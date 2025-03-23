@@ -1,0 +1,165 @@
+/* Table.css */
+.container {
+  background-color: var(--clr-white);
+  border: 1px solid #e6e9f4;
+  padding: 24px;
+  max-width: 1200px;
+  margin: auto;
+  border-radius: 6px;
+  margin-top: 30px;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.search-sort-container {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.search-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding-left: 10px;
+}
+
+.search-container input {
+  width: 100%;
+  border: none;
+  /* padding: 10px 10px 10px 35px; */
+  outline: none;
+  font-size: 16px;
+}
+
+.search-container i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: gray;
+  font-size: 16px;
+}
+
+input,
+select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-left: none;
+  border-right: none;
+  font-size: 14px;
+
+  /* box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); */
+}
+
+th,
+td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-left: none;
+  border-right: none;
+  text-align: left;
+  white-space: nowrap; 
+  overflow: hidden;     
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+th {
+  background-color: #f4f4f4;
+}
+
+tr:hover {
+  background-color: #f9f9f9;
+}
+
+tbody tr:hover {
+  background-color: #f2f2f2;
+}
+
+/* td.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #ddd;
+  border-left: none;
+  border-right: none;
+} */
+
+.table-header {
+  color: var(--clr-darkgreen);
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  padding: 6px 12px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.view-btn {
+  background-color: #836652;
+  color: white;
+}
+
+.view-btn:hover {
+  background-color: #795548;
+  color: white;
+}
+
+.delete-btn {
+  color: red;
+  background: none;
+  font-size: 16px;
+}
+
+.delete-header {
+  text-align: center;
+  width: 150px;
+}
+
+.delete-all-btn{
+
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding-left: 70px;
+}
+
+/* .delete-selected-btn:hover {
+  background-color: darkred;
+} */
+
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.pagination .active {
+  background-color: #007bff;
+  color: white;
+}
