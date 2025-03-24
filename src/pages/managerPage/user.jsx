@@ -1,27 +1,197 @@
 import React, { useState } from "react";
 import "./css/TabSwitcher.css";
+import "./css/table.css";
+import { IoIosSearch } from "react-icons/io";
+import img from "../../assets/images/person_four.jpg";
 
 const Users = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState("Technician");
+  const rowsPerPage = 5;
+
+  const [data] = useState([
+    {
+      image: img,
+      name: "Yangchen Dorji",
+      email: "yangchen@example.com",
+      location: "Block-A-101",
+      role: "Technician",
+    },
+    {
+      image: img,
+      name: "Karma Tenzin",
+      email: "karma@example.com",
+      location: "Block-B-202",
+      role: "Supervisor",
+    },
+    {
+      image: img,
+      name: "Sonam zangmo",
+      email: "sonam@example.com",
+      location: "Block-C-303",
+      role: "Supervisor",
+    },
+    {
+      image: img,
+      name: "Jigme Norbu",
+      email: "jigme@example.com",
+      location: "Block-D-404",
+      role: "Technician",
+    },
+    {
+      image: img,
+      name: "Pema Choden",
+      email: "pema@example.com",
+      location: "Block-E-505",
+      role: "Supervisor",
+    },
+    {
+      image: img,
+      name: "Tshering Zangmo",
+      email: "tshering@example.com",
+      location: "Block-F-606",
+      role: "Technician",
+    },
+    {
+      image: img,
+      name: "Dorji Wangchuk",
+      email: "dorji@example.com",
+      location: "Block-G-707",
+      role: "Technician",
+    },
+    {
+      image: img,
+      name: "Kinley Dorji",
+      email: "kinley@example.com",
+      location: "Block-H-808",
+      role: "Supervisor",
+    },
+    {
+      image: img,
+      name: "Deki Wangmo",
+      email: "deki@example.com",
+      location: "Block-I-909",
+      role: "Supervisor",
+    },
+    {
+      image: img,
+      name: "Ugyen Tenzin",
+      email: "ugyen@example.com",
+      location: "Block-J-1010",
+      role: "Technician",
+    },
+  ]);
+
+  // Filter data based on selected tab and search
+  const filteredData = data.filter(
+    (item) =>
+      item.role === activeTab &&
+      Object.values(item).some((value) =>
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+  );
+
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const displayedData = filteredData.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
 
   return (
-    <div className="user-tab-container">
-      <button
-        className={`tab ${activeTab === "Supervisor" ? "active" : ""}`}
-        onClick={() => setActiveTab("Supervisor")}
-      >
-        Supervisor
-      </button>
-      <button
-        className={`tab ${activeTab === "Technician" ? "active" : ""}`}
-        onClick={() => setActiveTab("Technician")}
-      >
-        Technician
-      </button>
+    <div className="user-dashboard">
+      {/* Tab Switcher */}
+      <div className="user-tab-container">
+        <button
+          className={`tab ${activeTab === "Supervisor" ? "active" : ""}`}
+          onClick={() => setActiveTab("Supervisor")}
+        >
+          Supervisor
+        </button>
+        <button
+          className={`tab ${activeTab === "Technician" ? "active" : ""}`}
+          onClick={() => setActiveTab("Technician")}
+        >
+          Technician
+        </button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="container">
+        <div className="search-sort-container">
+          <div className="search-container">
+            <IoIosSearch style={{ width: "20px", height: "20px" }} />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <table>
+          <thead className="table-header">
+            <tr>
+              {["Image", "Name", "Email", "Location", "Role"].map(
+                (header, index) => (
+                  <th key={index}>{header}</th>
+                )
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {displayedData.map((item, index) => (
+              <tr key={index}>
+                <td>
+                  <img
+                    className="User-profile"
+                    src={item.image}
+                    alt="User"
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      borderRadius: "50%",
+                    }}
+                    onMouseOver={(e) =>
+                      (e.target.style.transform = "scale(1.3)")
+                    }
+                    onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
+                  />
+                </td>
+                <td>{item.name}</td>
+                <td>{item.email}</td>
+                <td>{item.location}</td>
+                <td>{item.role}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="pagination">
+            <span>{filteredData.length} Results</span>
+            <div>
+              {[...Array(totalPages).keys()].slice(0, 5).map((num) => (
+                <button
+                  key={num}
+                  className={currentPage === num + 1 ? "active" : ""}
+                  onClick={() => setCurrentPage(num + 1)}
+                >
+                  {num + 1}
+                </button>
+              ))}
+              {totalPages > 5 && <span>...</span>}
+              <button onClick={() => setCurrentPage(totalPages)}>
+                {totalPages}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-    // <div>
-    //   <h1>Users</h1>
-    // </div>
   );
 };
 
