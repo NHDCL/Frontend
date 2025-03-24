@@ -1,0 +1,99 @@
+
+.profile-container {
+    display: flex;
+    justify-content: center;
+    /* align-items: center; */
+    height: 80vh;
+    margin-bottom: 3%;
+    background-color: #f8f8f8;
+  }
+  
+  .profile-card {
+    display: flex;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    /* max-width: 800px; */
+    width: 90%;
+  }
+  
+  .profile-left {
+    /* text-align: center; */
+    padding: 20px;
+    border-right: 1px solid #ddd;
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .profile-image {
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+  }
+  
+  .profile-right {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .profile-right h3 {
+    margin-bottom: 15px;
+    font-size: 18px;
+    text-align: center;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+  }
+  
+  .upload-label {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+    border: 1px dashed #888;
+    border-radius: 5px;
+    color: #666;
+    cursor: pointer;
+    margin: 10px 0;
+  }
+  
+  .upload-label:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .update-button {
+    width: 40%;
+    padding: 10px;
+    background-color: #897463;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    align-content: center;
+  }
+  
+  .update-button:hover {
+    background-color: #6f5435;
+  }
+  

@@ -1,19 +1,27 @@
-import { Routes, Route } from "react-router-dom";
-import Home from "../pages/Home";
+import { Routes, Route} from "react-router-dom";
 import ManagerRoutes from "./managerRoutes";
-import Login from "../pages/login";
-
+import Landingpage from "../pages/Landingpage";
+import Loginpage from "../pages/Loginpage";
+import Forgotpassword from "../pages/Forgotpassword";
+import Otppages from "../pages/Otppages";
+import Newpasswordpage from "../pages/Newpasswordpage";
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
+    // <Router>
+      <Routes>
+        <Route path="/" element={<Landingpage />} />
+        <Route path="/login" element={<Loginpage />} />
+        <Route path="/forgotpassword" element={<Forgotpassword/>} />
+        <Route path="/otp" element={<Otppages/>} />
+        <Route path="/newpassword" element={<Newpasswordpage/>} />
 
-      {/* Manager Routes */}
-      <Route path="/manager/*" element={<ManagerRoutes />} />
 
-    </Routes>
+
+        <Route path="/*" element={<ManagerRoutes />} /> {/* Manager section */}
+
+      </Routes>
+    // </Router>
   );
 };
 

@@ -1,0 +1,56 @@
+.lfcontainner {
+  background-color: #897463;
+}
+.lfupper {
+  display: flex;
+  flex-direction: row;
+  padding-left: 5%;
+  padding-right: 6%;
+  padding-top: 2%;
+  padding-bottom: 3%;
+  justify-content: space-between;
+  color: #ffffff;
+  flex-wrap: wrap;
+}
+
+.lfcopyright {
+  color: #ffffff;
+  text-align: center;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.lfh3 {
+  padding-bottom: 5px;
+}
+
+.lflink {
+  display: flex;
+  gap: 20px;
+}
+
+.lf-i {
+  font-size: 30px;
+  transition: transform 0.3s ease, color 0.3s ease;
+  cursor: pointer;
+}
+
+.facebook {
+  color: #1877f2; /* Facebook blue */
+}
+
+.youtube {
+  color: #ff0000; /* YouTube red */
+}
+
+.telegram {
+  color: #0088cc; /* Telegram blue */
+}
+
+.tiktok {
+  color: #000; /* TikTok black */
+}
+
+.lf-i:hover {
+  transform: scale(1.2);
+  opacity: 0.8;
+}
