@@ -42,12 +42,12 @@ const ManagerAccount = () => {
             {/* Right Section */}
             <div className="profile-right">
               <h3>Edit Your Profile Detail</h3>
-              <input type="text" name="name" value={profile.name} onChange={handleChange} placeholder="Name" />
-              <input type="email" name="email" value={profile.email} onChange={handleChange} placeholder="Email" />
-              <input type="text" name="academy" value={profile.academy} onChange={handleChange} placeholder="Academy" />
-              <input type="password" name="oldPassword" placeholder="Old Password" onChange={handleChange} />
-              <input type="password" name="newPassword" placeholder="New Password" onChange={handleChange} />
-              <input type="password" name="confirmPassword" placeholder="Re-enter New Password" onChange={handleChange} />
+              <input className="profile-input" type="text" name="name" value={profile.name} onChange={handleChange} placeholder="Name" />
+              <input className="profile-input" type="email" name="email" value={profile.email} onChange={handleChange} placeholder="Email" />
+              <input className="profile-input" type="text" name="academy" value={profile.academy} onChange={handleChange} placeholder="Academy" />
+              <input className="profile-input" type="password" name="oldPassword" placeholder="Old Password" onChange={handleChange} />
+              <input className="profile-input" type="password" name="newPassword" placeholder="New Password" onChange={handleChange} />
+              <input  className="profile-input" type="password" name="confirmPassword" placeholder="Re-enter New Password" onChange={handleChange} />
               <label className="upload-label">
                 <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 Click Here to Upload Image
