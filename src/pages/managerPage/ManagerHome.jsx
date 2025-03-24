@@ -1,103 +1,120 @@
 import React, { useState } from "react";
 import "./css/card.css";
 import "./css/table.css";
+import "./css/form.css";
 import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import img from "../../assets/images/person_four.jpg";
+import { IoIosCloseCircle } from "react-icons/io";
 
 const ManagerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(2);
-  const [selectedRows, setSelectedRows] = useState([]); // To track selected rows
-  const rowsPerPage = 7;
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [modalData, setModalData] = useState(null);
+  const [selectedPriority, setSelectedPriority] = useState("");
+  const rowsPerPage = 10;
 
-  const [data, setData] =useState ([
+  const [data, setData] = useState([
     {
       rid: "#1001",
       assetName: "Air Conditioner",
       name: "Yangchen",
+      email: "yangchen@example.com",
       phone: "17748323",
       location: "Block-A-101",
-      description: "Cooling issue disgfbjkdbv;ojdflgbvjd;fb",
+      description: "Cooling issue",
+      priority: "Major",
+      image: img,
     },
     {
       rid: "#1002",
       assetName: "Heater",
       name: "Sonam",
+      email: "sonam@example.com",
       phone: "17654321",
       location: "Block-B-202",
       description: "Not working properly",
+      priority: "Minor",
+      image: "https://via.placeholder.com/150",
     },
     {
       rid: "#1003",
       assetName: "Washing Machine",
       name: "Tashi",
+      email: "tashi@example.com",
       phone: "17567890",
       location: "Block-C-303",
       description: "Drum not spinning",
+      priority: "Major",
+      image: "https://via.placeholder.com/150",
     },
     {
-      rid: "#1004",
-      assetName: "Refrigerator",
-      name: "Karma",
-      phone: "17432156",
-      location: "Block-D-404",
-      description: "Leaking water",
+      rid: "#1003",
+      assetName: "Washing Machine",
+      name: "Tashi",
+      email: "tashi@example.com",
+      phone: "17567890",
+      location: "Block-C-303",
+      description: "Drum not spinning",
+      priority: "Major",
+      image: "https://via.placeholder.com/150",
     },
     {
-      rid: "#1005",
-      assetName: "Microwave",
-      name: "Pema",
-      phone: "17345678",
-      location: "Block-E-505",
-      description: "Not heating food",
+      rid: "#1003",
+      assetName: "Washing Machine",
+      name: "Tashi",
+      email: "tashi@example.com",
+      phone: "17567890",
+      location: "Block-C-303",
+      description: "Drum not spinning",
+      priority: "Major",
+      image: "https://via.placeholder.com/150",
     },
     {
-      rid: "#1006",
-      assetName: "Geyser",
-      name: "Dawa",
-      phone: "17234567",
-      location: "Block-F-606",
-      description: "No hot water",
+      rid: "#1003",
+      assetName: "Washing Machine",
+      name: "Tashi",
+      email: "tashi@example.com",
+      phone: "17567890",
+      location: "Block-C-303",
+      description: "Drum not spinning",
+      priority: "Major",
+      image: "https://via.placeholder.com/150",
     },
     {
-      rid: "#1007",
-      assetName: "Vacuum Cleaner",
-      name: "Thinley",
-      phone: "17123456",
-      location: "Block-G-707",
-      description: "Low suction power",
+      rid: "#1003",
+      assetName: "Washing Machine",
+      name: "Tashi",
+      email: "tashi@example.com",
+      phone: "17567890",
+      location: "Block-C-303",
+      description: "Drum not spinning",
+      priority: "Major",
+      image: "https://via.placeholder.com/150",
     },
     {
-      rid: "#1008",
-      assetName: "Television",
-      name: "Jigme",
-      phone: "17678901",
-      location: "Block-H-808",
-      description: "No signal detected",
-    },
-    {
-      rid: "#1009",
-      assetName: "Laptop",
-      name: "Dorji",
-      phone: "17543210",
-      location: "Block-I-909",
-      description: "Battery not charging",
-    },
-    {
-      rid: "#1010",
-      assetName: "Fan",
-      name: "Choki",
-      phone: "17456789",
-      location: "Block-J-1010",
-      description: "Making noise",
+      rid: "#1003",
+      assetName: "Washing Machine",
+      name: "Tashi",
+      email: "tashi@example.com",
+      phone: "17567890",
+      location: "Block-C-303",
+      description: "Drum not spinning",
+      priority: "Major",
+      image: "https://via.placeholder.com/150",
     },
   ]);
-
-  const filteredData = data.filter((item) =>
-    Object.values(item).some((value) =>
+  // Filtering data based on search and priority selection
+  const filteredData = data.filter((item) => {
+    const matchesSearch = Object.values(item).some((value) =>
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+    );
+    const matchesPriority =
+      selectedPriority === "" || item.priority === selectedPriority;
+
+    return matchesSearch && matchesPriority;
+  });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -121,7 +138,14 @@ const ManagerDashboard = () => {
   };
   const handleDeleteRow = (rid) => {
     const updatedData = data.filter((item) => item.rid !== rid);
-    setData(updatedData); // Update the state
+    setData(updatedData);
+  };
+
+  const handleView = (item) => {
+    setModalData(item);
+  };
+  const handleCloseModal = () => {
+    setModalData(null);
   };
 
   return (
@@ -168,10 +192,10 @@ const ManagerDashboard = () => {
             />
           </div>
 
-          <select>
-            <option>Priority</option>
-            <option>Minor</option>
-            <option>Major</option>
+          <select value={selectedPriority} onChange={(e) => setSelectedPriority(e.target.value)}>
+            <option value="">All Priorities</option>
+            <option value="Minor">Minor</option>
+            <option value="Major">Major</option>
           </select>
         </div>
         <table>
@@ -202,8 +226,13 @@ const ManagerDashboard = () => {
               ))}
               <th>
                 {selectedRows.length > 0 ? (
-                  <button className="delete-all-btn" onClick={handleDeleteSelected}>
-                    <RiDeleteBin6Line style={{ width: "20px", height: "20px", color:"red" }} />
+                  <button
+                    className="delete-all-btn"
+                    onClick={handleDeleteSelected}
+                  >
+                    <RiDeleteBin6Line
+                      style={{ width: "20px", height: "20px", color: "red" }}
+                    />
                   </button>
                 ) : (
                   " "
@@ -228,8 +257,13 @@ const ManagerDashboard = () => {
                 <td>{item.location}</td>
                 <td className="description">{item.description}</td>
                 <td className="actions">
-                  <button className="view-btn">View</button>
-                  <button className="delete-btn" onClick={() => handleDeleteRow(item.rid)}>
+                  <button className="view-btn" onClick={() => handleView(item)}>
+                    View
+                  </button>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDeleteRow(item.rid)}
+                  >
                     <RiDeleteBin6Line
                       style={{ width: "20px", height: "20px" }}
                     />
@@ -265,6 +299,81 @@ const ManagerDashboard = () => {
           ></button>
         )}
       </div>
+
+      {/* Modal for Viewing Request */}
+      {modalData && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Repair Request</h2>
+              <button className="close-btn" onClick={handleCloseModal}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <form className="repair-form">
+              <div className="modal-content-field">
+                <label>Name:</label>
+                <input type="text" value={modalData.name} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Phone Number:</label>
+                <input type="text" value={modalData.phone} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Email:</label>
+                <input type="email" value={modalData.email} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>RID</label>
+                <input type="text" value={modalData.rid} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Area:</label>
+                <input type="text" value={modalData.location} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Asset Name:</label>
+                <input type="text" value={modalData.assetName} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Priority:</label>
+                <input type="text" value={modalData.priority} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Description:</label>
+                <textarea value={modalData.description} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Image:</label>
+                <div className="profile-img">
+                  {modalData.image ? (
+                    <img
+                      src={modalData.image}
+                      alt="Asset"
+                      className="modal-image"
+                    />
+                  ) : (
+                    <div className="image-upload">
+                      <span>📷</span>
+                      <p>Click Here to Upload Image</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-buttons">
+                <button className="accept-btn">Accept</button>
+                <button className="reject-btn">Reject</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

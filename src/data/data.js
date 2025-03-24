@@ -18,6 +18,7 @@ export const managernavigationLinks = [
     { id: 8, title: 'Maintenance Report',path:"/MMaintenanceReport", icon: TbReport }
 ];
 
+
 // Export the other data objects
 export const budget = [
     // your budget data here

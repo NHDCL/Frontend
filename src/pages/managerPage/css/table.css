@@ -3,10 +3,11 @@
   background-color: var(--clr-white);
   border: 1px solid #e6e9f4;
   padding: 24px;
-  max-width: 1200px;
+  /* max-width: 1200px; */
   margin: auto;
   border-radius: 6px;
   margin-top: 30px;
+  width: 100%;
 }
 
 h2 {
@@ -112,8 +113,9 @@ button {
 }
 
 .view-btn {
-  background-color: #836652;
+  background-color: var(--clr-primar-light);
   color: white;
+  width: 70px;
 }
 
 .view-btn:hover {
