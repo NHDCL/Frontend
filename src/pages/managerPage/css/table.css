@@ -3,10 +3,10 @@
   background-color: var(--clr-white);
   border: 1px solid #e6e9f4;
   padding: 24px;
-  max-width: 1200px;
   margin: auto;
   border-radius: 6px;
   margin-top: 30px;
+  width:100%;
 }
 
 h2 {

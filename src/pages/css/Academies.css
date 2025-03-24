@@ -1,0 +1,93 @@
+
+.title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 2rem;
+    color: #315845;
+} 
+.a_hr1{
+  height: 1px;
+  margin-bottom: 5px;
+  width: 18%;
+  border-color: #315845;
+}
+.a_hr2{
+  height: 1px;
+  margin-bottom: 5px;
+  width: 15%;
+  border-color: #315845;
+}
+.a_hr3{
+  height: 1px;
+  margin-bottom: 20px;
+  width: 12%;
+  border-color: #315845;
+}
+.atitlediv{
+  /* background-color: bisque; */
+}
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .bento-item:hover .overlay {
+    opacity: 1;
+  }
+  .adescription{
+    width: 80%;
+  }
+  .aname{
+    /* background-color: darksalmon; */
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    
+  }
+   .bento-container {
+    display: flex;
+    flex-direction: column;
+    /* align-items: center; */
+    padding: 4%;
+    /* background-color: aquamarine; */
+  }
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    width: 100%;
+    /* background-color: crimson; */
+  }
+  
+  .bento-item {
+    background: #ddd;
+    display: flex;
+    align-items: end;
+    justify-content: left;
+    padding-left: 4%;
+    padding-bottom: 4%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    cursor: pointer;
+    height: 30vh;
+
+  }
+  
+  .item-0 { grid-column: span 2; }
+  .item-1 { grid-column: span 3; }
+  .item-2 { grid-column: span 3; }
+  .item-3 { grid-column: span 2; }
+  .item-4 { grid-column: span 5; }
+  
