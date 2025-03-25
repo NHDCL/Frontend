@@ -4,7 +4,7 @@ import Header from "../components/LandingComponents/Header";
 import Academies from "../components/LandingComponents/Academies";
 import MaintenanceRequest from "../components/LandingComponents/MaintancesRequest";
 import LandingFooter from "../components/LandingComponents/LandingFooter";
-
+import {Link} from "react-router-dom"
 const Landingpage = () => {
   return (
     <div>
@@ -21,9 +21,9 @@ const Landingpage = () => {
             Streamline facility maintenance, requests, and tracking
             effortlessly.
           </h3>
-          <div className="lgetstart">
+          <Link to="login" className="lgetstart">
             <p className="lp">Get Started</p>
-          </div>
+          </Link>
         </div>
       </div>
       <div className="llowercontainer">

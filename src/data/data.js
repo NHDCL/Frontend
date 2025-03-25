@@ -6,23 +6,22 @@ import { GiAutoRepair} from "react-icons/gi";
 import { GrVmMaintenance } from "react-icons/gr";
 import { TbReportSearch,TbReport } from "react-icons/tb";
 
-
 export const managernavigationLinks = [
-    { id: 1, title: 'Home', path:"/M", icon: FaHome },
-    { id: 2, title: 'Users', path: "/MUsers", icon: HiUsers },
-    { id: 3, title: 'Assets', path:"/Massets", icon: PiTreasureChestFill },
-    { id: 4, title: 'Asset Category', path:"/Mcategory", icon: TbCategoryPlus },
-    { id: 5, title: 'Repair and Maintenance', path:"/MRepairMaintenance", icon: GiAutoRepair  },
-    { id: 6, title: 'Preventive Maintenance', path:"/MPMaintenance", icon: GrVmMaintenance },
-    { id: 7, title: 'Repair Report', path:"/MRepairReport", icon: TbReportSearch  },
-    { id: 8, title: 'Maintenance Report',path:"/MMaintenanceReport", icon: TbReport },
-    { id: 9, title: 'Account',path:"/MAccount", icon: TbReport }
-
+    { id: 1, title: 'Home', path: "", icon: FaHome },  // Empty path for dashboard
+    { id: 2, title: 'Users', path: "users", icon: HiUsers },
+    { id: 3, title: 'Assets', path: "assets", icon: PiTreasureChestFill },
+    { id: 4, title: 'Asset Category', path: "category", icon: TbCategoryPlus },
+    { id: 5, title: 'Repair and Maintenance', path: "repair-maintenance", icon: GiAutoRepair },
+    { id: 6, title: 'Preventive Maintenance', path: "preventive-maintenance", icon: GrVmMaintenance },
+    { id: 7, title: 'Repair Report', path: "repair-report", icon: TbReportSearch },
+    { id: 8, title: 'Maintenance Report', path: "maintenance-report", icon: TbReport },
+    { id: 9, title: 'Account', path: "account", icon: TbReport }
 ];
 
+
 export const techniciannavigationLinks = [
-    { id: 1, title: 'Home', path:"/T", icon: FaHome },
-    { id: 2, title: 'Work Order', path:"/TWorkOrder", icon: GrVmMaintenance },
-    { id: 3, title: 'Maintenance Schedule',path:"/TMaintenanceSchedule", icon: TbReport }
+    { id: 1, title: 'Home', path: "", icon: FaHome },
+    { id: 2, title: 'Work Order', path: "work-order", icon: GrVmMaintenance },
+    { id: 3, title: 'Maintenance Schedule', path: "maintenance-schedule", icon: TbReport }
 ];
 

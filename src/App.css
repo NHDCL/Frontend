@@ -5,7 +5,12 @@
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+  overflow-y: scroll; /* Enables scrolling */
+  scrollbar-width: none;
+  font-family: 'Poppins', 'Arial Narrow';
+
 }
+
 
 :root {
   --clr-primary: #FFFFFF;
