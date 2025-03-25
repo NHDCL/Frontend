@@ -191,7 +191,9 @@ const Repair = () => {
 
   const handleScheduleView = (item) => {
     setModalData(item);
+    setAssignedWorker(null); // Reset worker selection when opening modal
   };
+  
   const handleCloseModal = () => {
     setModalData(null);
   };
@@ -365,37 +367,59 @@ const Repair = () => {
       {modalData && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <IoIosCloseCircle className="modal-close-btn" onClick={handleCloseModal} />
-            <h3>Schedule Form {modalData.rid}</h3>
-
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Repair Request</h2>
+              <button className="close-btn" onClick={handleCloseModal}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
             {/* Assign Dropdown */}
-            <label>Assign Worker:</label>
-            <Select
-              options={workersList}
-              value={workersList.find((w) => w.value === assignedWorker)}
-              onChange={(selectedOption) => setAssignedWorker(selectedOption?.value)}
-              isClearable
-            />
+            <div className="schedule-form">
+              <div className="modal-content-field">
+                <label>Assign Worker:</label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={workersList}
+                  value={workersList.find((w) => w.value === assignedWorker) || null} // Ensure default value is handled
+                  onChange={(selectedOption) => {
+                    setAssignedWorker(selectedOption?.value || ""); // Ensure it's updated
+                    console.log("Selected Worker:", selectedOption); // Debugging
+                  }}
+                  isClearable
+                />
 
-            {/* Assign Date */}
-            <label>Assign Date:</label>
-            <input
-              type="date"
-              value={assignDate}
-              onChange={(e) => setAssignDate(e.target.value)}
-            />
+              </div>
+              {/* Assign Date */}
+              <div className="modal-content-field">
+                <label>Assign Date:</label>
+                <input
+                  type="date"
+                  value={assignDate}
+                  onChange={(e) => setAssignDate(e.target.value)}
+                />
+              </div>
 
-            {/* Assign Time */}
-            <label>Assign Time:</label>
-            <input
-              type="time"
-              value={assignTime}
-              onChange={(e) => setAssignTime(e.target.value)}
-            />
+              <div className="modal-content-field">
+                {/* Assign Time */}
+                <label>Assign Time:</label>
+                <input
+                  type="time"
+                  value={assignTime}
+                  onChange={(e) => setAssignTime(e.target.value)}
+                />
+              </div>
 
-            <button className="assign-btn" onClick={handleAssignRequest}>
-              Assign Request
-            </button>
+              <button className="modal-buttons" onClick={handleAssignRequest}>
+                Assign Request
+              </button>
+
+
+            </div>
+
           </div>
         </div>
       )}

@@ -143,3 +143,72 @@
 .custom-select-workstatus__clear-indicator {
   display: none !important;
 }
+
+/* department dropdown */
+.custom-select-department__control {
+  width: 200px;
+  min-width: 200px !important;
+  max-width: 200px !important;
+  border: 1px solid #897463 !important;
+  border-radius: 4px;
+  padding: 2px;
+  font-size: 13px;
+  color: #333;
+}
+
+.custom-select-department__control:hover {
+  border-color: #897463 !important;
+}
+
+.custom-select-department__placeholder {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.custom-select-department__menu {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
+}
+
+/* Change dropdown option color */
+.custom-select-department__option {
+  font-size: 13px !important;
+  color: #333;
+  padding: 12px !important;
+  background-color: #fff;
+}
+
+/* Change hover effect */
+.custom-select-department__option:hover {
+  background-color: #897463 !important;
+  color: white !important;
+}
+
+/* Change the selected option's background color */
+.custom-select-department__option--is-selected {
+  background-color: #897463 !important; /* Brown background */
+  color: white !important; /* White text */
+}
+
+/* Change the dropdown arrow color */
+.custom-select-department__indicator {
+  color: #897463 !important;
+}
+
+/* Remove the separator line */
+.custom-select-department__indicator-separator {
+  display: none;
+}
+
+/* Change border color on focus */
+.custom-select-department__control--is-focused {
+  border-color: none !important; /* Brown border */
+  box-shadow: none !important; /* Light brown glow */
+}
+.custom-select-department__clear-indicator {
+  display: none !important;
+}
