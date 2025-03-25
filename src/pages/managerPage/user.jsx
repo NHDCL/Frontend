@@ -8,12 +8,12 @@ const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState("Technician");
-  const rowsPerPage = 5;
+  const rowsPerPage = 10;
 
   const [data] = useState([
     {
       image: img,
-      name: "Yangchen Dorji",
+      name: "Yangchen Wangmo",
       email: "yangchen@example.com",
       location: "Block-A-101",
       role: "Technician",
@@ -131,65 +131,66 @@ const Users = () => {
         </div>
 
         {/* Data Table */}
-        <table>
-          <thead className="table-header">
-            <tr>
-              {["Image", "Name", "Email", "Location", "Role"].map(
-                (header, index) => (
-                  <th key={index}>{header}</th>
-                )
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {displayedData.map((item, index) => (
-              <tr key={index}>
-                <td>
-                  <img
-                    className="User-profile"
-                    src={item.image}
-                    alt="User"
-                    style={{
-                      width: "50px",
-                      height: "50px",
-                      borderRadius: "50%",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.target.style.transform = "scale(1.3)")
-                    }
-                    onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
-                  />
-                </td>
-                <td>{item.name}</td>
-                <td>{item.email}</td>
-                <td>{item.location}</td>
-                <td>{item.role}</td>
+        <div className="table-container">
+          <table className="RequestTable">
+            <thead className="table-header">
+              <tr>
+                {["Image", "Name", "Email", "Location", "Role"].map(
+                  (header, index) => (
+                    <th key={index}>{header}</th>
+                  )
+                )}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {displayedData.map((item, index) => (
+                <tr key={index}>
+                  <td>
+                    <img
+                      className="User-profile"
+                      src={item.image}
+                      alt="User"
+                      style={{
+                        width: "50px",
+                        height: "50px",
+                        borderRadius: "50%",
+                      }}
+                      onMouseOver={(e) =>
+                        (e.target.style.transform = "scale(1.3)")
+                      }
+                      onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
+                    />
+                  </td>
+                  <td>{item.name}</td>
+                  <td>{item.email}</td>
+                  <td>{item.location}</td>
+                  <td>{item.role}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="pagination">
-            <span>{filteredData.length} Results</span>
-            <div>
-              {[...Array(totalPages).keys()].slice(0, 5).map((num) => (
-                <button
-                  key={num}
-                  className={currentPage === num + 1 ? "active" : ""}
-                  onClick={() => setCurrentPage(num + 1)}
-                >
-                  {num + 1}
-                </button>
-              ))}
-              {totalPages > 5 && <span>...</span>}
-              <button onClick={() => setCurrentPage(totalPages)}>
-                {totalPages}
+        <div className="pagination">
+          <span>{filteredData.length} Results</span>
+          <div>
+            {[...Array(totalPages).keys()].slice(0, 5).map((num) => (
+              <button
+                key={num}
+                className={currentPage === num + 1 ? "active" : ""}
+                onClick={() => setCurrentPage(num + 1)}
+              >
+                {num + 1}
               </button>
-            </div>
+            ))}
+            <span>...</span>
+            <button onClick={() => setCurrentPage(totalPages)}>
+              {totalPages}
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

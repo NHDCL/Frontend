@@ -2,14 +2,16 @@ import React, { useState } from "react";
 import "./css/card.css";
 import "./css/table.css";
 import "./css/form.css";
+import "./css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
+import Select from "react-select"
 
 const ManagerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(2);
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [modalData, setModalData] = useState(null);
   const [selectedPriority, setSelectedPriority] = useState("");
@@ -104,9 +106,31 @@ const ManagerDashboard = () => {
       priority: "Major",
       image: "https://via.placeholder.com/150",
     },
+
   ]);
+
+    // Extract unique priorities from data
+    const uniquePriorities = [
+      { value: "", label: "All Priorities" },
+      ...Array.from(new Set(data.map(item => item.priority))).map(priority => ({
+        value: priority,
+        label: priority
+      }))
+    ];
   // Filtering data based on search and priority selection
-  const filteredData = data.filter((item) => {
+  // const filteredData = data.filter((item) => {
+  //   const matchesSearch = Object.values(item).some((value) =>
+  //     value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  //   );
+  //   const matchesPriority =
+  //     selectedPriority === "" || item.priority === selectedPriority;
+
+  //   return matchesSearch && matchesPriority;
+  // });
+
+  const sortedData = [...data].sort((a, b) => b.rid - a.rid);
+
+  const filteredData = sortedData.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -115,6 +139,7 @@ const ManagerDashboard = () => {
 
     return matchesSearch && matchesPriority;
   });
+
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -179,7 +204,7 @@ const ManagerDashboard = () => {
       </div>
 
       {/* Home table */}
-      <h3>Latest request</h3>
+      <h3 className="heading">Latest request</h3>
       <div className="container">
         <div className="search-sort-container">
           <div className="search-container">
@@ -192,88 +217,102 @@ const ManagerDashboard = () => {
             />
           </div>
 
-          <select value={selectedPriority} onChange={(e) => setSelectedPriority(e.target.value)}>
-            <option value="">All Priorities</option>
-            <option value="Minor">Minor</option>
-            <option value="Major">Major</option>
-          </select>
+          {/* Priority Dropdown */}
+          <Select
+            classNamePrefix="custom-select"
+            className="priority-dropdown"
+            options={uniquePriorities}
+            value={uniquePriorities.find(option => option.value === selectedPriority)} // Ensure selected value is an object
+            onChange={(selectedOption) => {
+              if (selectedOption) {
+                setSelectedPriority(selectedOption.value);
+              } else {
+                setSelectedPriority(""); // Clear the selected priority when null
+              }
+            }}
+            isClearable
+            isSearchable={false}
+          />
         </div>
-        <table>
-          <thead className="table-header">
-            <tr>
-              <th>
-                <input
-                  type="checkbox"
-                  checked={selectedRows.length === displayedData.length} // Select all checkboxes when all rows are selected
-                  onChange={() =>
-                    setSelectedRows(
-                      selectedRows.length === displayedData.length
-                        ? []
-                        : displayedData.map((item) => item.rid)
-                    )
-                  }
-                />
-              </th>
-              {[
-                "RID",
-                "Asset Name",
-                "Name",
-                "Phone Number",
-                "Location",
-                "Description",
-              ].map((header, index) => (
-                <th key={index}>{header}</th>
-              ))}
-              <th>
-                {selectedRows.length > 0 ? (
-                  <button
-                    className="delete-all-btn"
-                    onClick={handleDeleteSelected}
-                  >
-                    <RiDeleteBin6Line
-                      style={{ width: "20px", height: "20px", color: "red" }}
-                    />
-                  </button>
-                ) : (
-                  " "
-                )}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayedData.map((item, index) => (
-              <tr key={index}>
-                <td>
+        <div className="table-container">
+          <table className="RequestTable">
+            <thead className="table-header">
+              <tr>
+                <th>
                   <input
                     type="checkbox"
-                    checked={selectedRows.includes(item.rid)}
-                    onChange={() => handleSelectRow(item.rid)}
+                    checked={selectedRows.length === displayedData.length} // Select all checkboxes when all rows are selected
+                    onChange={() =>
+                      setSelectedRows(
+                        selectedRows.length === displayedData.length
+                          ? []
+                          : displayedData.map((item) => item.rid)
+                      )
+                    }
                   />
-                </td>
-                <td>{item.rid}</td>
-                <td>{item.assetName}</td>
-                <td>{item.name}</td>
-                <td>{item.phone}</td>
-                <td>{item.location}</td>
-                <td className="description">{item.description}</td>
-                <td className="actions">
-                  <button className="view-btn" onClick={() => handleView(item)}>
-                    View
-                  </button>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDeleteRow(item.rid)}
-                  >
-                    <RiDeleteBin6Line
-                      style={{ width: "20px", height: "20px" }}
-                    />
-                  </button>
-                </td>
+                </th>
+                {[
+                  "RID",
+                  "Asset Name",
+                  "Name",
+                  "Phone Number",
+                  "Location",
+                  "Description",
+                ].map((header, index) => (
+                  <th key={index}>{header}</th>
+                ))}
+                <th>
+                  {selectedRows.length > 0 ? (
+                    <button
+                      className="delete-all-btn"
+                      onClick={handleDeleteSelected}
+                    >
+                      <RiDeleteBin6Line
+                        style={{ width: "20px", height: "20px", color: "red" }}
+                      />
+                    </button>
+                  ) : (
+                    " "
+                  )}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {displayedData.map((item, index) => (
+                <tr key={index}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.includes(item.rid)}
+                      onChange={() => handleSelectRow(item.rid)}
+                    />
+                  </td>
+                  <td>{item.rid}</td>
+                  <td>{item.assetName}</td>
+                  <td>{item.name}</td>
+                  <td>{item.phone}</td>
+                  <td>{item.location}</td>
+                  <td className="description">{item.description}</td>
+                  <td className="actions">
+                    <button className="view-btn" onClick={() => handleView(item)}>
+                      View
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDeleteRow(item.rid)}
+                    >
+                      <RiDeleteBin6Line
+                        style={{ width: "20px", height: "20px" }}
+                      />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
+        {/* Pagination */}
         <div className="pagination">
           <span>{filteredData.length} Results</span>
           <div>

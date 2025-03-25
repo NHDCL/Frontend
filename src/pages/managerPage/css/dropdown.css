@@ -1,0 +1,145 @@
+/* Styling for the dropdown */
+
+.dropdown-ls{
+    display: flex;
+    gap: 5px;
+}
+
+/* custom-priorities */
+.custom-select__control {
+  width: 200px;
+  min-width: 150px !important;
+  max-width: 150px !important;
+  border: 1px solid #897463 !important;
+  border-radius: 4px;
+  padding: 2px;
+  font-size: 13px;
+  color: #333;
+}
+
+.custom-select__control:hover {
+  border-color: #897463 !important;
+}
+
+.custom-select__placeholder {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.custom-select__menu {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 150px !important;
+  min-width: 150px !important;
+  max-width: 150px !important;
+}
+
+/* Change dropdown option color */
+.custom-select__option {
+  font-size: 13px !important;
+  color: #333;
+  padding: 12px !important;
+  background-color: #fff;
+}
+
+/* Change hover effect */
+.custom-select__option:hover {
+  background-color: #897463 !important;
+  color: white !important;
+}
+
+/* Change the selected option's background color */
+.custom-select__option--is-selected {
+  background-color: #897463 !important; /* Brown background */
+  color: white !important; /* White text */
+}
+
+/* Change the dropdown arrow color */
+.custom-select__indicator {
+  color: #897463 !important;
+}
+
+/* Remove the separator line */
+.custom-select__indicator-separator {
+  display: none;
+}
+
+/* Change border color on focus */
+.custom-select__control--is-focused {
+  border-color: none !important; /* Brown border */
+  box-shadow: none !important; /* Light brown glow */
+}
+.custom-select__clear-indicator {
+  display: none !important;
+}
+
+
+/* workstaus */
+.custom-select-workstatus__control {
+  width: 200px;
+  min-width: 160px !important;
+  max-width: 160px !important;
+  border: 1px solid #897463 !important;
+  border-radius: 4px;
+  padding: 2px;
+  font-size: 13px;
+  color: #333;
+}
+
+.custom-select-workstatus__control:hover {
+  border-color: #897463 !important;
+}
+
+.custom-select-workstatus__placeholder {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.custom-select-workstatus__menu {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 160px !important;
+  min-width: 160px !important;
+  max-width: 160px !important;
+}
+
+/* Change dropdown option color */
+.custom-select-workstatus__option {
+  font-size: 13px !important;
+  color: #333;
+  padding: 12px !important;
+  background-color: #fff;
+}
+
+/* Change hover effect */
+.custom-select-workstatus__option:hover {
+  background-color: #897463 !important;
+  color: white !important;
+}
+
+/* Change the selected option's background color */
+.custom-select-workstatus__option--is-selected {
+  background-color: #897463 !important; /* Brown background */
+  color: white !important; /* White text */
+}
+
+/* Change the dropdown arrow color */
+.custom-select-workstatus__indicator {
+  color: #897463 !important;
+}
+
+/* Remove the separator line */
+.custom-select-workstatus__indicator-separator {
+  display: none;
+}
+
+/* Change border color on focus */
+.custom-select-workstatus__control--is-focused {
+  border-color: none !important; /* Brown border */
+  box-shadow: none !important; /* Light brown glow */
+}
+.custom-select-workstatus__clear-indicator {
+  display: none !important;
+}
