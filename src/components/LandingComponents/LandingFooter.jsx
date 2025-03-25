@@ -7,7 +7,7 @@ const LandingFooter = () => {
   return (
     <div className="lfcontainner">
       <div className="lfupper">
-        <div>
+        <div className="lfQlinks">
           <h3 className="lfh3">Contact Us</h3>
           <p>Head Office No. : 323147 / 332735 / 332734</p>
           <p>
@@ -19,14 +19,14 @@ const LandingFooter = () => {
           </p>
           <p>Changjiji Site Office No. : 345528 Mobile No. : 17631768</p>
         </div>
-        <div>
+        <div className="lfQlinks">
           <h3 className="lfh3">Quick Links</h3>
           <p>NHDCL Bhutan</p>
           <p>Gyalsung Academy</p>
           <p>ERP</p>
           <p>Facility Management</p>
         </div>
-        <div>
+        <div style={{marginTop:"23px"}}>
           <h3 className="lfh3">Follow Us</h3>
           <div className="lflink">
             <FaFacebook className="lf-i facebook" />

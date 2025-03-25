@@ -1,11 +1,11 @@
 import { useContext } from "react";
 import { NavLink } from "react-router-dom";
-import { managernavigationLinks } from "../../data/data";
+import { techniciannavigationLinks } from "../../data/data";
 import "./Sidebar.css";
 import { SidebarContext } from "../../context/sidebarContext";
 import logo from "../../assets/images/Nlogo.jpeg";
 
-const Sidebar = () => {
+const TechnicianSidebar = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
 
   return (
@@ -17,13 +17,13 @@ const Sidebar = () => {
       </div>
       <nav className="navigation">
         <ul className="nav-list">
-          {managernavigationLinks.map((link) => (
+          {techniciannavigationLinks.map((link) => (
             <li className="nav-item" key={link.id}>
               <NavLink 
-                to={`/manager/${link.path}`}  // Ensure absolute path
+                to={`/technician/${link.path}`}  // Ensure proper navigation
                 className="nav-link" 
                 activeclassname="active"
-                end // Prevents nested links from staying active
+                end  // Prevents nested links from staying active
               >
                 <link.icon className="nav-link-icon" />
                 <span className="nav-link-text">{link.title}</span>
@@ -36,4 +36,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default TechnicianSidebar;

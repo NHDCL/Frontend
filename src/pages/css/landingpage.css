@@ -4,12 +4,11 @@
     background-image: url("../../assets/images/landingBG.png");
     background-size: cover;
     margin-top: 90px;
-    /* padding-top: 10%; */
 
 }
 .lwording{
-    padding-top: 6%;
-    padding-left: 4%;
+    padding-top: 5%;
+    margin-left: 4%;
     /* background-color: darkorchid; */
 
 }
@@ -19,7 +18,7 @@
     display: flex;
     justify-content: center;
     flex-direction: column;
-    width: 31%;
+    width: 35%;
     align-items: center;
 
 }
@@ -59,4 +58,148 @@
 }
 .llowercontainer{
     /* background-color: aqua; */
+}
+
+/* Responsive Design */
+@media (max-width: 1500px){
+    .lh1 {
+        font-size: 50px;
+    }
+    .lh1outer{
+        width: 40%;
+    
+    }
+    .lh3 {
+        font-size: 30px;
+        width: 50%;
+    }
+    .lgetstart {
+        height: 60px;
+        width: 180px;
+    }
+    .lp {
+        font-size: 20px;
+    }
+}
+@media (max-width: 1610px){
+
+    .lh1outer{
+        width: 50%;
+    
+    }
+}
+@media (max-width: 1170px) {
+ 
+    .lh1outer{
+        width: 45%;
+    
+    }
+    .lh3 {
+        font-size: 25px;
+        width: 50%;
+    }
+    .lgetstart {
+        height: 50px;
+        width: 160px;
+    }
+    .lp {
+        font-size: 18px;
+    }
+}
+@media (max-width: 1040px) {
+ 
+    .lh1outer{
+        width: 50%;
+    
+    }
+}
+@media (max-width: 992px) {
+    .lh1 {
+        font-size: 43px;
+    }
+    .lh1outer{
+        width: 50%;
+    
+    }
+    .lh3 {
+        font-size: 24px;
+        width:55%;
+    }
+    .lgetstart {
+        height: 50px;
+        width: 160px;
+    }
+    .lp {
+        font-size: 18px;
+    }
+}
+@media (max-width: 850px) {
+ 
+    .lh1outer{
+        width: 53%;
+    
+    }
+    
+
+}
+
+@media (max-width: 768px) {
+  
+    .lh1outer{
+        width: 55%;
+    
+    }
+    .lh1 {
+        font-size: 40px;
+    }
+    .lh3 {
+        font-size: 20px;
+        width:60%;
+    }
+    .lgetstart {
+        height: 45px;
+        width: 140px;
+    }
+    .lp {
+        font-size: 16px;
+    }
+}
+@media (max-width: 680px) {
+  
+    .lh1outer{
+        width: 61%;
+    
+    }
+   
+}
+@media (max-width: 576px) {
+    .lh1 {
+        font-size: 35px;
+    }
+    .lh1outer{
+        width: 66%;
+    
+    }
+    .lh3 {
+        font-size: 18px;
+        width: 70%;
+    }
+    .lgetstart {
+        height: 40px;
+        width: 120px;
+    }
+    .lp {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 495px) {
+    .lh1outer{
+        width: 90%;
+    
+    }
+    .lh1 {
+        font-size: 30px;
+    }
+    
 }
