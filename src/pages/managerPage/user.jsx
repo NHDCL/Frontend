@@ -16,6 +16,7 @@ const Users = () => {
       name: "Yangchen Wangmo",
       email: "yangchen@example.com",
       location: "Block-A-101",
+      department:"Plumbing Team",
       role: "Technician",
     },
     {
@@ -23,6 +24,7 @@ const Users = () => {
       name: "Karma Tenzin",
       email: "karma@example.com",
       location: "Block-B-202",
+      department:"Plumbing Team",
       role: "Supervisor",
     },
     {
@@ -30,6 +32,7 @@ const Users = () => {
       name: "Sonam zangmo",
       email: "sonam@example.com",
       location: "Block-C-303",
+      department:"Plumbing Team",
       role: "Supervisor",
     },
     {
@@ -37,6 +40,7 @@ const Users = () => {
       name: "Jigme Norbu",
       email: "jigme@example.com",
       location: "Block-D-404",
+      department:"Plumbing Team",
       role: "Technician",
     },
     {
@@ -44,6 +48,7 @@ const Users = () => {
       name: "Pema Choden",
       email: "pema@example.com",
       location: "Block-E-505",
+      department:"Plumbing Team",
       role: "Supervisor",
     },
     {
@@ -51,6 +56,7 @@ const Users = () => {
       name: "Tshering Zangmo",
       email: "tshering@example.com",
       location: "Block-F-606",
+      department:"Plumbing Team",
       role: "Technician",
     },
     {
@@ -58,6 +64,7 @@ const Users = () => {
       name: "Dorji Wangchuk",
       email: "dorji@example.com",
       location: "Block-G-707",
+      department:"Plumbing Team",
       role: "Technician",
     },
     {
@@ -65,6 +72,7 @@ const Users = () => {
       name: "Kinley Dorji",
       email: "kinley@example.com",
       location: "Block-H-808",
+      department:"Plumbing Team",
       role: "Supervisor",
     },
     {
@@ -72,6 +80,7 @@ const Users = () => {
       name: "Deki Wangmo",
       email: "deki@example.com",
       location: "Block-I-909",
+      department:"Plumbing Team",
       role: "Supervisor",
     },
     {
@@ -79,6 +88,7 @@ const Users = () => {
       name: "Ugyen Tenzin",
       email: "ugyen@example.com",
       location: "Block-J-1010",
+      department:"Plumbing Team",
       role: "Technician",
     },
   ]);
@@ -117,7 +127,7 @@ const Users = () => {
       </div>
 
       {/* Search Bar */}
-      <div className="container">
+      <div style={{margin:"0px", marginTop:"14px"}} className="container">
         <div className="search-sort-container">
           <div className="search-container">
             <IoIosSearch style={{ width: "20px", height: "20px" }} />
@@ -135,7 +145,7 @@ const Users = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-                {["Image", "Name", "Email", "Location", "Role"].map(
+                {["Image", "Name", "Email", "Location", "Department", "Role"].map(
                   (header, index) => (
                     <th key={index}>{header}</th>
                   )
@@ -164,6 +174,7 @@ const Users = () => {
                   <td>{item.name}</td>
                   <td>{item.email}</td>
                   <td>{item.location}</td>
+                  <td>{item.department}</td>
                   <td>{item.role}</td>
                 </tr>
               ))}

@@ -1,0 +1,57 @@
+.tabs-container {
+    width: 100%;
+    margin: auto;
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .tabs {
+    display: flex;
+    margin-bottom: 10px;
+    width: 75%; /* Set the width to 75% of the container */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    white-space: nowrap; /* Prevent buttons from wrapping to a new line */
+  }
+  
+  .tabs button {
+    padding: 10px 20px;
+    background: #FFFFFF;
+    cursor: pointer;
+    transition: 0.3s;
+    color: #897463;
+    border: 1px solid #897463;
+    border-radius: 0px;
+    width: 200px; /* Fixed width for each button */
+    white-space: nowrap; /* Prevent text wrapping */
+  }
+  
+  .tabs button.active {
+    background: #897463;
+    color: white;
+  }
+  
+  .tab-content {
+    padding: 20px;
+    border: 1px solid #ddd;
+  }
+  
+  .arrow {
+    top: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    background-color: #897463;
+    color: #FFFFFF;
+    z-index: 10;
+  }
+
+  /* Optional: Hide arrows when no scrolling is needed */
+  .tabs-container .arrow {
+    display: none;
+  }
+  
+  .tabs-container .arrow.visible {
+    display: block;
+    height: 40px;
+  }
+  

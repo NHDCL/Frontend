@@ -62,6 +62,19 @@ h2 {
   font-size: 16px;
 }
 
+.create-category-btn{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: var(--clr-primar-light);
+  padding: 5px;
+  border-radius: 10px;
+}
+.category-btn{
+  /* background-color: var(--clr-primar-light); */
+  color: #ffff;
+}
+
 input{
   padding: 8px;
   border: 1px solid #ccc;
@@ -88,7 +101,7 @@ td {
   white-space: nowrap; 
   overflow: hidden;     
   text-overflow: ellipsis;
-  max-width: 200px;
+  max-width: 100px;
 }
 th {
   background-color: #f4f4f4;
@@ -220,6 +233,38 @@ button {
 }
 
 .completed-status {
+  display: flex;
+  justify-content: center;
+  color: #06a561;
+  background-color: #c4f8e2;
+  padding: 6px;
+  border-radius: 4px;
+  width: 80px;
+}
+
+/* status color  */
+.In-maintenance-status {
+  display: flex;
+  justify-content: center;
+  color: #5a607f;
+  background-color: #e6e9f4;
+  padding: 6px;
+  border-radius: 4px;
+  width: 120px;
+
+}
+
+.disposed-status {
+  display: flex;
+  justify-content: center;
+  color: #19191b;
+  background-color: #f48f8f;
+  padding: 6px;
+  border-radius: 4px;
+  width: 80px;
+}
+
+.in-usage-status {
   display: flex;
   justify-content: center;
   color: #06a561;

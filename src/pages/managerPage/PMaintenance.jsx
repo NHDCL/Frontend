@@ -14,8 +14,13 @@ const PMaintenance = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [modalData, setModalData] = useState(null);
-  const [selectedPriority, setSelectedPriority] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
+  const [editModalData, setEditModalData] = useState(null);
+
+  const [assignedWorker, setAssignedWorker] = useState("");
+  const [assignTime, setAssignTime] = useState("");
+  const [assignDate, setAssignDate] = useState("");
+
   const rowsPerPage = 10;
 
   const [data, setData] = useState([
@@ -23,7 +28,7 @@ const PMaintenance = () => {
       mid: "#1001",
       Assetname: "Yangchen",
       Description: "Temperature check",
-      Schedule: "Every 1 month",
+      Schedule: "1",
       Lastworkorder: "Nov3, 2024",
       Nextworkorder: "March3, 2025",
       Assign: "Plumbing team",
@@ -33,7 +38,7 @@ const PMaintenance = () => {
       mid: "#1002",
       Assetname: "Yangchen",
       Description: "Temperature check",
-      Schedule: "Every 1 month",
+      Schedule: "3",
       Lastworkorder: "Nov3, 2024",
       Nextworkorder: "March3, 2025",
       Assign: "Plumbing team",
@@ -43,7 +48,7 @@ const PMaintenance = () => {
       mid: "#1003",
       Assetname: "Yangchen",
       Description: "Temperature check",
-      Schedule: "Every 1 month",
+      Schedule: "4",
       Lastworkorder: "Nov3, 2024",
       Nextworkorder: "March3, 2025",
       Assign: "Plumbing team",
@@ -53,7 +58,7 @@ const PMaintenance = () => {
       mid: "#1004",
       Assetname: "Yangchen",
       Description: "Temperature check",
-      Schedule: "Every 1 month",
+      Schedule: "2",
       Lastworkorder: "Nov3, 2024",
       Nextworkorder: "March3, 2025",
       Assign: "Plumbing team",
@@ -128,6 +133,48 @@ const PMaintenance = () => {
     setModalData(null);
   };
 
+
+  // Open Edit Modal
+  const handleEditRow = (item) => {
+    setEditModalData(item);
+  };
+
+  // Update Edited Data
+  const handleSaveEdit = () => {
+    if (!editModalData) return;
+
+    setData((prevData) =>
+      prevData.map((row) =>
+        row.mid === editModalData.mid ? editModalData : row
+      )
+    );
+
+    setEditModalData(null); // Close modal after saving
+  };
+
+
+  const handleAssignRequest = () => {
+    if (!assignedWorker || !assignTime || !assignDate) {
+      alert("Please fill in all fields before assigning.");
+      return;
+    }
+
+    alert(
+      `Assigned ${modalData.rid} to ${assignedWorker} at ${assignTime} on ${assignDate}`
+    );
+
+    // Close the modal after assigning
+    handleCloseModal();
+  };
+
+  // Sample workers list
+  const workersList = [
+    { value: "Worker A", label: "Worker A" },
+    { value: "Worker B", label: "Worker B" },
+    { value: "Worker C", label: "Worker C" },
+  ];
+
+
   return (
     <div className="ManagerDashboard">
       <div className="container">
@@ -180,7 +227,7 @@ const PMaintenance = () => {
                   "MID",
                   "Asset Name",
                   "Description",
-                  "Schedule",
+                  "Schedule(month)",
                   "Last Work Order",
                   "Next Work Order",
                   "Assign to",
@@ -229,7 +276,7 @@ const PMaintenance = () => {
                   <td className="actions">
                     <button
                       className="edit-btn"
-                      onClick={() => handleDeleteRow(item.mid)}
+                      onClick={() => handleEditRow(item)}
                     >
                       <FaEdit style={{ width: "20px", height: "20px" }} />
                     </button>
@@ -266,25 +313,80 @@ const PMaintenance = () => {
           </div>
         </div>
       </div>
-
-      {/* Modal for Viewing Request */}
-      {modalData && (
+      {/* Edit Modal */}
+      {editModalData && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <IoIosCloseCircle
-              className="modal-close-btn"
-              onClick={handleCloseModal}
-            />
-            <h3>Schedule Request: {modalData.mid}</h3>
-            <p>Name: {modalData.name}</p>
-            <p>Email: {modalData.email}</p>
-            <p>Phone: {modalData.phone}</p>
-            <p>Area: {modalData.Area}</p>
-            <p>Priority: {modalData.priority}</p>
-            <p>Work Status: {modalData.workstatus}</p>
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Preventive maintenance schedule form</h2>
+              <button className="close-btn" onClick={() => setEditModalData(null)}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+
+            <div className="schedule-form">
+              <p className="sub-title">Maintenance Detail</p>
+              <div className="modal-content-field">
+                <label htmlFor="">Description: </label>
+                <input type="text" value={editModalData.Description} onChange={(e) => setEditModalData({ ...editModalData, Description: e.target.value })} />
+              </div>
+              <div className="modal-content-field">
+                <label htmlFor="">Assign: </label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={workersList}
+                  value={workersList.find(worker => worker.value === editModalData.Assign) || null} // Ensure correct selection
+                  onChange={(selectedOption) => {
+                    setEditModalData({ ...editModalData, Assign: selectedOption?.value || "" }); // Update state correctly
+                  }}
+                  isClearable
+                  isSearchable
+                />
+
+
+              </div>
+
+              <p className="sub-title">Schedule</p>
+              <div className="modal-content-field">
+                <label htmlFor="">Starts on: </label>
+                <input
+                  type="date"
+                  value={editModalData.Lastworkorder ? new Date(editModalData.Lastworkorder).toISOString().split("T")[0] : ""}
+                  onChange={(e) => setEditModalData({ ...editModalData, Lastworkorder: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label htmlFor="">Schedule time: </label>
+                <input type="time" value={editModalData.Schedule} onChange={(e) => setEditModalData({ ...editModalData, Schedule: e.target.value })} />
+              </div>
+              <div className="modal-content-field">
+                <label htmlFor="">Repeats: </label>
+                <input type="text" value={editModalData.Schedule} onChange={(e) => setEditModalData({ ...editModalData, Schedule: e.target.value })} />
+              </div>
+              <div className="modal-content-field">
+                <label htmlFor="">Ends on: </label>
+                <input
+                  type="date"
+                  value={editModalData.Nextworkorder ? new Date(editModalData.Nextworkorder).toISOString().split("T")[0] : ""}
+                  onChange={(e) => setEditModalData({ ...editModalData, Nextworkorder: e.target.value })}
+                />
+              </div>
+
+            </div>
+
+            {/* <button className="save-btn" onClick={handleSaveEdit}>Save</button> */}
+            <div className="modal-buttons">
+              <button className="accept-btn" style={{ width: "80px" }} onClick={handleSaveEdit}>Save</button>
+            </div>
           </div>
         </div>
       )}
+
+
     </div>
   );
 };

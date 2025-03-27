@@ -22,6 +22,8 @@ const Repair = () => {
   const [assignDate, setAssignDate] = useState("");
   const rowsPerPage = 10;
 
+  const today = new Date().toISOString().split("T")[0];
+
   const [data, setData] = useState([
     {
       rid: "#1001",
@@ -193,7 +195,7 @@ const Repair = () => {
     setModalData(item);
     setAssignedWorker(null); // Reset worker selection when opening modal
   };
-  
+
   const handleCloseModal = () => {
     setModalData(null);
   };
@@ -369,13 +371,14 @@ const Repair = () => {
           <div className="modal-content">
             {/* Close Button */}
             <div className="modal-header">
-              <h2 className="form-h">Repair Request</h2>
+              <h2 className="form-h">Schedule Form</h2>
               <button className="close-btn" onClick={handleCloseModal}>
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
                 />
               </button>
             </div>
+            
             {/* Assign Dropdown */}
             <div className="schedule-form">
               <div className="modal-content-field">
@@ -391,7 +394,6 @@ const Repair = () => {
                   }}
                   isClearable
                 />
-
               </div>
               {/* Assign Date */}
               <div className="modal-content-field">
@@ -399,6 +401,7 @@ const Repair = () => {
                 <input
                   type="date"
                   value={assignDate}
+                  min={today}
                   onChange={(e) => setAssignDate(e.target.value)}
                 />
               </div>
@@ -412,14 +415,10 @@ const Repair = () => {
                   onChange={(e) => setAssignTime(e.target.value)}
                 />
               </div>
-
-              <button className="modal-buttons" onClick={handleAssignRequest}>
-                Assign Request
-              </button>
-
-
+              <div className="modal-buttons">
+                <button className="accept-btn" style={{ width: "80px" }} onClick={handleAssignRequest}>Done</button>
+              </div>
             </div>
-
           </div>
         </div>
       )}

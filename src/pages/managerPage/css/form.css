@@ -10,7 +10,6 @@
   align-items: center;
   z-index: 1000;
   overflow: hidden;
-  
 }
 
 .modal-content {
@@ -57,18 +56,15 @@
   padding: 12px;
 }
 
-.profile-img{
-    width: 100%;
-    max-width: 350px;
-    border: 1px dashed #897463;
-    
-
+.profile-img {
+  width: 100%;
+  max-width: 350px;
+  border: 1px dashed #897463;
 }
 .modal-image {
   width: 80%;
-  object-fit:cover;
+  object-fit: cover;
   margin: 10px auto;
-  
 }
 
 .image-upload {
@@ -111,6 +107,7 @@
 .modal-content-field {
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .close-btn {
@@ -128,13 +125,12 @@
   color: #000;
 }
 
-
 /* schedule form  */
 
-.schedule-form{
+.schedule-form {
   display: flex;
-    flex-direction: column;
-    gap: 8px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .schedule-form input {
@@ -152,4 +148,73 @@
   font-size: 13px;
   width: 150px;
   padding-right: 13px;
+}
+
+@media (max-width: 1024px) {
+  .modal-content {
+    background: white;
+    width: 60%;
+    max-width: 1000px;
+    max-height: 95vh;
+    overflow: auto;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    scrollbar-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    background: white;
+    width: 60%;
+    max-width: 1000px;
+    max-height: 95vh;
+    overflow: auto;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    scrollbar-width: none;
+  }
+}
+@media (max-width: 480px) {
+  .modal-content {
+    background: white;
+    width: 100%;
+    max-width: 1000px;
+    max-height: 95vh;
+    overflow: auto;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    scrollbar-width: none;
+  }
+}
+@media (max-width: 320px) {
+  .modal-content {
+    background: white;
+    width: 100%;
+    max-width: 1000px;
+    max-height: 95vh;
+    overflow: auto;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    scrollbar-width: none;
+  }
+}
+
+.sub-title {
+  font-size: 12px;
+  display: flex;
+  padding-left: 70px;
+  padding-top: 10px;
+  font-weight:bold;
+}
+
+.time-input{
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  max-width: 350px;
 }

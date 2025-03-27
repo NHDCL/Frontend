@@ -1,7 +1,7 @@
 /* sidebar */
 .sidebar {
     background-color: var(--clr-primary);
-    width: 310px;
+    width: 300px;
     padding: 36px 20px;
     transition: var(--transition-default);
     box-shadow: 4px 0px 15px rgba(0, 0, 0, 0.1);
@@ -88,7 +88,7 @@
   }
   .nav-link-text {
     text-transform: capitalize;
-    font-size: 15px;
+    font-size: 14px;
   }
 
 

@@ -144,17 +144,22 @@
   display: none !important;
 }
 
+
 /* department dropdown */
 .custom-select-department__control {
-  width: 200px;
-  min-width: 200px !important;
-  max-width: 200px !important;
+  width: 100% !important;
+  min-width: 350px !important;
+  max-width: 350px !important;
   border: 1px solid #897463 !important;
-  border-radius: 4px;
+  border-radius: 10px !important;
   padding: 2px;
   font-size: 13px;
   color: #333;
+  text-align: left !important;
+  display: flex !important;
+  justify-content: flex-start !important;
 }
+
 
 .custom-select-department__control:hover {
   border-color: #897463 !important;
@@ -163,14 +168,18 @@
 .custom-select-department__placeholder {
   font-size: 14px;
   color: #aaa;
+  align-items: flex-start !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+  
 }
 
 .custom-select-department__menu {
   background-color: #fff;
-  border-radius: 4px;
+  border-radius: 10px !important;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  width: 200px !important;
-  min-width: 200px !important;
+  width: 350px !important;
+  min-width: 350px !important;
   max-width: 200px !important;
 }
 
@@ -180,6 +189,9 @@
   color: #333;
   padding: 12px !important;
   background-color: #fff;
+  text-align: left !important;
+  display: flex !important;
+  justify-content: flex-start !important;
 }
 
 /* Change hover effect */
@@ -212,3 +224,29 @@
 .custom-select-department__clear-indicator {
   display: none !important;
 }
+
+@media (max-width: 768px) {
+  .custom-select-department__control {
+    min-width: 150px !important;
+    font-size: 12px;
+    padding: 4px;
+  }
+
+  .custom-select-department__menu {
+    min-width: 150px !important;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-select-department__control {
+    min-width: 120px !important;
+    font-size: 11px;
+  }
+
+  .custom-select-department__menu {
+    min-width: 120px !important;
+    font-size: 11px;
+  }
+}
+
