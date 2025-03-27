@@ -5,6 +5,8 @@ import { TbCategoryPlus } from "react-icons/tb";
 import { GiAutoRepair} from "react-icons/gi";
 import { GrVmMaintenance } from "react-icons/gr";
 import { TbReportSearch,TbReport } from "react-icons/tb";
+import { BsHouseCheck } from "react-icons/bs";
+import { HiOutlineClipboardDocumentCheck } from "react-icons/hi2";
 
 export const managernavigationLinks = [
     { id: 1, title: 'Home', path: "", icon: FaHome },  // Empty path for dashboard
@@ -25,3 +27,15 @@ export const techniciannavigationLinks = [
     { id: 3, title: 'Maintenance Schedule', path: "maintenance-schedule", icon: TbReport }
 ];
 
+export const adminnavigationLinks = [
+    { id: 1, title: 'Home', path: "", icon: FaHome },  // Empty path for dashboard
+    { id: 1, title: 'Academies', path: "academies", icon: BsHouseCheck },  // Empty path for dashboard
+    { id: 2, title: 'Users', path: "users", icon: HiUsers },
+    { id: 3, title: 'Assets', path: "assets", icon: PiTreasureChestFill },
+    { id: 4, title: 'Asset Approval', path: "approval", icon: HiOutlineClipboardDocumentCheck },
+    { id: 5, title: 'Repair and Maintenance', path: "repair-maintenance", icon: GiAutoRepair },
+    { id: 6, title: 'Preventive Maintenance', path: "preventive-maintenance", icon: GrVmMaintenance },
+    { id: 7, title: 'Repair Report', path: "repair-report", icon: TbReportSearch },
+    { id: 8, title: 'Maintenance Report', path: "maintenance-report", icon: TbReport },
+    { id: 9, title: 'Account', path: "account", icon: TbReport }
+];

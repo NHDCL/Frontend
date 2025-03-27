@@ -6,6 +6,7 @@ import Forgotpassword from "../pages/Forgotpassword";
 import Otppages from "../pages/Otppages";
 import Newpasswordpage from "../pages/Newpasswordpage";
 import TechnicianRoutes from "./TechnicianRoutes";
+import AdminRoutes from "./AdminRoutes";
 
 const AppRoutes = () => {
   return (
@@ -19,6 +20,8 @@ const AppRoutes = () => {
       {/* Define separate base paths for manager and technician */}
       <Route path="/manager/*" element={<ManagerRoutes />} /> 
       <Route path="/technician/*" element={<TechnicianRoutes />} /> 
+      <Route path="/admin/*" element={<AdminRoutes />} /> 
+
       <Route path="*" element={<h1>404 - Page Not Found</h1>} />
 
     </Routes>

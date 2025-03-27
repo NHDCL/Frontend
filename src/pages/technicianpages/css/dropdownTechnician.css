@@ -1,0 +1,134 @@
+/* Styling for the dropdown */
+.dropdown-ls {
+    display: flex;
+    gap: 5px;
+}
+
+/* Custom Priorities */
+.custom-select__control {
+    width: 200px;
+    min-width: 150px !important;
+    max-width: 150px !important;
+    border: 1px solid #897463 !important;
+    border-radius: 4px;
+    padding: 2px;
+    font-size: 13px;
+    color: #333;
+    background-color: #fff;
+}
+
+/* Ensure focus effect is visible */
+.custom-select__control--is-focused {
+    border-color: #897463 !important;
+    box-shadow: 0 0 5px rgba(137, 116, 99, 0.5) !important;
+}
+
+/* Placeholder text */
+.custom-select__placeholder {
+    font-size: 14px;
+    color: #aaa;
+}
+
+/* Dropdown menu */
+.custom-select__menu {
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+    z-index: 9999; /* Ensures dropdown appears above other elements */
+}
+
+/* Dropdown options */
+.custom-select__option {
+    font-size: 13px !important;
+    color: #333;
+    padding: 12px !important;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+/* Hover effect */
+.custom-select__option:hover {
+    background-color: #897463 !important;
+    color: white !important;
+}
+
+/* Selected option */
+.custom-select__option--is-selected {
+    background-color: #897463 !important;
+    color: white !important;
+}
+
+/* Dropdown arrow color */
+.custom-select__indicator {
+    color: #897463 !important;
+}
+
+/* Remove separator line */
+.custom-select__indicator-separator {
+    display: none;
+}
+
+/* Ensure clear button is hidden */
+.custom-select__clear-indicator {
+    display: none !important;
+}
+
+/* Work Status Dropdown */
+.custom-select-workstatus__control {
+    width: 200px;
+    min-width: 160px !important;
+    max-width: 160px !important;
+    border: 1px solid #897463 !important;
+    border-radius: 4px;
+    padding: 2px;
+    font-size: 13px;
+    color: #333;
+    background-color: #fff;
+}
+
+.custom-select-workstatus__control:hover {
+    border-color: #897463 !important;
+}
+
+.custom-select-workstatus__menu {
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 160px !important;
+    z-index: 9999; /* Prevents overlap issues */
+}
+
+.custom-select-workstatus__option {
+    font-size: 13px !important;
+    color: #333;
+    padding: 12px !important;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.custom-select-workstatus__option:hover {
+    background-color: #897463 !important;
+    color: white !important;
+}
+
+.custom-select-workstatus__option--is-selected {
+    background-color: #897463 !important;
+    color: white !important;
+}
+
+.custom-select-workstatus__indicator {
+    color: #897463 !important;
+}
+
+.custom-select-workstatus__indicator-separator {
+    display: none;
+}
+
+.custom-select-workstatus__clear-indicator {
+    display: none !important;
+}

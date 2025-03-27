@@ -1,0 +1,78 @@
+.AdminA-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 5px;
+    padding: 0px 20px 20px 0px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .AdminA-bento-item:hover .AdminA-overlay {
+    opacity: 1;
+  }
+  /* .adescription{
+    width: 80%;
+  } */
+  .AdminA-aname{
+    /* background-color: darksalmon; */
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    
+  }
+
+  .AdminA-bento-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    width: 100%;
+    /* background-color: crimson; */
+  }
+  
+  .AdminA-bento-item {
+    background: #ddd;
+    display: flex;
+    align-items: end;
+    justify-content: left;
+    padding-left: 4%;
+    padding-bottom: 4%;
+    position: relative;
+    overflow: hidden;
+    /* border-radius: 10px; */
+    cursor: pointer;
+    height: 23vh;
+
+  }
+  
+  .AdminA-item-0 { grid-column: span 2; }
+  .AdminA-item-1 { grid-column: span 3; }
+  .AdminA-item-2 { grid-column: span 3; }
+  .AdminA-item-3 { grid-column: span 2; }
+  .AdminA-item-4 { grid-column: span 5; }
+
+  .AdminA-addA{
+    background-color: #897463;
+    color: #FFFFFF;
+    padding: 10px;
+    margin-bottom: 20px;
+    align-self: flex-end;
+  }
+
+  .AdminA-container{
+    /* background-color: aquamarine; */
+    width: 90%;
+    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+  }
