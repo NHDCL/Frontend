@@ -1,0 +1,77 @@
+  .work-order-card {
+    background-color: #F7F7F7;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 305px;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .work-order-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .work-order-card-icon {
+    margin-right: 8px;
+    color: #555;
+  }
+  
+  .work-order-card-info {
+    color: #666;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  
+  .work-order-card-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  
+  .work-order-card-status-icon {
+    margin-right: 5px;
+  }
+  
+  .minor {
+    background-color: #d4f1d4;
+    color: #2d7a2d;
+    width: 80px;
+    border-radius: 10px;
+  }
+  
+  .major {
+    background-color: #f8d7da;
+    color: #a71d2a;
+    width: 80px;
+    border-radius: 10px;
+
+
+  }
+  
+  .work-order-card-view-button {
+    width: 35%;
+    background-color: #897463;
+    color: white;
+    padding: 8px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    align-self: flex-end;
+  }
+  
+  .work-order-card-view-button:hover {
+    background-color: #795548;
+  }
+ 

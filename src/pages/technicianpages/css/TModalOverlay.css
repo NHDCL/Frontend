@@ -1,0 +1,217 @@
+.TModal-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    overflow: hidden;
+    
+  }
+  
+  .TModal-modal-content {
+    background: white;
+    width: 40%;
+    max-width: 1000px;
+    max-height: 95vh;
+    overflow: auto;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    scrollbar-width: none;
+  }
+  
+  .TModal-repair-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .TModal-repair-form label {
+    text-align: right;
+    font-size: 13px;
+    width: 150px;
+    padding-right: 13px;
+  }
+  
+  .TModal-form-h {
+    font-size: 14px;
+    font-weight: bold;
+    padding-left: 30px;
+    color: var(--clr-darkgreen);
+    margin-bottom: 0px !important;
+  }
+  
+  .TModal-repair-form input,
+  .TModal-repair-form textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #897463;
+    border-radius: 10px;
+    max-width: 350px;
+    font-size: 13px;
+    padding: 12px;
+  }
+  
+  .TModal-profile-img{
+      width: 100%;
+      max-width: 350px;
+      border: 1px dashed #897463;
+
+  }
+  .TModal-modal-image {
+    width: 80%;
+    object-fit:cover;
+    margin: 10px auto;
+    
+  }
+  
+  .TModal-image-upload {
+    border: 2px dashed #aaa;
+    padding: 20px;
+    text-align: center;
+    color: #777;
+    cursor: pointer;
+  }
+  
+  .TModal-modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .TModal-accept-btn {
+    background: #8c7157;
+    color: white;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 150px;
+  }
+  .TModal-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+  }
+  .TModal-content-field {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .TModal-close-btn {
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding-right: 30px !important;
+  }
+  
+  /* Close button hover effect */
+  .TModal-close-btn:hover {
+    color: #000;
+  }
+
+.TModal-add-btn{
+  background-color: #897463;
+  color: #FFFFFF;
+  width: 70px;
+  border-radius: 10px;
+
+}
+.TModal-team-list{
+  /* background-color: #5b4c81; */
+  border: 1px solid #897463;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px;
+  gap: 5px;
+}
+
+.TModal-repair-form input,
+.TModal-repair-form textarea {
+  width: 100%;
+  border: 1px solid #897463;
+  border-radius: 10px;
+  max-width: 350px;
+  font-size: 13px;
+  padding: 12px;
+}
+.TModal-time-inputs{
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  max-width: 350px;
+  gap: 2px;
+}
+.TModal-outer-team{
+  width: 100%;
+  max-width: 350px;
+}
+.TModal-team-members{
+  /* background-color: fuchsia; */
+  display: flex;
+  gap: 5px;
+}
+.TModal-team-member{
+  background-color: #E6E9F4;
+  padding: 4px;
+  border-radius: 5px;
+  color: #5A607F;
+  font-size: 12px;
+}
+.WorkOrder-label{
+    margin-bottom: 15px;
+    font-weight: 500;
+    font-size: 14px;
+}
+@media screen and (max-width: 1000px) {
+  .TModal-modal-content {
+    width: 50%;
+    max-width: 1000px;
+    
+  }
+}
+@media screen and (max-width: 900px) {
+  .TModal-modal-content {
+    width: 55%;
+    max-width: 1000px;
+    
+  }
+}
+@media screen and (max-width: 800px) {
+  .TModal-modal-content {
+    width: 60%;
+    max-width: 1000px;
+    
+  }
+}
+@media screen and (max-width: 700px) {
+  .TModal-modal-content {
+    width: 70%;
+    max-width: 1000px;
+    
+  }
+}
+@media screen and (max-width: 600px) {
+  .TModal-modal-content {
+    width: 75%;
+    max-width: 1000px;
+    
+  }
+}
+@media screen and (max-width: 500px) {
+  .TModal-modal-content {
+    width: 80%;
+    max-width: 1000px;
+    
+  }
+}

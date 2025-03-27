@@ -416,8 +416,6 @@ const Repair = () => {
               <button className="modal-buttons" onClick={handleAssignRequest}>
                 Assign Request
               </button>
-
-
             </div>
 
           </div>
