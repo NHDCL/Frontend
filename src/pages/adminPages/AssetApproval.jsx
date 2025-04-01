@@ -1,9 +1,41 @@
-import React from "react"
+import React,{useState} from "react";
+import BulkFileApproval from "./tab/BulkFileApproval";
+import CreationApproval from "./tab/CreationApproval";
+import DeletionApproval from "./tab/DeletionApproval";
 
-const AssetApproval = () =>{
-    return(
-        <div>Approval</div>
-    )
-}
+const AssetApproval = () => {
+    const [activeTab, setActiveTab] = useState("creation");
 
-export default AssetApproval
+    const categories = [
+      { id: "creation", name: "Creation Approval" },
+      { id: "deletion", name: "Deletion Approval" },
+      { id: "bulk", name: "Bulk File Approval" },
+    ];
+  
+    return (
+      <div className="Approval-tabs-container">
+        {/* Tabs */}
+        <div className="Approval-tabs">
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              className={`tab-button ${activeTab === category.id ? "active" : ""}`}
+              onClick={() => setActiveTab(category.id)}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+  
+        {/* Tab Content */}
+        <div style={{marginRight:"5%"}}>
+          {activeTab === "creation" && <CreationApproval />}
+          {activeTab === "deletion" && <DeletionApproval />}
+          {activeTab === "bulk" && <BulkFileApproval />}
+        </div>
+      </div>
+    );
+  };
+  
+  export default AssetApproval;
+  

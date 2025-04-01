@@ -4,13 +4,14 @@ import "./css/Thome.css";
 import "./css/TModalOverlay.css";
 import "./../managerPage/css/dropdown.css";
 import Select from "react-select";
-import { MdWorkHistory } from "react-icons/md";
 import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 
-const WorkOrderModal = ({ order, onClose }) => {
+const WorkOrderModal = ({ order, onClose, data=[] }) => {
   const [teamMembers, setTeamMembers] = useState(order.teamMembers || []);
   const [newMember, setNewMember] = useState("");
+    const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
+  
 
   const handleAddMember = () => {
     if (newMember.trim() && !teamMembers.includes(newMember)) {
@@ -24,6 +25,18 @@ const WorkOrderModal = ({ order, onClose }) => {
   };
 
   if (!order) return null;
+
+   // Extract unique work statuses from data
+   const uniqueWorkStatuses = [
+    { value: "", label: "All Work status" },
+    ...Array.from(new Set(data.map((item) => item.workstatus))).map(
+      (status) => ({
+        value: status,
+        label: status,
+      })
+    ),
+  ];
+  console.log(uniqueWorkStatuses); // Log the array to verify
 
   return (
     <div className="TModal-modal-overlay">
@@ -105,11 +118,22 @@ const WorkOrderModal = ({ order, onClose }) => {
 
           <div className="TModal-content-field">
             <label>Work Status:</label>
-            <select defaultValue={order.status}>
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-            </select>
+            {/* Work Status Dropdown */}
+            <Select
+              classNamePrefix="customm-select-workstatus"
+              className="workstatus-dropdown"
+              options={uniqueWorkStatuses}
+              value={uniqueWorkStatuses.find(
+                (option) => option.value === selectedWorkStatus
+              )}
+              onChange={(selectedOption) => {
+                setSelectedWorkStatus(
+                  selectedOption ? selectedOption.value : ""
+                );
+              }}
+              isClearable
+              isSearchable={false}
+            />
           </div>
 
           <div className="TModal-content-field">
@@ -192,7 +216,7 @@ const TechnicianWorkOrder = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "Minor",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -224,7 +248,7 @@ const TechnicianWorkOrder = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "Minor",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",

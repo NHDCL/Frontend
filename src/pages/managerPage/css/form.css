@@ -89,6 +89,7 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  margin: 0px 10px 0px 10px;
 }
 
 .reject-btn {
@@ -98,6 +99,15 @@
   border-radius: 5px;
   cursor: pointer;
 }
+.Bulk-download-btn{
+  background: #315845;
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;

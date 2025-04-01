@@ -1,19 +1,18 @@
 import React, { useState, useRef } from "react";
-import "./../managerPage/css/card.css";
-import "./../managerPage/css/table.css";
-import "./../managerPage/css/form.css";
-import "./../managerPage/css/dropdown.css";
+import "./../../managerPage/css/card.css";
+import "./../../managerPage/css/table.css";
+import "./../../managerPage/css/form.css";
+import "./../../managerPage/css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 // import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
-import { LuDownload } from "react-icons/lu";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-import Select from "react-select"
+import Select from "react-select";
 
-const AdminMReport = () => {
+const CreationApproval = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -24,92 +23,51 @@ const AdminMReport = () => {
     Remarks: "",
   });
 
-
-
   const rowsPerPage = 10;
 
   const [data, setData] = useState([
     {
-      rid: "#1001",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "",
+      Asset_ID: "128",
+      Title: "Laptop",
+      Asset_Code: "NHDCL-22-2003",
+      Serial_Number: "NHDCL-22-2003",
+      Cost: "600",
+      Acquired_Date: "25/3/2025",
+      Estimated_Lifespan: "1 year",
+      Status: "In Maintenance",
+      Category: "Machinery & Equipment",
+      Area: "Block-C, 2nd Floor, Room 203",
+      Description: "This laptop was brought from BT",
+      Created_By: "12210100.gcit@rub.edu.bt",
     },
     {
-      rid: "#1002",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
+      Asset_ID: "129",
+      Title: "Printer",
+      Asset_Code: "NHDCL-22-2004",
+      Serial_Number: "NHDCL-22-2004",
+      Cost: "1200",
+      Acquired_Date: "12/5/2024",
+      Estimated_Lifespan: "3 years",
+      Status: "Operational",
+      Category: "Office Equipment",
+      Area: "Block-B, 1st Floor, Room 102",
+      Description: "Printer for office use, HP LaserJet",
+      Created_By: "12210101.gcit@rub.edu.bt",
     },
     {
-      rid: "#1003",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
+      Asset_ID: "130",
+      Title: "Projector",
+      Asset_Code: "NHDCL-22-2005",
+      Serial_Number: "NHDCL-22-2005",
+      Cost: "800",
+      Acquired_Date: "30/7/2023",
+      Estimated_Lifespan: "5 years",
+      Status: "Needs Repair",
+      Category: "Multimedia Equipment",
+      Area: "Block-A, 3rd Floor, Room 305",
+      Description: "Ceiling-mounted projector with HDMI support",
+      Created_By: "12210102.gcit@rub.edu.bt",
     },
-    {
-      rid: "#1004",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "Cooling issue",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-    },
-    {
-      rid: "#1004",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "Cooling issue",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "1I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-    },
-
   ]);
 
   const sortedData = [...data].sort((a, b) => b.rid - a.rid);
@@ -119,10 +77,8 @@ const AdminMReport = () => {
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-
     return matchesSearch;
   });
-
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -150,10 +106,6 @@ const AdminMReport = () => {
   };
   const handleCloseModal = () => {
     setModalData(null);
-  };
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditableData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Ref for the modal
@@ -189,27 +141,17 @@ const AdminMReport = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          {/* Download  */}
-          <div className="create-category-btn">
-            <button className="category-btn">Download</button>
-            <LuDownload style={{ color: "#ffffff", marginRight: "12px" }} />
-          </div>
-
-
         </div>
         <div className="table-container">
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
                 {[
-                  "RRID",
+                  "Asset ID",
+                  "Asset_Code",
                   "Asset Name",
-                  "Time",
-                  "Date",
                   "Area",
-                  "Total Cost",
-                  "Parts_used",
-                  "Description"
+                  "Requested By",
                 ].map((header, index) => (
                   <th key={index}>{header}</th>
                 ))}
@@ -232,17 +174,17 @@ const AdminMReport = () => {
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                
-                  <td>{item.rid}</td>
-                  <td>{item.assetName}</td>
-                  <td>{[item.startTime, item.endTime].join(" - ")}</td>
-                  <td>{item.Date}</td>
+                  <td>{item.Asset_ID}</td>
+                  <td>{item.Asset_Code}</td>
+                  <td>{item.Title}</td>
                   <td>{item.Area}</td>
-                  <td>{item.Total_cost}</td>
-                  <td>{item.part_used}</td>
-                  <td className="description">{item.description}</td>
+                  <td>{item.Created_By}</td>
                   <td className="actions">
-                    <button style={{marginLeft:"10px"}} className="view-btn" onClick={() => handleView(item)}>
+                    <button
+                      style={{ marginLeft: "10px" }}
+                      className="view-btn"
+                      onClick={() => handleView(item)}
+                    >
                       View
                     </button>
                   </td>
@@ -271,7 +213,6 @@ const AdminMReport = () => {
             </button>
           </div>
         </div>
-    
       </div>
 
       {/* Modal for Viewing Request */}
@@ -280,7 +221,7 @@ const AdminMReport = () => {
           <div className="modal-content" ref={modalRef}>
             {/* Close Button */}
             <div className="modal-header">
-              <h2 className="form-h">Repair Report</h2>
+              <h2 className="form-h">Asset Details</h2>
               <button className="close-btn" onClick={handleCloseModal}>
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
@@ -290,61 +231,65 @@ const AdminMReport = () => {
             <div className="modal-body" ref={modalRef}>
               <form className="repair-form">
                 <div className="modal-content-field">
-                  <label>Asset Name:</label>
-                  <input type="text" value={modalData.assetName} readOnly />
+                  <label>Asset ID:</label>
+                  <input type="text" value={modalData.Asset_ID} readOnly />
                 </div>
 
                 <div className="modal-content-field">
-                  <label>Time</label>
-                  <div className="time-input">
-                    <input type="text" value={modalData.startTime} readOnly />
-                    <input type="text" value={modalData.endTime} readOnly />
-                  </div>
+                  <label>Title</label>
+                  <input type="text" value={modalData.Title} readOnly />
                 </div>
                 <div className="modal-content-field">
-                  <label>Date</label>
-                  <input type="text" value={modalData.Date} readOnly />
+                  <label>Asset Code: </label>
+                  <input type="text" value={modalData.Asset_Code} readOnly />
+                </div>
+
+                <div className="modal-content-field">
+                  <label>Serial Number: </label>
+                  <input type="text" value={modalData.Serial_Number} readOnly />
                 </div>
                 <div className="modal-content-field">
-                  <label>Area</label>
+                  <label>Cost: </label>
+                  <input type="text" value={modalData.Cost} readOnly />
+                </div>
+                <div className="modal-content-field">
+                  <label>Acquired Date:</label>
+                  <input type="text" value={modalData.Acquired_Date} readOnly />
+                </div>
+                <div className="modal-content-field">
+                  <label>Estimated Lifespan: </label>
+                  <input
+                    type="text"
+                    value={modalData.Estimated_Lifespan}
+                    readOnly
+                  />
+                </div>
+                <div className="modal-content-field">
+                  <label>Status</label>
+                  <input type="text" value={modalData.Status} readOnly />
+                </div>
+                <div className="modal-content-field">
+                  <label>Category: </label>
+                  <input type="text" value={modalData.Category} readOnly />
+                </div>
+                <div className="modal-content-field">
+                  <label>Area: </label>
                   <input type="text" value={modalData.Area} readOnly />
                 </div>
-
                 <div className="modal-content-field">
-                  <label>Parts used: </label>
-                  <input type="text" value={modalData.part_used} readOnly />
+                  <label>Description: </label>
+                  <textarea value={modalData.Description} readOnly />
                 </div>
                 <div className="modal-content-field">
-                  <label>Total Technicians</label>
-                  <input type="text" value={modalData.total_technician} readOnly />
+                  <label>Created_By: </label>
+                  <input type="text" value={modalData.Created_By} readOnly />
                 </div>
-                <div className="modal-content-field">
-                  <label>Assigned Technicians</label>
-                  <input type="text" value={modalData.Assigned_Technician} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Assigned Supervisor</label>
-                  <input type="text" value={modalData.Assigned_supervisor} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Description:</label>
-                  <textarea value={modalData.description} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Total Cost: </label>
-                  <input type="text" value={modalData.Total_cost} readOnly />
-                </div>
-    
-
                 <div className="modal-buttons">
-                  <button className="accept-btn" onClick={handleDownloadPDF}>Download
-                    <LuDownload style={{ marginLeft: "12px" }} />
-                  </button>
+                  <button className="accept-btn">Approve</button>
+                  <button className="reject-btn">Decline</button>
                 </div>
               </form>
-
             </div>
-
           </div>
         </div>
       )}
@@ -352,4 +297,4 @@ const AdminMReport = () => {
   );
 };
 
-export default AdminMReport;
+export default CreationApproval;

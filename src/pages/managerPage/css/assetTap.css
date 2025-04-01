@@ -3,6 +3,7 @@
     margin: auto;
     display: flex;
     flex-direction: row;
+
   }
   
   .tabs {
@@ -54,4 +55,34 @@
     display: block;
     height: 40px;
   }
+
+
+  .Approval-tabs-container{
+    display: flex;
+    flex-direction: column;
+    margin-left: 15px;
+  }
+
+  .Approval-tabs {
+    display: flex;
+    margin-bottom: 10px;
+    width: 75%; /* Set the width to 75% of the container */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    white-space: nowrap; /* Prevent buttons from wrapping to a new line */
+  }
   
+  .Approval-tabs button {
+    padding: 10px 20px;
+    background: #FFFFFF;
+    cursor: pointer;
+    transition: 0.3s;
+    color: #897463;
+    border: 1px solid #897463;
+    border-radius: 0px;
+    width: 150px; /* Fixed width for each button */
+    white-space: nowrap; /* Prevent text wrapping */
+  }
+  .Approval-tabs button.active {
+    background: #897463;
+    color: white;
+  }
