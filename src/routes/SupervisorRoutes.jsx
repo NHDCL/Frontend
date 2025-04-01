@@ -5,27 +5,29 @@ import { SidebarContext } from "../context/sidebarContext";
 import { UserProvider } from "../context/userContext";
 
 import ContentTop from "../components/ContentTop/ContentTop";
-import TechnicianHome from "../pages/technicianpages/TechnicianHome";
-import TechnicianWorkOrder from "../pages/technicianpages/TechnicianWorkOrder";
-import TechnicianMSchedule from "../pages/technicianpages/TechnicianMSchedule";
-import TechnicianSidebar from "../layout/Sidebar/TechnicianSidebar";
+import SupervisorSidebar from "../layout/Sidebar/SupervisorSidebar";
+import SupervisorHome from "../pages/SupervisorPage/SupervisorHome";
+import SupervisorWO from "../pages/SupervisorPage/SupervisorWO";
 import SupervisorAccount from "../pages/SupervisorPage/SupervisorAccount";
+import AdminRReport from "../pages/adminPages/AdminRReport";
+import AdminMReport from "../pages/adminPages/AdminMReport";
 
-const TechnicianRoutes = () => {
+const SupervisorRoutes = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
 
   return (
     <div>
-      <TechnicianSidebar />
+      <SupervisorSidebar />
       <div className={`main-content ${isSidebarOpen ? "shifted" : ""}`}>
         <UserProvider>
           <ContentTop />
         </UserProvider>
         <div className="content-main">
           <Routes>
-            <Route path="/" element={<TechnicianHome />} />
-            <Route path="work-order" element={<TechnicianWorkOrder />} />
-            <Route path="maintenance-schedule" element={<TechnicianMSchedule />} />
+            <Route path="/" element={<SupervisorHome />} />
+            <Route path="work-order" element={<SupervisorWO />} />
+            <Route path="repair-report" element={<AdminRReport />} />
+            <Route path="maintenance-report" element={<AdminMReport />} />
             <Route path="account" element={<SupervisorAccount />} />
             <Route path="*" element={<h1>404 - Page Not Found</h1>} />
           </Routes>
@@ -35,4 +37,4 @@ const TechnicianRoutes = () => {
   );
 };
 
-export default TechnicianRoutes;
+export default SupervisorRoutes;

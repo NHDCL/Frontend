@@ -1,11 +1,11 @@
-      import React, { useState, useRef } from "react";
-import "./css/card.css";
-import "./css/table.css";
-import "./css/form.css";
-import "./css/dropdown.css";
+import React, { useState, useRef } from "react";
+import "./../managerPage/css/card.css";
+import "./../managerPage/css/table.css";
+import "./../managerPage/css/form.css";
+import "./../managerPage/css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import img from "../../assets/images/person_four.jpg";
+// import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import { LuDownload } from "react-icons/lu";
 import html2canvas from "html2canvas";
@@ -13,7 +13,7 @@ import jsPDF from "jspdf";
 
 import Select from "react-select"
 
-const Repairreport = () => {
+const SAdminMReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -39,11 +39,11 @@ const Repairreport = () => {
       Total_cost: "NU.400",
       part_used: "screw driver",
       location: "Block-A-101",
-      description: "Cooling issue",
+      description: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
       total_technician: "4",
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
+      Additional_information: "",
     },
     {
       rid: "#1002",
@@ -55,7 +55,7 @@ const Repairreport = () => {
       Total_cost: "NU.400",
       part_used: "screw driver",
       location: "Block-A-101",
-      description: "Cooling issue",
+      description: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
       total_technician: "4",
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
@@ -71,11 +71,11 @@ const Repairreport = () => {
       Total_cost: "NU.400",
       part_used: "screw driver",
       location: "Block-A-101",
-      description: "Cooling issue",
+      description: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
       total_technician: "4",
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
+      Additional_information: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
     },
     {
       rid: "#1004",
@@ -91,7 +91,7 @@ const Repairreport = () => {
       total_technician: "4",
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
+      Additional_information: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
     },
     {
       rid: "#1004",
@@ -107,21 +107,10 @@ const Repairreport = () => {
       total_technician: "4",
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
+      Additional_information: "1I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
     },
 
   ]);
-
-  // Filtering data based on search and priority selection
-  // const filteredData = data.filter((item) => {
-  //   const matchesSearch = Object.values(item).some((value) =>
-  //     value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  //   );
-  //   const matchesPriority =
-  //     selectedPriority === "" || item.priority === selectedPriority;
-
-  //   return matchesSearch && matchesPriority;
-  // });
 
   const sortedData = [...data].sort((a, b) => b.rid - a.rid);
 
@@ -212,19 +201,6 @@ const Repairreport = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-                <th>
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.length === displayedData.length} // Select all checkboxes when all rows are selected
-                    onChange={() =>
-                      setSelectedRows(
-                        selectedRows.length === displayedData.length
-                          ? []
-                          : displayedData.map((item) => item.rid)
-                      )
-                    }
-                  />
-                </th>
                 {[
                   "RRID",
                   "Asset Name",
@@ -256,13 +232,7 @@ const Repairreport = () => {
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(item.rid)}
-                      onChange={() => handleSelectRow(item.rid)}
-                    />
-                  </td>
+                
                   <td>{item.rid}</td>
                   <td>{item.assetName}</td>
                   <td>{[item.startTime, item.endTime].join(" - ")}</td>
@@ -272,7 +242,7 @@ const Repairreport = () => {
                   <td>{item.part_used}</td>
                   <td className="description">{item.description}</td>
                   <td className="actions">
-                    <button className="view-btn" onClick={() => handleView(item)}>
+                    <button style={{marginLeft:"10px"}} className="view-btn" onClick={() => handleView(item)}>
                       View
                     </button>
                   </td>
@@ -301,12 +271,7 @@ const Repairreport = () => {
             </button>
           </div>
         </div>
-        {selectedRows.length > 0 && (
-          <button
-            className="delete-selected-btn"
-            onClick={handleDeleteSelected}
-          ></button>
-        )}
+    
       </div>
 
       {/* Modal for Viewing Request */}
@@ -369,29 +334,12 @@ const Repairreport = () => {
                   <label>Total Cost: </label>
                   <input type="text" value={modalData.Total_cost} readOnly />
                 </div>
-                <div className="modal-content-field">
-                  <label>Additional Informations: </label>
-                  <textarea value={modalData.Additional_information} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Additional Cost:</label>
-                  <input name="Additional_cost" value={editableData.Additional_cost} onChange={handleInputChange} />
-                </div>
-                <div className="modal-content-field">
-                  <label>Additional Hours:</label>
-                  <input name="Additional_Hour" value={editableData.Additional_Hour} onChange={handleInputChange} />
-                </div>
-                <div className="modal-content-field">
-                  <label>Remarks:</label>
-                  <textarea name="Remarks" value={editableData.Remarks} onChange={handleInputChange} />
-                </div>
-
+    
 
                 <div className="modal-buttons">
                   <button className="accept-btn" onClick={handleDownloadPDF}>Download
                     <LuDownload style={{ marginLeft: "12px" }} />
                   </button>
-                  <button className="reject-btn">Done</button>
                 </div>
               </form>
 
@@ -404,4 +352,4 @@ const Repairreport = () => {
   );
 };
 
-export default Repairreport;
+export default SAdminMReport;

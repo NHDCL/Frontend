@@ -67,7 +67,10 @@
     padding: 20px;
     border: 1px solid #E6E9F4;
     height: 85vh;
+    overflow-y: scroll;
 
 }
+
+
 
 

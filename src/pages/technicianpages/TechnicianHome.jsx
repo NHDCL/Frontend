@@ -38,7 +38,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
       })
     ),
   ];
-  console.log(uniqueWorkStatuses); // Log the array to verify
 
 
   return (
@@ -120,24 +119,22 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
           </div>
 
           <div className="TModal-content-field">
-            <label>Work Status:</label>
-            {/* Work Status Dropdown */}
-            <Select
-              classNamePrefix="custom-select-workstatus"
-              className="workstatus-dropdown"
-              options={uniqueWorkStatuses}
-              value={uniqueWorkStatuses.find(
-                (option) => option.value === selectedWorkStatus
-              )}
-              onChange={(selectedOption) => {
-                setSelectedWorkStatus(
-                  selectedOption ? selectedOption.value : ""
-                );
-              }}
-              isClearable
-              isSearchable={false}
-            />
-          </div>
+  <label>Work Status:</label>
+  {/* Work Status Dropdown */}
+  <Select
+    classNamePrefix="customm-select-workstatus"
+    className="workstatus-dropdown"
+    options={uniqueWorkStatuses}
+    value={uniqueWorkStatuses.find(
+      (option) => option.value === selectedWorkStatus
+    )}
+    onChange={(selectedOption) => {
+      setSelectedWorkStatus(selectedOption ? selectedOption.value : "");
+    }}
+    isClearable
+    isSearchable={false}
+  />
+</div>
 
           <div className="TModal-content-field">
             <label>Team Members:</label>

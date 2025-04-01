@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./css/assetTap.css";
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { FaArrowRight } from "react-icons/fa";
 import { FaArrowLeft } from "react-icons/fa";
 

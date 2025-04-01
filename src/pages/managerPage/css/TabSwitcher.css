@@ -11,7 +11,6 @@
 .user-tab-container {
   display: flex;
   border: 1px solid #897463;
-  /* border-radius: 10px; */
   overflow: hidden;
   width: fit-content;
 }
@@ -25,12 +24,107 @@
   font-size: 14px;
   transition: 0.3s;
   flex: 1;
-  outline: none;
+  /* outline: none; */
+  border: 1px solid #897463;
+  border-radius: 0px;
+
 }
 
 .tab.active {
   background: #7b6650; /* Brown color */
   color: white;
-  font-weight: bold;
+  /* font-weight: bold; */
   border-radius: 0%;
 }
+
+.user-tab-outer{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.add-user{
+  background-color: #897463;
+  color: #FFFFFF;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+
+/* Modal Styling */
+.AdminUser-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.AdminU-modal-content {
+  background: #FFFFFF;
+  padding: 20px;
+  border-radius: 5px;
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  /* justify-content: center; */
+  align-items: center;
+  gap: 3px;
+}
+
+.AdminUser-modal-content {
+  padding: 20px;
+  border-radius: 5px;
+  width: 80%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.AdminUser-modal-content input {
+  width: 100%;
+  border: solid 1.5px #897463;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: black;
+  margin-bottom: 10px;
+}
+
+
+.AdminUser-add{
+  background-color: #897463;
+  color: #FFFFFF;
+  padding: 12px;
+  border-radius: 10px;
+  width: 150px;
+  align-self: center;
+}
+
+.AdminUser-close-btn {
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding-right: 30px !important;
+}
+
+.AdminUser-close-btn:hover {
+  color: #000;
+}
+.AdminUser_close{
+  display: flex;
+  justify-content: space-between;
+  width: 80%;
+  flex-wrap: wrap;
+}
+

@@ -144,6 +144,75 @@
   display: none !important;
 }
 
+/* workstaus for technician */
+.customm-select-workstatus__control {
+  width: 200px;
+  min-width: 350px !important;
+  max-width: 350px !important;
+  border: 1px solid #897463 !important;
+  border-radius: 4px;
+  padding: 2px;
+  font-size: 13px;
+  color: #333;
+}
+
+.customm-select-workstatus__control:hover {
+  border-color: #897463 !important;
+}
+
+.customm-select-workstatus__placeholder {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.customm-select-workstatus__menu {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 350px !important;
+  min-width: 350px !important;
+  max-width: 350px !important;
+}
+
+/* Change dropdown option color */
+.customm-select-workstatus__option {
+  font-size: 13px !important;
+  color: #333;
+  padding: 12px !important;
+  background-color: #fff;
+}
+
+/* Change hover effect */
+.customm-select-workstatus__option:hover {
+  background-color: #897463 !important;
+  color: white !important;
+}
+
+/* Change the selected option's background color */
+.customm-select-workstatus__option--is-selected {
+  background-color: #897463 !important; /* Brown background */
+  color: white !important; /* White text */
+}
+
+/* Change the dropdown arrow color */
+.customm-select-workstatus__indicator {
+  color: #897463 !important;
+}
+
+/* Remove the separator line */
+.customm-select-workstatus__indicator-separator {
+  display: none;
+}
+
+/* Change border color on focus */
+.customm-select-workstatus__control--is-focused {
+  border-color: none !important; /* Brown border */
+  box-shadow: none !important; /* Light brown glow */
+}
+.customm-select-workstatus__clear-indicator {
+  display: none !important;
+}
+
 
 /* department dropdown */
 .custom-select-department__control {

@@ -64,6 +64,7 @@
     align-items: center;
     width: 55%;
     flex-wrap: wrap;
+    overflow-y: scroll;
     /* min-height: 100vh; */
     /* background-color: #f9f9f9; */
 
@@ -131,12 +132,11 @@
     width: 40%;
     align-self: center;
   }
-  
+
   .mr-submit-btn:hover {
     background-color: #8b5e34;
   }
-
-
+  
   .mr-upload-preview {
     width: 110px;
     height: 110px;
@@ -144,3 +144,4 @@
     border-radius: 10px;
   }
   
+

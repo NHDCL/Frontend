@@ -1,0 +1,57 @@
+.graph-container {
+    /* max-width: 1200px; */
+    margin: auto;
+    padding: 20px;
+  }
+  
+  .graph-title {
+    text-align: left;
+    font-size: 24px;
+    font-weight: bold;
+    color: #2F4F4F;
+    margin-bottom: 20px;
+  }
+  
+  .graph-select-container {
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    gap: 10px;
+  }
+  
+  .graph-select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    /* background-color: aqua; */
+  }
+  .graph-select option:checked {
+    background-color: #8B5D33 !important;
+    color: white !important; /* White text */
+  }
+
+  .graph-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  
+  .graph-card {
+    background: #F8F8F8;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .graph-subtitle {
+    font-size: 18px;
+    color: #5D5C61;
+    margin-bottom: 10px;
+  }
+  
+
+  
