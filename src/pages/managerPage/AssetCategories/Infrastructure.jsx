@@ -16,7 +16,7 @@ const Infrastructure = () => {
     const [modalData, setModalData] = useState(null);
     const [editModalData, setEditModalData] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [newCategory, setNewCategory] = useState({ category: "", DepreciatedValue: "" });
+    const [newInfrastructure, setNewInfrastructure] = useState({ Title: "", AssetCode: "", Category: "Building", Floor: "", PlintArea: "", AcquireDate: "", Useful_life: "", status: "", cost: "", Area: "", DepreciatedValue: "", File: "" });
 
     const rowsPerPage = 10;
 
@@ -222,7 +222,21 @@ const Infrastructure = () => {
     ];
     const handleCloseModal = () => {
         setModalData(null);
-      };
+    };
+
+    const handleAddInfrastructure = () => {
+        setShowAddModal(true);
+        setNewInfrastructure({ category: "", DepreciatedValue: "" });
+    };
+
+    const handleSaveNewInfrastructure= () => {
+        if (newInfrastructure.Category && newInfrastructure.DepreciatedValue) {
+            const newAID = data.length > 0 ? (Math.max(...data.map((item) => Number(item.SerialNo))) + 1).toString() : "1";
+            setData([...data, { AID: newAID, ...newInfrastructure }]);
+            setShowAddModal(false);
+            setNewInfrastructure({}); // Reset form after adding
+        }
+    };
 
     return (
         <div className="managerDashboard" >
@@ -255,7 +269,7 @@ const Infrastructure = () => {
                     </div>
                     <div className="create-category-btn">
                         <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
-                        <button className="category-btn" >Create category</button>
+                        <button className="category-btn" onClick={handleAddInfrastructure} >Create category</button>
                     </div>
 
                 </div>
@@ -265,7 +279,7 @@ const Infrastructure = () => {
                 <table className="RequestTable">
                     <thead className="table-header">
                         <tr>
-    
+
                             {["SI.No", "Asset Code", "Title", "Acquire Date", "Useful Life(year)", "size", "Depreciated Value (%)", "Status"].map((header, index) => (
                                 <th key={index}>{header}</th>
                             ))}
@@ -317,6 +331,121 @@ const Infrastructure = () => {
                 </div>
             </div>
 
+            {/* Add Infrustructure Modal */}
+            {showAddModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2 className="form-h">Create Asset</h2>
+                            <button className="close-btn" onClick={() => setShowAddModal(false)}>
+                                <IoIosCloseCircle style={{ color: "#897463", width: "20px", height: "20px" }} />
+                            </button>
+                        </div>
+                        <div className="schedule-form">
+                            <div className="modal-content-field">
+                                <label>Title:</label>
+                                <input
+                                    type="text"
+                                    value={newInfrastructure.Title}
+                                    onChange={(e) => setNewInfrastructure({ ...newInfrastructure, Title: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Asset Code:</label>
+                                <input
+                                    type="text"
+                                    value={newInfrastructure.AssetCode}
+                                    onChange={(e) => setNewInfrastructure({ ...newInfrastructure, AssetCode: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Category:</label>
+                                <input
+                                    type="text"
+                                    value={newInfrastructure.Category}
+                                    onChange={(e) => setNewInfrastructure({ ...newInfrastructure, Category: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Floor:</label>
+                                <input
+                                    type="text"
+                                    value={newInfrastructure.Floor}
+                                    onChange={(e) => setNewInfrastructure({ ...newInfrastructure, Floor: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Plint Area(sq.m):</label>
+                                <input
+                                    type="text"
+                                    value={newInfrastructure.PlintArea}
+                                    onChange={(e) => setNewInfrastructure({ ...newInfrastructure, PlintArea: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Acquired Date:</label>
+                                <input
+                                    type="text"
+                                    value={newInfrastructure.AcquireDate}
+                                    onChange={(e) => setNewInfrastructure({ ...newInfrastructure, AcquireDate: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Useful Life (Year):</label>
+                                <input
+                                    type="text"
+                                    value={newInfrastructure.Useful_life}
+                                    onChange={(e) => setNewInfrastructure({ ...newInfrastructure, Useful_life: e.target.value })}
+                                />
+                            </div>
+                            {/* <div className="modal-content-field">
+                                        <label>Status:</label>
+                                        <input
+                                          type="text"
+                                          value={newInfrustructure.status}
+                                          onChange={(e) =>setNewInfrustructure({ ...newInfrustructure, Useful_life: e.target.value })}
+                                        />
+                                      </div> */}
+                            <div className="modal-content-field">
+                                <label>Cost:</label>
+                                <input
+                                    type="text"
+                                    value={newInfrastructure.cost}
+                                    onChange={(e) => setNewInfrastructure({ ...newInfrastructure, cost: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Area:</label>
+                                <input
+                                    type="text"
+                                    value={newInfrastructure.Area}
+                                    onChange={(e) => setNewInfrastructure({ ...newInfrastructure, Area: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Depreciated Value (%):</label>
+                                <input
+                                    type="number"
+                                    value={newInfrastructure.DepreciatedValue}
+                                    onChange={(e) => setNewInfrastructure({ ...newInfrastructure, DepreciatedValue: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Description:</label>
+                                <input
+                                    type="text"
+                                    value={newInfrastructure.description}
+                                    onChange={(e) => setNewInfrastructure({ ...newInfrastructure, description: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-actions">
+                                <button className="accept-btn" style={{ width: "80px" }} onClick={handleSaveNewInfrastructure}>Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal for Viewing Request */}
             {modalData && (
                 <div className="modal-overlay">
@@ -355,7 +484,7 @@ const Infrastructure = () => {
                             </div>
                             <div className="modal-content-field">
                                 <label>Depreciated Value:</label>
-                                <input  value={modalData.Depreciated_value} readOnly />
+                                <input value={modalData.Depreciated_value} readOnly />
                             </div>
                             <div className="modal-content-field">
                                 <label>Acquired Date:</label>
@@ -374,10 +503,6 @@ const Infrastructure = () => {
                                 <input value={modalData.category} readOnly />
                             </div>
                             <div className="modal-content-field">
-                                <label>Area:</label>
-                                <input value={modalData.Area} readOnly />
-                            </div>
-                            <div className="modal-content-field">
                                 <label>Created by</label>
                                 <input value={modalData.Created_by} readOnly />
                             </div>
@@ -387,8 +512,8 @@ const Infrastructure = () => {
                             </div>
 
                             <div className="modal-buttons">
-                                <button className="accept-btn" style={{backgroundColor:"red"}}>
-                                    <RiDeleteBin6Line/>
+                                <button className="accept-btn" style={{ backgroundColor: "red" }}>
+                                    <RiDeleteBin6Line />
                                 </button>
                                 <button className="reject-btn">Schedule Maintenance</button>
                             </div>

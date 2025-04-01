@@ -16,7 +16,7 @@ const Facilities = () => {
   const [modalData, setModalData] = useState(null);
   const [editModalData, setEditModalData] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newCategory, setNewCategory] = useState({ category: "", DepreciatedValue: "" });
+  const [newFacilities, setNewFacilities] = useState({ Title: "", AssetCode: "", Category: "Building", Floor: "", PlintArea: "", AcquireDate: "", Useful_life: "", status: "", cost: "", Area: "", DepreciatedValue: "", File: "" });
 
   const rowsPerPage = 10;
 
@@ -225,6 +225,20 @@ const Facilities = () => {
     setModalData(null);
   };
 
+  const handleAddFacilities = () => {
+    setShowAddModal(true);
+    setNewFacilities({ category: "", DepreciatedValue: "" });
+  };
+
+  const handleSaveNewFacilities = () => {
+    if (newFacilities.Category && newFacilities.DepreciatedValue) {
+      const newAID = data.length > 0 ? (Math.max(...data.map((item) => Number(item.SerialNo))) + 1).toString() : "1";
+      setData([...data, { AID: newAID, ...newFacilities }]);
+      setShowAddModal(false);
+      setNewFacilities({}); // Reset form after adding
+    }
+  };
+
   return (
     <div className="managerDashboard" >
       <div className="search-sort-container">
@@ -256,11 +270,12 @@ const Facilities = () => {
           </div>
           <div className="create-category-btn">
             <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
-            <button className="category-btn" >Create category</button>
+            <button className="category-btn" onClick={handleAddFacilities}>Create category</button>
           </div>
 
         </div>
       </div>
+
       {/* Table */}
       <div className="table-container">
         <table className="RequestTable">
@@ -316,6 +331,121 @@ const Facilities = () => {
           <button onClick={() => setCurrentPage(totalPages)}>{totalPages}</button>
         </div>
       </div>
+
+      {/* Add facilities Modal */}
+      {showAddModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="form-h">Create Asset</h2>
+              <button className="close-btn" onClick={() => setShowAddModal(false)}>
+                <IoIosCloseCircle style={{ color: "#897463", width: "20px", height: "20px" }} />
+              </button>
+            </div>
+            <div className="schedule-form">
+              <div className="modal-content-field">
+                <label>Title:</label>
+                <input
+                  type="text"
+                  value={newFacilities.Title}
+                  onChange={(e) =>setNewFacilities({ ...newFacilities, Title: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Asset Code:</label>
+                <input
+                  type="text"
+                  value={newFacilities.AssetCode}
+                  onChange={(e) =>setNewFacilities({ ...newFacilities, AssetCode: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Category:</label>
+                <input
+                  type="text"
+                  value={newFacilities.Category}
+                  onChange={(e) =>setNewFacilities({ ...newFacilities, Category: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Floor:</label>
+                <input
+                  type="text"
+                  value={newFacilities.Floor}
+                  onChange={(e) =>setNewFacilities({ ...newFacilities, Floor: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Plint Area(sq.m):</label>
+                <input
+                  type="text"
+                  value={newFacilities.PlintArea}
+                  onChange={(e) =>setNewFacilities({ ...newFacilities, PlintArea: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Acquired Date:</label>
+                <input
+                  type="text"
+                  value={newFacilities.AcquireDate}
+                  onChange={(e) =>setNewFacilities({ ...newFacilities, AcquireDate: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Useful Life (Year):</label>
+                <input
+                  type="text"
+                  value={newFacilities.Useful_life}
+                  onChange={(e) =>setNewFacilities({ ...newFacilities, Useful_life: e.target.value })}
+                />
+              </div>
+              {/* <div className="modal-content-field">
+                            <label>Status:</label>
+                            <input
+                              type="text"
+                              value={newFacilities.status}
+                              onChange={(e) =>setNewFacilities({ ...newFacilities, Useful_life: e.target.value })}
+                            />
+                          </div> */}
+              <div className="modal-content-field">
+                <label>Cost: </label>
+                <input
+                  type="text"
+                  value={newFacilities.cost}
+                  onChange={(e) =>setNewFacilities({ ...newFacilities, cost: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Area:</label>
+                <input
+                  type="text"
+                  value={newFacilities.Area}
+                  onChange={(e) =>setNewFacilities({ ...newFacilities, Area: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Depreciated Value (%):</label>
+                <input
+                  type="number"
+                  value={newFacilities.DepreciatedValue}
+                  onChange={(e) =>setNewFacilities({ ...newFacilities, DepreciatedValue: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Description:</label>
+                <input
+                  type="text"
+                  value={newFacilities.description}
+                  onChange={(e) =>setNewFacilities({ ...newFacilities, description: e.target.value })}
+                />
+              </div>
+              <div className="modal-actions">
+                <button className="accept-btn" style={{ width: "80px" }} onClick={handleSaveNewFacilities}>Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal for Viewing Request */}
       {modalData && (

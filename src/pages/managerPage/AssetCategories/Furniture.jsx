@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosSearch } from "react-icons/io";
 import { IoMdAdd } from "react-icons/io";
@@ -6,7 +6,9 @@ import { ImFolderDownload } from "react-icons/im";
 import Category from "../AssetCategory";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
-
+import { FaDownload } from "react-icons/fa";
+import { QRCodeCanvas } from "qrcode.react";
+import jsPDF from "jspdf";
 
 const Furniture = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -16,10 +18,16 @@ const Furniture = () => {
     const [modalData, setModalData] = useState(null);
     const [editModalData, setEditModalData] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [newCategory, setNewCategory] = useState({ category: "", DepreciatedValue: "" });
+    const [scheduleModalData, setScheduleModalData] = useState(null); // This controls the modal's visibility
+    const [newMachinery, setNewMachinery] = useState({ category: "", DepreciatedValue: "" });
 
-    const rowsPerPage = 10;
+    const qrRefs = useRef([]);
 
+    const rowsPerPage = 9; // 3x3 grid for QR codes per page
+    const qrSize = 40;     // Size of each QR code (adjust as needed)
+    const qrSpacing = 12;  // Spacing between QR codes
+
+    // Example asset data
     const [data, setData] = useState([
         {
             SerialNo: "1",
@@ -52,127 +60,97 @@ const Furniture = () => {
             description: "Main corporate office building",
         },
         {
-            SerialNo: "3",
-            AssetCode: "NHDCL-22-2005",
-            Title: "Water Pump",
-            AcquireDate: "10-05-2022",
-            Useful_life: 10,
-            size: "3m height, 5m width",
-            Depreciated_value: 2,
-            status: "disposed",
-            cost: 200000,
-            Category: {},
-            Area: "Area-3",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Essential for water distribution",
-        },
-        {
-            SerialNo: "4",
-            AssetCode: "NHDCL-22-2006",
-            Title: "Solar Panels",
-            AcquireDate: "01-01-2021",
-            Useful_life: 15,
-            size: "50m²",
-            Depreciated_value: 10,
+            SerialNo: "2",
+            AssetCode: "NHDCL-22-2004",
+            Title: "Office Building",
+            AcquireDate: "15-03-2023",
+            Useful_life: 20,
+            size: "50m height, 100m width",
+            Depreciated_value: 5,
             status: "In Usage",
-            cost: 500000,
+            cost: 20000000,
             Category: {},
-            Area: "Area-4",
+            Area: "Area-2",
             Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Provides sustainable energy",
+            description: "Main corporate office building",
         },
         {
-            SerialNo: "5",
-            AssetCode: "NHDCL-22-2007",
-            Title: "Generator",
-            AcquireDate: "12-06-2020",
-            Useful_life: 12,
-            size: "10m²",
-            Depreciated_value: 6,
-            status: "In Maintenance",
-            cost: 1000000,
-            Category: {},
-            Area: "Area-5",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Backup power source for office",
-        },
-        {
-            SerialNo: "6",
-            AssetCode: "NHDCL-22-2008",
-            Title: "CCTV System",
-            AcquireDate: "08-09-2021",
-            Useful_life: 7,
-            size: "Building-wide coverage",
-            Depreciated_value: 3,
-            status: "disposed",
-            cost: 400000,
-            Category: {},
-            Area: "Area-6",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Security surveillance system",
-        },
-        {
-            SerialNo: "7",
-            AssetCode: "NHDCL-22-2009",
-            Title: "Conference Room Equipment",
-            AcquireDate: "20-11-2023",
-            Useful_life: 5,
-            size: "15m²",
-            Depreciated_value: 1,
-            status: "disposed",
-            cost: 150000,
-            Category: {},
-            Area: "Area-7",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Projector, sound system, and furniture",
-        },
-        {
-            SerialNo: "8",
-            AssetCode: "NHDCL-22-2010",
-            Title: "Underground Parking",
-            AcquireDate: "14-07-2019",
-            Useful_life: 30,
-            size: "2000m²",
-            Depreciated_value: 15,
+            SerialNo: "2",
+            AssetCode: "NHDCL-22-2004",
+            Title: "Office Building",
+            AcquireDate: "15-03-2023",
+            Useful_life: 20,
+            size: "50m height, 100m width",
+            Depreciated_value: 5,
             status: "In Usage",
-            cost: 5000000,
+            cost: 20000000,
             Category: {},
-            Area: "Area-8",
+            Area: "Area-2",
             Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Parking space for company vehicles",
+            description: "Main corporate office building",
         },
         {
-            SerialNo: "9",
-            AssetCode: "NHDCL-22-2011",
-            Title: "IT Server Room",
-            AcquireDate: "22-05-2022",
-            Useful_life: 10,
-            size: "30m²",
-            Depreciated_value: 3,
+            SerialNo: "2",
+            AssetCode: "NHDCL-22-2004",
+            Title: "Office Building",
+            AcquireDate: "15-03-2023",
+            Useful_life: 20,
+            size: "50m height, 100m width",
+            Depreciated_value: 5,
             status: "In Usage",
-            cost: 2000000,
+            cost: 20000000,
             Category: {},
-            Area: "Area-9",
+            Area: "Area-2",
             Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Secure and climate-controlled data center",
+            description: "Main corporate office building",
         },
         {
-            SerialNo: "10",
-            AssetCode: "NHDCL-22-2012",
-            Title: "Fire Extinguisher System",
-            AcquireDate: "05-02-2021",
-            Useful_life: 8,
-            size: "Building-wide",
-            Depreciated_value: 2,
-            status: "In Maintenance",
-            cost: 500000,
+            SerialNo: "2",
+            AssetCode: "NHDCL-22-2004",
+            Title: "Office Building",
+            AcquireDate: "15-03-2023",
+            Useful_life: 20,
+            size: "50m height, 100m width",
+            Depreciated_value: 5,
+            status: "In Usage",
+            cost: 20000000,
             Category: {},
-            Area: "Area-10",
+            Area: "Area-2",
             Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Fire safety system for emergency response",
-        }
-    ])
+            description: "Main corporate office building",
+        },
+        {
+            SerialNo: "2",
+            AssetCode: "NHDCL-22-2004",
+            Title: "Office Building",
+            AcquireDate: "15-03-2023",
+            Useful_life: 20,
+            size: "50m height, 100m width",
+            Depreciated_value: 5,
+            status: "In Usage",
+            cost: 20000000,
+            Category: {},
+            Area: "Area-2",
+            Created_by: "12210100.gcit@rub.edu.bt",
+            description: "Main corporate office building",
+        },
+        {
+            SerialNo: "2",
+            AssetCode: "NHDCL-22-2004",
+            Title: "Office Building",
+            AcquireDate: "15-03-2023",
+            Useful_life: 20,
+            size: "50m height, 100m width",
+            Depreciated_value: 5,
+            status: "In Usage",
+            cost: 20000000,
+            Category: {},
+            Area: "Area-2",
+            Created_by: "12210100.gcit@rub.edu.bt",
+            description: "Main corporate office building",
+        },
 
+    ]);
     // Filtering data based on search and priority selection and work status
     const sortedData = [...data].sort((a, b) => b.mid - a.mid);
     const filteredData = sortedData.filter((item) => {
@@ -190,19 +168,14 @@ const Furniture = () => {
         (currentPage - 1) * rowsPerPage,
         currentPage * rowsPerPage
     );
-    const handleSelectRow = (AID) => {
-        setSelectedRows((prev) =>
-            prev.includes(AID) ? prev.filter((item) => item !== AID) : [...prev, AID]
-        );
-    };
 
     const handleDeleteSelected = () => {
         setData(data.filter((item) => !selectedRows.includes(item.AID)));
         setSelectedRows([]);
     };
 
-    const handleDeleteRow = (AID) => {
-        setData(data.filter((item) => item.AID !== AID));
+    const handleDeleteRow = (SerialNo) => {
+        setData(data.filter((item) => item.SerialNo !== SerialNo));
     };
 
     const handleView = (item) => {
@@ -232,10 +205,91 @@ const Furniture = () => {
     ];
     const handleCloseModal = () => {
         setModalData(null);
-      };
+    };
+
+    const handleAddMachinery = () => {
+        setShowAddModal(true);
+        setNewMachinery({ category: "", DepreciatedValue: "" });
+    };
+
+    const handleSaveNewMachinery = () => {
+        if (newMachinery.Category && newMachinery.DepreciatedValue) {
+            const newSerialNo = data.length > 0 ? (Math.max(...data.map((item) => Number(item.SerialNo))) + 1).toString() : "1";
+            setData([...data, { SerialNo: newSerialNo, ...newMachinery }]);
+            setShowAddModal(false);
+            setNewMachinery({}); // Reset form after adding
+        }
+    };
+    const handleScheduleMaintenance = () => {
+        setScheduleModalData(modalData); // Set modal data to open the schedule modal
+    };
+
+
+
+    // DownloadPDF
+    const handleDownloadPDF = () => {
+        if (selectedRows.length === 0) return;
+
+        const doc = new jsPDF();
+        let pageY = 10; // Y position to start placing QR codes
+        let pageX = 40; // X position for the QR codes
+        let rowCount = 0;
+
+        selectedRows.forEach((SerialNo, index) => {
+            const rowData = data.find((item) => item.SerialNo === SerialNo);
+            if (!rowData) return;
+
+            // Add QR Code
+            const qrCanvas = qrRefs.current[rowData.SerialNo];
+            if (qrCanvas) {
+                const qrDataUrl = qrCanvas.toDataURL("image/png");
+                doc.addImage(qrDataUrl, "PNG", pageX, pageY, qrSize, qrSize);
+
+                // Decrease font size
+                doc.setFontSize(8); // Set the font size smaller
+
+                // Add asset details under the QR code
+                pageY += qrSize + qrSpacing;
+                doc.text(`Asset Code: ${rowData.AssetCode}`, pageX, pageY);
+                pageY += 8;
+                doc.text(`Title: ${rowData.Title}`, pageX, pageY);
+                pageY += 8;
+                doc.text(`Category: ${rowData.Category}`, pageX, pageY);
+                pageY += 10;
+
+                rowCount++;
+
+                // Move to the next column (after every 3 QR codes in a row)
+                if (rowCount % 3 === 0) {
+                    pageX += qrSize + qrSpacing;
+                    pageY = 10; // Reset Y position for the next column
+                }
+
+                // If 9 QR codes are added, go to the next page
+                if (rowCount === rowsPerPage) {
+                    doc.addPage();
+                    pageY = 10;
+                    pageX = 40;
+                    rowCount = 0; // Reset row count
+                }
+            }
+        });
+
+        // Save the PDF
+        doc.save("Assets_with_QR_Codes.pdf");
+    };
+
+    const handleSelectRow = (SerialNo) => {
+        setSelectedRows((prev) =>
+            prev.includes(SerialNo)
+                ? prev.filter((item) => item !== SerialNo)
+                : [...prev, SerialNo]
+        );
+    };
+
 
     return (
-        <div className="managerDashboard" >
+        <div className="managerDashboard">
             <div className="search-sort-container">
                 <div className="search-container">
                     <IoIosSearch style={{ width: "20px", height: "20px" }} />
@@ -265,31 +319,57 @@ const Furniture = () => {
                     </div>
                     <div className="create-category-btn">
                         <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
-                        <button className="category-btn" >Create category</button>
+                        <button className="category-btn" onClick={handleAddMachinery} >Create category</button>
                     </div>
-
                 </div>
             </div>
+
             {/* Table */}
             <div className="table-container">
                 <table className="RequestTable">
                     <thead className="table-header">
                         <tr>
-                            {["SI.No", "Asset Code", "Title", "Acquire Date", "Useful Life(year)", "size", "Depreciated Value (%)", "Status"].map((header, index) => (
-                                <th key={index}>{header}</th>
-                            ))}
+                            <th>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedRows.length === filteredData.length}
+                                    onChange={() =>
+                                        setSelectedRows(
+                                            selectedRows.length === filteredData.length
+                                                ? []
+                                                : filteredData.map((item) => item.SerialNo)
+                                        )
+                                    }
+                                />
+                            </th>
+                            {["SI.No", "Asset Code", "Title", "Acquire Date", "Useful Life(year)", "size", "Depreciated Value (%)", "Status"].map(
+                                (header, index) => (
+                                    <th key={index}>{header}</th>
+                                )
+                            )}
                             <th>
                                 {selectedRows.length > 0 && (
-                                    <button className="delete-all-btn" onClick={handleDeleteSelected}>
-                                        <RiDeleteBin6Line style={{ width: "20px", height: "20px", color: "red" }} />
+                                    <button
+                                        className="delete-all-btn"
+                                        style={{ paddingLeft: "98px" }}
+                                        onClick={handleDownloadPDF}
+                                    >
+                                        <FaDownload style={{ width: "20px", height: "20px", color: "green" }} />
                                     </button>
                                 )}
                             </th>
                         </tr>
                     </thead>
                     <tbody>
-                        {displayedData.map((item, index) => (
-                            <tr key={index}>
+                        {filteredData.map((item) => (
+                            <tr key={item.SerialNo}>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedRows.includes(item.SerialNo)}
+                                        onChange={() => handleSelectRow(item.SerialNo)}
+                                    />
+                                </td>
                                 <td>{item.SerialNo}</td>
                                 <td>{item.AssetCode}</td>
                                 <td>{item.Title}</td>
@@ -302,10 +382,17 @@ const Furniture = () => {
                                         {item.status}
                                     </div>
                                 </td>
-                                <td className="actions">
+                                <td className="actions" style={{ display: "flex", flexDirection: "row", width: "100%", maxWidth: "150px" }}>
                                     <button className="view-btn" onClick={() => handleView(item)}>
                                         View
                                     </button>
+                                    <div>
+                                        <QRCodeCanvas
+                                            value={item.AssetCode}
+                                            size={qrSize}
+                                            ref={(el) => (qrRefs.current[item.SerialNo] = el)}
+                                        />
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -325,6 +412,121 @@ const Furniture = () => {
                     <button onClick={() => setCurrentPage(totalPages)}>{totalPages}</button>
                 </div>
             </div>
+
+            {/* Add Machinery Modal */}
+            {showAddModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2 className="form-h">Create Asset</h2>
+                            <button className="close-btn" onClick={() => setShowAddModal(false)}>
+                                <IoIosCloseCircle style={{ color: "#897463", width: "20px", height: "20px" }} />
+                            </button>
+                        </div>
+                        <div className="schedule-form">
+                            <div className="modal-content-field">
+                                <label>Title:</label>
+                                <input
+                                    type="text"
+                                    value={newMachinery.Title}
+                                    onChange={(e) => setNewMachinery({ ...newMachinery, Title: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Asset Code:</label>
+                                <input
+                                    type="text"
+                                    value={newMachinery.AssetCode}
+                                    onChange={(e) => setNewMachinery({ ...newMachinery, AssetCode: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Category:</label>
+                                <input
+                                    type="text"
+                                    value={newMachinery.Category}
+                                    onChange={(e) => setNewMachinery({ ...newMachinery, Category: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Floor:</label>
+                                <input
+                                    type="text"
+                                    value={newMachinery.Floor}
+                                    onChange={(e) => setNewMachinery({ ...newMachinery, Floor: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Plint Area(sq.m):</label>
+                                <input
+                                    type="text"
+                                    value={newMachinery.PlintArea}
+                                    onChange={(e) => setNewMachinery({ ...newMachinery, PlintArea: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Acquired Date:</label>
+                                <input
+                                    type="text"
+                                    value={newMachinery.AcquireDate}
+                                    onChange={(e) => setNewMachinery({ ...newMachinery, AcquireDate: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Useful Life (Year):</label>
+                                <input
+                                    type="text"
+                                    value={newMachinery.Useful_life}
+                                    onChange={(e) => setNewMachinery({ ...newMachinery, Useful_life: e.target.value })}
+                                />
+                            </div>
+                            {/* <div className="modal-content-field">
+                                                    <label>Status:</label>
+                                                    <input
+                                                      type="text"
+                                                      value={newMachinery.status}
+                                                      onChange={(e) =>setNewMachinery({ ...newMachinery, Useful_life: e.target.value })}
+                                                    />
+                                                  </div> */}
+                            <div className="modal-content-field">
+                                <label>Cost:</label>
+                                <input
+                                    type="text"
+                                    value={newMachinery.cost}
+                                    onChange={(e) => setNewMachinery({ ...newMachinery, cost: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Area:</label>
+                                <input
+                                    type="text"
+                                    value={newMachinery.Area}
+                                    onChange={(e) => setNewMachinery({ ...newMachinery, Area: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Depreciated Value (%):</label>
+                                <input
+                                    type="number"
+                                    value={newMachinery.DepreciatedValue}
+                                    onChange={(e) => setNewMachinery({ ...newMachinery, DepreciatedValue: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Description:</label>
+                                <input
+                                    type="text"
+                                    value={newMachinery.description}
+                                    onChange={(e) => setNewMachinery({ ...newMachinery, description: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-actions">
+                                <button className="accept-btn" style={{ width: "80px" }} onClick={handleSaveNewMachinery}>Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal for Viewing Request */}
             {modalData && (
@@ -364,7 +566,7 @@ const Furniture = () => {
                             </div>
                             <div className="modal-content-field">
                                 <label>Depreciated Value:</label>
-                                <input  value={modalData.Depreciated_value} readOnly />
+                                <input value={modalData.Depreciated_value} readOnly />
                             </div>
                             <div className="modal-content-field">
                                 <label>Acquired Date:</label>
@@ -396,17 +598,20 @@ const Furniture = () => {
                             </div>
 
                             <div className="modal-buttons">
-                                <button className="accept-btn" style={{backgroundColor:"red"}}>
-                                    <RiDeleteBin6Line/>
+                                <button className="accept-btn" style={{ backgroundColor: "red" }}>
+                                    <RiDeleteBin6Line />
                                 </button>
-                                <button className="reject-btn">Schedule Maintenance</button>
+                                <button className="accept-btn" onClick={handleScheduleMaintenance}>
+                                    Schedule Maintenance
+                                </button>
+
                             </div>
                         </form>
                     </div>
                 </div>
             )}
-        </div >
-    )
+        </div>
+    );
 };
 
 export default Furniture;

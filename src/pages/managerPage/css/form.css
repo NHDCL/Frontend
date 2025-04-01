@@ -150,6 +150,13 @@
   padding-right: 13px;
 }
 
+.Building-sort{
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  padding-bottom: 16px;
+}
+
 @media (max-width: 1024px) {
   .modal-content {
     background: white;

@@ -16,7 +16,7 @@ const Landscaping = () => {
     const [modalData, setModalData] = useState(null);
     const [editModalData, setEditModalData] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [newCategory, setNewCategory] = useState({ category: "", DepreciatedValue: "" });
+    const [newLandscaping, setNewLandscaping] = useState({ category: "", DepreciatedValue: "" });
 
     const rowsPerPage = 10;
 
@@ -232,7 +232,21 @@ const Landscaping = () => {
     ];
     const handleCloseModal = () => {
         setModalData(null);
-      };
+    };
+
+    const handleAddLandscaping = () => {
+        setShowAddModal(true);
+        setNewLandscaping({ category: "", DepreciatedValue: "" });
+    };
+
+    const handleSaveNewLandscaping = () => {
+        if (newLandscaping.Category && newLandscaping.DepreciatedValue) {
+            const newAID = data.length > 0 ? (Math.max(...data.map((item) => Number(item.SerialNo))) + 1).toString() : "1";
+            setData([...data, { AID: newAID, ...newLandscaping }]);
+            setShowAddModal(false);
+            setNewLandscaping({}); // Reset form after adding
+        }
+    };
 
     return (
         <div className="managerDashboard" >
@@ -265,7 +279,7 @@ const Landscaping = () => {
                     </div>
                     <div className="create-category-btn">
                         <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
-                        <button className="category-btn" >Create category</button>
+                        <button className="category-btn" onClick={handleAddLandscaping} >Create category</button>
                     </div>
 
                 </div>
@@ -326,6 +340,122 @@ const Landscaping = () => {
                 </div>
             </div>
 
+            {/* Add Landscaping Modal */}
+            {showAddModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2 className="form-h">Create Asset</h2>
+                            <button className="close-btn" onClick={() => setShowAddModal(false)}>
+                                <IoIosCloseCircle style={{ color: "#897463", width: "20px", height: "20px" }} />
+                            </button>
+                        </div>
+                        <div className="schedule-form">
+                            <div className="modal-content-field">
+                                <label>Title:</label>
+                                <input
+                                    type="text"
+                                    value={newLandscaping.Title}
+                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, Title: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Asset Code:</label>
+                                <input
+                                    type="text"
+                                    value={newLandscaping.AssetCode}
+                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, AssetCode: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Category:</label>
+                                <input
+                                    type="text"
+                                    value={newLandscaping.Category}
+                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, Category: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Floor:</label>
+                                <input
+                                    type="text"
+                                    value={newLandscaping.Floor}
+                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, Floor: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Plint Area(sq.m):</label>
+                                <input
+                                    type="text"
+                                    value={newLandscaping.PlintArea}
+                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, PlintArea: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Acquired Date:</label>
+                                <input
+                                    type="text"
+                                    value={newLandscaping.AcquireDate}
+                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, AcquireDate: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Useful Life (Year):</label>
+                                <input
+                                    type="text"
+                                    value={newLandscaping.Useful_life}
+                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, Useful_life: e.target.value })}
+                                />
+                            </div>
+                            {/* <div className="modal-content-field">
+                                        <label>Status:</label>
+                                        <input
+                                          type="text"
+                                          value={newLandscaping.status}
+                                          onChange={(e) =>setNewLandscaping({ ...newLandscaping, Useful_life: e.target.value })}
+                                        />
+                                      </div> */}
+                            <div className="modal-content-field">
+                                <label>Cost:</label>
+                                <input
+                                    type="text"
+                                    value={newLandscaping.cost}
+                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, cost: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Area:</label>
+                                <input
+                                    type="text"
+                                    value={newLandscaping.Area}
+                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, Area: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Depreciated Value (%):</label>
+                                <input
+                                    type="number"
+                                    value={newLandscaping.DepreciatedValue}
+                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, DepreciatedValue: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-content-field">
+                                <label>Description:</label>
+                                <input
+                                    type="text"
+                                    value={newLandscaping.description}
+                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, description: e.target.value })}
+                                />
+                            </div>
+                            <div className="modal-actions">
+                                <button className="accept-btn" style={{ width: "80px" }} onClick={handleSaveNewLandscaping}>Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
             {/* Modal for Viewing Request */}
             {modalData && (
                 <div className="modal-overlay">
@@ -364,7 +494,7 @@ const Landscaping = () => {
                             </div>
                             <div className="modal-content-field">
                                 <label>Depreciated Value:</label>
-                                <input  value={modalData.Depreciated_value} readOnly />
+                                <input value={modalData.Depreciated_value} readOnly />
                             </div>
                             <div className="modal-content-field">
                                 <label>Acquired Date:</label>
@@ -396,8 +526,8 @@ const Landscaping = () => {
                             </div>
 
                             <div className="modal-buttons">
-                                <button className="accept-btn" style={{backgroundColor:"red"}}>
-                                    <RiDeleteBin6Line/>
+                                <button className="accept-btn" style={{ backgroundColor: "red" }}>
+                                    <RiDeleteBin6Line />
                                 </button>
                                 <button className="reject-btn">Schedule Maintenance</button>
                             </div>

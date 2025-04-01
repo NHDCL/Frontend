@@ -59,8 +59,8 @@ const Loginpage = () => {
 
       
             {/* <Link to="/technician/" style={{ width:"40%"}} > */}
-            <Link to="/admin/" style={{ width:"40%"}} >
-            {/* <Link to="/manager/" style={{ width:"40%"}} > */}
+            {/* <Link to="/admin/" style={{ width:"40%"}} > */}
+            <Link to="/manager/" style={{ width:"40%"}} >
 
               <button type="submit" className="login-submit-btn">
               Login

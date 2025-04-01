@@ -235,7 +235,7 @@ const ManagerDashboard = () => {
           />
         </div>
         <div className="table-container">
-          <table className="RequestTable">
+          <table className="RequestTable" style={{width: "100% " ,minWidth: "800px"}}>
             <thead className="table-header">
               <tr>
                 <th>

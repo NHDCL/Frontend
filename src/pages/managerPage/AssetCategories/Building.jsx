@@ -13,10 +13,82 @@ const Building = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedBuilding, setSelectedBuilding] = useState("");
+  const [selectedFloor, setSelectedFloor] = useState("");
   const [modalData, setModalData] = useState(null);
   const [editModalData, setEditModalData] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newCategory, setNewCategory] = useState({ category: "", DepreciatedValue: "" });
+  const [newBuilding, setNewBuiding] = useState({ Title: "", AssetCode: "", Category: "Building", Floor: "", PlintArea: "", AcquireDate: "", Useful_life: "", status: "", cost: "", Area: "", DepreciatedValue: "", File: "" });
+  const [floorAndRooms, setFloorAndRooms] = useState({});
+  const [floorInput, setFloorInput] = useState("");
+  const [roomInput, setRoomInput] = useState("");
+  // const [scheduleModalData, setScheduleModalData] = useState(null);
+  const [jsonData, setJson] = useState("");
+  const [assetCode, setAssetCode] = useState("");
+  const [title, setTitle] = useState("");
+  const [assetCategoryName, setAssetCategoryName] = useState("");
+  const [scheduleModalData, setScheduleModalData] = useState({
+    Description: "",
+    Assign: "",
+    Lastworkorder: "",
+    Schedule: "",
+    Nextworkorder: ""
+  });
+
+
+  const addRoom = () => {
+    if (floorInput.trim() && roomInput.trim()) {
+      setFloorAndRooms((prev) => {
+        const updatedRooms = { ...prev };
+        if (!updatedRooms[floorInput]) {
+          updatedRooms[floorInput] = [];
+        }
+        updatedRooms[floorInput].push(roomInput);
+        setJson(JSON.stringify(updatedRooms, null, 2)); // Update the jsonData
+        return updatedRooms;
+      });
+      setRoomInput(""); // Clear room input
+    }
+  };
+
+  const styles = {
+    textArea: {
+      width: "100%",
+      height: "120px",
+      padding: "10px",
+      fontSize: "14px",
+      background: "#f8f8f8",
+      border: "1px solid #ddd",
+      borderRadius: "4px",
+      resize: "none",
+    },
+    floorBlock: {
+      marginBottom: "10px",
+    },
+    floorTitle: {
+      fontWeight: "bold",
+      fontSize: "14px",
+      color: "#305845",
+    },
+    roomText: {
+      fontSize: "13px",
+      color: "#333",
+      marginLeft: "10px",
+    },
+    noRoomText: {
+      fontSize: "13px",
+      color: "#888",
+      fontStyle: "italic",
+      marginLeft: "10px",
+    },
+    emptyMessage: {
+      fontStyle: "italic",
+      color: "#888",
+      textAlign: "center",
+    },
+  };
+
+
 
   const rowsPerPage = 10;
 
@@ -24,10 +96,11 @@ const Building = () => {
     {
       SerialNo: "1",
       AssetCode: "NHDCL-22-2003",
-      Title: "Football ground",
+      Title: "Block A",
       AcquireDate: "27-02-2024",
       Useful_life: 3,
-      size: "10m height, 20m width",
+      Floor: 4,
+      PlintArea: 4,
       Depreciated_value: 4,
       status: "In Maintenance",
       cost: 600000,
@@ -38,139 +111,85 @@ const Building = () => {
     },
     {
       SerialNo: "2",
-      AssetCode: "NHDCL-22-2004",
-      Title: "Football ground",
-      AcquireDate: "15-03-2023",
-      Useful_life: 20,
-      size: "50m height, 100m width",
-      Depreciated_value: 5,
-      status: "In Usage",
-      cost: 20000000,
+      AssetCode: "NHDCL-22-2003",
+      Title: "Block B",
+      AcquireDate: "27-02-2024",
+      Useful_life: 3,
+      Floor: 4,
+      PlintArea: 4,
+      Depreciated_value: 4,
+      status: "In Maintenance",
+      cost: 600000,
       Category: {},
-      Area: "Area-2",
+      Area: "Area-1",
       Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Main corporate office building",
+      description: "This is the biggest land we own",
     },
     {
       SerialNo: "3",
-      AssetCode: "NHDCL-22-2005",
-      Title: "Football ground",
-      AcquireDate: "10-05-2022",
-      Useful_life: 10,
-      size: "3m height, 5m width",
-      Depreciated_value: 2,
-      status: "disposed",
-      cost: 200000,
+      AssetCode: "NHDCL-22-2003",
+      Title: "Block C",
+      AcquireDate: "27-02-2024",
+      Useful_life: 3,
+      Floor: 6,
+      PlintArea: 4,
+      Depreciated_value: 4,
+      status: "In Maintenance",
+      cost: 600000,
       Category: {},
-      Area: "Area-3",
+      Area: "Area-1",
       Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Essential for water distribution",
+      description: "This is the biggest land we own",
     },
     {
       SerialNo: "4",
-      AssetCode: "NHDCL-22-2006",
-      Title: "Football ground",
-      AcquireDate: "01-01-2021",
-      Useful_life: 15,
-      size: "50m²",
-      Depreciated_value: 10,
+      AssetCode: "NHDCL-22-2003",
+      Title: "Block D",
+      AcquireDate: "27-02-2024",
+      Useful_life: 3,
+      Floor: 4,
+      PlintArea: 4,
+      Depreciated_value: 4,
       status: "In Usage",
-      cost: 500000,
+      cost: 600000,
       Category: {},
-      Area: "Area-4",
+      Area: "Area-1",
       Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Provides sustainable energy",
+      description: "This is the biggest land we own",
     },
     {
       SerialNo: "5",
-      AssetCode: "NHDCL-22-2007",
-      Title: "Football ground",
-      AcquireDate: "12-06-2020",
-      Useful_life: 12,
-      size: "10m²",
-      Depreciated_value: 6,
-      status: "In Maintenance",
-      cost: 1000000,
+      AssetCode: "NHDCL-22-2003",
+      Title: "Block E",
+      AcquireDate: "27-02-2024",
+      Useful_life: 3,
+      Floor: 3,
+      PlintArea: 4,
+      Depreciated_value: 4,
+      status: "disposed",
+      cost: 600000,
       Category: {},
-      Area: "Area-5",
+      Area: "Area-1",
       Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Backup power source for office",
+      description: "This is the biggest land we own",
     },
     {
       SerialNo: "6",
-      AssetCode: "NHDCL-22-2008",
-      Title: "Football ground",
-      AcquireDate: "08-09-2021",
-      Useful_life: 7,
-      size: "Building-wide coverage",
-      Depreciated_value: 3,
-      status: "disposed",
-      cost: 400000,
-      Category: {},
-      Area: "Area-6",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Security surveillance system",
-    },
-    {
-      SerialNo: "7",
-      AssetCode: "NHDCL-22-2009",
-      Title: "Football ground",
-      AcquireDate: "20-11-2023",
-      Useful_life: 5,
-      size: "15m²",
-      Depreciated_value: 1,
-      status: "disposed",
-      cost: 150000,
-      Category: {},
-      Area: "Area-7",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Projector, sound system, and furniture",
-    },
-    {
-      SerialNo: "8",
-      AssetCode: "NHDCL-22-2010",
-      Title: "Football ground",
-      AcquireDate: "14-07-2019",
-      Useful_life: 30,
-      size: "2000m²",
-      Depreciated_value: 15,
-      status: "In Usage",
-      cost: 5000000,
-      Category: {},
-      Area: "Area-8",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Parking space for company vehicles",
-    },
-    {
-      SerialNo: "9",
-      AssetCode: "NHDCL-22-2011",
-      Title: "Football ground",
-      AcquireDate: "22-05-2022",
-      Useful_life: 10,
-      size: "30m²",
-      Depreciated_value: 3,
-      status: "In Usage",
-      cost: 2000000,
-      Category: {},
-      Area: "Area-9",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Secure and climate-controlled data center",
-    },
-    {
-      SerialNo: "10",
-      AssetCode: "NHDCL-22-2012",
-      Title: "Football ground",
-      AcquireDate: "05-02-2021",
-      Useful_life: 8,
-      size: "Building-wide",
-      Depreciated_value: 2,
+      AssetCode: "NHDCL-22-2003",
+      Title: "Block A",
+      AcquireDate: "27-02-2024",
+      Useful_life: 3,
+      Floor: 1,
+      PlintArea: 4,
+      Depreciated_value: 4,
       status: "In Maintenance",
-      cost: 500000,
+      cost: 600000,
       Category: {},
-      Area: "Area-10",
+      Area: "Area-1",
       Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Fire safety system for emergency response",
-    }
+      description: "This is the biggest land we own",
+    },
+
   ])
 
   // Filtering data based on search and priority selection and work status
@@ -182,7 +201,13 @@ const Building = () => {
     const matchesStatus =
       selectedStatus === "" || item.status === selectedStatus;
 
-    return matchesSearch && matchesStatus;
+    const matchesBuilding =
+      selectedBuilding === "" || item.Title === selectedBuilding;
+
+    const matchesFloor =
+      selectedFloor === "" || item.Floor === selectedFloor;
+
+    return matchesSearch && matchesStatus && matchesBuilding && matchesFloor;
   });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -190,21 +215,11 @@ const Building = () => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
-  const handleSelectRow = (AID) => {
-    setSelectedRows((prev) =>
-      prev.includes(AID) ? prev.filter((item) => item !== AID) : [...prev, AID]
-    );
-  };
 
   const handleDeleteSelected = () => {
     setData(data.filter((item) => !selectedRows.includes(item.AID)));
     setSelectedRows([]);
   };
-
-  const handleDeleteRow = (AID) => {
-    setData(data.filter((item) => item.AID !== AID));
-  };
-
   const handleView = (item) => {
     setModalData(item);
   };
@@ -233,6 +248,74 @@ const Building = () => {
   const handleCloseModal = () => {
     setModalData(null);
   };
+
+  // Extract unique work statuses from data
+  const uniqueBuilding = [
+    { value: "", label: "All buildings" },
+    ...Array.from(new Set(data.map(item => item.Title))).map(Title => ({
+      value: Title,
+      label: Title
+    }))
+  ];
+
+  const uniqueFloors = [
+    { value: "", label: "All Floors" },
+    ...Array.from(new Set(
+      data
+        .filter(item => selectedBuilding === "" || item.Title === selectedBuilding)
+        .map(item => item.Floor)
+    )).map(floor => ({
+      value: floor,
+      label: `Floor ${floor}`
+    }))
+  ];
+  const handleAddBuilding = () => {
+    setShowAddModal(true);
+    setNewBuiding({ category: "", DepreciatedValue: "" });
+  };
+
+  const handleSaveNewBuilding = () => {
+    if (newBuilding.Category && newBuilding.DepreciatedValue) {
+      const newAID = data.length > 0 ? (Math.max(...data.map((item) => Number(item.SerialNo))) + 1).toString() : "1";
+      setData([...data, { AID: newAID, ...newBuilding }]);
+      setShowAddModal(false);
+      setNewBuiding({}); // Reset form after adding
+    }
+  };
+
+  // Update Edited Data
+  const handleSaveEdit = () => {
+    if (!editModalData) return;
+
+    setData((prevData) =>
+      prevData.map((row) =>
+        row.mid === editModalData.mid ? editModalData : row
+      )
+    );
+
+    setEditModalData(null); // Close modal after saving
+  };
+  // const handleSaveSchedule =()=>{
+
+  // }
+
+  // Sample workers list
+  const workersList = [
+    { value: "Worker A", label: "Worker A" },
+    { value: "Worker B", label: "Worker B" },
+    { value: "Worker C", label: "Worker C" },
+  ];
+
+  const handleScheduleMaintenance = () => {
+    setScheduleModalData({
+      ...modalData, // Passing in modalData to populate the schedule form
+      Schedule: modalData.Schedule || "",
+      Lastworkorder: modalData.Lastworkorder || "",
+      Nextworkorder: modalData.Nextworkorder || "",
+      Assign: modalData.Assign || "",
+    });
+  };
+
 
   return (
     <div className="managerDashboard" >
@@ -265,28 +348,47 @@ const Building = () => {
           </div>
           <div className="create-category-btn">
             <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
-            <button className="category-btn" >Create category</button>
+            <button className="category-btn" onClick={handleAddBuilding}>Create category</button>
           </div>
-
         </div>
       </div>
+      <div className="Building-sort">
+        {/* Building Dropdown */}
+        <Select
+          classNamePrefix="custom-select-workstatus"
+          className="workstatus-dropdown"
+          options={uniqueBuilding}
+          value={uniqueBuilding.find(option => option.value === selectedBuilding)}
+          onChange={(selectedOption) => {
+            setSelectedBuilding(selectedOption ? selectedOption.value : "");
+            setSelectedFloor(""); // Reset floor selection when a new building is chosen
+          }}
+          isClearable
+        />
+
+        {/* Floor Dropdown (Only Shows if Building is Selected) */}
+        {selectedBuilding && (
+          <Select
+            classNamePrefix="custom-select-workstatus"
+            className="workstatus-dropdown"
+            options={uniqueFloors}
+            value={uniqueFloors.find(option => option.value === selectedFloor)}
+            onChange={(selectedOption) => {
+              setSelectedFloor(selectedOption ? selectedOption.value : "");
+            }}
+            isClearable
+          />
+        )}
+      </div>
+
+
       {/* Table */}
       <div className="table-container">
         <table className="RequestTable">
           <thead className="table-header">
             <tr>
-              <th>
-                <input
-                  type="checkbox"
-                  checked={selectedRows.length === displayedData.length && displayedData.length > 0}
-                  onChange={() =>
-                    setSelectedRows(
-                      selectedRows.length === displayedData.length ? [] : displayedData.map((item) => item.AID)
-                    )
-                  }
-                />
-              </th>
-              {["SI.No", "Asset Code", "Title", "Acquire Date", "Useful Life(year)", "size", "Depreciated Value (%)", "Status"].map((header, index) => (
+
+              {["SI.No", "Asset Code", "Title", "Acquire Date", "Useful Life(year)", "Floors", "Plint_area(sq.,)", "Depreciated Value (%)", "Status"].map((header, index) => (
                 <th key={index}>{header}</th>
               ))}
               <th>
@@ -301,19 +403,13 @@ const Building = () => {
           <tbody>
             {displayedData.map((item, index) => (
               <tr key={index}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.includes(item.AID)}
-                    onChange={() => handleSelectRow(item.AID)}
-                  />
-                </td>
                 <td>{item.SerialNo}</td>
                 <td>{item.AssetCode}</td>
                 <td>{item.Title}</td>
                 <td>{item.AcquireDate}</td>
                 <td>{item.Useful_life}</td>
-                <td>{item.size}</td>
+                <td>{item.Floor}</td>
+                <td>{item.PlintArea}</td>
                 <td>{item.Depreciated_value}</td>
                 <td>
                   <div className={getStatusClass(item.status)}>
@@ -343,6 +439,167 @@ const Building = () => {
           <button onClick={() => setCurrentPage(totalPages)}>{totalPages}</button>
         </div>
       </div>
+
+      {/* Add Building Modal */}
+      {showAddModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="form-h">Create Asset</h2>
+              <button className="close-btn" onClick={() => setShowAddModal(false)}>
+                <IoIosCloseCircle style={{ color: "#897463", width: "20px", height: "20px" }} />
+              </button>
+            </div>
+            <div className="schedule-form">
+              <div className="modal-content-field">
+                <label>Title:</label>
+                <input
+                  type="text"
+                  value={newBuilding.Title}
+                  onChange={(e) => setNewBuiding({ ...newBuilding, Title: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Asset Code:</label>
+                <input
+                  type="text"
+                  value={newBuilding.AssetCode}
+                  onChange={(e) => setNewBuiding({ ...newBuilding, AssetCode: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Category:</label>
+                <input
+                  type="text"
+                  value={newBuilding.Category}
+                  onChange={(e) => setNewBuiding({ ...newBuilding, Category: e.target.value })}
+                />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Plint Area(sq.m):</label>
+                <input
+                  type="text"
+                  value={newBuilding.PlintArea}
+                  onChange={(e) => setNewBuiding({ ...newBuilding, PlintArea: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Acquired Date:</label>
+                <input
+                  type="text"
+                  value={newBuilding.AcquireDate}
+                  onChange={(e) => setNewBuiding({ ...newBuilding, AcquireDate: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Useful Life (Year):</label>
+                <input
+                  type="text"
+                  value={newBuilding.Useful_life}
+                  onChange={(e) => setNewBuiding({ ...newBuilding, Useful_life: e.target.value })}
+                />
+              </div>
+              {/* <div className="modal-content-field">
+                      <label>Status:</label>
+                      <input
+                        type="text"
+                        value={newBuilding.status}
+                        onChange={(e) => setNewBuiding({ ...newBuilding, Useful_life: e.target.value })}
+                      />
+                    </div> */}
+              <div className="modal-content-field">
+                <label>Cost:</label>
+                <input
+                  type="text"
+                  value={newBuilding.cost}
+                  onChange={(e) => setNewBuiding({ ...newBuilding, cost: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Area:</label>
+                <input
+                  type="text"
+                  value={newBuilding.Area}
+                  onChange={(e) => setNewBuiding({ ...newBuilding, Area: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Depreciated Value (%):</label>
+                <input
+                  type="number"
+                  value={newBuilding.DepreciatedValue}
+                  onChange={(e) => setNewBuiding({ ...newBuilding, DepreciatedValue: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Description:</label>
+                <input
+                  type="text"
+                  value={newBuilding.description}
+                  onChange={(e) => setNewBuiding({ ...newBuilding, description: e.target.value })}
+                />
+              </div>
+
+              <h3 style={{ color: "#305845", fontSize: "14px" }}>Floor and Room Data</h3>
+              <div className="modal-content-field">
+                <label>Floor Name:</label>
+                <input
+                  type="text"
+                  value={newBuilding.Floor}
+                  onChange={(e) => setFloorInput(e.target.value)}
+                />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Room Name:</label>
+                <div style={{ display: "flex", width: "100%", maxWidth: "350px" }}>
+                  <input
+                    type="text"
+                    // value={newBuilding.addRoo}
+                    onChange={(e) => setRoomInput(e.target.value)}
+
+                  />
+                  <button type="button" onClick={addRoom} style={{ backgroundColor: "#897463", color: "white", border: "1px, solid", borderRadius: "10px", marginLeft: "10px" }}>
+                    Add Room
+                  </button>
+                </div>
+
+              </div>
+
+
+
+              <h4 style={{ color: "#305845", fontSize: "14px" }}>Current Floor and Room:</h4>
+              <div style={styles.textArea}>
+                {Object.entries(floorAndRooms).length === 0 ? (
+                  <p style={styles.emptyMessage}>No floors or rooms added yet.</p>
+                ) : (
+                  Object.entries(floorAndRooms).map(([floor, rooms]) => (
+                    <div key={floor} style={styles.floorBlock}>
+                      <p style={styles.floorTitle}>Floor: {floor}:</p>
+                      {rooms.length > 0 ? (
+                        rooms.map((room, index) => (
+                          <p key={index} style={styles.roomText}>Room:  {room}</p>
+                        ))
+                      ) : (
+                        <p style={styles.noRoomText}>No rooms added</p>
+                      )}
+                    </div>
+                  ))
+                )}
+
+              </div>
+
+
+
+              <div className="modal-actions">
+                <button className="accept-btn" style={{ width: "80px" }} onClick={handleSaveNewBuilding}>Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Modal for Viewing Request */}
       {modalData && (
@@ -405,7 +662,7 @@ const Building = () => {
                 <input value={modalData.Area} readOnly />
               </div>
               <div className="modal-content-field">
-                <label>Created by</label>
+                <label>Created by:</label>
                 <input value={modalData.Created_by} readOnly />
               </div>
               <div className="modal-content-field">
@@ -417,12 +674,92 @@ const Building = () => {
                 <button className="accept-btn" style={{ backgroundColor: "red" }}>
                   <RiDeleteBin6Line />
                 </button>
-                <button className="reject-btn">Schedule Maintenance</button>
+
+                <button className="accept-btn" onClick={handleScheduleMaintenance}>
+                  Schedule Maintenance
+                </button>
+
+
+
+                {/* <button className="accept-btn" onClick={() => handleScheduleMaintenance()} >Schedule Maintenance</button> */}
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* scheduleModel */}
+      {scheduleModalData && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Preventive maintenance schedule form</h2>
+              <button className="close-btn" onClick={() => setScheduleModalData(null)}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="schedule-form">
+              <p className="sub-title">Maintenance Detail</p>
+              <div className="modal-content-field">
+                <label htmlFor="">Description: </label>
+                <input type="text" value={scheduleModalData.Description} onChange={(e) => setScheduleModalData({ ...scheduleModalData, Description: e.target.value })} />
+              </div>
+              <div className="modal-content-field">
+                <label htmlFor="">Assign: </label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={workersList}
+                  value={workersList.find(worker => worker.value === scheduleModalData.Assign) || null} // Ensure correct selection
+                  onChange={(selectedOption) => {
+                    setScheduleModalData({ ...scheduleModalData, Assign: selectedOption?.value || "" }); // Update state correctly
+                  }}
+                  isClearable
+                  isSearchable
+                />
+              </div>
+
+              <p className="sub-title">Schedule</p>
+              <div className="modal-content-field">
+                <label htmlFor="">Starts on: </label>
+                <input
+                  type="date"
+                  value={scheduleModalData.Lastworkorder ? new Date(scheduleModalData.Lastworkorder).toISOString().split("T")[0] : ""}
+                  onChange={(e) => setScheduleModalData({ ...scheduleModalData, Lastworkorder: e.target.value })}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label htmlFor="">Schedule time: </label>
+                <input type="time" value={scheduleModalData.Schedule} onChange={(e) => setScheduleModalData({ ...scheduleModalData, Schedule: e.target.value })} />
+              </div>
+              <div className="modal-content-field">
+                <label htmlFor="">Repeats: </label>
+                <input type="text" value={scheduleModalData.Schedule} onChange={(e) => setScheduleModalData({ ...scheduleModalData, Schedule: e.target.value })} />
+              </div>
+              <div className="modal-content-field">
+                <label htmlFor="">Ends on: </label>
+                <input
+                  type="date"
+                  value={scheduleModalData.Nextworkorder ? new Date(scheduleModalData.Nextworkorder).toISOString().split("T")[0] : ""}
+                  onChange={(e) => setScheduleModalData({ ...scheduleModalData, Nextworkorder: e.target.value })}
+                />
+              </div>
+
+            </div>
+
+            {/* <button className="save-btn" onClick={handleSaveEdit}>Save</button> */}
+            <div className="modal-buttons">
+              <button className="accept-btn" style={{ width: "150px" }}>Create Schedule</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div >
   )
 };
