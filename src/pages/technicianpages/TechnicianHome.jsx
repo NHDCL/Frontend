@@ -123,7 +123,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   {/* Work Status Dropdown */}
   <Select
     classNamePrefix="customm-select-workstatus"
-    className="workstatus-dropdown"
+    className="Wworkstatus-dropdown"
     options={uniqueWorkStatuses}
     value={uniqueWorkStatuses.find(
       (option) => option.value === selectedWorkStatus

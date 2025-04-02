@@ -1,10 +1,5 @@
 import React, { useState, lazy, Suspense } from "react";
 import AssetTap from "./AssetTap";
-import { IoIosSearch } from "react-icons/io";
-import { IoMdAdd } from "react-icons/io";
-import { ImFolderDownload } from "react-icons/im";
-
-import Select from "react-select";
 
 
 // Lazy load category components correctly
