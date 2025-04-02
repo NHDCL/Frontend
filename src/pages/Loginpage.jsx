@@ -90,13 +90,14 @@ const Loginpage = () => {
               Forgot Password?
             </Link>
           </div>
-            {/* <Link to="/technician/" style={{ width:"40%"}} > */}
-            <Link to="/admin/" style={{ width:"40%"}} >
-            {/* <Link to="/manager/" style={{ width:"40%"}} > */}
+          {/* <Link to="/technician/" style={{ width:"40%"}} > */}
+          {/* <Link to="/admin/" style={{ width:"40%"}} > */}
 
-              <button type="submit" style={{ width:"40%"}} className="login-submit-btn">
-              <Link to="/admin/" style={{ width:"40%", color:"white"}} >Login</Link>
-              </button>
+          <button type="submit" style={{ width: "40%" }} className="login-submit-btn">
+            {/* <Link to="/admin/" style={{ width: "40%", color: "white" }} >Login</Link> */}
+            <Link to="/manager/" style={{ width: "40%" }} >Login</Link>
+
+          </button>
         </form>
       </div>
       <LandingFooter />

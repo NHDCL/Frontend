@@ -346,8 +346,6 @@ const PMaintenance = () => {
                   isClearable
                   isSearchable
                 />
-
-
               </div>
 
               <p className="sub-title">Schedule</p>

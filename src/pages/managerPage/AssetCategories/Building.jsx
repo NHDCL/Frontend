@@ -224,6 +224,27 @@ const Building = () => {
     setModalData(item);
   };
 
+  const handleCreateSchedule = () => {
+    if (
+      !scheduleModalData.Schedule ||
+      !scheduleModalData.Lastworkorder ||
+      !scheduleModalData.Nextworkorder ||
+      !scheduleModalData.Assign
+    ) {
+      alert("Please fill out all fields before submitting.");
+      return;
+    }
+  
+    // If all fields are filled, process the schedule
+    console.log("Creating schedule:", scheduleModalData);
+  
+    // Only close the modal AFTER schedule creation
+    // setIsScheduleModalOpen(false); // Removed from here
+    setScheduleModalData(null);
+  };
+  
+
+
   // Function to get the class based on workstatus
   const getStatusClass = (status) => {
     switch (status) {
@@ -306,16 +327,30 @@ const Building = () => {
     { value: "Worker C", label: "Worker C" },
   ];
 
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(true);
+  
   const handleScheduleMaintenance = () => {
-    setScheduleModalData({
-      ...modalData, // Passing in modalData to populate the schedule form
-      Schedule: modalData.Schedule || "",
-      Lastworkorder: modalData.Lastworkorder || "",
-      Nextworkorder: modalData.Nextworkorder || "",
-      Assign: modalData.Assign || "",
-    });
+    // Ensure the modalData is correctly populated before opening the schedule modal
+    if (modalData) {
+      setScheduleModalData({
+        Schedule: modalData.Schedule || "",
+        Lastworkorder: modalData.Lastworkorder || "",
+        Nextworkorder: modalData.Nextworkorder || "",
+        Assign: modalData.Assign || "",
+        Description: modalData.Description || "", // Add more if needed
+      });
+  
+      // Open the modal
+      setIsScheduleModalOpen(true);
+    }
   };
+  
+  
 
+  const closeModal = () => {
+    setIsScheduleModalOpen(false); // Close modal
+    setScheduleModalData(null); // Reset modal data
+  };
 
   return (
     <div className="managerDashboard" >
@@ -393,7 +428,7 @@ const Building = () => {
               ))}
               <th>
                 {selectedRows.length > 0 && (
-                  <button className="delete-all-btn" onClick={handleDeleteSelected}>
+                  <button className="delete-all-btn" onClick={handleDeleteSelected()}>
                     <RiDeleteBin6Line style={{ width: "20px", height: "20px", color: "red" }} />
                   </button>
                 )}
@@ -446,9 +481,10 @@ const Building = () => {
           <div className="modal-content">
             <div className="modal-header">
               <h2 className="form-h">Create Asset</h2>
-              <button className="close-btn" onClick={() => setShowAddModal(false)}>
+              <button className="close-btn" onClick={closeModal}>
                 <IoIosCloseCircle style={{ color: "#897463", width: "20px", height: "20px" }} />
               </button>
+
             </div>
             <div className="schedule-form">
               <div className="modal-content-field">
@@ -608,7 +644,7 @@ const Building = () => {
             {/* Close Button */}
             <div className="modal-header">
               <h2 className="form-h">Asset Details</h2>
-              <button className="close-btn" onClick={handleCloseModal}>
+              <button className="close-btn" onClick={() => setIsScheduleModalOpen(false)}>
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
                 />
@@ -679,9 +715,6 @@ const Building = () => {
                   Schedule Maintenance
                 </button>
 
-
-
-                {/* <button className="accept-btn" onClick={() => handleScheduleMaintenance()} >Schedule Maintenance</button> */}
               </div>
             </form>
           </div>
@@ -689,16 +722,14 @@ const Building = () => {
       )}
 
       {/* scheduleModel */}
-      {scheduleModalData && (
+      { scheduleModalData && isScheduleModalOpen && ( 
         <div className="modal-overlay">
           <div className="modal-content">
             {/* Close Button */}
             <div className="modal-header">
               <h2 className="form-h">Preventive maintenance schedule form</h2>
-              <button className="close-btn" onClick={() => setScheduleModalData(null)}>
-                <IoIosCloseCircle
-                  style={{ color: "#897463", width: "20px", height: "20px" }}
-                />
+              <button className="close-btn" onClick={() => setIsScheduleModalOpen(false)}>
+                <IoIosCloseCircle style={{ color: "#897463", width: "20px", height: "20px" }} />
               </button>
             </div>
 
