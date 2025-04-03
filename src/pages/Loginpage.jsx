@@ -4,9 +4,15 @@ import { FaEnvelope, FaLock } from "react-icons/fa";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import Header from "../components/LandingComponents/Header";
 import LandingFooter from "../components/LandingComponents/LandingFooter";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useLoginMutation } from "../slices/userApiSlice"; // Import login mutation
+import { setCredentials } from "../slices/authSlice";
 
 const Loginpage = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [login, { isLoading }] = useLoginMutation(); // Login mutation
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,11 +42,48 @@ const Loginpage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log("Form submitted with:", { email, password });
-      // Handle successful login here
+      try {
+        const response = await login({ email, password }).unwrap(); // Call API
+        dispatch(setCredentials({ ...response }));
+        console.log("Login Successful:", response);
+
+        // Extract the role name from the response (assuming it's in the authorities array)
+        const authorities = response.user.authorities; // The authorities array
+        let userRole = "";
+
+        // Check if authorities contain both roleId and roleName
+        authorities.forEach((auth) => {
+          if (
+            auth.authority === "Admin" ||
+            auth.authority === "Manager" ||
+            auth.authority === "Super Admin" ||
+            auth.authority === "Supervisor" ||
+            auth.authority === "Technician"
+          ) {
+            userRole = auth.authority; // Assign the role name
+          }
+        });
+
+        // Navigate based on the user's role
+        if (userRole === "Admin") {
+          navigate("/admin/"); // Navigate to the Admin page
+        } else if (userRole === "Manager") {
+          navigate("/manager/"); // Navigate to the Manager page
+        } else if (userRole === "Super Admin") {
+          navigate("/superadmin/"); // Navigate to the Super Admin page
+        } else if (userRole === "Supervisor") {
+          navigate("/supervisor/"); // Navigate to the Supervisor page
+        } else if (userRole === "Technician") {
+          navigate("/technician/"); // Navigate to the Technician page
+        } else {
+          navigate("/"); // Default navigation (in case of an unknown role)
+        }
+      } catch (err) {
+        console.error("Login Failed:", err);
+      }
     }
   };
 
@@ -80,24 +123,32 @@ const Loginpage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <span className="login-password-toggle" onClick={togglePasswordVisibility}>
+                <span
+                  className="login-password-toggle"
+                  onClick={togglePasswordVisibility}
+                >
                   {showPassword ? <AiFillEye /> : <AiFillEyeInvisible />}
                 </span>
               </div>
-              {errors.password && <p className="error-message">{errors.password}</p>}
+              {errors.password && (
+                <p className="error-message">{errors.password}</p>
+              )}
             </div>
             <Link to="/forgotpassword" className="login-forgot-password">
               Forgot Password?
             </Link>
           </div>
-            {/* <Link to="/technician/" style={{ width:"40%"}} > */}
-            {/* <Link to="/admin/" style={{ width:"40%"}} > */}
-            {/* <Link to="/manager/" style={{ width:"40%"}} > */}
+          {/* <Link to="/technician/" style={{ width:"40%"}} > */}
+          {/* <Link to="/admin/" style={{ width:"40%"}} > */}
+          {/* <Link to="/manager/" style={{ width:"40%"}} > */}
 
-          <button type="submit" style={{ width: "40%" }} className="login-submit-btn">
-            {/* <Link to="/admin/" style={{ width: "40%", color: "white" }} >Login</Link> */}
-            <Link to="/manager/" style={{ width: "40%" }} >Login</Link>
-
+          <button
+            type="submit"
+            style={{ width: "40%" }}
+            className="login-submit-btn"
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
       </div>
