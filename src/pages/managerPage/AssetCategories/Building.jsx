@@ -327,7 +327,7 @@ const Building = () => {
     { value: "Worker C", label: "Worker C" },
   ];
 
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(true);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   
   const handleScheduleMaintenance = () => {
     // Ensure the modalData is correctly populated before opening the schedule modal
@@ -644,7 +644,7 @@ const Building = () => {
             {/* Close Button */}
             <div className="modal-header">
               <h2 className="form-h">Asset Details</h2>
-              <button className="close-btn" onClick={() => setIsScheduleModalOpen(false)}>
+              <button className="close-btn" onClick={handleCloseModal}>
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
                 />
@@ -722,7 +722,7 @@ const Building = () => {
       )}
 
       {/* scheduleModel */}
-      { scheduleModalData && isScheduleModalOpen && ( 
+      {isScheduleModalOpen && scheduleModalData && ( 
         <div className="modal-overlay">
           <div className="modal-content">
             {/* Close Button */}

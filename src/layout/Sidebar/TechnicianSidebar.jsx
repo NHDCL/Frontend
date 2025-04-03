@@ -20,7 +20,7 @@ const TechnicianSidebar = () => {
         <ul className="nav-list">
           {techniciannavigationLinks.map((link, index) => (
             <>
-              {index === splitIndex && <hr className="nav-divider" />} {/* Add hr before last two items */}
+              {/* {index === splitIndex && <hr className="nav-divider" />} Add hr before last two items */}
               <li className="nav-item" key={link.id}>
                 <NavLink 
                   to={`/technician/${link.path}`} 
