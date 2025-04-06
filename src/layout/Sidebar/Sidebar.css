@@ -90,6 +90,25 @@
 .nav-link:focus {
   background-color: var(--clr-darkgreen);
   color: var(--clr-white);
+  .nav-link:focus {
+    background-color: var(--clr-darkgreen);
+    color: var(--clr-white);
+  }
+  .nav-link-icon {
+    width: 22px;
+  }
+  .nav-link-text {
+    text-transform: capitalize;
+    font-size: 14px;
+  }
+
+  .sidebar-divider {
+    width: 90%;
+    margin-top: 30px;
+  }
+}
+.logout-btn {
+  color: #315845;
 }
 .nav-link-icon {
   width: 22px;
@@ -169,6 +188,10 @@
 .nav-list {
   padding: 0;
   margin: 0;
+}
+.nav-divider {
+  margin-top: 350px;
+  margin-bottom: 20px;
 }
 
 .bottom-links {

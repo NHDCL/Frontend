@@ -6,12 +6,14 @@ import "./../managerPage/css/dropdown.css";
 import Select from "react-select";
 import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
+import { RiImageAddLine } from "react-icons/ri";
 
-const WorkOrderModal = ({ order, onClose, data=[] }) => {
+const WorkOrderModal = ({ order, onClose, data = [] }) => {
   const [teamMembers, setTeamMembers] = useState(order.teamMembers || []);
   const [newMember, setNewMember] = useState("");
-    const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
-  
+  const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
+  const [images, setImages] = useState([]); // Allow multiple images
+  const [imageError, setImageError] = useState("");
 
   const handleAddMember = () => {
     if (newMember.trim() && !teamMembers.includes(newMember)) {
@@ -26,8 +28,25 @@ const WorkOrderModal = ({ order, onClose, data=[] }) => {
 
   if (!order) return null;
 
-   // Extract unique work statuses from data
-   const uniqueWorkStatuses = [
+  // Handle image upload
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (images.length + files.length > 5) {
+      setImageError("You can upload a maximum of 5 images.");
+      return;
+    }
+    setImageError("");
+    const imageUrls = files.map((file) => URL.createObjectURL(file));
+    setImages((prevImages) => [...prevImages, ...imageUrls]);
+  };
+
+  // Remove uploaded image
+  const removeImage = (index) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
+
+  // Extract unique work statuses from data
+  const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
     ...Array.from(new Set(data.map((item) => item.workstatus))).map(
       (status) => ({
@@ -98,20 +117,28 @@ const WorkOrderModal = ({ order, onClose, data=[] }) => {
             <input type="text" value={`$${order.totalCost}`} readOnly />
           </div>
 
+          {/* Display Multiple Asset Images */}
           <div className="TModal-content-field">
-            <label>Asset Image:</label>
+            <label>Asset Images:</label>
             <div className="TModal-profile-img">
-              {order.imageUrl ? (
+              {Array.isArray(order.imageUrl) && order.imageUrl.length > 0 ? (
+                order.imageUrl.map((imgSrc, index) => (
+                  <img
+                    key={index}
+                    src={imgSrc}
+                    alt={`Work Order ${index + 1}`}
+                    className="TModal-modal-image"
+                  />
+                ))
+              ) : order.imageUrl ? (
+                // If `imageUrl` is a string, display it as a single image
                 <img
                   src={order.imageUrl}
                   alt="Work Order"
                   className="TModal-modal-image"
                 />
               ) : (
-                <div className="TModal-image-upload">
-                  <span>📷</span>
-                  <p>Click Here to Upload Image</p>
-                </div>
+                <p>No image available</p>
               )}
             </div>
           </div>
@@ -134,6 +161,50 @@ const WorkOrderModal = ({ order, onClose, data=[] }) => {
               isClearable
               isSearchable={false}
             />
+          </div>
+
+          <div className="TModal-content-field">
+            <label>Repaired Images:</label>
+            <div className="TModal-profile-img">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                id="imageUpload"
+                onChange={handleImageUpload}
+                style={{ display: "none" }}
+              />
+              {imageError && <p className="error-text">{imageError}</p>}
+              <div className="TModel-multiupload">
+                {images.map((imgSrc, index) => (
+                  <div key={index} className="mr-image-wrapper">
+                    <img
+                      src={imgSrc}
+                      alt={`Uploaded Preview ${index}`}
+                      className="mr-upload-preview"
+                    />
+                    <button
+                      type="button"
+                      className="mr-remove-btn"
+                      onClick={() => removeImage(index)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {images.length < 5 && (
+                  <div
+                    className="mr-upload-box"
+                    onClick={() =>
+                      document.getElementById("imageUpload").click()
+                    }
+                  >
+                    <RiImageAddLine className="mr-upload-icon" />
+                    <p className="mr-pimg">Upload Images</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="TModal-content-field">
@@ -166,7 +237,10 @@ const WorkOrderModal = ({ order, onClose, data=[] }) => {
                   {teamMembers.map((member, index) => (
                     <div key={index} className="TModal-team-member">
                       {member}{" "}
-                        <IoMdCloseCircle onClick={() => handleRemoveMember(index)} style={{color:"black"}}/>
+                      <IoMdCloseCircle
+                        onClick={() => handleRemoveMember(index)}
+                        style={{ color: "black" }}
+                      />
                     </div>
                   ))}
                 </div>
@@ -205,253 +279,255 @@ const TechnicianWorkOrder = () => {
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
       totalCost: 400,
-      imageUrl:
+      imageUrl:[
         "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Minor",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
         "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Minor",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
 
+      ],
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Minor",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Minor",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
+    {
+      id: 1,
+      title: "Chair Repair",
+      dueDate: "Apr 23, 2025",
+      location: "Block-k-203",
+      priority: "Major",
+      time: { start: "07:00 AM", end: "09:00 AM" },
+      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
+      description: "The chair leg is broken and needs replacement.",
+      totalCost: 400,
+      imageUrl:
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      status: "Pending",
+      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
+      additionalInfo: "",
+    },
   ]);
 
   const uniquePriorities = [
@@ -476,7 +552,6 @@ const TechnicianWorkOrder = () => {
 
   return (
     <div className="work-orders-container">
-
       <div className="WorkOrder-filter-section">
         <Select
           classNamePrefix="custom-select"

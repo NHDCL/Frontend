@@ -238,7 +238,7 @@ const PMaintenance = () => {
                 <th>
                   {selectedRows.length > 0 ? (
                     <button
-                      className="delete-all-btn"
+                      className="deleteMaintenance-all-btn"
                       onClick={handleDeleteSelected}
                     >
                       <RiDeleteBin6Line
@@ -346,8 +346,6 @@ const PMaintenance = () => {
                   isClearable
                   isSearchable
                 />
-
-
               </div>
 
               <p className="sub-title">Schedule</p>

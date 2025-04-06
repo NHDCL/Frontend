@@ -47,31 +47,21 @@ const TechnicianSidebar = () => {
       <nav className="navigation">
         <ul className="nav-list">
           {techniciannavigationLinks.map((link, index) => (
-            <>
+            <li className="nav-item" key={link.path}>
+              {" "}
+              {/* Use unique key like `link.path` */}
               {index === splitIndex && <hr className="nav-divider" />}{" "}
-              {/* Add hr before last two items */}
-              <li className="nav-item" key={link.id}>
-                {link.title === "Logout" ? (
-                  <button
-                    className="nav-link logout-btn"
-                    onClick={handleLogout}
-                  >
-                    <link.icon className="nav-link-icon" />
-                    <span className="nav-link-text">{link.title}</span>
-                  </button>
-                ) : (
-                  <NavLink
-                    to={`/technician/${link.path}`}
-                    className="nav-link"
-                    activeclassname="active"
-                    end
-                  >
-                    <link.icon className="nav-link-icon" />
-                    <span className="nav-link-text">{link.title}</span>
-                  </NavLink>
-                )}
-              </li>
-            </>
+              {/* Divider for the last two items */}
+              <NavLink
+                to={`/technician/${link.path}`}
+                className="nav-link"
+                activeClassName="active"
+                end
+              >
+                <link.icon className="nav-link-icon" />
+                <span className="nav-link-text">{link.title}</span>
+              </NavLink>
+            </li>
           ))}
         </ul>
       </nav>

@@ -3,8 +3,14 @@ import { useContext } from "react";
 import { SidebarContext } from "../../context/sidebarContext";
 import { IoMenu } from "react-icons/io5";
 import { useLocation } from "react-router-dom";
-import { managernavigationLinks } from "../../data/data";
 import { useUser } from "../../context/userContext";
+import {
+  managernavigationLinks,
+  techniciannavigationLinks,
+  adminnavigationLinks,
+  sadminnavigationLinks,
+  supervisornavigationLinks
+} from "../../data/data";
 
 const ContentTop = () => {
   const { toggleSidebar } = useContext(SidebarContext);
@@ -20,11 +26,7 @@ const ContentTop = () => {
   return (
     <div className="main-content-top">
       <div className="content-top-left">
-        <button
-          type="button"
-          className="sidebar-toggler"
-          onClick={() => toggleSidebar()}
-        >
+        <button type="button" className="sidebar-toggler" onClick={toggleSidebar}>
           <IoMenu style={{ fontSize: "25px", color: "var(--clr-darkgreen)" }} />
         </button>
         <h3 className="content-top-title">
@@ -39,6 +41,8 @@ const ContentTop = () => {
             alt="Profile"
           />
         </button>
+        <p style={{ fontSize: "14px", fontWeight: "500" }}>{user.role}</p>
+
       </div>
     </div>
   );
