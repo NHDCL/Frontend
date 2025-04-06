@@ -8,10 +8,11 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import { LuDownload } from "react-icons/lu";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import "tippy.js/dist/tippy.css";
 import Tippy from "@tippyjs/react";
+import autoTable from "jspdf-autotable";
+
 import Select from "react-select"
 
 const Maintenancereport = () => {
@@ -24,8 +25,6 @@ const Maintenancereport = () => {
     Additional_Hour: "",
     Remarks: "",
   });
-
-
 
   const rowsPerPage = 10;
 
@@ -149,6 +148,30 @@ const Maintenancereport = () => {
   //   return matchesSearch && matchesPriority;
   // });
 
+  const handleDownloadSelected = () => {
+    if (selectedRows.length === 0) return;
+
+    const selectedData = data.filter((item) => selectedRows.includes(item.rid));
+
+    const csvContent = [
+      ["Repair ID", "Asset Name", "Start Time", "End Time", "Date", "Area", "Total Cost", "Parts Used", "Location", "Description", "Total Technicians", "Assigned Supervisor", "Assigned Technician"],
+      ...selectedData.map((item) => [
+        item.rid, item.assetName, item.startTime, item.endTime, item.Date,
+        item.Area, item.Total_cost, item.part_used, item.location,
+        item.description, item.total_technician, item.Assigned_supervisor, item.Assigned_Technician
+      ])
+    ].map(row => row.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "repair_report.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   const sortedData = [...data].sort((a, b) => b.rid - a.rid);
 
   const filteredData = sortedData.filter((item) => {
@@ -197,19 +220,49 @@ const Maintenancereport = () => {
   const modalRef = useRef(null);
 
   // **Function to handle PDF download**
-  const handleDownloadPDF = (e) => {
-    e.preventDefault(); // Prevents unwanted form submission
 
-    if (modalRef.current) {
-      html2canvas(modalRef.current, { scale: 2 }).then((canvas) => {
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "mm", "a4"); // Set A4 size (portrait)
-        const imgWidth = 190; // Adjust image width
-        const imgHeight = (canvas.height * imgWidth) / canvas.width; // Maintain aspect ratio
-        pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
-        pdf.save("Repair_Report.pdf");
-      });
-    }
+  // **Function to handle PDF download**
+  const handleDownloadPDF = () => {
+    if (!modalData) return; // Prevent function execution if no data is selected
+  
+    const doc = new jsPDF();
+  
+    // Add title
+    doc.text("Repair Report", 14, 15);
+  
+    // Define table headers
+    const columns = ["Field", "Value"];
+  
+    // Map modalData dynamically into table rows
+    const rows = [
+      ["RID", modalData.rid],
+      ["Asset Name", modalData.assetName],
+      ["Start Time", modalData.startTime],
+      ["End Time", modalData.endTime],
+      ["Date", modalData.Date],
+      ["Area", modalData.Area],
+      ["Total Cost", modalData.Total_cost],
+      ["Part Used", modalData.part_used],
+      ["Location", modalData.location],
+      ["Description", modalData.description],
+      ["Total Technicians", modalData.total_technician],
+      ["Assigned Supervisor", modalData.Assigned_supervisor],
+      ["Assigned Technician", modalData.Assigned_Technician],
+      ["Additional Info", modalData.Additional_information],
+    ];
+  
+    // Generate the table using autoTable
+    autoTable(doc, {
+      head: [columns],
+      body: rows,
+      startY: 20,
+      theme: "grid",
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [41, 128, 185] }, // Blue header background
+    });
+  
+    // Save the PDF
+    doc.save(`Repair_Report_${modalData.rid}.pdf`);
   };
 
   return (
@@ -228,7 +281,7 @@ const Maintenancereport = () => {
           </div>
           {/* Download  */}
           <div className="create-category-btn">
-            <button className="category-btn">Download</button>
+            <button className="category-btn" onClick={handleDownloadSelected}>Download</button>
             <LuDownload style={{ color: "#ffffff", marginRight: "12px" }} />
           </div>
 
@@ -266,11 +319,11 @@ const Maintenancereport = () => {
                 <th>
                   {selectedRows.length > 0 ? (
                     <button
-                      className="delete-all-btn"
-                      onClick={handleDeleteSelected}
+                      className="download-all-btn"
+                      onClick={handleDownloadSelected}
                     >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px", color: "red" }}
+                      < LuDownload
+                        style={{ width: "35px", height: "35px", color: "#305845", paddingLeft: "12px" }}
                       />
                     </button>
                   ) : (

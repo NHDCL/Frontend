@@ -8,6 +8,8 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select"
+import { TiArrowSortedUp } from "react-icons/ti";
+
 
 const ManagerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -109,24 +111,40 @@ const ManagerDashboard = () => {
 
   ]);
 
-    // Extract unique priorities from data
-    const uniquePriorities = [
-      { value: "", label: "All Priorities" },
-      ...Array.from(new Set(data.map(item => item.priority))).map(priority => ({
-        value: priority,
-        label: priority
-      }))
-    ];
-  // Filtering data based on search and priority selection
-  // const filteredData = data.filter((item) => {
-  //   const matchesSearch = Object.values(item).some((value) =>
-  //     value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  //   );
-  //   const matchesPriority =
-  //     selectedPriority === "" || item.priority === selectedPriority;
+  // Sorting
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
 
-  //   return matchesSearch && matchesPriority;
-  // });
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      if (a[column] < b[column]) return ascending ? -1 : 1;
+      if (a[column] > b[column]) return ascending ? 1 : -1;
+      return 0;
+    });
+    setData(sortedData);
+  };
+
+  const handleSort = (column) => {
+    const newSortOrder = column === sortOrder.column
+      ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
+      : true; // Start with ascending for a new column
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+    sortData(column, newSortOrder);
+  };
+
+
+
+  // Extract unique priorities from data
+  const uniquePriorities = [
+    { value: "", label: "All Priorities" },
+    ...Array.from(new Set(data.map(item => item.priority))).map(priority => ({
+      value: priority,
+      label: priority
+    }))
+  ];
 
   const sortedData = [...data].sort((a, b) => b.rid - a.rid);
 
@@ -235,7 +253,7 @@ const ManagerDashboard = () => {
           />
         </div>
         <div className="table-container">
-          <table className="RequestTable" style={{width: "100% " ,minWidth: "800px"}}>
+          <table className="RequestTable" style={{ width: "100% ", minWidth: "800px" }}>
             <thead className="table-header">
               <tr>
                 <th>
@@ -258,25 +276,38 @@ const ManagerDashboard = () => {
                   "Phone Number",
                   "Location",
                   "Description",
+                  " "
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header === "Asset Name" || header === "Location" ? (
+                      <div className="header-title">
+                        {header}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() => handleSort("assetName" || "Location")}
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform: (sortOrder.column === "assetName" || sortOrder.column === "Location") && sortOrder.ascending
+                                  ? "rotate(0deg)"
+                                  : "rotate(180deg)",
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header
+                    )}
+                  </th>
                 ))}
-                <th>
-                  {selectedRows.length > 0 ? (
-                    <button
-                      className="delete-all-btn"
-                      onClick={handleDeleteSelected}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px", color: "red" }}
-                      />
-                    </button>
-                  ) : (
-                    " "
-                  )}
-                </th>
               </tr>
             </thead>
+
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>

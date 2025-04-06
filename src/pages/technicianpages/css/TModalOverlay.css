@@ -178,7 +178,7 @@
     font-size: 14px;
 }
 
-.Wworkstatus-dropdown{
+/* .workstatus-dropdown{
   width: 100%;
   max-width: 350px;
 
@@ -194,7 +194,7 @@
   height: 120px;
   /* width: 90%; */
   /* background-color: #5A607F; */
-}
+
 @media screen and (max-width: 1000px) {
   .TModal-modal-content {
     width: 50%;
