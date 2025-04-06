@@ -1,13 +1,15 @@
-import { Navigate, Outlet } from "react-router-dom";
-import PropTypes from "prop-types";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-const ProtectedRoute = ({ isAllowed, redirectPath = "/login" }) => {
-  return isAllowed ? <Outlet /> : <Navigate to={redirectPath} replace />;
-};
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { user } = useAuth();
 
-ProtectedRoute.propTypes = {
-  isAllowed: PropTypes.bool.isRequired,
-  redirectPath: PropTypes.string,
+  // If the user is not logged in or doesn't have the required role, redirect to login
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <Navigate to="/login" />;
+  }
+
+  return children; // Render the child components if user has the required role
 };
 
 export default ProtectedRoute;
