@@ -46,41 +46,35 @@ const Loginpage = () => {
     e.preventDefault();
     if (validateForm()) {
       try {
-        const response = await login({ email, password }).unwrap(); // Call API
-        dispatch(setCredentials({ ...response }));
+        const response = await login({ email, password }).unwrap();
+
+        // Extract the role from authorities
+        const authorities = response.user.authorities;
+        const userRole = authorities.find((auth) =>
+          ["Admin", "Manager", "Super Admin", "Supervisor", "Technician"].includes(auth.authority)
+        )?.authority || "Unknown";
+
+        // Store both user and userRole in Redux and localStorage
+        dispatch(setCredentials({ user: response.user, userRole }));
+
         console.log("Login Successful:", response);
+        console.log("User Role:", userRole);
 
-        // Extract the role name from the response (assuming it's in the authorities array)
-        const authorities = response.user.authorities; // The authorities array
-        let userRole = "";
-
-        // Check if authorities contain both roleId and roleName
-        authorities.forEach((auth) => {
-          if (
-            auth.authority === "Admin" ||
-            auth.authority === "Manager" ||
-            auth.authority === "Super Admin" ||
-            auth.authority === "Supervisor" ||
-            auth.authority === "Technician"
-          ) {
-            userRole = auth.authority; // Assign the role name
-          }
-        });
-
-        // Navigate based on the user's role
+        // Navigate based on role
         if (userRole === "Admin") {
-          navigate("/admin/"); // Navigate to the Admin page
+          navigate("/admin/");
         } else if (userRole === "Manager") {
-          navigate("/manager/"); // Navigate to the Manager page
+          navigate("/manager/");
         } else if (userRole === "Super Admin") {
-          navigate("/superadmin/"); // Navigate to the Super Admin page
+          navigate("/superadmin/");
         } else if (userRole === "Supervisor") {
-          navigate("/supervisor/"); // Navigate to the Supervisor page
+          navigate("/supervisor/");
         } else if (userRole === "Technician") {
-          navigate("/technician/"); // Navigate to the Technician page
+          navigate("/technician/");
         } else {
-          navigate("/"); // Default navigation (in case of an unknown role)
+          navigate("/");
         }
+
       } catch (err) {
         console.error("Login Failed:", err);
       }
@@ -138,9 +132,6 @@ const Loginpage = () => {
               Forgot Password?
             </Link>
           </div>
-          {/* <Link to="/technician/" style={{ width:"40%"}} > */}
-          {/* <Link to="/admin/" style={{ width:"40%"}} > */}
-          {/* <Link to="/manager/" style={{ width:"40%"}} > */}
 
           <button
             type="submit"
