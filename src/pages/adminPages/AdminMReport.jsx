@@ -10,8 +10,8 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { LuDownload } from "react-icons/lu";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-
-import Select from "react-select"
+import "tippy.js/dist/tippy.css";
+import Tippy from "@tippyjs/react";
 
 const AdminMReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,6 +44,11 @@ const AdminMReport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "",
+      imageUrl:[
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+
+      ],
     },
     {
       rid: "#1002",
@@ -60,6 +65,11 @@ const AdminMReport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "12210.gcit@gmail.com",
+      imageUrl:[
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+
+      ],
     },
     {
       rid: "#1003",
@@ -76,6 +86,11 @@ const AdminMReport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
+      imageUrl:[
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+
+      ],
     },
     {
       rid: "#1004",
@@ -92,6 +107,11 @@ const AdminMReport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
+      imageUrl:[
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+
+      ],
     },
     {
       rid: "#1004",
@@ -108,6 +128,11 @@ const AdminMReport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "1I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
+      imageUrl:[
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+
+      ],
     },
 
   ]);
@@ -240,8 +265,15 @@ const AdminMReport = () => {
                   <td>{item.Area}</td>
                   <td>{item.Total_cost}</td>
                   <td>{item.part_used}</td>
-                  <td className="description">{item.description}</td>
-                  <td className="actions">
+                  <td className="description">
+                    <Tippy content={item.description} placement="top">
+                      <span>
+                        {item.description.length > 20
+                          ? item.description.substring(0, 20) + "..."
+                          : item.description}
+                      </span>
+                    </Tippy>
+                  </td>                  <td className="actions">
                     <button style={{marginLeft:"10px"}} className="view-btn" onClick={() => handleView(item)}>
                       View
                     </button>
@@ -334,7 +366,31 @@ const AdminMReport = () => {
                   <label>Total Cost: </label>
                   <input type="text" value={modalData.Total_cost} readOnly />
                 </div>
-    
+                
+                <div className="modal-content-field">
+            <label>Repaired Images:</label>
+            <div className="TModal-profile-img">
+              {Array.isArray(modalData.imageUrl) && modalData.imageUrl.length > 0 ? (
+                modalData.imageUrl.map((imgSrc, index) => (
+                  <img
+                    key={index}
+                    src={imgSrc}
+                    alt={`Work Order ${index + 1}`}
+                    className="TModal-modal-image"
+                  />
+                ))
+              ) : modalData.imageUrl ? (
+                // If `imageUrl` is a string, display it as a single image
+                <img
+                  src={modalData.imageUrl}
+                  alt="Work Order"
+                  className="TModal-modal-image"
+                />
+              ) : (
+                <p>No image available</p>
+              )}
+            </div>
+          </div>
 
                 <div className="modal-buttons">
                   <button className="accept-btn" onClick={handleDownloadPDF}>Download

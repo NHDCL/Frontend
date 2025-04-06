@@ -12,7 +12,7 @@ const ContentTop = () => {
   const { user } = useUser();
 
   // Set profile image to a constant variable
-  const profileImage = user?.profileImage || "https://randomuser.me/api/portraits/men/1.jpg";
+  const profileImage = user?.profileImage || "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250";
   const currentPage = managernavigationLinks.find(
     (link) => link.path === location.pathname
   );
@@ -32,13 +32,15 @@ const ContentTop = () => {
         </h3>
       </div>
       <div className="content-top-btns">
-        <button className="profile-btn">
+      <button className="profile-btn">
           <img
             src={profileImage} // Use the constant for the profile image
             className="profile-img" // You can style the profile image
             alt="Profile"
           />
         </button>
+        <p style={{ fontSize: "14px", fontWeight: "500" }}>{user.role}</p>
+
       </div>
     </div>
   );

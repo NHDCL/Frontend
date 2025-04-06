@@ -18,8 +18,13 @@
   font-size: 15px;
   font-weight: 600;
 }
-.content-top-btn {
-  margin-left: 18px;
+.content-top-btns {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* background-color: darkviolet; */
+  /* margin-left: 18px; */
 }
 .content-top-btn img {
   width: 24px;

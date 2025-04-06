@@ -6,7 +6,8 @@ const UserContext = createContext();
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState({
     name: "John Doe",
-    profileImage:{img}  // You can replace with a URL or base64 image
+    profileImage:img,  // You can replace with a URL or base64 image
+    role: "Manager",
   });
 
   return (

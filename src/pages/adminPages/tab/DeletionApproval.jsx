@@ -10,18 +10,12 @@ import { IoIosCloseCircle } from "react-icons/io";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-import Select from "react-select";
-
 const DeletionApproval = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [modalData, setModalData] = useState(null);
-  const [editableData, setEditableData] = useState({
-    Additional_cost: "",
-    Additional_Hour: "",
-    Remarks: "",
-  });
+
 
   const rowsPerPage = 10;
 
@@ -86,12 +80,8 @@ const DeletionApproval = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (rid) => {
-    setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(rid)
-        ? prevSelectedRows.filter((item) => item !== rid)
-        : [...prevSelectedRows, rid]
-    );
+  const handleInputChange = (e, field) => {
+    setModalData({ ...modalData, [field]: e.target.value });
   };
 
   const handleDeleteSelected = () => {
@@ -110,22 +100,6 @@ const DeletionApproval = () => {
 
   // Ref for the modal
   const modalRef = useRef(null);
-
-  // **Function to handle PDF download**
-  const handleDownloadPDF = (e) => {
-    e.preventDefault(); // Prevents unwanted form submission
-
-    if (modalRef.current) {
-      html2canvas(modalRef.current, { scale: 2 }).then((canvas) => {
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "mm", "a4"); // Set A4 size (portrait)
-        const imgWidth = 190; // Adjust image width
-        const imgHeight = (canvas.height * imgWidth) / canvas.width; // Maintain aspect ratio
-        pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
-        pdf.save("Repair_Report.pdf");
-      });
-    }
-  };
 
   return (
     <div className="ManagerDashboard">
@@ -230,60 +204,20 @@ const DeletionApproval = () => {
             </div>
             <div className="modal-body" ref={modalRef}>
               <form className="repair-form">
-                <div className="modal-content-field">
-                  <label>Asset ID:</label>
-                  <input type="text" value={modalData.Asset_ID} readOnly />
+              {Object.keys(modalData).map((field) => (
+                <div key={field} className="modal-content-field">
+                  <label>{field.replace("_", " ")}:</label>
+                  {field !== "Deleted_By" ? (
+                    <input
+                      type="text"
+                      value={modalData[field]}
+                      onChange={(e) => handleInputChange(e, field)}
+                    />
+                  ) : (
+                    <input type="text" value={modalData[field]} readOnly />
+                  )}
                 </div>
-
-                <div className="modal-content-field">
-                  <label>Title</label>
-                  <input type="text" value={modalData.Title} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Asset Code: </label>
-                  <input type="text" value={modalData.Asset_Code} readOnly />
-                </div>
-
-                <div className="modal-content-field">
-                  <label>Serial Number: </label>
-                  <input type="text" value={modalData.Serial_Number} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Cost: </label>
-                  <input type="text" value={modalData.Cost} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Acquired Date:</label>
-                  <input type="text" value={modalData.Acquired_Date} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Estimated Lifespan: </label>
-                  <input
-                    type="text"
-                    value={modalData.Estimated_Lifespan}
-                    readOnly
-                  />
-                </div>
-                <div className="modal-content-field">
-                  <label>Status</label>
-                  <input type="text" value={modalData.Status} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Category: </label>
-                  <input type="text" value={modalData.Category} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Area: </label>
-                  <input type="text" value={modalData.Area} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Description: </label>
-                  <textarea value={modalData.Description} readOnly />
-                </div>
-                <div className="modal-content-field">
-                  <label>Deleted_By: </label>
-                  <input type="text" value={modalData.Deleted_By} readOnly />
-                </div>
+              ))}
                 <div className="modal-buttons">
                   <button className="accept-btn">Approve</button>
                   <button className="reject-btn">Decline</button>

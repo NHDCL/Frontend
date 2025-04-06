@@ -214,6 +214,159 @@
 }
 
 
+
+/* Add Users */
+.custommm-select-workstatus__control {
+  width: 100% !important;
+  min-width: 50px !important;
+  max-width: 750px !important;
+  border: 1.5px solid #897463 !important;
+  border-radius: 10px;
+  padding: 2px;
+  font-size: 13px;
+  margin-bottom: 8px;
+  background-color: hotpink;
+  color: #333;
+}
+
+.custommm-select-workstatus__control:hover {
+  border-color: #897463 !important;
+}
+
+.custommm-select-workstatus__placeholder {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.custommm-select-workstatus__menu {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100% !important;
+  min-width: 50px !important;
+  max-width: 650px !important;
+}
+
+/* Change dropdown option color */
+.custommm-select-workstatus__option {
+  font-size: 13px !important;
+  color: #333;
+  padding: 12px !important;
+  background-color: #fff;
+}
+
+/* Change hover effect */
+.custommm-select-workstatus__option:hover {
+  background-color: #897463 !important;
+  color: white !important;
+}
+
+/* Change the selected option's background color */
+.custommm-select-workstatus__option--is-selected {
+  background-color: #897463 !important; /* Brown background */
+  color: white !important; /* White text */
+}
+
+/* Change the dropdown arrow color */
+.custommm-select-workstatus__indicator {
+  color: #897463 !important;
+}
+
+/* Remove the separator line */
+.custommm-select-workstatus__indicator-separator {
+  display: none;
+}
+
+/* Change border color on focus */
+.custommm-select-workstatus__control--is-focused {
+  border-color: none !important; /* Brown border */
+  box-shadow: none !important; /* Light brown glow */
+}
+.custommm-select-workstatus__clear-indicator {
+  display: none !important;
+}
+
+
+/* dropdown for maintenance  request */
+.customm-select-department__control {
+  width: 100% !important;
+  min-width: 50px !important;
+  max-width: 650px !important;
+  border: 1.5px solid #897463 !important;
+  border-radius: 10px !important;
+  padding: 2px;
+  font-size: 13px;
+  color: #333;
+  text-align: left !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+}
+
+
+.customm-select-department__control:hover {
+  border-color: #897463 !important;
+}
+
+.customm-select-department__placeholder {
+  font-size: 14px;
+  color: #aaa;
+  align-items: flex-start !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+  
+}
+
+.customm-select-department__menu {
+  background-color: #fff;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100% !important;
+  min-width: 50px !important;
+  max-width: 650px !important;
+}
+
+/* Change dropdown option color */
+.customm-select-department__option {
+  font-size: 13px !important;
+  color: #333;
+  padding: 12px !important;
+  background-color: #fff;
+  text-align: left !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+}
+
+/* Change hover effect */
+.customm-select-department__option:hover {
+  background-color: #897463 !important;
+  color: white !important;
+}
+
+/* Change the selected option's background color */
+.customm-select-department__option--is-selected {
+  background-color: #897463 !important; /* Brown background */
+  color: white !important; /* White text */
+}
+
+/* Change the dropdown arrow color */
+.customm-select-department__indicator {
+  color: #897463 !important;
+}
+
+/* Remove the separator line */
+.customm-select-department__indicator-separator {
+  display: none;
+}
+
+/* Change border color on focus */
+.customm-select-department__control--is-focused {
+  border-color: none !important; /* Brown border */
+  box-shadow: none !important; /* Light brown glow */
+}
+.customm-select-department__clear-indicator {
+  display: none !important;
+}
+
 /* department dropdown */
 .custom-select-department__control {
   width: 100% !important;

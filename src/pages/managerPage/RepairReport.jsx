@@ -1,4 +1,4 @@
-      import React, { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import "./css/card.css";
 import "./css/table.css";
 import "./css/form.css";
@@ -10,8 +10,8 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { LuDownload } from "react-icons/lu";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-
-import Select from "react-select"
+import "tippy.js/dist/tippy.css";
+import Tippy from "@tippyjs/react";
 
 const Repairreport = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,8 +23,6 @@ const Repairreport = () => {
     Additional_Hour: "",
     Remarks: "",
   });
-
-
 
   const rowsPerPage = 10;
 
@@ -39,11 +37,17 @@ const Repairreport = () => {
       Total_cost: "NU.400",
       part_used: "screw driver",
       location: "Block-A-101",
-      description: "Cooling issue",
+      description:
+        "Cooling issue A chair is a piece of furniture designed to provide seating support for a single person. It typically consists of a seat, a backrest, and four legs, although variations exist with three legs, armrests, and cushioning.",
       total_technician: "4",
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
+      Additional_information:
+        "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
+      imageUrl: [
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      ],
     },
     {
       rid: "#1002",
@@ -60,6 +64,10 @@ const Repairreport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "12210.gcit@gmail.com",
+      imageUrl: [
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      ],
     },
     {
       rid: "#1003",
@@ -76,6 +84,10 @@ const Repairreport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "12210.gcit@gmail.com",
+      imageUrl: [
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      ],
     },
     {
       rid: "#1004",
@@ -92,6 +104,10 @@ const Repairreport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "12210.gcit@gmail.com",
+      imageUrl: [
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      ],
     },
     {
       rid: "#1004",
@@ -108,8 +124,11 @@ const Repairreport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "12210.gcit@gmail.com",
+      imageUrl: [
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      ],
     },
-
   ]);
 
   // Filtering data based on search and priority selection
@@ -130,10 +149,8 @@ const Repairreport = () => {
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-
     return matchesSearch;
   });
-
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -205,8 +222,6 @@ const Repairreport = () => {
             <button className="category-btn">Download</button>
             <LuDownload style={{ color: "#ffffff", marginRight: "12px" }} />
           </div>
-
-
         </div>
         <div className="table-container">
           <table className="RequestTable">
@@ -233,7 +248,7 @@ const Repairreport = () => {
                   "Area",
                   "Total Cost",
                   "Parts_used",
-                  "Description"
+                  "Description",
                 ].map((header, index) => (
                   <th key={index}>{header}</th>
                 ))}
@@ -270,9 +285,20 @@ const Repairreport = () => {
                   <td>{item.Area}</td>
                   <td>{item.Total_cost}</td>
                   <td>{item.part_used}</td>
-                  <td className="description">{item.description}</td>
+                  <td className="description">
+                    <Tippy content={item.description} placement="top">
+                      <span>
+                        {item.description.length > 20
+                          ? item.description.substring(0, 20) + "..."
+                          : item.description}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td className="actions">
-                    <button className="view-btn" onClick={() => handleView(item)}>
+                    <button
+                      className="view-btn"
+                      onClick={() => handleView(item)}
+                    >
                       View
                     </button>
                   </td>
@@ -351,15 +377,27 @@ const Repairreport = () => {
                 </div>
                 <div className="modal-content-field">
                   <label>Total Technicians</label>
-                  <input type="text" value={modalData.total_technician} readOnly />
+                  <input
+                    type="text"
+                    value={modalData.total_technician}
+                    readOnly
+                  />
                 </div>
                 <div className="modal-content-field">
                   <label>Assigned Technicians</label>
-                  <input type="text" value={modalData.Assigned_Technician} readOnly />
+                  <input
+                    type="text"
+                    value={modalData.Assigned_Technician}
+                    readOnly
+                  />
                 </div>
                 <div className="modal-content-field">
                   <label>Assigned Supervisor</label>
-                  <input type="text" value={modalData.Assigned_supervisor} readOnly />
+                  <input
+                    type="text"
+                    value={modalData.Assigned_supervisor}
+                    readOnly
+                  />
                 </div>
                 <div className="modal-content-field">
                   <label>Description:</label>
@@ -374,29 +412,64 @@ const Repairreport = () => {
                   <textarea value={modalData.Additional_information} readOnly />
                 </div>
                 <div className="modal-content-field">
+                  <label>Repaired Images:</label>
+                  <div className="TModal-profile-img">
+                    {Array.isArray(modalData.imageUrl) &&
+                    modalData.imageUrl.length > 0 ? (
+                      modalData.imageUrl.map((imgSrc, index) => (
+                        <img
+                          key={index}
+                          src={imgSrc}
+                          alt={`Work Order ${index + 1}`}
+                          className="TModal-modal-image"
+                        />
+                      ))
+                    ) : modalData.imageUrl ? (
+                      // If `imageUrl` is a string, display it as a single image
+                      <img
+                        src={modalData.imageUrl}
+                        alt="Work Order"
+                        className="TModal-modal-image"
+                      />
+                    ) : (
+                      <p>No image available</p>
+                    )}
+                  </div>
+                </div>
+                <div className="modal-content-field">
                   <label>Additional Cost:</label>
-                  <input name="Additional_cost" value={editableData.Additional_cost} onChange={handleInputChange} />
+                  <input
+                    name="Additional_cost"
+                    value={editableData.Additional_cost}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="modal-content-field">
                   <label>Additional Hours:</label>
-                  <input name="Additional_Hour" value={editableData.Additional_Hour} onChange={handleInputChange} />
+                  <input
+                    name="Additional_Hour"
+                    value={editableData.Additional_Hour}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="modal-content-field">
                   <label>Remarks:</label>
-                  <textarea name="Remarks" value={editableData.Remarks} onChange={handleInputChange} />
+                  <textarea
+                    name="Remarks"
+                    value={editableData.Remarks}
+                    onChange={handleInputChange}
+                  />
                 </div>
 
-
                 <div className="modal-buttons">
-                  <button className="accept-btn" onClick={handleDownloadPDF}>Download
+                  <button className="accept-btn" onClick={handleDownloadPDF}>
+                    Download
                     <LuDownload style={{ marginLeft: "12px" }} />
                   </button>
                   <button className="reject-btn">Done</button>
                 </div>
               </form>
-
             </div>
-
           </div>
         </div>
       )}

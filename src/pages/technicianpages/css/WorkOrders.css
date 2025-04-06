@@ -44,17 +44,33 @@
     margin-right: 5px;
   }
   
-  .minor {
+  .low {
     background-color: #d4f1d4;
     color: #2d7a2d;
-    width: 80px;
+    width: 70px;
     border-radius: 10px;
   }
   
-  .major {
+  .immediate {
     background-color: #f8d7da;
     color: #a71d2a;
-    width: 80px;
+    width: 110px;
+    border-radius: 10px;
+
+
+  }
+
+  .high {
+    background-color: #f0d8ac;
+    color: #b46d16;
+    width: 70px;
+    border-radius: 10px;
+  }
+  
+  .moderate{
+    background-color: rgb(239, 239, 192);
+    color: rgb(170, 170, 27);
+    width: 110px;
     border-radius: 10px;
 
 
