@@ -20,14 +20,13 @@ const AppRoutes = () => {
       <Route path="/newpassword" element={<Newpasswordpage />} />
 
       {/* Define separate base paths for manager and technician */}
-      <Route path="/manager/*" element={<ManagerRoutes />} /> 
-      <Route path="/technician/*" element={<TechnicianRoutes />} /> 
-      <Route path="/admin/*" element={<AdminRoutes />} /> 
-      <Route path="/superadmin/*" element={<SuperAdminRoutes />} /> 
-      <Route path="/supervisor/*" element={<SupervisorRoutes />} /> 
+      <Route path="/manager/*" element={<ManagerRoutes />} />
+      <Route path="/technician/*" element={<TechnicianRoutes />} />
+      <Route path="/admin/*" element={<AdminRoutes />} />
+      <Route path="/superadmin/*" element={<SuperAdminRoutes />} />
+      <Route path="/supervisor/*" element={<SupervisorRoutes />} />
 
       <Route path="*" element={<h1>404 - Page Not Found</h1>} />
-
     </Routes>
   );
 };

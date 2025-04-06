@@ -1,12 +1,40 @@
 import { useContext } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import { managernavigationLinks } from "../../data/data";
 import "./Sidebar.css";
 import { SidebarContext } from "../../context/sidebarContext";
 import logo from "../../assets/images/Nlogo.jpeg";
 
-const Sidebar = () => {
+const ManagerSidebar = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You will be logged out!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, Logout!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("authToken");
+        sessionStorage.removeItem("user");
+        Swal.fire({
+          icon: "success",
+          title: "Logged out successfully!",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+        });
+        navigate("/login");
+      }
+    });
+  };
 
   return (
     <div className={`sidebar ${isSidebarOpen ? "sidebar-change" : ""}`}>
@@ -19,15 +47,22 @@ const Sidebar = () => {
         <ul className="nav-list">
           {managernavigationLinks.map((link) => (
             <li className="nav-item" key={link.id}>
-              <NavLink 
-                to={`/manager/${link.path}`}  // Ensure absolute path
-                className="nav-link" 
-                activeclassname="active"
-                end // Prevents nested links from staying active
-              >
-                <link.icon className="nav-link-icon" />
-                <span className="nav-link-text">{link.title}</span>
-              </NavLink>
+              {link.title === "Logout" ? (
+                <button className="nav-link logout-btn" onClick={handleLogout}>
+                  <link.icon className="nav-link-icon" />
+                  <span className="nav-link-text">{link.title}</span>
+                </button>
+              ) : (
+                <NavLink
+                  to={`/manager/${link.path}`} // Ensure absolute path
+                  className="nav-link"
+                  activeclassname="active"
+                  end // Prevents nested links from staying active
+                >
+                  <link.icon className="nav-link-icon" />
+                  <span className="nav-link-text">{link.title}</span>
+                </NavLink>
+              )}
             </li>
           ))}
         </ul>
@@ -36,4 +71,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default ManagerSidebar;
