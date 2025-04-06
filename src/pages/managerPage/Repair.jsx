@@ -8,6 +8,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
+import { TiArrowSortedUp } from "react-icons/ti";
 
 const Repair = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,10 +69,10 @@ const Repair = () => {
     {
       rid: "#1005",
       image: img,
-      name: "Yangchen",
+      name: "Pema",
       email: "yangchen@example.com",
       phone: "17748323",
-      Area: "Block-A-101",
+      Area: "Block-B-101",
       priority: "Major",
       workstatus: "In progress"
     },
@@ -81,17 +82,17 @@ const Repair = () => {
       name: "Yangchen",
       email: "yangchen@example.com",
       phone: "17748323",
-      Area: "Block-A-101",
+      Area: "Block-C-101",
       priority: "Major",
       workstatus: "In progress"
     },
     {
       rid: "#1007",
       image: img,
-      name: "Yangchen",
+      name: "Dorji",
       email: "yangchen@example.com",
       phone: "17748323",
-      Area: "Block-A-101",
+      Area: "lock-A-101",
       priority: "Major",
       workstatus: "pending"
     }
@@ -153,6 +154,7 @@ const Repair = () => {
 
   // Filtering data based on search and priority selection and work status
   const sortedData = [...data].sort((a, b) => b.rid - a.rid);
+
   const filteredData = sortedData.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
@@ -200,6 +202,31 @@ const Repair = () => {
     setModalData(null);
   };
 
+  // Sorting
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      if (a[column] < b[column]) return ascending ? -1 : 1;
+      if (a[column] > b[column]) return ascending ? 1 : -1;
+      return 0;
+    });
+    setData(sortedData);
+  };
+
+  const handleSort = (column) => {
+    const newSortOrder = column === sortOrder.column
+      ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
+      : true; // Start with ascending for a new column
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+    sortData(column, newSortOrder);
+  };
+
+
   return (
     <div className="ManagerDashboard">
       <div className="container">
@@ -243,10 +270,7 @@ const Repair = () => {
               isClearable
               isSearchable={false}
             />
-
           </div>
-
-
         </div>
 
         <div className="table-container">
@@ -276,7 +300,36 @@ const Repair = () => {
                   "Priority",
                   "Workstatus"
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header === "Area" || header === "Name" ? (
+                      <div className="header-title">
+                        {header}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() =>
+                              handleSort(header === "Area" ? "Area" : header.toLowerCase().replace(' ', ''))
+                            }
+
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform: sortOrder.column === header.toLowerCase().replace(' ', '') && sortOrder.ascending
+                                  ? "rotate(0deg)"  // Ascending
+                                  : sortOrder.column === header.toLowerCase().replace(' ', '') && !sortOrder.ascending
+                                    ? "rotate(180deg)" // Descending
+                                    : "rotate(0deg)",  // Default
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header
+                    )}
+                  </th>
                 ))}
                 <th>
                   {selectedRows.length > 0 ? (
@@ -378,7 +431,7 @@ const Repair = () => {
                 />
               </button>
             </div>
-            
+
             {/* Assign Dropdown */}
             <div className="schedule-form">
               <div className="modal-content-field">

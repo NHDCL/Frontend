@@ -299,3 +299,49 @@ button {
   width: 80px;
 }
 
+.sort-icons{
+  display: flex;
+  flex-direction: column;
+}
+.sort-btn{
+  padding: 0px;
+} 
+
+
+.table-header th {
+  /* Ensure the table headers are still aligned normally */
+  padding-right: 10px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Optional: Hover effect for sorting buttons */
+.sort-btn:hover svg {
+  fill: #007bff;
+}
+
+
+.sort-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sort-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.sort-btn svg {
+  transition: transform 0.3s ease; /* Smooth rotation */
+}
+
