@@ -9,7 +9,7 @@ import logo from "../../assets/images/Nlogo.jpeg";
 const TechnicianSidebar = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
   const navigate = useNavigate();
-  const splitIndex = techniciannavigationLinks.length - 2; // Get the index before last two items
+  const splitIndex = techniciannavigationLinks.length - 2; // For optional divider logic
 
   const handleLogout = () => {
     Swal.fire({
@@ -48,19 +48,23 @@ const TechnicianSidebar = () => {
         <ul className="nav-list">
           {techniciannavigationLinks.map((link, index) => (
             <li className="nav-item" key={link.path}>
-              {" "}
-              {/* Use unique key like `link.path` */}
-              {index === splitIndex && <hr className="nav-divider" />}{" "}
-              {/* Divider for the last two items */}
-              <NavLink
-                to={`/technician/${link.path}`}
-                className="nav-link"
-                activeClassName="active"
-                end
-              >
-                <link.icon className="nav-link-icon" />
-                <span className="nav-link-text">{link.title}</span>
-              </NavLink>
+              {index === splitIndex && <hr className="nav-divider" />}
+              {link.title === "Logout" ? (
+                <button className="nav-link logout-btn" onClick={handleLogout}>
+                  <link.icon className="nav-link-icon" />
+                  <span className="nav-link-text">{link.title}</span>
+                </button>
+              ) : (
+                <NavLink
+                  to={`/technician/${link.path}`}
+                  className="nav-link"
+                  activeclassname="active"
+                  end
+                >
+                  <link.icon className="nav-link-icon" />
+                  <span className="nav-link-text">{link.title}</span>
+                </NavLink>
+              )}
             </li>
           ))}
         </ul>
