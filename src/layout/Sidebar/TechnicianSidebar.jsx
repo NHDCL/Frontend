@@ -17,23 +17,42 @@ const TechnicianSidebar = () => {
         </div>
       </div>
       <nav className="navigation">
-        <ul className="nav-list">
-          {techniciannavigationLinks.map((link, index) => (
-            <li className="nav-item" key={link.path}> {/* Use unique key like `link.path` */}
-              {index === splitIndex && <hr className="nav-divider" />} {/* Divider for the last two items */}
-              <NavLink 
-                to={`/technician/${link.path}`} 
-                className="nav-link" 
-                activeClassName="active"
-                end
-              >
-                <link.icon className="nav-link-icon" />
-                <span className="nav-link-text">{link.title}</span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
+  <ul className="nav-list">
+    {techniciannavigationLinks.slice(0, splitIndex).map((link) => (
+      <li className="nav-item" key={link.path}>
+        <NavLink 
+          to={`/technician/${link.path}`} 
+          className="nav-link" 
+          activeClassName="active"
+          end
+        >
+          <link.icon className="nav-link-icon" />
+          <span className="nav-link-text">{link.title}</span>
+        </NavLink>
+      </li>
+    ))}
+  </ul>
+
+  <div className="bottom-links">
+    <hr className="nav-divider" />
+    <ul className="nav-list">
+      {techniciannavigationLinks.slice(splitIndex).map((link) => (
+        <li className="nav-item" key={link.path}>
+          <NavLink 
+            to={`/technician/${link.path}`} 
+            className="nav-link" 
+            activeClassName="active"
+            end
+          >
+            <link.icon className="nav-link-icon" />
+            <span className="nav-link-text">{link.title}</span>
+          </NavLink>
+        </li>
+      ))}
+    </ul>
+  </div>
+</nav>
+
     </div>
   );
 };
