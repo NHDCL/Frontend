@@ -58,6 +58,10 @@ const Loginpage = () => {
 
       try {
         const response = await login({ email, password }).unwrap(); // Call API
+
+        // ⬇️ Save JWT token to sessionStorage
+        sessionStorage.setItem("token", response.token);
+
         dispatch(setCredentials({ ...response }));
         console.log("Login Successful:", response);
 
@@ -70,10 +74,9 @@ const Loginpage = () => {
           timer: 2000,
           willClose: () => {
             // Extract the role name from the response (assuming it's in the authorities array)
-            const authorities = response.user.authorities; // The authorities array
+            const authorities = response.user.authorities;
             let userRole = "";
 
-            // Check if authorities contain the roleId and roleName
             authorities.forEach((auth) => {
               if (
                 auth.authority === "Admin" ||
@@ -82,23 +85,23 @@ const Loginpage = () => {
                 auth.authority === "Supervisor" ||
                 auth.authority === "Technician"
               ) {
-                userRole = auth.authority; // Assign the role name
+                userRole = auth.authority;
               }
             });
 
             // Navigate based on the user's role
             if (userRole === "Admin") {
-              navigate("/admin/"); // Navigate to the Admin page
+              navigate("/admin/");
             } else if (userRole === "Manager") {
-              navigate("/manager/"); // Navigate to the Manager page
+              navigate("/manager/");
             } else if (userRole === "Super Admin") {
-              navigate("/superadmin/"); // Navigate to the Super Admin page
+              navigate("/superadmin/");
             } else if (userRole === "Supervisor") {
-              navigate("/supervisor/"); // Navigate to the Supervisor page
+              navigate("/supervisor/");
             } else if (userRole === "Technician") {
-              navigate("/technician/"); // Navigate to the Technician page
+              navigate("/technician/");
             } else {
-              navigate("/"); // Default navigation (in case of an unknown role)
+              navigate("/");
             }
           },
         });

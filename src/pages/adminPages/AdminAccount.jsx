@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./../managerPage/css/MAccount.css";
 import img from "../../assets/images/pp.png";
 import { RiImageAddLine } from "react-icons/ri";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 
-const ManagerAccount = () => {
+const AdminAccount = () => {
   const [profile, setProfile] = useState({
-    name: "Tenzin Om",
-    email: "omtenzin@gmail.com",
+    name: "",
+    email: "",
+    academy: "", // Keep academy but don't update it
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -20,6 +21,43 @@ const ManagerAccount = () => {
     newPassword: false,
     confirmPassword: false,
   });
+
+  const token = sessionStorage.getItem("token"); // 🔑 Retrieve token
+
+  // Fetch profile data on component mount
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/manager/profile",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // 🔐 Attach token
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile data");
+        }
+
+        const data = await response.json();
+        setProfile((prevProfile) => ({
+          ...prevProfile,
+          name: data.name, // Retrieved name
+          email: data.email, // Retrieved email
+          academy: prevProfile.academy, // Keep academy value as is, not updated from the backend
+        }));
+      } catch (error) {
+        console.error("Failed to fetch profile data:", error.message);
+        alert("Failed to load profile data.");
+      }
+    };
+
+    fetchProfileData();
+  }, [token]); // The useEffect hook will run when the component mounts or when the token changes
 
   const togglePasswordVisibility = (field) => {
     setShowPassword((prevState) => ({
@@ -51,25 +89,37 @@ const ManagerAccount = () => {
     } else if (!/\S+@\S+\.\S+/.test(profile.email)) {
       newErrors.email = "Invalid email format";
     }
-    if (!profile.oldPassword) newErrors.oldPassword = "Old password is required";
-
-    if (profile.newPassword || profile.confirmPassword) {
-      if (profile.newPassword.length < 6) {
-        newErrors.newPassword = "New password must be at least 6 characters";
-      }
-      if (profile.newPassword !== profile.confirmPassword) {
-        newErrors.confirmPassword = "Passwords do not match";
-      }
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      alert("Profile Updated Successfully!");
-      console.log("Updated Profile:", profile);
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/manager/update-profile",
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // 🔐 Attach token
+            },
+            body: JSON.stringify(profile),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to update profile");
+        }
+
+        const data = await response.json();
+        alert("Profile Updated Successfully!");
+        console.log("Updated Profile (from server):", data);
+      } catch (error) {
+        console.error("Update failed:", error.message);
+        alert("Failed to update profile. Please try again.");
+      }
     }
   };
 
@@ -80,11 +130,12 @@ const ManagerAccount = () => {
           <img src={profile.image} alt="Profile" className="profile-image" />
           <h2>{profile.name}</h2>
           <p>{profile.email}</p>
-          <p>{profile.academy}</p>
+          <p>{profile.academy}</p> {/* Academy displayed but not editable */}
         </div>
 
         <div className="profile-right">
           <h3>Edit Your Profile Details</h3>
+          {/* Name is editable */}
           <input
             className="profile-input"
             type="text"
@@ -95,6 +146,7 @@ const ManagerAccount = () => {
           />
           {errors.name && <p className="error-text">{errors.name}</p>}
 
+          {/* Email is editable */}
           <input
             className="profile-input"
             type="email"
@@ -105,12 +157,25 @@ const ManagerAccount = () => {
           />
           {errors.email && <p className="error-text">{errors.email}</p>}
 
+          {/* Academy is not editable */}
+          <input
+            className="profile-input"
+            type="text"
+            name="academy"
+            value={profile.academy}
+            disabled // Academy is read-only
+            placeholder="Academy"
+          />
+          {errors.academy && <p className="error-text">{errors.academy}</p>}
+
+          {/* Password fields */}
           {["oldPassword", "newPassword", "confirmPassword"].map((field) => (
             <div className="password-container" key={field}>
               <input
                 className="profile-input"
                 type={showPassword[field] ? "text" : "password"}
                 name={field}
+                value={profile[field]}
                 placeholder={
                   field === "oldPassword"
                     ? "Old Password"
@@ -138,7 +203,7 @@ const ManagerAccount = () => {
               className="profile-hidden"
             />
             <RiImageAddLine className="profile-upload-icon" />
-            <p style={{marginBottom:"4px"}}>Upload Image</p>
+            <p style={{ marginBottom: "4px" }}>Upload Image</p>
           </label>
 
           <button className="profile-update-button" onClick={handleSubmit}>
@@ -150,4 +215,4 @@ const ManagerAccount = () => {
   );
 };
 
-export default ManagerAccount;
+export default AdminAccount;

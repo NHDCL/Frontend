@@ -9,7 +9,7 @@ import {
   techniciannavigationLinks,
   adminnavigationLinks,
   sadminnavigationLinks,
-  supervisornavigationLinks
+  supervisornavigationLinks,
 } from "../../data/data";
 
 const ContentTop = () => {
@@ -18,7 +18,8 @@ const ContentTop = () => {
   const { user } = useUser();
 
   // Set profile image to a constant variable
-  const profileImage = user?.profileImage || "https://randomuser.me/api/portraits/men/1.jpg";
+  const profileImage =
+    user?.profileImage || "https://randomuser.me/api/portraits/men/1.jpg";
   const currentPage = managernavigationLinks.find(
     (link) => link.path === location.pathname
   );
@@ -26,7 +27,11 @@ const ContentTop = () => {
   return (
     <div className="main-content-top">
       <div className="content-top-left">
-        <button type="button" className="sidebar-toggler" onClick={toggleSidebar}>
+        <button
+          type="button"
+          className="sidebar-toggler"
+          onClick={toggleSidebar}
+        >
           <IoMenu style={{ fontSize: "25px", color: "var(--clr-darkgreen)" }} />
         </button>
         <h3 className="content-top-title">
@@ -42,7 +47,6 @@ const ContentTop = () => {
           />
         </button>
         <p style={{ fontSize: "14px", fontWeight: "500" }}>{user.role}</p>
-
       </div>
     </div>
   );
