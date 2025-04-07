@@ -46,9 +46,8 @@ const ContentTop = () => {
       navigationLinks = [];
   }
 
-  // Get the relative path from location.pathname (e.g., "academies" from "/superadmin/academies")
   const pathArray = location.pathname.split("/");
-  const currentPath = pathArray[pathArray.length - 1]; // This will give "academies", "repair-maintenance", etc.
+  const currentPath = pathArray[pathArray.length - 1];
 
   // Find the corresponding navigation link
   const currentPage = navigationLinks.find(
@@ -56,7 +55,7 @@ const ContentTop = () => {
   );
 
   // Display "Home" if no match is found, or use the matched title
-  const title = currentPage ? currentPage.title : currentPath || "Home";
+  const title = currentPage ? currentPage.title : "Home";
   console.log(currentPage.title)
 
   const profileImage =

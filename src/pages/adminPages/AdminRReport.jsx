@@ -10,6 +10,7 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { LuDownload } from "react-icons/lu";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 import Select from "react-select"
 
