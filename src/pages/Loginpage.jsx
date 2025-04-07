@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useLoginMutation } from "../slices/userApiSlice"; // Import login mutation
 import { setCredentials } from "../slices/authSlice";
+import Swal from "sweetalert2";
 
 const Loginpage = () => {
   const dispatch = useDispatch();
@@ -45,44 +46,69 @@ const Loginpage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
+      // Show loading indicator with SweetAlert
+      Swal.fire({
+        title: "Logging in...",
+        text: "Please wait while we authenticate you.",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        timerProgressBar: true,
+      });
+
       try {
         const response = await login({ email, password }).unwrap(); // Call API
         dispatch(setCredentials({ ...response }));
         console.log("Login Successful:", response);
 
-        // Extract the role name from the response (assuming it's in the authorities array)
-        const authorities = response.user.authorities; // The authorities array
-        let userRole = "";
+        Swal.fire({
+          icon: "success",
+          title: "Login Successful!",
+          text: "You have logged in successfully.",
+          position: "center",
+          showConfirmButton: false,
+          timer: 2000,
+          willClose: () => {
+            // Extract the role name from the response (assuming it's in the authorities array)
+            const authorities = response.user.authorities; // The authorities array
+            let userRole = "";
 
-        // Check if authorities contain both roleId and roleName
-        authorities.forEach((auth) => {
-          if (
-            auth.authority === "Admin" ||
-            auth.authority === "Manager" ||
-            auth.authority === "Super Admin" ||
-            auth.authority === "Supervisor" ||
-            auth.authority === "Technician"
-          ) {
-            userRole = auth.authority; // Assign the role name
-          }
+            // Check if authorities contain the roleId and roleName
+            authorities.forEach((auth) => {
+              if (
+                auth.authority === "Admin" ||
+                auth.authority === "Manager" ||
+                auth.authority === "Super Admin" ||
+                auth.authority === "Supervisor" ||
+                auth.authority === "Technician"
+              ) {
+                userRole = auth.authority; // Assign the role name
+              }
+            });
+
+            // Navigate based on the user's role
+            if (userRole === "Admin") {
+              navigate("/admin/"); // Navigate to the Admin page
+            } else if (userRole === "Manager") {
+              navigate("/manager/"); // Navigate to the Manager page
+            } else if (userRole === "Super Admin") {
+              navigate("/superadmin/"); // Navigate to the Super Admin page
+            } else if (userRole === "Supervisor") {
+              navigate("/supervisor/"); // Navigate to the Supervisor page
+            } else if (userRole === "Technician") {
+              navigate("/technician/"); // Navigate to the Technician page
+            } else {
+              navigate("/"); // Default navigation (in case of an unknown role)
+            }
+          },
         });
-
-        // Navigate based on the user's role
-        if (userRole === "Admin") {
-          navigate("/admin/"); // Navigate to the Admin page
-        } else if (userRole === "Manager") {
-          navigate("/manager/"); // Navigate to the Manager page
-        } else if (userRole === "Super Admin") {
-          navigate("/superadmin/"); // Navigate to the Super Admin page
-        } else if (userRole === "Supervisor") {
-          navigate("/supervisor/"); // Navigate to the Supervisor page
-        } else if (userRole === "Technician") {
-          navigate("/technician/"); // Navigate to the Technician page
-        } else {
-          navigate("/"); // Default navigation (in case of an unknown role)
-        }
       } catch (err) {
         console.error("Login Failed:", err);
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: err?.data?.message || "An error occurred. Please try again.",
+        });
       }
     }
   };
@@ -138,9 +164,6 @@ const Loginpage = () => {
               Forgot Password?
             </Link>
           </div>
-          {/* <Link to="/technician/" style={{ width:"40%"}} > */}
-          {/* <Link to="/admin/" style={{ width:"40%"}} > */}
-          {/* <Link to="/manager/" style={{ width:"40%"}} > */}
 
           <button
             type="submit"

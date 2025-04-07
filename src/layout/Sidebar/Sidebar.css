@@ -61,7 +61,7 @@
   .nav-item {
     margin-bottom: 10px;
     margin-right: 4px;
-    /* position: relative; */
+    position: relative;
 
   }
   .nav-link {
