@@ -25,7 +25,6 @@ const AppRoutes = () => {
       <Route path="/admin/*" element={<AdminRoutes />} />
       <Route path="/superadmin/*" element={<SuperAdminRoutes />} />
       <Route path="/supervisor/*" element={<SupervisorRoutes />} />
-
       <Route path="*" element={<h1>404 - Page Not Found</h1>} />
     </Routes>
   );

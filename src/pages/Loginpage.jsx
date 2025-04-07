@@ -57,13 +57,31 @@ const Loginpage = () => {
       });
 
       try {
-        const response = await login({ email, password }).unwrap(); // Call API
+        const response = await login({ email, password }).unwrap();
 
         // ⬇️ Save JWT token to sessionStorage
         sessionStorage.setItem("token", response.token);
 
         dispatch(setCredentials({ ...response }));
+
+        // Extract the role from authorities
+        const authorities = response.user.authorities;
+        const userRole =
+          authorities.find((auth) =>
+            [
+              "Admin",
+              "Manager",
+              "Super Admin",
+              "Supervisor",
+              "Technician",
+            ].includes(auth.authority)
+          )?.authority || "Unknown";
+
+        // Store both user and userRole in Redux and localStorage
+        dispatch(setCredentials({ user: response.user, userRole }));
+
         console.log("Login Successful:", response);
+        console.log("User Role:", userRole);
 
         Swal.fire({
           icon: "success",

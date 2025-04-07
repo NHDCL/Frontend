@@ -8,6 +8,7 @@ import logo from "../../assets/images/Nlogo.jpeg";
 
 const ManagerSidebar = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
+  const splitIndex = managernavigationLinks.length - 2;
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -43,29 +44,51 @@ const ManagerSidebar = () => {
           <img src={logo} alt="profile" />
         </div>
       </div>
+
       <nav className="navigation">
         <ul className="nav-list">
-          {managernavigationLinks.map((link) => (
-            <li className="nav-item" key={link.id}>
-              {link.title === "Logout" ? (
-                <button className="nav-link logout-btn" onClick={handleLogout}>
-                  <link.icon className="nav-link-icon" />
-                  <span className="nav-link-text">{link.title}</span>
-                </button>
-              ) : (
+          {managernavigationLinks.slice(0, splitIndex).map((link) => (
+            <li className="nav-item" key={link.path}>
+             
                 <NavLink
-                  to={`/manager/${link.path}`} // Ensure absolute path
+                  to={`/manager/${link.path}`}
                   className="nav-link"
                   activeclassname="active"
-                  end // Prevents nested links from staying active
+                  end
                 >
                   <link.icon className="nav-link-icon" />
                   <span className="nav-link-text">{link.title}</span>
                 </NavLink>
-              )}
+      
             </li>
           ))}
         </ul>
+
+        <div className="bottom-links">
+          <hr className="nav-divider" />
+          <ul className="nav-list">
+            {managernavigationLinks.slice(splitIndex).map((link) => (
+              <li className="nav-item" key={link.path}>
+                {link.title === "Logout" ? (
+                  <button className="nav-link logout-btn" onClick={handleLogout}>
+                    <link.icon className="nav-link-icon" />
+                    <span className="nav-link-text">{link.title}</span>
+                  </button>
+                ) : (
+                  <NavLink
+                    to={`/manager/${link.path}`}
+                    className="nav-link"
+                    activeclassname="active"
+                    end
+                  >
+                    <link.icon className="nav-link-icon" />
+                    <span className="nav-link-text">{link.title}</span>
+                  </NavLink>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       </nav>
     </div>
   );
