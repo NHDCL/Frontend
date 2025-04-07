@@ -8,6 +8,7 @@ import logo from "../../assets/images/Nlogo.jpeg";
 
 const SupervisorSidebar = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
+  const splitIndex = supervisornavigationLinks.length - 2;
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -43,29 +44,53 @@ const SupervisorSidebar = () => {
           <img src={logo} alt="profile" />
         </div>
       </div>
+
       <nav className="navigation">
         <ul className="nav-list">
-          {supervisornavigationLinks.map((link) => (
+          {supervisornavigationLinks.slice(0, splitIndex).map((link) => (
             <li className="nav-item" key={link.id}>
-              {link.title === "Logout" ? (
-                <button className="nav-link logout-btn" onClick={handleLogout}>
-                  <link.icon className="nav-link-icon" />
-                  <span className="nav-link-text">{link.title}</span>
-                </button>
-              ) : (
+  
                 <NavLink
-                  to={`/supervisor/${link.path}`} // Ensure proper navigation
-                  className="nav-link"
-                  activeclassname="active"
-                  end // Prevents nested links from staying active
+                  to={`/supervisor/${link.path}`}
+                  className={({ isActive }) =>
+                    isActive ? "nav-link active" : "nav-link"
+                  }
+                  end
                 >
                   <link.icon className="nav-link-icon" />
                   <span className="nav-link-text">{link.title}</span>
                 </NavLink>
-              )}
+              
             </li>
           ))}
         </ul>
+
+        <div className="bottom-links">
+          <hr className="nav-divider" />
+          <ul className="nav-list">
+            {supervisornavigationLinks.slice(splitIndex).map((link) => (
+              <li className="nav-item" key={link.id}>
+                {link.title === "Logout" ? (
+                  <button className="nav-link logout-btn" onClick={handleLogout}>
+                    <link.icon className="nav-link-icon" />
+                    <span className="nav-link-text">{link.title}</span>
+                  </button>
+                ) : (
+                  <NavLink
+                    to={`/supervisor/${link.path}`}
+                    className={({ isActive }) =>
+                      isActive ? "nav-link active" : "nav-link"
+                    }
+                    end
+                  >
+                    <link.icon className="nav-link-icon" />
+                    <span className="nav-link-text">{link.title}</span>
+                  </NavLink>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       </nav>
     </div>
   );
