@@ -1,7 +1,6 @@
 import React, { useState, lazy, Suspense } from "react";
 import AssetTap from "./AssetTap";
 
-
 // Lazy load category components correctly
 const categoryComponents = {
   Tab1: lazy(() => import("./AssetCategories/Building")),
@@ -10,6 +9,7 @@ const categoryComponents = {
   Tab4: lazy(() => import("./AssetCategories/Landscaping")),
   Tab5: lazy(() => import("./AssetCategories/Machinery")),
   Tab6: lazy(() => import("./AssetCategories/Furniture")),
+  Tab7: lazy(() => import("./AssetCategories/roomQR")),
 };
 
 // Correct path for the default "Other" category
@@ -25,6 +25,7 @@ const MAsset = () => {
     { id: "Tab4", name: "Landscaping" },
     { id: "Tab5", name: "Machinery & Equipment" },
     { id: "Tab6", name: "Furniture & Fixture" },
+    { id: "Tab7", name: "Room QR" }
   ]);
 
   const [activeTab, setActiveTab] = useState("Tab1");

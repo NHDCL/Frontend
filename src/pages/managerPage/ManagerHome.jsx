@@ -197,25 +197,25 @@ const ManagerDashboard = () => {
         {/* Card counts */}
         <div className="cardCount cardCount1">
           <div className="CardContent">
-            <h3 className="cardTitle">Total technician Count</h3>
+            <h3 className="cardTitle">Total Technician Count</h3>
             <p className="count">45</p>
           </div>
         </div>
         <div className="cardCount">
           <div className="CardContent">
-            <h3 className="cardTitle">Total technician Count</h3>
+            <h3 className="cardTitle">Total Supervisor Count</h3>
             <p className="count">45</p>
           </div>
         </div>
         <div className="cardCount cardCount1">
           <div className="CardContent">
-            <h3 className="cardTitle">Total technician Count</h3>
+            <h3 className="cardTitle">Total Asset Count</h3>
             <p className="count">56</p>
           </div>
         </div>
         <div className="cardCount">
           <div className="CardContent">
-            <h3 className="cardTitle">Total technician Count</h3>
+            <h3 className="cardTitle">Total Repair Request</h3>
             <p className="count">78</p>
           </div>
         </div>

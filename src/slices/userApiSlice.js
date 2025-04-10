@@ -43,6 +43,108 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    postAcademy: builder.mutation({
+      query: (formData) => ({
+        url: USERS_URL + "/academies",
+        method: "POST",
+        body: formData,
+      }),
+    }),
+
+    getAcademy: builder.query({
+      query: () => ({
+        url: USERS_URL + "/academies",
+        method: "GET",
+      }),
+      providesTags: ["Academy"],
+    }),
+
+    // Get department
+    getDepartment: builder.query({
+      query: () => ({
+        url: USERS_URL + "/departments",
+        method: "GET",
+      }),
+      providesTags: ["Departments"],
+    }),
+
+    // Post Department
+    createDepartment: builder.mutation({
+      query: (departmentData) => ({
+        url: USERS_URL + "/departments",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(departmentData),
+      }),
+    }),
+
+    updateAcademy: builder.mutation({
+      query: ({ academyId, name, location, description, image }) => {
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("location", location);
+        formData.append("description", description);
+        if (image) {
+          formData.append("image", image);
+        }
+
+        return {
+          url: `${USERS_URL}/academies/${academyId}`,
+          method: "PUT",
+          body: formData,
+        };
+      },
+    }),
+
+    // updateAcademy: builder.mutation({
+    //   query: (updatedData) => {
+    //     console.log('Updating academy with data:', updatedData); // optional: helpful for debugging
+    //     return {
+    //       // url: ${USERS_URL}/academies/${updatedData.academyId}, // use academyId here!
+    //       url: USERS_URL + /academies/${updatedData.academyId},
+
+    //       method: 'PUT',
+    //       body: updatedData,
+    //     };
+    //   },
+    // }),
+
+    // Delete Academy
+    deleteAcademy: builder.mutation({
+      query: (id) => ({
+        url: USERS_URL + `/academies/${id}`,
+        method: "DELETE",
+      }),
+    }),
+
+    getUsers: builder.query({
+      query: () => ({
+        url: USERS_URL + "/users",
+        method: "GET",
+      }),
+      providesTags: ["users"],
+    }),
+
+    createUser: builder.mutation({
+      query: (userData) => {
+        const formData = new FormData();
+        formData.append("email", userData.email);
+        formData.append("password", userData.password);
+        formData.append("name", userData.name);
+        formData.append("academyId", userData.academyId); // Ensure academyId is appended
+        formData.append("departmentId", userData.departmentId); // departmentId should be appended if available
+        formData.append("roleId", userData.roleId);
+
+        return {
+          url: USERS_URL + "/users",
+          method: "POST",
+          body: formData,
+        };
+      },
+    }),
+
     getUserByEmail: builder.query({
       query: (email) => ({
         url: `${USERS_URL}/users/email`,
@@ -58,7 +160,6 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         if (image) {
           formData.append("image", image);
         }
-
         return {
           url: USERS_URL + "/users/image",
           method: "PUT",
@@ -79,6 +180,20 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       query: () => ({
         url: USERS_URL + "/auth/logout",
         method: "POST",
+      }),
+    }),
+
+    getAllAcademies: builder.query({
+      query: () => ({
+        url: USERS_URL + "/academies",
+        method: "GET",
+      }),
+    }),
+
+    getAllDepartments: builder.query({
+      query: () => ({
+        url: USERS_URL + "/departments",
+        method: "GET",
       }),
     }),
 
@@ -104,6 +219,14 @@ export const {
   useVerifyOtpMutation,
   useResendOtpMutation,
   useResetPasswordMutation,
+  usePostAcademyMutation,
+  useGetAcademyQuery,
+  useDeleteAcademyMutation,
+  useUpdateAcademyMutation,
+  useCreateUserMutation,
+  useGetDepartmentQuery,
+  useCreateDepartmentMutation,
+  useGetUsersQuery,
   useGetUserByEmailQuery,
   useUpdateUserImageMutation,
   useChangePasswordMutation,

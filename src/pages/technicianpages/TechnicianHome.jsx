@@ -50,10 +50,12 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work Status" },
-    ...Array.from(new Set(data.map((item) => item.workstatus))).map(
+    ...Array.from(new Set(data.map((item) => item.priority))).map(
       (status) => ({ value: status, label: status })
     ),
   ];
+  console.log("UWS",uniqueWorkStatuses)
+  console.log("data", data)
 
   return (
     <div className="TModal-modal-overlay">
@@ -104,22 +106,22 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <input type="text" value={`$${order.totalCost || 0}`} readOnly />
           </div>
 
-{/* Display Multiple Asset Images */}
-<div className="TModal-content-field">
-  <label>Asset Images:</label>
-  <div className="TModal-profile-img">
-    {Array.isArray(order.imageUrl) && order.imageUrl.length > 0 ? (
-      order.imageUrl.map((imgSrc, index) => (
-        <img key={index} src={imgSrc} alt={`Work Order ${index + 1}`} className="TModal-modal-image" />
-      ))
-    ) : order.imageUrl ? (
-      // If `imageUrl` is a string, display it as a single image
-      <img src={order.imageUrl} alt="Work Order" className="TModal-modal-image" />
-    ) : (
-      <p>No image available</p>
-    )}
-  </div>
-</div>
+          {/* Display Multiple Asset Images */}
+          <div className="TModal-content-field">
+            <label>Asset Images:</label>
+            <div className="TModal-profile-img">
+              {Array.isArray(order.imageUrl) && order.imageUrl.length > 0 ? (
+                order.imageUrl.map((imgSrc, index) => (
+                  <img key={index} src={imgSrc} alt={`Work Order ${index + 1}`} className="TModal-modal-image" />
+                ))
+              ) : order.imageUrl ? (
+                // If `imageUrl` is a string, display it as a single image
+                <img src={order.imageUrl} alt="Work Order" className="TModal-modal-image" />
+              ) : (
+                <p>No image available</p>
+              )}
+            </div>
+          </div>
 
 
           <div className="TModal-content-field">
@@ -177,22 +179,22 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
               </div>
             </div>
           </div>
-                    <div className="TModal-content-field">
-                      <label></label>
-                      <div className="TModal-outer-team">
-                        {/* Render only if team members exist */}
-                        {teamMembers.length > 0 && (
-                          <div className="TModal-team-list">
-                            {teamMembers.map((member, index) => (
-                              <div key={index} className="TModal-team-member">
-                                {member}{" "}
-                                  <IoMdCloseCircle onClick={() => handleRemoveMember(index)} style={{color:"black"}}/>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+          <div className="TModal-content-field">
+            <label></label>
+            <div className="TModal-outer-team">
+              {/* Render only if team members exist */}
+              {teamMembers.length > 0 && (
+                <div className="TModal-team-list">
+                  {teamMembers.map((member, index) => (
+                    <div key={index} className="TModal-team-member">
+                      {member}{" "}
+                      <IoMdCloseCircle onClick={() => handleRemoveMember(index)} style={{ color: "black" }} />
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
           <div className="TModal-content-field">
             <label>Additional Information:</label>
@@ -239,7 +241,7 @@ const TechnicianHome = () => {
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
       totalCost: 400,
-      imageUrl:[
+      imageUrl: [
         "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
         "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
         "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
@@ -517,6 +519,7 @@ const TechnicianHome = () => {
           value={uniquePriorities.find(
             (option) => option.value === selectedPriority
           )} // Ensure selected value is an object
+
           onChange={(selectedOption) => {
             if (selectedOption) {
               setSelectedPriority(selectedOption.value);
@@ -543,6 +546,7 @@ const TechnicianHome = () => {
         <WorkOrderModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
+          data={data}
         />
       )}
     </div>

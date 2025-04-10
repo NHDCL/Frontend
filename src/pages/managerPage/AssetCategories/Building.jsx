@@ -88,8 +88,6 @@ const Building = () => {
     },
   };
 
-
-
   const rowsPerPage = 10;
 
   const [data, setData] = useState([
@@ -270,7 +268,6 @@ const Building = () => {
     setModalData(null);
   };
 
-  // Extract unique work statuses from data
   const uniqueBuilding = [
     { value: "", label: "All buildings" },
     ...Array.from(new Set(data.map(item => item.Title))).map(Title => ({

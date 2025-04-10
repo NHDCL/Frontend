@@ -344,4 +344,8 @@ button {
 .sort-btn svg {
   transition: transform 0.3s ease; /* Smooth rotation */
 }
+.addUserDep{
+  display: flex;
+  gap:5px;
 
+}
