@@ -55,6 +55,59 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         body: { email, otp, newPassword },
       }),
     }),
+
+
+    // Add Academy
+    postAcademy: builder.mutation({
+      query: (formData) => ({
+        url: USERS_URL + "/academies",
+        method: "POST",
+        body: formData,
+      }),
+    }),
+
+    // Get Academy
+    getAcademy: builder.query({
+      query: () => ({
+        url: USERS_URL + "/academies",
+        method: "GET",
+      }),
+      providesTags: ["Academy"],
+    }),
+
+    // update academy
+    updateAcademy: builder.mutation({
+      query: ({ academyId, name, location, description, image }) => {
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("location", location);
+        formData.append("description", description);
+        if (image) {
+          formData.append("image", image); // image should be a File object
+        }
+
+        return {
+          url: `${USERS_URL}/academies/${academyId}`,
+          method: "PUT",
+          body: formData,
+        };
+      },
+    }),
+    // updateAcademy: builder.mutation({
+    //   query: ({ academyId, formData }) => ({
+    //       url: `${USERS_URL}/academies/${academyId}`,
+    //       method: "PUT",
+    //       body: formData,
+    //   }),
+    // }),
+
+    // Delete Academy
+    deleteAcademy: builder.mutation({
+      query: (id) => ({
+        url: USERS_URL + `/academies/${id}`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -63,5 +116,9 @@ export const {
   useForgotPasswordMutation,
   useVerifyOtpMutation,
   useResendOtpMutation,
+  usePostAcademyMutation,
+  useGetAcademyQuery,
+  useDeleteAcademyMutation,
+  useUpdateAcademyMutation,
   useResetPasswordMutation, // Added this
 } = usersApiSlice;

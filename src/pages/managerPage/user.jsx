@@ -19,6 +19,8 @@ const Users = () => {
       location: "Block-A-101",
       department: "Plumbing Team",
       role: "Technician",
+      workAssigned: 8,
+
     },
     {
       image: img,
@@ -43,6 +45,8 @@ const Users = () => {
       location: "Block-D-404",
       department: "Plumbing Team",
       role: "Technician",
+      workAssigned: 8,
+
     },
     {
       image: img,
@@ -59,6 +63,8 @@ const Users = () => {
       location: "Block-F-606",
       department: "Plumbing Team",
       role: "Technician",
+      workAssigned: 8,
+
     },
     {
       image: img,
@@ -67,6 +73,8 @@ const Users = () => {
       location: "Block-G-707",
       department: "Plumbing Team",
       role: "Technician",
+      workAssigned: 8,
+
     },
     {
       image: img,
@@ -171,7 +179,7 @@ const Users = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-                {["Image", "Name", "Email", "Location", "Department", "Role"].map(
+              {["Image", "Name", "Email", "Location", "Department", "Role", ...(activeTab === "Technician" ? ["Work Assigned"] : [])].map(
                   (header, index) => (
                     <th key={index}>
                       {header === "Name" || header === "Location" || header === "Department" ? (
@@ -230,6 +238,8 @@ const Users = () => {
                   <td>{item.location}</td>
                   <td>{item.department}</td>
                   <td>{item.role}</td>
+                  {activeTab === "Technician" && <td>{item.workAssigned ?? 0}</td>}
+
                 </tr>
               ))}
             </tbody>
