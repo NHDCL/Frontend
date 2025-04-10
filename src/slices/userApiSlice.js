@@ -11,7 +11,6 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-    // Forgot Password endpoint
     forgotPassword: builder.mutation({
       query: (email) => ({
         url: USERS_URL + "/users/forgot-password",
@@ -20,7 +19,6 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-    // Verify OTP endpoint
     verifyOtp: builder.mutation({
       query: ({ email, otp }) => ({
         url: USERS_URL + "/users/verify-otp",
@@ -29,7 +27,6 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-    // Resend OTP endpoint
     resendOtp: builder.mutation({
       query: (email) => ({
         url: USERS_URL + "/users/resend-otp",
@@ -38,21 +35,79 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-    // // Change Password endpoint
-    // changePassword: builder.mutation({
-    //   query: ({ email, oldPassword, newPassword }) => ({
-    //     url: USERS_URL + "/users/change-password",
-    //     method: "PUT",
-    //     body: { email, oldPassword, newPassword },
-    //   }),
-    // }),
-
-    // Reset Password (after OTP verification)
     resetPassword: builder.mutation({
       query: ({ email, otp, newPassword }) => ({
         url: USERS_URL + "/users/reset-password",
         method: "POST",
         body: { email, otp, newPassword },
+      }),
+    }),
+
+    getUserByEmail: builder.query({
+      query: (email) => ({
+        url: `${USERS_URL}/users/email`,
+        method: "GET",
+        params: { email },
+      }),
+    }),
+
+    updateUserImage: builder.mutation({
+      query: ({ email, image }) => {
+        const formData = new FormData();
+        formData.append("email", email);
+        if (image) {
+          formData.append("image", image);
+        }
+
+        return {
+          url: USERS_URL + "/users/image",
+          method: "PUT",
+          body: formData,
+        };
+      },
+    }),
+
+    changePassword: builder.mutation({
+      query: ({ email, oldPassword, newPassword }) => ({
+        url: USERS_URL + "/users/change-password",
+        method: "PUT",
+        body: { email, oldPassword, newPassword },
+      }),
+    }),
+
+    logout: builder.mutation({
+      query: () => ({
+        url: USERS_URL + "/auth/logout",
+        method: "POST",
+      }),
+    }),
+
+    // New Endpoints for Academies and Departments
+    getAllAcademies: builder.query({
+      query: () => ({
+        url: USERS_URL + "/academies", // Corrected path here
+        method: "GET",
+      }),
+    }),
+
+    getAllDepartments: builder.query({
+      query: () => ({
+        url: USERS_URL + "/departments", // Corrected path here
+        method: "GET",
+      }),
+    }),
+
+    getAcademyById: builder.query({
+      query: (id) => ({
+        url: `${USERS_URL}/academies/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    getDepartmentById: builder.query({
+      query: (id) => ({
+        url: `${USERS_URL}/departments/${id}`,
+        method: "GET",
       }),
     }),
   }),
@@ -63,5 +118,13 @@ export const {
   useForgotPasswordMutation,
   useVerifyOtpMutation,
   useResendOtpMutation,
-  useResetPasswordMutation, // Added this
+  useResetPasswordMutation,
+  useGetUserByEmailQuery,
+  useUpdateUserImageMutation,
+  useChangePasswordMutation,
+  useLogoutMutation,
+  useGetAllAcademiesQuery,
+  useGetAllDepartmentsQuery,
+  useGetAcademyByIdQuery,
+  useGetDepartmentByIdQuery,
 } = usersApiSlice;

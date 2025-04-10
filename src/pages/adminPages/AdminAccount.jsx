@@ -1,20 +1,37 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./../managerPage/css/MAccount.css";
-import img from "../../assets/images/pp.png";
 import { RiImageAddLine } from "react-icons/ri";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
+import { useSelector } from "react-redux";
+import { createSelector } from "reselect";
+import img from "../../assets/images/defaultImage.png";
+import {
+  useGetUserByEmailQuery,
+  useUpdateUserImageMutation,
+  useChangePasswordMutation,
+} from "../../slices/userApiSlice";
+import Swal from "sweetalert2";
+
+const selectUserInfo = (state) => state.auth.userInfo || {};
+const getUserEmail = createSelector(
+  selectUserInfo,
+  (userInfo) => userInfo?.user?.username || ""
+);
 
 const AdminAccount = () => {
   const [profile, setProfile] = useState({
     name: "",
     email: "",
-    academy: "", // Keep academy but don't update it
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
-    image: img, // Default image
+    image: img,
+    imageFile: null,
   });
 
+  const [isNewImageSelected, setIsNewImageSelected] = useState(false); // 👈 new flag
+  const originalImageRef = useRef(img);
+  const email = useSelector(getUserEmail);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState({
     oldPassword: false,
@@ -22,42 +39,28 @@ const AdminAccount = () => {
     confirmPassword: false,
   });
 
-  const token = sessionStorage.getItem("token"); // 🔑 Retrieve token
+  const { data, error, refetch } = useGetUserByEmailQuery(email);
+  const [updateUserProfile, { isLoading: isImageLoading }] =
+    useUpdateUserImageMutation();
+  const [updateUserPassword, { isLoading: isPasswordLoading }] =
+    useChangePasswordMutation();
 
-  // Fetch profile data on component mount
   useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:5000/api/manager/profile",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, // 🔐 Attach token
-            },
-          }
-        );
+    if (data) {
+      setProfile((prevProfile) => ({
+        ...prevProfile,
+        name: data.user.name,
+        email: data.user.email,
+        image: data.user.image || img,
+      }));
+      originalImageRef.current = data.user.image || img;
+    }
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch profile data");
-        }
-
-        const data = await response.json();
-        setProfile((prevProfile) => ({
-          ...prevProfile,
-          name: data.name, // Retrieved name
-          email: data.email, // Retrieved email
-          academy: prevProfile.academy, // Keep academy value as is, not updated from the backend
-        }));
-      } catch (error) {
-        console.error("Failed to fetch profile data:", error.message);
-        alert("Failed to load profile data.");
-      }
-    };
-
-    fetchProfileData();
-  }, [token]); // The useEffect hook will run when the component mounts or when the token changes
+    if (error) {
+      console.error("Failed to fetch profile data:", error);
+      Swal.fire("Error", "Failed to load profile data.", "error");
+    }
+  }, [data, error]);
 
   const togglePasswordVisibility = (field) => {
     setShowPassword((prevState) => ({
@@ -75,7 +78,15 @@ const AdminAccount = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfile({ ...profile, image: reader.result });
+        setProfile((prev) => ({
+          ...prev,
+          image: reader.result,
+          imageFile: file,
+          oldPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        }));
+        setIsNewImageSelected(true); // 👈 show update button
       };
       reader.readAsDataURL(file);
     }
@@ -83,11 +94,21 @@ const AdminAccount = () => {
 
   const validateForm = () => {
     let newErrors = {};
-    if (!profile.name.trim()) newErrors.name = "Name is required";
-    if (!profile.email.trim()) {
+    const { name, email, oldPassword, newPassword, confirmPassword } = profile;
+
+    if (!name.trim()) newErrors.name = "Name is required";
+    if (!email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(profile.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = "Invalid email format";
+    }
+
+    if (oldPassword || newPassword || confirmPassword) {
+      if (!oldPassword) newErrors.oldPassword = "Old password is required";
+      if (newPassword.length < 6)
+        newErrors.newPassword = "Password must be at least 6 characters";
+      if (newPassword !== confirmPassword)
+        newErrors.confirmPassword = "Passwords do not match";
     }
 
     setErrors(newErrors);
@@ -96,30 +117,71 @@ const AdminAccount = () => {
 
   const handleSubmit = async () => {
     if (validateForm()) {
-      try {
-        const response = await fetch(
-          "http://localhost:5000/api/manager/update-profile",
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, // 🔐 Attach token
-            },
-            body: JSON.stringify(profile),
-          }
-        );
+      let madeChanges = false;
 
-        if (!response.ok) {
-          throw new Error("Failed to update profile");
+      if (
+        profile.oldPassword &&
+        profile.newPassword &&
+        profile.newPassword === profile.confirmPassword
+      ) {
+        madeChanges = true;
+        try {
+          const res = await updateUserPassword({
+            email: profile.email,
+            oldPassword: profile.oldPassword,
+            newPassword: profile.newPassword,
+          }).unwrap();
+          Swal.fire("Success", "Password Updated Successfully!", "success");
+          setProfile((prev) => ({
+            ...prev,
+            oldPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+          }));
+        } catch (error) {
+          console.error("Password update failed:", error.message);
+          Swal.fire(
+            "Password Update Failed",
+            error?.data?.message || "Something went wrong.",
+            "error"
+          );
         }
-
-        const data = await response.json();
-        alert("Profile Updated Successfully!");
-        console.log("Updated Profile (from server):", data);
-      } catch (error) {
-        console.error("Update failed:", error.message);
-        alert("Failed to update profile. Please try again.");
       }
+
+      if (!madeChanges) {
+        Swal.fire("Info", "No changes detected to update.", "info");
+      }
+    } else {
+      Swal.fire(
+        "Validation Error",
+        "Please correct the errors in the form.",
+        "warning"
+      );
+    }
+  };
+
+  const handleImageUpdate = async () => {
+    if (profile.imageFile && profile.imageFile !== originalImageRef.current) {
+      try {
+        const response = await updateUserProfile({
+          email: profile.email,
+          image: profile.imageFile,
+        }).unwrap();
+        Swal.fire("Success", "Profile Image Updated Successfully!", "success");
+        originalImageRef.current = profile.imageFile;
+        setIsNewImageSelected(false); // 👈 hide update button
+        // Refetch the profile data to update the image
+        refetch();
+      } catch (error) {
+        console.error("Image update failed:", error.message);
+        Swal.fire(
+          "Image Update Failed",
+          error?.data?.message || "Something went wrong.",
+          "error"
+        );
+      }
+    } else {
+      Swal.fire("Info", "Please select a new image to update.", "info");
     }
   };
 
@@ -127,15 +189,34 @@ const AdminAccount = () => {
     <div className="profile-container">
       <div className="profile-card">
         <div className="profile-left">
-          <img src={profile.image} alt="Profile" className="profile-image" />
-          <h2>{profile.name}</h2>
-          <p>{profile.email}</p>
-          <p>{profile.academy}</p> {/* Academy displayed but not editable */}
+          <div className="profile-image-wrapper">
+            <img src={profile.image} alt="Profile" className="profile-image" />
+            <label className="profile-camera-icon">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="profile-hidden"
+              />
+              <RiImageAddLine />
+            </label>
+          </div>
+
+          {/* Only show button if new image is selected */}
+          {isNewImageSelected && (
+            <button
+              className="profile-update-button"
+              onClick={handleImageUpdate}
+              disabled={isImageLoading}
+            >
+              {isImageLoading ? "Updating..." : "Update Image"}
+            </button>
+          )}
         </div>
 
         <div className="profile-right">
           <h3>Edit Your Profile Details</h3>
-          {/* Name is editable */}
+
           <input
             className="profile-input"
             type="text"
@@ -146,7 +227,6 @@ const AdminAccount = () => {
           />
           {errors.name && <p className="error-text">{errors.name}</p>}
 
-          {/* Email is editable */}
           <input
             className="profile-input"
             type="email"
@@ -157,18 +237,6 @@ const AdminAccount = () => {
           />
           {errors.email && <p className="error-text">{errors.email}</p>}
 
-          {/* Academy is not editable */}
-          <input
-            className="profile-input"
-            type="text"
-            name="academy"
-            value={profile.academy}
-            disabled // Academy is read-only
-            placeholder="Academy"
-          />
-          {errors.academy && <p className="error-text">{errors.academy}</p>}
-
-          {/* Password fields */}
           {["oldPassword", "newPassword", "confirmPassword"].map((field) => (
             <div className="password-container" key={field}>
               <input
@@ -195,19 +263,12 @@ const AdminAccount = () => {
             </div>
           ))}
 
-          <label className="profile-upload-label">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="profile-hidden"
-            />
-            <RiImageAddLine className="profile-upload-icon" />
-            <p style={{ marginBottom: "4px" }}>Upload Image</p>
-          </label>
-
-          <button className="profile-update-button" onClick={handleSubmit}>
-            Update
+          <button
+            className="profile-update-button"
+            onClick={handleSubmit}
+            disabled={isPasswordLoading}
+          >
+            {isPasswordLoading ? "Updating..." : "Update"}
           </button>
         </div>
       </div>

@@ -61,8 +61,11 @@ const Loginpage = () => {
 
         // ⬇️ Save JWT token to sessionStorage
         sessionStorage.setItem("token", response.token);
+        console.log("Token:", response.token);
 
-        dispatch(setCredentials({ ...response }));
+        // Dispatch and save user data in localStorage
+        dispatch(setCredentials(response.user)); // Dispatch user data to Redux
+        localStorage.setItem("userInfo", JSON.stringify(response.user)); // Save user data to localStorage
 
         // Extract the role from authorities
         const authorities = response.user.authorities;
@@ -91,22 +94,6 @@ const Loginpage = () => {
           showConfirmButton: false,
           timer: 2000,
           willClose: () => {
-            // Extract the role name from the response (assuming it's in the authorities array)
-            const authorities = response.user.authorities;
-            let userRole = "";
-
-            authorities.forEach((auth) => {
-              if (
-                auth.authority === "Admin" ||
-                auth.authority === "Manager" ||
-                auth.authority === "Super Admin" ||
-                auth.authority === "Supervisor" ||
-                auth.authority === "Technician"
-              ) {
-                userRole = auth.authority;
-              }
-            });
-
             // Navigate based on the user's role
             if (userRole === "Admin") {
               navigate("/admin/");

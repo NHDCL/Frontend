@@ -4,8 +4,8 @@ import { SidebarContext } from "../../context/sidebarContext";
 import { IoMenu } from "react-icons/io5";
 import { useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
+import defaultImage from "../../assets/images/defaultImage.png";
 import { useUser } from "../../context/userContext";
-
 import {
   managernavigationLinks,
   techniciannavigationLinks,
@@ -13,19 +13,28 @@ import {
   sadminnavigationLinks,
   supervisornavigationLinks,
 } from "../../data/data";
+import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
+import { createSelector } from "reselect";
+
+const selectUserInfo = (state) => state.auth.userInfo || {};
+const getUserEmail = createSelector(
+  selectUserInfo,
+  (userInfo) => userInfo?.user?.username || ""
+);
 
 const ContentTop = () => {
   const { toggleSidebar } = useContext(SidebarContext);
   const location = useLocation();
   const { user } = useUser();
 
+  const email = useSelector(getUserEmail);
+  const { data: userData } = useGetUserByEmailQuery(email);
+
   // Get userRole from Redux store
   const userRole = useSelector((state) => state.auth.userRole);
-  console.log("userRole", userRole);
 
-  // Use correct nav links based on role
+  // Navigation links based on role
   let navigationLinks = [];
-
   switch (userRole) {
     case "Manager":
       navigationLinks = managernavigationLinks;
@@ -48,16 +57,11 @@ const ContentTop = () => {
 
   const pathArray = location.pathname.split("/");
   const currentPath = pathArray[pathArray.length - 1];
-
-  // Find the corresponding navigation link
   const currentPage = navigationLinks.find((link) => link.path === currentPath);
-
-  // Display "Home" if no match is found, or use the matched title
   const title = currentPage ? currentPage.title : "Home";
-  console.log(currentPage.title);
 
-  const profileImage =
-    user?.profileImage || "https://randomuser.me/api/portraits/men/1.jpg";
+  // Fetched profile image
+  const profileImage = userData?.user?.image || defaultImage;
 
   return (
     <div className="main-content-top">
