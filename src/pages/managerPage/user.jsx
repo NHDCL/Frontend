@@ -133,7 +133,6 @@ const Users = () => {
     sortData(column, newSortOrder);
   };
 
-
   return (
     <div className="user-dashboard">
       {/* Tab Switcher */}
@@ -235,7 +234,6 @@ const Users = () => {
             </tbody>
           </table>
         </div>
-
 
         {/* Pagination */}
         <div className="pagination">

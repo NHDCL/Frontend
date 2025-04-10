@@ -17,6 +17,7 @@ const Infrastructure = () => {
     const [editModalData, setEditModalData] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
     const [newInfrastructure, setNewInfrastructure] = useState({ Title: "", AssetCode: "", Category: "Building", Floor: "", PlintArea: "", AcquireDate: "", Useful_life: "", status: "", cost: "", Area: "", DepreciatedValue: "", File: "" });
+    const [showModal, setShowModal] = useState(false);
 
     const rowsPerPage = 10;
 
@@ -223,19 +224,28 @@ const Infrastructure = () => {
     const handleCloseModal = () => {
         setModalData(null);
     };
+    const handleCloseModalBulk = () => {
+        setShowModal(null);
+    };
 
     const handleAddInfrastructure = () => {
         setShowAddModal(true);
         setNewInfrastructure({ category: "", DepreciatedValue: "" });
     };
 
-    const handleSaveNewInfrastructure= () => {
+    const handleSaveNewInfrastructure = () => {
         if (newInfrastructure.Category && newInfrastructure.DepreciatedValue) {
             const newAID = data.length > 0 ? (Math.max(...data.map((item) => Number(item.SerialNo))) + 1).toString() : "1";
             setData([...data, { AID: newAID, ...newInfrastructure }]);
             setShowAddModal(false);
             setNewInfrastructure({}); // Reset form after adding
         }
+    };
+
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        console.log("Selected file:", file);
+        // You can add logic to handle the file upload here
     };
 
     return (
@@ -265,7 +275,7 @@ const Infrastructure = () => {
                     />
                     <div className="create-category-btn">
                         <ImFolderDownload style={{ color: "#ffffff", marginLeft: "12px" }} />
-                        <button className="category-btn">Bulk Import</button>
+                        <button className="category-btn" onClick={() => setShowModal(true)}>Bulk Import</button>
                     </div>
                     <div className="create-category-btn">
                         <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
@@ -518,6 +528,34 @@ const Infrastructure = () => {
                                 <button className="reject-btn">Schedule Maintenance</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk upload */}
+            {showModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        {/* Close Button */}
+                        <div className="modal-header">
+                            <h2 className="form-h">Upload your file</h2>
+                            <button className="close-btn" onClick={handleCloseModalBulk}>
+                                <IoIosCloseCircle
+                                    style={{ color: "#897463", width: "20px", height: "20px" }}
+                                />
+                            </button>
+                        </div>
+                        <input
+                            type="file"
+                            accept=".pdf,image/*"
+                            onChange={handleFileChange}
+                        />
+                        <div style={{ marginTop: "20px" }}>
+                            <button className="accept-btn" >Upload</button>
+                            <button className="reject-btn" onClick={() => setShowModal(false)}>
+                                Cancel
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

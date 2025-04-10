@@ -195,6 +195,7 @@ const Furniture = () => {
                 return "";
         }
     };
+
     // Extract unique work statuses from data
     const uniqueStatuses = [
         { value: "", label: "All Work status" },
@@ -223,8 +224,6 @@ const Furniture = () => {
     const handleScheduleMaintenance = () => {
         setScheduleModalData(modalData); // Set modal data to open the schedule modal
     };
-
-
 
     // DownloadPDF
     const handleDownloadPDF = () => {
