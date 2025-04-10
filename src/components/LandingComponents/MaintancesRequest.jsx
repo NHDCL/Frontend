@@ -1,6 +1,23 @@
 import React, { useState } from "react";
 import "./../../pages/css/MaintenanceRequest.css";
 import { RiImageAddLine } from "react-icons/ri";
+import Select from "react-select";
+
+const academies = [
+  "Pemathang",
+  "Khotokha",
+  "Jamtsholing",
+  "Taraythang",
+  "Gyalpozhing",
+];
+const areaOptions = {
+  Pemathang: ["Block A", "Ground", "Footpath", "Room1"],
+  Khotokha: ["Library", "Canteen", "Lab"],
+  Jamtsholing: ["Main Hall", "Office", "Hostel"],
+  Taraythang: ["Parking", "Garden", "Playground"],
+  Gyalpozhing: ["Block B", "Corridor", "Stairs"],
+};
+const priorities = ["Immediate(Within 24 hours)", "High(Within 1-2 days)", "Moderate(Within 1 week)", "Low(More than a week)"];
 
 const MaintenanceRequest = () => {
   const [formData, setFormData] = useState({
@@ -13,19 +30,30 @@ const MaintenanceRequest = () => {
     description: "",
   });
 
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]); // Change to array for multiple images
   const [errors, setErrors] = useState({});
+  const [imageError, setImageError] = useState("");
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (e, field) => {
+    if (field) {
+      setFormData({ ...formData, [field]: e.value });
+    } else {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    }
+  };
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (images.length + files.length > 5) {
+      setImageError("You can upload a maximum of 5 images.");
+      return;
+    }
+    setImageError("");
+    const imageUrls = files.map((file) => URL.createObjectURL(file));
+    setImages((prevImages) => [...prevImages, ...imageUrls]);
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setImage(imageUrl);
-    }
+  const removeImage = (index) => {
+    setImages(images.filter((_, i) => i !== index)); // Remove image by index
   };
 
   const validateForm = () => {
@@ -36,7 +64,8 @@ const MaintenanceRequest = () => {
     if (!formData.academy) newErrors.academy = "Please select an academy.";
     if (!formData.area) newErrors.area = "Please select an area.";
     if (!formData.priority) newErrors.priority = "Please select a priority.";
-    if (!formData.description.trim()) newErrors.description = "Description is required.";
+    if (!formData.description.trim())
+      newErrors.description = "Description is required.";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -61,93 +90,112 @@ const MaintenanceRequest = () => {
       <div className="mr_formouter">
         <div className="mr_img">
           <h1 className="mr_p">
-            Please complete the maintenance request form to report any issues with the facility.
+            Please complete the maintenance request form to report any issues
+            with the facility.
           </h1>
         </div>
 
         <div className="mr_form">
           <form className="mr-custom-form" onSubmit={handleSubmit}>
-            {/* Name Input */}
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              autoComplete="off"
               className="mr-input"
               placeholder="Enter your name"
             />
             {errors.name && <p className="error-text">{errors.name}</p>}
 
-            {/* Phone Input */}
             <input
               type="text"
               name="phone"
               value={formData.phone}
               onChange={handleInputChange}
-              autoComplete="off"
               className="mr-input"
               placeholder="Enter your phone number"
             />
             {errors.phone && <p className="error-text">{errors.phone}</p>}
 
-            {/* Asset Name Input */}
             <input
               type="text"
               name="asset"
               value={formData.asset}
               onChange={handleInputChange}
-              autoComplete="off"
               className="mr-input"
               placeholder="Enter asset name"
             />
             {errors.asset && <p className="error-text">{errors.asset}</p>}
 
-            {/* Academy Dropdown */}
-            <select
+            <Select
+              classNamePrefix="customm-select-department"
               name="academy"
-              value={formData.academy}
-              onChange={handleInputChange}
-              className="mr-input"
-            >
-              <option value="" disabled>Select Academy</option>
-              <option value="Pemathang">Pemathang</option>
-              <option value="Khotokha">Khotokha</option>
-              <option value="Jamtsholing">Jamtsholing</option>
-              <option value="Taraythang">Taraythang</option>
-              <option value="Gyalpozhing">Gyalpozhing</option>
-            </select>
+              value={
+                formData.academy
+                  ? { value: formData.academy, label: formData.academy }
+                  : null
+              }
+              onChange={(selectedOption) =>
+                handleInputChange(selectedOption, "academy")
+              }
+              options={academies.map((academy) => ({
+                value: academy,
+                label: academy,
+              }))}
+              isClearable
+              isSearchable={false}
+              placeholder="Select Academy"
+            />
             {errors.academy && <p className="error-text">{errors.academy}</p>}
 
-            {/* Area Dropdown */}
-            <select
+            {/* Area Selection (Filtered by Selected Academy) */}
+            <Select
+              classNamePrefix="customm-select-department"
               name="area"
-              value={formData.area}
-              onChange={handleInputChange}
-              className="mr-input"
-            >
-              <option value="" disabled>Select Area</option>
-              <option value="Block A">Block A</option>
-              <option value="Ground">Ground</option>
-              <option value="Footpath">Footpath</option>
-              <option value="Room1">Room1</option>
-            </select>
+              value={
+                formData.area
+                  ? { value: formData.area, label: formData.area }
+                  : null
+              }
+              onChange={(selectedOption) =>
+                handleInputChange(selectedOption, "area")
+              }
+              options={
+                formData.academy
+                  ? areaOptions[formData.academy].map((area) => ({
+                      value: area,
+                      label: area,
+                    }))
+                  : []
+              }
+              isClearable
+              isSearchable={false}
+              placeholder="Select Area"
+              isDisabled={!formData.academy} // Disable if no academy is selected
+            />
             {errors.area && <p className="error-text">{errors.area}</p>}
 
-            {/* Priority Dropdown */}
-            <select
+            <Select
+              classNamePrefix="customm-select-department"
               name="priority"
-              value={formData.priority}
-              onChange={handleInputChange}
-              className="mr-input"
-            >
-              <option value="" disabled>Select Priority</option>
-              <option value="Major">Major</option>
-              <option value="Minor">Minor</option>
-            </select>
+              value={
+                priorities.find((priority) => priority === formData.priority)
+                  ? { value: formData.priority, label: formData.priority }
+                  : null
+              }
+              onChange={(selectedOption) =>
+                handleInputChange(selectedOption, "priority")
+              }
+              options={priorities.map((priority) => ({
+                value: priority,
+                label: priority,
+              }))}
+              isClearable
+              isSearchable={false}
+              placeholder="Select Priority"
+            />
             {errors.priority && <p className="error-text">{errors.priority}</p>}
 
-            {/* Description Textarea */}
             <textarea
               name="description"
               value={formData.description}
@@ -155,29 +203,30 @@ const MaintenanceRequest = () => {
               className="mr-input"
               placeholder="Enter a brief description"
             />
-            {errors.description && <p className="error-text">{errors.description}</p>}
+            {errors.description && (
+              <p className="error-text">{errors.description}</p>
+            )}
 
-            {/* Image Upload */}
-            <input
-              type="file"
-              accept="image/*"
-              id="imageUpload"
-              onChange={handleImageUpload}
-              style={{ display: "none" }}
-            />
-            <div className="mr-upload-box" onClick={() => document.getElementById("imageUpload").click()}>
-              {image ? (
-                <img src={image} alt="Uploaded Preview" className="mr-upload-preview" />
-              ) : (
-                <>
+<input type="file" accept="image/*" id="imageUpload" multiple onChange={handleImageUpload} style={{ display: "none" }} />
+            <div className="mr-upload-box-img">
+              {imageError && <p className="error-text">{imageError}</p>}
+              {images.map((imgSrc, index) => (
+                <div key={index} className="mr-image-wrapper">
+                  <img src={imgSrc} alt={`Uploaded Preview ${index}`} className="mr-upload-preview" />
+                  <button type="button" className="mr-remove-btn" onClick={() => removeImage(index)}>×</button>
+                </div>
+              ))}
+              {images.length < 5 && (
+                <div className="mr-upload-box" onClick={() => document.getElementById("imageUpload").click()}>
                   <RiImageAddLine className="mr-upload-icon" />
-                  <p className=".mr-pimg">Upload Image</p>
-                </>
+                  <p className="mr-pimg">Upload Images</p>
+                </div>
               )}
             </div>
 
-            {/* Submit Button */}
-            <button type="submit" className="mr-submit-btn">Request</button>
+            <button type="submit" className="mr-submit-btn">
+              Request
+            </button>
           </form>
         </div>
       </div>

@@ -7,7 +7,7 @@ import Select from "react-select";
 
 const sampleData = [
   {
-    name: "Academy A",
+    name: "Gyelpozhing",
     years: {
       "2023": [
         { month: "Jan", cost: 60, responseTime: 40 },
@@ -40,7 +40,7 @@ const sampleData = [
     }
   },
   {
-    name: "Academy B",
+    name: "Tareythang",
     years: {
       "2023": [
         { month: "Jan", cost: 30, responseTime: 40 },
@@ -75,7 +75,7 @@ const sampleData = [
 ];
 
 const MaintenanceGraphs = () => {
-  const [selectedAcademy, setSelectedAcademy] = useState("Academy A");
+  const [selectedAcademy, setSelectedAcademy] = useState("Gyelpozhing");
   const [selectedYear, setSelectedYear] = useState("2023");
 
   const selectedAcademyData = sampleData.find(a => a.name === selectedAcademy);

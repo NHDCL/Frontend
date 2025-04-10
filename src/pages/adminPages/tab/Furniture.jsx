@@ -16,11 +16,7 @@ const Furniture = () => {
     const [selectedRows, setSelectedRows] = useState([]);
     const [selectedStatus, setSelectedStatus] = useState("");
     const [modalData, setModalData] = useState(null);
-    const [editModalData, setEditModalData] = useState(null);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [scheduleModalData, setScheduleModalData] = useState(null); // This controls the modal's visibility
-    const [newMachinery, setNewMachinery] = useState({ category: "", DepreciatedValue: "" });
-
+    
     const qrRefs = useRef([]);
 
     const rowsPerPage = 9; // 3x3 grid for QR codes per page
@@ -169,14 +165,6 @@ const Furniture = () => {
         currentPage * rowsPerPage
     );
 
-    const handleDeleteSelected = () => {
-        setData(data.filter((item) => !selectedRows.includes(item.AID)));
-        setSelectedRows([]);
-    };
-
-    const handleDeleteRow = (SerialNo) => {
-        setData(data.filter((item) => item.SerialNo !== SerialNo));
-    };
 
     const handleView = (item) => {
         setModalData(item);
@@ -205,23 +193,6 @@ const Furniture = () => {
     ];
     const handleCloseModal = () => {
         setModalData(null);
-    };
-
-    const handleAddMachinery = () => {
-        setShowAddModal(true);
-        setNewMachinery({ category: "", DepreciatedValue: "" });
-    };
-
-    const handleSaveNewMachinery = () => {
-        if (newMachinery.Category && newMachinery.DepreciatedValue) {
-            const newSerialNo = data.length > 0 ? (Math.max(...data.map((item) => Number(item.SerialNo))) + 1).toString() : "1";
-            setData([...data, { SerialNo: newSerialNo, ...newMachinery }]);
-            setShowAddModal(false);
-            setNewMachinery({}); // Reset form after adding
-        }
-    };
-    const handleScheduleMaintenance = () => {
-        setScheduleModalData(modalData); // Set modal data to open the schedule modal
     };
 
 
@@ -313,14 +284,7 @@ const Furniture = () => {
                         isClearable
                         isSearchable={false}
                     />
-                    {/* <div className="create-category-btn">
-                        <ImFolderDownload style={{ color: "#ffffff", marginLeft: "12px" }} />
-                        <button className="category-btn">Bulk Import</button>
-                    </div>
-                    <div className="create-category-btn">
-                        <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
-                        <button className="category-btn" onClick={handleAddMachinery} >Create category</button>
-                    </div> */}
+        
                 </div>
             </div>
 
@@ -482,15 +446,6 @@ const Furniture = () => {
                                 <textarea value={modalData.description} readOnly />
                             </div>
 
-                            {/* <div className="modal-buttons">
-                                <button className="accept-btn" style={{ backgroundColor: "red" }}>
-                                    <RiDeleteBin6Line />
-                                </button>
-                                <button className="accept-btn" onClick={handleScheduleMaintenance}>
-                                    Schedule Maintenance
-                                </button>
-
-                            </div> */}
                         </form>
                     </div>
                 </div>

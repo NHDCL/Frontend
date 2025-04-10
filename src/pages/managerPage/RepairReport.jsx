@@ -1,4 +1,4 @@
-      import React, { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import "./css/card.css";
 import "./css/table.css";
 import "./css/form.css";
@@ -10,6 +10,9 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { LuDownload } from "react-icons/lu";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import "tippy.js/dist/tippy.css";
+import Tippy from "@tippyjs/react";
+import autoTable from "jspdf-autotable";
 
 import Select from "react-select"
 
@@ -24,8 +27,6 @@ const Repairreport = () => {
     Remarks: "",
   });
 
-
-
   const rowsPerPage = 10;
 
   const [data, setData] = useState([
@@ -39,11 +40,17 @@ const Repairreport = () => {
       Total_cost: "NU.400",
       part_used: "screw driver",
       location: "Block-A-101",
-      description: "Cooling issue",
+      description:
+        "Cooling issue A chair is a piece of furniture designed to provide seating support for a single person. It typically consists of a seat, a backrest, and four legs, although variations exist with three legs, armrests, and cushioning.",
       total_technician: "4",
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
+      Additional_information:
+        "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
+      imageUrl: [
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      ],
     },
     {
       rid: "#1002",
@@ -60,6 +67,10 @@ const Repairreport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "12210.gcit@gmail.com",
+      imageUrl: [
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      ],
     },
     {
       rid: "#1003",
@@ -76,6 +87,10 @@ const Repairreport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "12210.gcit@gmail.com",
+      imageUrl: [
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      ],
     },
     {
       rid: "#1004",
@@ -92,6 +107,10 @@ const Repairreport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "12210.gcit@gmail.com",
+      imageUrl: [
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      ],
     },
     {
       rid: "#1004",
@@ -108,20 +127,12 @@ const Repairreport = () => {
       Assigned_supervisor: "12210.gcit@gmail.com",
       Assigned_Technician: "12210.gcit@gmail.com",
       Additional_information: "12210.gcit@gmail.com",
+      imageUrl: [
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      ],
     },
-
   ]);
-
-  // Filtering data based on search and priority selection
-  // const filteredData = data.filter((item) => {
-  //   const matchesSearch = Object.values(item).some((value) =>
-  //     value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  //   );
-  //   const matchesPriority =
-  //     selectedPriority === "" || item.priority === selectedPriority;
-
-  //   return matchesSearch && matchesPriority;
-  // });
 
   const sortedData = [...data].sort((a, b) => b.rid - a.rid);
 
@@ -130,10 +141,8 @@ const Repairreport = () => {
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-
     return matchesSearch;
   });
-
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -153,7 +162,7 @@ const Repairreport = () => {
     const updatedData = data.filter((item) => !selectedRows.includes(item.rid));
     // Update the data with the filtered result after deletion
     setData(updatedData);
-    setSelectedRows([]); // Reset selected rows after deletion
+    setSelectedRows([]);
   };
 
   const handleView = (item) => {
@@ -167,23 +176,77 @@ const Repairreport = () => {
     setEditableData((prev) => ({ ...prev, [name]: value }));
   };
 
+
   // Ref for the modal
   const modalRef = useRef(null);
 
   // **Function to handle PDF download**
-  const handleDownloadPDF = (e) => {
-    e.preventDefault(); // Prevents unwanted form submission
+  const handleDownloadPDF = () => {
+    if (!modalData) return; // Prevent function execution if no data is selected
+  
+    const doc = new jsPDF();
+  
+    // Add title
+    doc.text("Repair Report", 14, 15);
+  
+    // Define table headers
+    const columns = ["Field", "Value"];
+  
+    // Map modalData dynamically into table rows
+    const rows = [
+      ["RID", modalData.rid],
+      ["Asset Name", modalData.assetName],
+      ["Start Time", modalData.startTime],
+      ["End Time", modalData.endTime],
+      ["Date", modalData.Date],
+      ["Area", modalData.Area],
+      ["Total Cost", modalData.Total_cost],
+      ["Part Used", modalData.part_used],
+      ["Location", modalData.location],
+      ["Description", modalData.description],
+      ["Total Technicians", modalData.total_technician],
+      ["Assigned Supervisor", modalData.Assigned_supervisor],
+      ["Assigned Technician", modalData.Assigned_Technician],
+      ["Additional Info", modalData.Additional_information],
+    ];
+  
+    // Generate the table using autoTable
+    autoTable(doc, {
+      head: [columns],
+      body: rows,
+      startY: 20,
+      theme: "grid",
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [41, 128, 185] }, // Blue header background
+    });
+  
+    // Save the PDF
+    doc.save(`Repair_Report_${modalData.rid}.pdf`);
+  };
 
-    if (modalRef.current) {
-      html2canvas(modalRef.current, { scale: 2 }).then((canvas) => {
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "mm", "a4"); // Set A4 size (portrait)
-        const imgWidth = 190; // Adjust image width
-        const imgHeight = (canvas.height * imgWidth) / canvas.width; // Maintain aspect ratio
-        pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
-        pdf.save("Repair_Report.pdf");
-      });
-    }
+  // download 
+  const handleDownloadSelected = () => {
+    if (selectedRows.length === 0) return;
+
+    const selectedData = data.filter((item) => selectedRows.includes(item.rid));
+
+    const csvContent = [
+      ["Repair ID", "Asset Name", "Start Time", "End Time", "Date", "Area", "Total Cost", "Parts Used", "Location", "Description", "Total Technicians", "Assigned Supervisor", "Assigned Technician"],
+      ...selectedData.map((item) => [
+        item.rid, item.assetName, item.startTime, item.endTime, item.Date,
+        item.Area, item.Total_cost, item.part_used, item.location,
+        item.description, item.total_technician, item.Assigned_supervisor, item.Assigned_Technician
+      ])
+    ].map(row => row.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "repair_report.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   return (
@@ -202,10 +265,9 @@ const Repairreport = () => {
           </div>
           {/* Download  */}
           <div className="create-category-btn">
-            <button className="category-btn">Download</button>
+            <button className="category-btn" onClick={handleDownloadSelected}>Download</button>
             <LuDownload style={{ color: "#ffffff", marginRight: "12px" }} />
           </div>
-
 
         </div>
         <div className="table-container">
@@ -233,19 +295,21 @@ const Repairreport = () => {
                   "Area",
                   "Total Cost",
                   "Parts_used",
-                  "Description"
+                  "Description",
                 ].map((header, index) => (
                   <th key={index}>{header}</th>
                 ))}
                 <th>
                   {selectedRows.length > 0 ? (
                     <button
-                      className="delete-all-btn"
-                      onClick={handleDeleteSelected}
+                      className="download-all-btn"
+                      onClick={handleDownloadSelected}
                     >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px", color: "red" }}
+                      < LuDownload
+                        style={{ width: "35px", height: "35px", color: "#305845", paddingLeft: "12px" }}
                       />
+
+
                     </button>
                   ) : (
                     " "
@@ -270,9 +334,20 @@ const Repairreport = () => {
                   <td>{item.Area}</td>
                   <td>{item.Total_cost}</td>
                   <td>{item.part_used}</td>
-                  <td className="description">{item.description}</td>
+                  <td className="description">
+                    <Tippy content={item.description} placement="top">
+                      <span>
+                        {item.description.length > 20
+                          ? item.description.substring(0, 20) + "..."
+                          : item.description}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td className="actions">
-                    <button className="view-btn" onClick={() => handleView(item)}>
+                    <button
+                      className="view-btn"
+                      onClick={() => handleView(item)}
+                    >
                       View
                     </button>
                   </td>
@@ -351,15 +426,27 @@ const Repairreport = () => {
                 </div>
                 <div className="modal-content-field">
                   <label>Total Technicians</label>
-                  <input type="text" value={modalData.total_technician} readOnly />
+                  <input
+                    type="text"
+                    value={modalData.total_technician}
+                    readOnly
+                  />
                 </div>
                 <div className="modal-content-field">
                   <label>Assigned Technicians</label>
-                  <input type="text" value={modalData.Assigned_Technician} readOnly />
+                  <input
+                    type="text"
+                    value={modalData.Assigned_Technician}
+                    readOnly
+                  />
                 </div>
                 <div className="modal-content-field">
                   <label>Assigned Supervisor</label>
-                  <input type="text" value={modalData.Assigned_supervisor} readOnly />
+                  <input
+                    type="text"
+                    value={modalData.Assigned_supervisor}
+                    readOnly
+                  />
                 </div>
                 <div className="modal-content-field">
                   <label>Description:</label>
@@ -374,29 +461,64 @@ const Repairreport = () => {
                   <textarea value={modalData.Additional_information} readOnly />
                 </div>
                 <div className="modal-content-field">
+                  <label>Repaired Images:</label>
+                  <div className="TModal-profile-img">
+                    {Array.isArray(modalData.imageUrl) &&
+                    modalData.imageUrl.length > 0 ? (
+                      modalData.imageUrl.map((imgSrc, index) => (
+                        <img
+                          key={index}
+                          src={imgSrc}
+                          alt={`Work Order ${index + 1}`}
+                          className="TModal-modal-image"
+                        />
+                      ))
+                    ) : modalData.imageUrl ? (
+                      // If `imageUrl` is a string, display it as a single image
+                      <img
+                        src={modalData.imageUrl}
+                        alt="Work Order"
+                        className="TModal-modal-image"
+                      />
+                    ) : (
+                      <p>No image available</p>
+                    )}
+                  </div>
+                </div>
+                <div className="modal-content-field">
                   <label>Additional Cost:</label>
-                  <input name="Additional_cost" value={editableData.Additional_cost} onChange={handleInputChange} />
+                  <input
+                    name="Additional_cost"
+                    value={editableData.Additional_cost}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="modal-content-field">
                   <label>Additional Hours:</label>
-                  <input name="Additional_Hour" value={editableData.Additional_Hour} onChange={handleInputChange} />
+                  <input
+                    name="Additional_Hour"
+                    value={editableData.Additional_Hour}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="modal-content-field">
                   <label>Remarks:</label>
-                  <textarea name="Remarks" value={editableData.Remarks} onChange={handleInputChange} />
+                  <textarea
+                    name="Remarks"
+                    value={editableData.Remarks}
+                    onChange={handleInputChange}
+                  />
                 </div>
 
-
                 <div className="modal-buttons">
-                  <button className="accept-btn" onClick={handleDownloadPDF}>Download
+                  <button className="accept-btn" onClick={handleDownloadPDF}>
+                    Download
                     <LuDownload style={{ marginLeft: "12px" }} />
                   </button>
                   <button className="reject-btn">Done</button>
                 </div>
               </form>
-
             </div>
-
           </div>
         </div>
       )}

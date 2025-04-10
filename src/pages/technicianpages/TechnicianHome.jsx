@@ -6,15 +6,18 @@ import "./css/dropdownTechnician.css";
 import "../managerPage/css/dropdown.css";
 import Select from "react-select";
 import { MdWorkHistory } from "react-icons/md";
-import { IoIosCloseCircle } from "react-icons/io";
-import { IoMdCloseCircle } from "react-icons/io";
+import { IoIosCloseCircle, IoMdCloseCircle } from "react-icons/io";
+import { RiImageAddLine } from "react-icons/ri";
 
 const WorkOrderModal = ({ order, onClose, data = [] }) => {
+
   const [teamMembers, setTeamMembers] = useState(order.teamMembers || []);
   const [newMember, setNewMember] = useState("");
-
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
+  const [images, setImages] = useState([]); // Allow multiple images
+  const [imageError, setImageError] = useState("");
 
+  // Handle adding new team member
   const handleAddMember = () => {
     if (newMember.trim() && !teamMembers.includes(newMember)) {
       setTeamMembers([...teamMembers, newMember]);
@@ -22,23 +25,37 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
     }
   };
 
+  // Handle removing team member
   const handleRemoveMember = (index) => {
     setTeamMembers(teamMembers.filter((_, i) => i !== index));
   };
 
-  if (!order) return null;
+  // Handle image upload
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (images.length + files.length > 5) {
+      setImageError("You can upload a maximum of 5 images.");
+      return;
+    }
+    setImageError("");
+    const imageUrls = files.map((file) => URL.createObjectURL(file));
+    setImages((prevImages) => [...prevImages, ...imageUrls]);
+  };
+
+  // Remove uploaded image
+  const removeImage = (index) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
 
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
-    { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map((item) => item.workstatus))).map(
-      (status) => ({
-        value: status,
-        label: status,
-      })
+    { value: "", label: "All Work Status" },
+    ...Array.from(new Set(data.map((item) => item.priority))).map(
+      (status) => ({ value: status, label: status })
     ),
   ];
-
+  console.log("UWS",uniqueWorkStatuses)
+  console.log("data", data)
 
   return (
     <div className="TModal-modal-overlay">
@@ -46,11 +63,10 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
         <div className="TModal-modal-header">
           <h2 className="TModal-form-h">Work Order Details</h2>
           <button className="TModal-close-btn" onClick={onClose}>
-            <IoIosCloseCircle
-              style={{ color: "#897463", width: "20px", height: "20px" }}
-            />
+            <IoIosCloseCircle style={{ color: "#897463", width: "20px", height: "20px" }} />
           </button>
         </div>
+
         <form className="TModal-repair-form">
           <div className="TModal-content-field">
             <label>Asset Name:</label>
@@ -60,81 +76,88 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
           <div className="TModal-content-field">
             <label>Time:</label>
             <div className="TModal-time-inputs">
-              <input
-                className="TModal-WorkOTime"
-                type="text"
-                value={order.time.start}
-                readOnly
-              />
-              <input
-                className="TModal-WorkOTime"
-                type="text"
-                value={order.time.end}
-                readOnly
-              />
+              <input className="TModal-WorkOTime" type="text" value={order.time?.start || "N/A"} readOnly />
+              <input className="TModal-WorkOTime" type="text" value={order.time?.end || "N/A"} readOnly />
             </div>
           </div>
 
           <div className="TModal-content-field">
             <label>Date:</label>
-            <input type="text" value={order.dueDate} readOnly />
+            <input type="text" value={order.dueDate || "N/A"} readOnly />
           </div>
 
           <div className="TModal-content-field">
             <label>Area:</label>
-            <input type="text" value={order.location} readOnly />
+            <input type="text" value={order.location || "N/A"} readOnly />
           </div>
 
           <div className="TModal-content-field">
             <label>Parts Used:</label>
-            <input type="text" value={order.partsUsed.join(", ")} readOnly />
+            <input type="text" value={order.partsUsed?.join(", ") || "N/A"} readOnly />
           </div>
 
           <div className="TModal-content-field">
             <label>Description:</label>
-            <textarea value={order.description} readOnly />
+            <textarea value={order.description || "No description"} readOnly />
           </div>
 
           <div className="TModal-content-field">
             <label>Total Cost:</label>
-            <input type="text" value={`$${order.totalCost}`} readOnly />
+            <input type="text" value={`$${order.totalCost || 0}`} readOnly />
           </div>
 
+          {/* Display Multiple Asset Images */}
           <div className="TModal-content-field">
-            <label>Asset Image:</label>
+            <label>Asset Images:</label>
             <div className="TModal-profile-img">
-              {order.imageUrl ? (
-                <img
-                  src={order.imageUrl}
-                  alt="Work Order"
-                  className="TModal-modal-image"
-                />
+              {Array.isArray(order.imageUrl) && order.imageUrl.length > 0 ? (
+                order.imageUrl.map((imgSrc, index) => (
+                  <img key={index} src={imgSrc} alt={`Work Order ${index + 1}`} className="TModal-modal-image" />
+                ))
+              ) : order.imageUrl ? (
+                // If `imageUrl` is a string, display it as a single image
+                <img src={order.imageUrl} alt="Work Order" className="TModal-modal-image" />
               ) : (
-                <div className="TModal-image-upload">
-                  <span>📷</span>
-                  <p>Click Here to Upload Image</p>
-                </div>
+                <p>No image available</p>
               )}
             </div>
           </div>
 
+
           <div className="TModal-content-field">
-  <label>Work Status:</label>
-  {/* Work Status Dropdown */}
-  <Select
-    classNamePrefix="customm-select-workstatus"
-    className="Wworkstatus-dropdown"
-    options={uniqueWorkStatuses}
-    value={uniqueWorkStatuses.find(
-      (option) => option.value === selectedWorkStatus
-    )}
-    onChange={(selectedOption) => {
-      setSelectedWorkStatus(selectedOption ? selectedOption.value : "");
-    }}
-    isClearable
-    isSearchable={false}
-  />
-</div>
+            <label>Work Status:</label>
+            <Select
+              classNamePrefix="customm-select-workstatus"
+              className="Wworkstatus-dropdown"
+              options={uniqueWorkStatuses}
+              value={uniqueWorkStatuses.find((option) => option.value === selectedWorkStatus)}
+              onChange={(selectedOption) => setSelectedWorkStatus(selectedOption ? selectedOption.value : "")}
+              isClearable
+              isSearchable={false}
+            />
+          </div>
+
+          <div className="TModal-content-field">
+            <label>Repaired Images:</label>
+            <div className="TModal-profile-img">
+              <input type="file" accept="image/*" multiple id="imageUpload" onChange={handleImageUpload} style={{ display: "none" }} />
+              {imageError && <p className="error-text">{imageError}</p>}
+              <div className="TModel-multiupload">
+                {images.map((imgSrc, index) => (
+                  <div key={index} className="mr-image-wrapper">
+                    <img src={imgSrc} alt={`Uploaded Preview ${index}`} className="mr-upload-preview" />
+                    <button type="button" className="mr-remove-btn" onClick={() => removeImage(index)}>×</button>
+                  </div>
+                ))}
+                {images.length < 5 && (
+                  <div className="mr-upload-box" onClick={() => document.getElementById("imageUpload").click()}>
+                    <RiImageAddLine className="mr-upload-icon" />
+                    <p className="mr-pimg">Upload Images</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
           <div className="TModal-content-field">
             <label>Team Members:</label>
@@ -156,7 +179,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
               </div>
             </div>
           </div>
-
           <div className="TModal-content-field">
             <label></label>
             <div className="TModal-outer-team">
@@ -166,10 +188,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                   {teamMembers.map((member, index) => (
                     <div key={index} className="TModal-team-member">
                       {member}{" "}
-                      <IoMdCloseCircle
-                        onClick={() => handleRemoveMember(index)}
-                        style={{ color: "black" }}
-                      />
+                      <IoMdCloseCircle onClick={() => handleRemoveMember(index)} style={{ color: "black" }} />
                     </div>
                   ))}
                 </div>
@@ -183,9 +202,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
           </div>
 
           <div className="TModal-modal-buttons">
-            <button type="submit" className="TModal-accept-btn">
-              Done
-            </button>
+            <button type="submit" className="TModal-accept-btn">Done</button>
           </div>
         </form>
       </div>
@@ -203,7 +220,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "Immediate",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -219,13 +236,19 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "High",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
       totalCost: 400,
-      imageUrl:
+      imageUrl: [
         "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+
+      ],
       workstatus: "Pending",
       teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
       additionalInfo: "",
@@ -235,7 +258,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "Moderate",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -251,7 +274,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Minor",
+      priority: "Low",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -267,7 +290,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "Low",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -283,7 +306,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "High",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -299,7 +322,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "Moderate",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -315,7 +338,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "Moderate",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -331,7 +354,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Minor",
+      priority: "Moderate",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -347,7 +370,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "Moderate",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -363,7 +386,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "Moderate",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -379,7 +402,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "Moderate",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -395,7 +418,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "Low",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -411,7 +434,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "High",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -427,7 +450,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Major",
+      priority: "High",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -443,7 +466,7 @@ const TechnicianHome = () => {
       title: "Chair Repair",
       dueDate: "Apr 23, 2025",
       location: "Block-k-203",
-      priority: "Minor",
+      priority: "Low",
       time: { start: "07:00 AM", end: "09:00 AM" },
       partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
       description: "The chair leg is broken and needs replacement.",
@@ -458,34 +481,24 @@ const TechnicianHome = () => {
 
   const uniquePriorities = [
     { value: "", label: "All Priorities" },
-    ...Array.from(new Set(data.map((item) => item.priority))).map(priority => ({
+    ...Array.from(new Set(data.map((item) => item.priority))).map(
+      (priority) => ({
         value: priority,
         label: priority,
       })
     ),
   ];
 
-  // const filteredData = data.filter((item) => {
-  //   const matchesSearch = Object.values(item)
-  //     .map((value) => value.toString().toLowerCase())
-  //     .some((text) => text.includes(searchTerm.toLowerCase()));
-
-  //   const matchesPriority =
-  //     !selectedPriority || item.priority === selectedPriority;
-  //   return matchesSearch && matchesPriority;
-  // });
-
-
-    // Filtering data based on search and priority selection and work status
-    const sortedData = [...data].sort((a, b) => b.rid - a.rid);
-    const filteredData = sortedData.filter((item) => {
-      const matchesSearch = Object.values(item).some((value) =>
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      const matchesPriority =
-        selectedPriority === "" || item.priority === selectedPriority;
-      return matchesSearch && matchesPriority;
-    });
+  // Filtering data based on search and priority selection and work status
+  const sortedData = [...data].sort((a, b) => b.rid - a.rid);
+  const filteredData = sortedData.filter((item) => {
+    const matchesSearch = Object.values(item).some((value) =>
+      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const matchesPriority =
+      selectedPriority === "" || item.priority === selectedPriority;
+    return matchesSearch && matchesPriority;
+  });
 
   return (
     <div className="work-orders-container">
@@ -499,21 +512,24 @@ const TechnicianHome = () => {
       <div className="WorkOrder-filter-section">
         <p className="WorkOrder-label">Recent Work Orders</p>
 
-            <Select
-              classNamePrefix="custom-select"
-              className="priority-dropdown"
-              options={uniquePriorities}
-              value={uniquePriorities.find(option => option.value === selectedPriority)} // Ensure selected value is an object
-              onChange={(selectedOption) => {
-                if (selectedOption) {
-                  setSelectedPriority(selectedOption.value);
-                } else {
-                  setSelectedPriority(""); // Clear the selected priority when null
-                }
-              }}
-              isClearable
-              isSearchable={false}
-            />
+        <Select
+          classNamePrefix="custom-select"
+          className="priority-dropdown"
+          options={uniquePriorities}
+          value={uniquePriorities.find(
+            (option) => option.value === selectedPriority
+          )} // Ensure selected value is an object
+
+          onChange={(selectedOption) => {
+            if (selectedOption) {
+              setSelectedPriority(selectedOption.value);
+            } else {
+              setSelectedPriority(""); // Clear the selected priority when null
+            }
+          }}
+          isClearable
+          isSearchable={false}
+        />
       </div>
 
       <div className="work-orders-grid">
@@ -530,6 +546,7 @@ const TechnicianHome = () => {
         <WorkOrderModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
+          data={data}
         />
       )}
     </div>

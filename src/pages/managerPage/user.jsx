@@ -3,6 +3,7 @@ import "./css/TabSwitcher.css";
 import "./css/table.css";
 import { IoIosSearch } from "react-icons/io";
 import img from "../../assets/images/person_four.jpg";
+import { TiArrowSortedUp } from "react-icons/ti";
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -10,21 +11,23 @@ const Users = () => {
   const [activeTab, setActiveTab] = useState("Technician");
   const rowsPerPage = 10;
 
-  const [data] = useState([
+  const [data, setData] = useState([
     {
       image: img,
       name: "Yangchen Wangmo",
       email: "yangchen@example.com",
       location: "Block-A-101",
-      department:"Plumbing Team",
+      department: "Plumbing Team",
       role: "Technician",
+      workAssigned: 8,
+
     },
     {
       image: img,
       name: "Karma Tenzin",
       email: "karma@example.com",
       location: "Block-B-202",
-      department:"Plumbing Team",
+      department: "Plumbing Team",
       role: "Supervisor",
     },
     {
@@ -32,7 +35,7 @@ const Users = () => {
       name: "Sonam zangmo",
       email: "sonam@example.com",
       location: "Block-C-303",
-      department:"Plumbing Team",
+      department: "Plumbing Team",
       role: "Supervisor",
     },
     {
@@ -40,15 +43,17 @@ const Users = () => {
       name: "Jigme Norbu",
       email: "jigme@example.com",
       location: "Block-D-404",
-      department:"Plumbing Team",
+      department: "Plumbing Team",
       role: "Technician",
+      workAssigned: 8,
+
     },
     {
       image: img,
       name: "Pema Choden",
       email: "pema@example.com",
       location: "Block-E-505",
-      department:"Plumbing Team",
+      department: "Plumbing Team",
       role: "Supervisor",
     },
     {
@@ -56,23 +61,27 @@ const Users = () => {
       name: "Tshering Zangmo",
       email: "tshering@example.com",
       location: "Block-F-606",
-      department:"Plumbing Team",
+      department: "Plumbing Team",
       role: "Technician",
+      workAssigned: 8,
+
     },
     {
       image: img,
       name: "Dorji Wangchuk",
       email: "dorji@example.com",
       location: "Block-G-707",
-      department:"Plumbing Team",
+      department: "Plumbing Team",
       role: "Technician",
+      workAssigned: 8,
+
     },
     {
       image: img,
       name: "Kinley Dorji",
       email: "kinley@example.com",
       location: "Block-H-808",
-      department:"Plumbing Team",
+      department: "Plumbing Team",
       role: "Supervisor",
     },
     {
@@ -80,7 +89,7 @@ const Users = () => {
       name: "Deki Wangmo",
       email: "deki@example.com",
       location: "Block-I-909",
-      department:"Plumbing Team",
+      department: "Plumbing Team",
       role: "Supervisor",
     },
     {
@@ -88,7 +97,7 @@ const Users = () => {
       name: "Ugyen Tenzin",
       email: "ugyen@example.com",
       location: "Block-J-1010",
-      department:"Plumbing Team",
+      department: "Plumbing Team",
       role: "Technician",
     },
   ]);
@@ -107,6 +116,30 @@ const Users = () => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+
+  // Sorting
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      if (a[column] < b[column]) return ascending ? -1 : 1;
+      if (a[column] > b[column]) return ascending ? 1 : -1;
+      return 0;
+    });
+    setData(sortedData);
+  };
+
+  const handleSort = (column) => {
+    const newSortOrder = column === sortOrder.column
+      ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
+      : true; // Start with ascending for a new column
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+    sortData(column, newSortOrder);
+  };
 
   return (
     <div className="user-dashboard">
@@ -127,7 +160,7 @@ const Users = () => {
       </div>
 
       {/* Search Bar */}
-      <div style={{margin:"0px", marginTop:"14px"}} className="container">
+      <div style={{ margin: "0px", marginTop: "14px" }} className="container">
         <div className="search-sort-container">
           <div className="search-container">
             <IoIosSearch style={{ width: "20px", height: "20px" }} />
@@ -145,9 +178,37 @@ const Users = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-                {["Image", "Name", "Email", "Location", "Department", "Role"].map(
+              {["Image", "Name", "Email", "Location", "Department", "Role", ...(activeTab === "Technician" ? ["Work Assigned"] : [])].map(
                   (header, index) => (
-                    <th key={index}>{header}</th>
+                    <th key={index}>
+                      {header === "Name" || header === "Location" || header === "Department" ? (
+                        <div className="header-title">
+                          {header}
+                          <div className="sort-icons">
+                            <button
+                              className="sort-btn"
+                              onClick={() => handleSort(header.toLowerCase().replace(' ', '', ''))}
+                            >
+                              <TiArrowSortedUp
+                                style={{
+                                  color: "#305845",
+                                  transform: sortOrder.column === header.toLowerCase().replace(' ', '') && sortOrder.ascending
+                                    ? "rotate(0deg)"  // Ascending
+                                    : sortOrder.column === header.toLowerCase().replace(' ', '') && !sortOrder.ascending
+                                      ? "rotate(180deg)" // Descending
+                                      : "rotate(0deg)",  // Default
+                                  transition: "transform 0.3s ease",
+                                }}
+                              />
+
+
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        header
+                      )}
+                    </th>
                   )
                 )}
               </tr>
@@ -176,12 +237,13 @@ const Users = () => {
                   <td>{item.location}</td>
                   <td>{item.department}</td>
                   <td>{item.role}</td>
+                  {activeTab === "Technician" && <td>{item.workAssigned ?? 0}</td>}
+
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-
 
         {/* Pagination */}
         <div className="pagination">

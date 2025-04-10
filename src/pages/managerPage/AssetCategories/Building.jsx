@@ -145,6 +145,27 @@ const Building = ({ category }) => {
     setModalData(item); // This will set the selected asset data for the modal
   };
 
+  const handleCreateSchedule = () => {
+    if (
+      !scheduleModalData.Schedule ||
+      !scheduleModalData.Lastworkorder ||
+      !scheduleModalData.Nextworkorder ||
+      !scheduleModalData.Assign
+    ) {
+      alert("Please fill out all fields before submitting.");
+      return;
+    }
+  
+    // If all fields are filled, process the schedule
+    console.log("Creating schedule:", scheduleModalData);
+  
+    // Only close the modal AFTER schedule creation
+    // setIsScheduleModalOpen(false); // Removed from here
+    setScheduleModalData(null);
+  };
+  
+
+
   // Function to get the class based on workstatus
   const getStatusClass = (status) => {
     switch (status) {
@@ -173,7 +194,6 @@ const Building = ({ category }) => {
     setFloorAndRooms({});
   };
 
-  // Extract unique work statuses from data
   const uniqueBuilding = [
     { value: "", label: "All buildings" },
     ...Array.from(new Set(data.map((item) => item.Title))).map((Title) => ({
@@ -293,6 +313,8 @@ const Building = ({ category }) => {
     { value: "Worker C", label: "Worker C" },
   ];
 
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  
   const handleScheduleMaintenance = () => {
     if (!modalData) return; // Optional: prevent errors if modalData is undefined
 
@@ -605,6 +627,7 @@ const Building = ({ category }) => {
                   style={{ color: "#897463", width: "20px", height: "20px" }}
                 />
               </button>
+
             </div>
             <div className="schedule-form">
               <div className="modal-content-field">
@@ -984,7 +1007,7 @@ const Building = ({ category }) => {
       )}
 
       {/* scheduleModel */}
-      {scheduleModalData && (
+      {isScheduleModalOpen && scheduleModalData && ( 
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">

@@ -124,7 +124,7 @@ const Category = () => {
                 ))}
                 <th>
                   {selectedRows.length > 0 && (
-                    <button className="delete-all-btn" onClick={handleDeleteSelected}>
+                    <button className="deletectg-all-btn" onClick={handleDeleteSelected}>
                       <RiDeleteBin6Line style={{ width: "20px", height: "20px", color: "red" }} />
                     </button>
                   )}
