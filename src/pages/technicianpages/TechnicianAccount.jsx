@@ -9,6 +9,8 @@ import {
   useGetUserByEmailQuery,
   useUpdateUserImageMutation,
   useChangePasswordMutation,
+  useGetAcademyByIdQuery,
+  useGetDepartmentByIdQuery,
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 
@@ -18,10 +20,14 @@ const getUserEmail = createSelector(
   (userInfo) => userInfo?.user?.username || ""
 );
 
-const SAdminAccount = () => {
+const TechnicianAccount = () => {
   const [profile, setProfile] = useState({
     name: "",
     email: "",
+    academyId: "",
+    departmentId: "",
+    academy: "",
+    department: "",
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -31,7 +37,7 @@ const SAdminAccount = () => {
 
   const [isNewImageSelected, setIsNewImageSelected] = useState(false);
   const originalImageRef = useRef(img);
-  const email = useSelector(getUserEmail); // 👈 Getting logged-in user email from Redux
+  const email = useSelector(getUserEmail);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState({
     oldPassword: false,
@@ -39,29 +45,60 @@ const SAdminAccount = () => {
     confirmPassword: false,
   });
 
-  const { data, error, refetch } = useGetUserByEmailQuery(email);
+  const { data: userData, error, refetch } = useGetUserByEmailQuery(email);
+  const { data: academyData } = useGetAcademyByIdQuery(profile.academyId, {
+    skip: !profile.academyId,
+  });
+  const { data: departmentData } = useGetDepartmentByIdQuery(
+    profile.departmentId,
+    {
+      skip: !profile.departmentId,
+    }
+  );
+
   const [updateUserProfile, { isLoading: isImageLoading }] =
     useUpdateUserImageMutation();
   const [updateUserPassword, { isLoading: isPasswordLoading }] =
     useChangePasswordMutation();
 
+  // Update user data
   useEffect(() => {
-    if (data?.user) {
-      console.log("User Data:", data.user); // 👈 for debugging
-      setProfile((prevProfile) => ({
-        ...prevProfile,
-        name: data.user.name || "",
-        email: data.user.email || "",
-        image: data.user.image || img,
+    if (userData?.user) {
+      setProfile((prev) => ({
+        ...prev,
+        name: userData.user.name || "",
+        email: userData.user.email || "",
+        academyId: userData.user.academyId || "",
+        departmentId: userData.user.departmentId || "",
+        image: userData.user.image || img,
       }));
-      originalImageRef.current = data.user.image || img;
+      originalImageRef.current = userData.user.image || img;
     }
 
     if (error) {
-      console.error("Failed to fetch profile data:", error);
       Swal.fire("Error", "Failed to load profile data.", "error");
     }
-  }, [data, error]);
+  }, [userData, error]);
+
+  // Update academy data - using correct structure
+  useEffect(() => {
+    if (academyData?.name) {
+      setProfile((prev) => ({
+        ...prev,
+        academy: academyData.name || "",
+      }));
+    }
+  }, [academyData]);
+
+  // Update department data - using correct structure
+  useEffect(() => {
+    if (departmentData?.name) {
+      setProfile((prev) => ({
+        ...prev,
+        department: departmentData.name || "",
+      }));
+    }
+  }, [departmentData]);
 
   const togglePasswordVisibility = (field) => {
     setShowPassword((prevState) => ({
@@ -103,7 +140,9 @@ const SAdminAccount = () => {
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = "Invalid email format";
     }
-
+    if (!profile.academy.trim()) newErrors.academy = "Academy is required";
+    if (!profile.department.trim())
+      newErrors.department = "Department is required";
     if (oldPassword || newPassword || confirmPassword) {
       if (!oldPassword) newErrors.oldPassword = "Old password is required";
       if (newPassword.length < 6)
@@ -140,7 +179,6 @@ const SAdminAccount = () => {
             confirmPassword: "",
           }));
         } catch (error) {
-          console.error("Password update failed:", error.message);
           Swal.fire(
             "Password Update Failed",
             error?.data?.message || "Something went wrong.",
@@ -171,9 +209,8 @@ const SAdminAccount = () => {
         Swal.fire("Success", "Profile Image Updated Successfully!", "success");
         originalImageRef.current = profile.imageFile;
         setIsNewImageSelected(false);
-        refetch(); // Refresh data after update
+        refetch();
       } catch (error) {
-        console.error("Image update failed:", error.message);
         Swal.fire(
           "Image Update Failed",
           error?.data?.message || "Something went wrong.",
@@ -236,6 +273,28 @@ const SAdminAccount = () => {
           />
           {errors.email && <p className="error-text">{errors.email}</p>}
 
+          <input
+            className="profile-input"
+            type="text"
+            name="academy"
+            value={profile.academy}
+            placeholder="Academy"
+            disabled
+          />
+          {errors.academy && <p className="error-text">{errors.academy}</p>}
+
+          <input
+            className="profile-input"
+            type="text"
+            name="department"
+            value={profile.department}
+            placeholder="Department"
+            disabled
+          />
+          {errors.department && (
+            <p className="error-text">{errors.department}</p>
+          )}
+
           {["oldPassword", "newPassword", "confirmPassword"].map((field) => (
             <div className="password-container" key={field}>
               <input
@@ -275,4 +334,4 @@ const SAdminAccount = () => {
   );
 };
 
-export default SAdminAccount;
+export default TechnicianAccount;

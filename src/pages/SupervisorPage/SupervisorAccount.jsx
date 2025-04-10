@@ -1,27 +1,104 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./../managerPage/css/MAccount.css";
-import img from "../../assets/images/pp.png";
 import { RiImageAddLine } from "react-icons/ri";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
+import { useSelector } from "react-redux";
+import { createSelector } from "reselect";
+import img from "../../assets/images/defaultImage.png";
+import {
+  useGetUserByEmailQuery,
+  useUpdateUserImageMutation,
+  useChangePasswordMutation,
+  useGetAcademyByIdQuery,
+  useGetDepartmentByIdQuery,
+} from "../../slices/userApiSlice";
+import Swal from "sweetalert2";
+
+const selectUserInfo = (state) => state.auth.userInfo || {};
+const getUserEmail = createSelector(
+  selectUserInfo,
+  (userInfo) => userInfo?.user?.username || ""
+);
 
 const SupervisorAccount = () => {
   const [profile, setProfile] = useState({
-    name: "Tenzin Om",
-    email: "omtenzin@gmail.com",
-    academy: "Khotokha Gyalsung Academy",
-    department: "Plumbing Team",
+    name: "",
+    email: "",
+    academyId: "",
+    departmentId: "",
+    academy: "",
+    department: "",
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
-    image: img, // Default image
+    image: img,
+    imageFile: null,
   });
 
+  const [isNewImageSelected, setIsNewImageSelected] = useState(false);
+  const originalImageRef = useRef(img);
+  const email = useSelector(getUserEmail);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState({
     oldPassword: false,
     newPassword: false,
     confirmPassword: false,
   });
+
+  const { data: userData, error, refetch } = useGetUserByEmailQuery(email);
+  const { data: academyData } = useGetAcademyByIdQuery(profile.academyId, {
+    skip: !profile.academyId,
+  });
+  const { data: departmentData } = useGetDepartmentByIdQuery(
+    profile.departmentId,
+    {
+      skip: !profile.departmentId,
+    }
+  );
+
+  const [updateUserProfile, { isLoading: isImageLoading }] =
+    useUpdateUserImageMutation();
+  const [updateUserPassword, { isLoading: isPasswordLoading }] =
+    useChangePasswordMutation();
+
+  // Update user data
+  useEffect(() => {
+    if (userData?.user) {
+      setProfile((prev) => ({
+        ...prev,
+        name: userData.user.name || "",
+        email: userData.user.email || "",
+        academyId: userData.user.academyId || "",
+        departmentId: userData.user.departmentId || "",
+        image: userData.user.image || img,
+      }));
+      originalImageRef.current = userData.user.image || img;
+    }
+
+    if (error) {
+      Swal.fire("Error", "Failed to load profile data.", "error");
+    }
+  }, [userData, error]);
+
+  // Update academy data - using correct structure
+  useEffect(() => {
+    if (academyData?.name) {
+      setProfile((prev) => ({
+        ...prev,
+        academy: academyData.name || "",
+      }));
+    }
+  }, [academyData]);
+
+  // Update department data - using correct structure
+  useEffect(() => {
+    if (departmentData?.name) {
+      setProfile((prev) => ({
+        ...prev,
+        department: departmentData.name || "",
+      }));
+    }
+  }, [departmentData]);
 
   const togglePasswordVisibility = (field) => {
     setShowPassword((prevState) => ({
@@ -39,7 +116,15 @@ const SupervisorAccount = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfile({ ...profile, image: reader.result });
+        setProfile((prev) => ({
+          ...prev,
+          image: reader.result,
+          imageFile: file,
+          oldPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        }));
+        setIsNewImageSelected(true);
       };
       reader.readAsDataURL(file);
     }
@@ -47,34 +132,93 @@ const SupervisorAccount = () => {
 
   const validateForm = () => {
     let newErrors = {};
-    if (!profile.name.trim()) newErrors.name = "Name is required";
-    if (!profile.email.trim()) {
+    const { name, email, oldPassword, newPassword, confirmPassword } = profile;
+
+    if (!name.trim()) newErrors.name = "Name is required";
+    if (!email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(profile.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = "Invalid email format";
     }
     if (!profile.academy.trim()) newErrors.academy = "Academy is required";
-    if (!profile.department.trim()) newErrors.department = "Department is required";
-
-    if (!profile.oldPassword) newErrors.oldPassword = "Old password is required";
-
-    if (profile.newPassword || profile.confirmPassword) {
-      if (profile.newPassword.length < 6) {
-        newErrors.newPassword = "New password must be at least 6 characters";
-      }
-      if (profile.newPassword !== profile.confirmPassword) {
+    if (!profile.department.trim())
+      newErrors.department = "Department is required";
+    if (oldPassword || newPassword || confirmPassword) {
+      if (!oldPassword) newErrors.oldPassword = "Old password is required";
+      if (newPassword.length < 6)
+        newErrors.newPassword = "Password must be at least 6 characters";
+      if (newPassword !== confirmPassword)
         newErrors.confirmPassword = "Passwords do not match";
-      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      alert("Profile Updated Successfully!");
-      console.log("Updated Profile:", profile);
+      let madeChanges = false;
+
+      if (
+        profile.oldPassword &&
+        profile.newPassword &&
+        profile.newPassword === profile.confirmPassword
+      ) {
+        madeChanges = true;
+        try {
+          await updateUserPassword({
+            email: profile.email,
+            oldPassword: profile.oldPassword,
+            newPassword: profile.newPassword,
+          }).unwrap();
+          Swal.fire("Success", "Password Updated Successfully!", "success");
+          setProfile((prev) => ({
+            ...prev,
+            oldPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+          }));
+        } catch (error) {
+          Swal.fire(
+            "Password Update Failed",
+            error?.data?.message || "Something went wrong.",
+            "error"
+          );
+        }
+      }
+
+      if (!madeChanges) {
+        Swal.fire("Info", "No changes detected to update.", "info");
+      }
+    } else {
+      Swal.fire(
+        "Validation Error",
+        "Please correct the errors in the form.",
+        "warning"
+      );
+    }
+  };
+
+  const handleImageUpdate = async () => {
+    if (profile.imageFile && profile.imageFile !== originalImageRef.current) {
+      try {
+        await updateUserProfile({
+          email: profile.email,
+          image: profile.imageFile,
+        }).unwrap();
+        Swal.fire("Success", "Profile Image Updated Successfully!", "success");
+        originalImageRef.current = profile.imageFile;
+        setIsNewImageSelected(false);
+        refetch();
+      } catch (error) {
+        Swal.fire(
+          "Image Update Failed",
+          error?.data?.message || "Something went wrong.",
+          "error"
+        );
+      }
+    } else {
+      Swal.fire("Info", "Please select a new image to update.", "info");
     }
   };
 
@@ -82,15 +226,33 @@ const SupervisorAccount = () => {
     <div className="profile-container">
       <div className="profile-card">
         <div className="profile-left">
-          <img src={profile.image} alt="Profile" className="profile-image" />
-          <h2>{profile.name}</h2>
-          <p>{profile.email}</p>
-          <p>{profile.department}</p>
-          <p>{profile.academy}</p>
+          <div className="profile-image-wrapper">
+            <img src={profile.image} alt="Profile" className="profile-image" />
+            <label className="profile-camera-icon">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="profile-hidden"
+              />
+              <RiImageAddLine />
+            </label>
+          </div>
+
+          {isNewImageSelected && (
+            <button
+              className="profile-update-button"
+              onClick={handleImageUpdate}
+              disabled={isImageLoading}
+            >
+              {isImageLoading ? "Updating..." : "Update Image"}
+            </button>
+          )}
         </div>
 
         <div className="profile-right">
           <h3>Edit Your Profile Details</h3>
+
           <input
             className="profile-input"
             type="text"
@@ -114,23 +276,24 @@ const SupervisorAccount = () => {
           <input
             className="profile-input"
             type="text"
-            name="department"
-            value={profile.department}
-            onChange={handleChange}
-            placeholder="Department"
+            name="academy"
+            value={profile.academy}
+            placeholder="Academy"
+            disabled
           />
-          {errors.department && <p className="error-text">{errors.department}</p>}
+          {errors.academy && <p className="error-text">{errors.academy}</p>}
 
-          
           <input
             className="profile-input"
             type="text"
-            name="academy"
-            value={profile.academy}
-            onChange={handleChange}
-            placeholder="Academy"
+            name="department"
+            value={profile.department}
+            placeholder="Department"
+            disabled
           />
-          {errors.academy && <p className="error-text">{errors.academy}</p>}
+          {errors.department && (
+            <p className="error-text">{errors.department}</p>
+          )}
 
           {["oldPassword", "newPassword", "confirmPassword"].map((field) => (
             <div className="password-container" key={field}>
@@ -138,6 +301,7 @@ const SupervisorAccount = () => {
                 className="profile-input"
                 type={showPassword[field] ? "text" : "password"}
                 name={field}
+                value={profile[field]}
                 placeholder={
                   field === "oldPassword"
                     ? "Old Password"
@@ -157,19 +321,12 @@ const SupervisorAccount = () => {
             </div>
           ))}
 
-          <label className="profile-upload-label">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="profile-hidden"
-            />
-            <RiImageAddLine className="profile-upload-icon" />
-            <p style={{marginBottom:"4px"}}>Upload Image</p>
-          </label>
-
-          <button className="profile-update-button" onClick={handleSubmit}>
-            Update
+          <button
+            className="profile-update-button"
+            onClick={handleSubmit}
+            disabled={isPasswordLoading}
+          >
+            {isPasswordLoading ? "Updating..." : "Update"}
           </button>
         </div>
       </div>

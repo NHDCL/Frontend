@@ -11,6 +11,7 @@ const TechnicianSidebar = () => {
   const navigate = useNavigate();
   const splitIndex = techniciannavigationLinks.length - 2;
 
+  // Handle Logout Logic
   const handleLogout = () => {
     Swal.fire({
       title: "Are you sure?",
@@ -22,8 +23,11 @@ const TechnicianSidebar = () => {
       confirmButtonText: "Yes, Logout!",
     }).then((result) => {
       if (result.isConfirmed) {
+        // Remove authentication data
         localStorage.removeItem("authToken");
-        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+
+        // Success toast
         Swal.fire({
           icon: "success",
           title: "Logged out successfully!",
@@ -32,6 +36,8 @@ const TechnicianSidebar = () => {
           showConfirmButton: false,
           timer: 2000,
         });
+
+        // Redirect to login page
         navigate("/login");
       }
     });
@@ -49,17 +55,16 @@ const TechnicianSidebar = () => {
         <ul className="nav-list">
           {techniciannavigationLinks.slice(0, splitIndex).map((link) => (
             <li className="nav-item" key={link.path}>
-                <NavLink
-                  to={`/technician/${link.path}`}
-                  className={({ isActive }) =>
-                    isActive ? "nav-link active" : "nav-link"
-                  }
-                  end
-                >
-                  <link.icon className="nav-link-icon" />
-                  <span className="nav-link-text">{link.title}</span>
-                </NavLink>
-        
+              <NavLink
+                to={`/technician/${link.path}`}
+                className={({ isActive }) =>
+                  isActive ? "nav-link active" : "nav-link"
+                }
+                end
+              >
+                <link.icon className="nav-link-icon" />
+                <span className="nav-link-text">{link.title}</span>
+              </NavLink>
             </li>
           ))}
         </ul>
@@ -70,7 +75,10 @@ const TechnicianSidebar = () => {
             {techniciannavigationLinks.slice(splitIndex).map((link) => (
               <li className="nav-item" key={link.path}>
                 {link.title === "Logout" ? (
-                  <button className="nav-link logout-btn" onClick={handleLogout}>
+                  <button
+                    className="nav-link logout-btn"
+                    onClick={handleLogout}
+                  >
                     <link.icon className="nav-link-icon" />
                     <span className="nav-link-text">{link.title}</span>
                   </button>
