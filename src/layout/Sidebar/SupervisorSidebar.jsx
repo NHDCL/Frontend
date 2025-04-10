@@ -22,8 +22,11 @@ const SupervisorSidebar = () => {
       confirmButtonText: "Yes, Logout!",
     }).then((result) => {
       if (result.isConfirmed) {
+        // Remove auth data from localStorage and sessionStorage
         localStorage.removeItem("authToken");
-        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+
+        // Show success toast
         Swal.fire({
           icon: "success",
           title: "Logged out successfully!",
@@ -32,6 +35,8 @@ const SupervisorSidebar = () => {
           showConfirmButton: false,
           timer: 2000,
         });
+
+        // Navigate to login page
         navigate("/login");
       }
     });
@@ -49,18 +54,16 @@ const SupervisorSidebar = () => {
         <ul className="nav-list">
           {supervisornavigationLinks.slice(0, splitIndex).map((link) => (
             <li className="nav-item" key={link.id}>
-  
-                <NavLink
-                  to={`/supervisor/${link.path}`}
-                  className={({ isActive }) =>
-                    isActive ? "nav-link active" : "nav-link"
-                  }
-                  end
-                >
-                  <link.icon className="nav-link-icon" />
-                  <span className="nav-link-text">{link.title}</span>
-                </NavLink>
-              
+              <NavLink
+                to={`/supervisor/${link.path}`}
+                className={({ isActive }) =>
+                  isActive ? "nav-link active" : "nav-link"
+                }
+                end
+              >
+                <link.icon className="nav-link-icon" />
+                <span className="nav-link-text">{link.title}</span>
+              </NavLink>
             </li>
           ))}
         </ul>
@@ -71,7 +74,10 @@ const SupervisorSidebar = () => {
             {supervisornavigationLinks.slice(splitIndex).map((link) => (
               <li className="nav-item" key={link.id}>
                 {link.title === "Logout" ? (
-                  <button className="nav-link logout-btn" onClick={handleLogout}>
+                  <button
+                    className="nav-link logout-btn"
+                    onClick={handleLogout}
+                  >
                     <link.icon className="nav-link-icon" />
                     <span className="nav-link-text">{link.title}</span>
                   </button>

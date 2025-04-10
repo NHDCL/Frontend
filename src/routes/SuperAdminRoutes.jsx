@@ -9,7 +9,7 @@ import AdminRepair from "../pages/adminPages/AdminRepair";
 import AdminMaintenance from "../pages/adminPages/AdminMaintenance";
 import AdminRReport from "../pages/adminPages/AdminRReport";
 import AdminMReport from "../pages/adminPages/AdminMReport";
-import AdminAccount from "../pages/adminPages/AdminAccount";
+import SAdminAccount from "../pages/superAdminPages/SAdminAccount";
 import ContentTop from "../components/ContentTop/ContentTop";
 import SuperAdminSidebar from "../layout/Sidebar/SuperAdminSidebar";
 import SAdminAcademies from "../pages/superAdminPages/SAdminAcademies";
@@ -32,10 +32,13 @@ const SuperAdminRoutes = () => {
             <Route path="Users" element={<SAdminUser />} />
             <Route path="assets" element={<AdminAssets />} />
             <Route path="repair-maintenance" element={<AdminRepair />} />
-            <Route path="preventive-maintenance" element={<AdminMaintenance />} />
+            <Route
+              path="preventive-maintenance"
+              element={<AdminMaintenance />}
+            />
             <Route path="repair-report" element={<AdminRReport />} />
             <Route path="maintenance-report" element={<AdminMReport />} />
-            <Route path="account" element={<AdminAccount />} />
+            <Route path="account" element={<SAdminAccount />} />
             <Route path="*" element={<h1>404 - Page Not Found</h1>} />
           </Routes>
         </div>

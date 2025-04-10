@@ -5,14 +5,21 @@ import { adminnavigationLinks } from "../../data/data";
 import "./Sidebar.css";
 import { SidebarContext } from "../../context/sidebarContext";
 import logo from "../../assets/images/Nlogo.jpeg";
+import { useLogoutMutation } from "../../slices/userApiSlice"; // import logout mutation
+import { useDispatch } from "react-redux"; // Import useDispatch
+import { logout } from "../../slices/authSlice"; // Import logout action
 
 const AdminSidebar = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
   const splitIndex = adminnavigationLinks.length - 2;
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // Initialize dispatch
 
-  const handleLogout = () => {
-    Swal.fire({
+  const [logoutUser] = useLogoutMutation(); // use logout mutation
+
+  const handleLogout = async () => {
+    // Confirming with the user if they really want to log out
+    const result = await Swal.fire({
       title: "Are you sure?",
       text: "You will be logged out!",
       icon: "warning",
@@ -20,10 +27,23 @@ const AdminSidebar = () => {
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Yes, Logout!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        localStorage.removeItem("authToken");
-        sessionStorage.removeItem("user");
+    });
+
+    if (result.isConfirmed) {
+      try {
+        // Logging out the user by calling the API mutation
+        await logoutUser();
+
+        // Clearing session and authentication tokens
+        sessionStorage.removeItem("token");
+
+        // Dispatching the logout action
+        dispatch(logout()); // Dispatch the logout action
+
+        // Removing user info from localStorage
+        localStorage.removeItem("userInfo");
+
+        // Showing success message on successful logout
         Swal.fire({
           icon: "success",
           title: "Logged out successfully!",
@@ -32,9 +52,15 @@ const AdminSidebar = () => {
           showConfirmButton: false,
           timer: 2000,
         });
+
+        // Redirecting to the login page after logout
         navigate("/login");
+      } catch (error) {
+        // Handling any errors during logout
+        Swal.fire("Error", "Logout failed. Try again.", "error");
+        console.error("Logout error:", error);
       }
-    });
+    }
   };
 
   return (
@@ -49,18 +75,16 @@ const AdminSidebar = () => {
         <ul className="nav-list">
           {adminnavigationLinks.slice(0, splitIndex).map((link) => (
             <li className="nav-item" key={link.id}>
-          
-                <NavLink
-                  to={`/admin/${link.path}`}
-                  className={({ isActive }) =>
-                    isActive ? "nav-link active" : "nav-link"
-                  }
-                  end
-                >
-                  <link.icon className="nav-link-icon" />
-                  <span className="nav-link-text">{link.title}</span>
-                </NavLink>
-            
+              <NavLink
+                to={`/admin/${link.path}`}
+                className={({ isActive }) =>
+                  isActive ? "nav-link active" : "nav-link"
+                }
+                end
+              >
+                <link.icon className="nav-link-icon" />
+                <span className="nav-link-text">{link.title}</span>
+              </NavLink>
             </li>
           ))}
         </ul>
@@ -71,7 +95,10 @@ const AdminSidebar = () => {
             {adminnavigationLinks.slice(splitIndex).map((link) => (
               <li className="nav-item" key={link.id}>
                 {link.title === "Logout" ? (
-                  <button className="nav-link logout-btn" onClick={handleLogout}>
+                  <button
+                    className="nav-link logout-btn"
+                    onClick={handleLogout} // Logout button triggers handleLogout function
+                  >
                     <link.icon className="nav-link-icon" />
                     <span className="nav-link-text">{link.title}</span>
                   </button>

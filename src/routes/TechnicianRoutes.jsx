@@ -9,7 +9,7 @@ import TechnicianHome from "../pages/technicianpages/TechnicianHome";
 import TechnicianWorkOrder from "../pages/technicianpages/TechnicianWorkOrder";
 import TechnicianMSchedule from "../pages/technicianpages/TechnicianMSchedule";
 import TechnicianSidebar from "../layout/Sidebar/TechnicianSidebar";
-import SupervisorAccount from "../pages/SupervisorPage/SupervisorAccount";
+import TechnicianAccount from "../pages/technicianpages/TechnicianAccount";
 
 const TechnicianRoutes = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
@@ -25,8 +25,11 @@ const TechnicianRoutes = () => {
           <Routes>
             <Route path="/" element={<TechnicianHome />} />
             <Route path="work-order" element={<TechnicianWorkOrder />} />
-            <Route path="maintenance-schedule" element={<TechnicianMSchedule />} />
-            <Route path="account" element={<SupervisorAccount />} />
+            <Route
+              path="maintenance-schedule"
+              element={<TechnicianMSchedule />}
+            />
+            <Route path="account" element={<TechnicianAccount />} />
             <Route path="*" element={<h1>404 - Page Not Found</h1>} />
           </Routes>
         </div>
