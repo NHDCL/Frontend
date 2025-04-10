@@ -82,21 +82,6 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-    // New Endpoints for Academies and Departments
-    getAllAcademies: builder.query({
-      query: () => ({
-        url: USERS_URL + "/academies", // Corrected path here
-        method: "GET",
-      }),
-    }),
-
-    getAllDepartments: builder.query({
-      query: () => ({
-        url: USERS_URL + "/departments", // Corrected path here
-        method: "GET",
-      }),
-    }),
-
     getAcademyById: builder.query({
       query: (id) => ({
         url: `${USERS_URL}/academies/${id}`,
@@ -123,8 +108,6 @@ export const {
   useUpdateUserImageMutation,
   useChangePasswordMutation,
   useLogoutMutation,
-  useGetAllAcademiesQuery,
-  useGetAllDepartmentsQuery,
   useGetAcademyByIdQuery,
   useGetDepartmentByIdQuery,
 } = usersApiSlice;
