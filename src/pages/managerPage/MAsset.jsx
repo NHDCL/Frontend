@@ -1,69 +1,76 @@
 import React, { useState, lazy, Suspense } from "react";
 import AssetTap from "./AssetTap";
+import { useGetCategoryQuery } from "../../slices/assetApiSlice";
 
-
-// Lazy load category components correctly
-const categoryComponents = {
-  Tab1: lazy(() => import("./AssetCategories/Building")),
-  Tab2: lazy(() => import("./AssetCategories/Infrastructure")),
-  Tab3: lazy(() => import("./AssetCategories/Facilities")),
-  Tab4: lazy(() => import("./AssetCategories/Landscaping")),
-  Tab5: lazy(() => import("./AssetCategories/Machinery")),
-  Tab6: lazy(() => import("./AssetCategories/Furniture")),
+// Mapping API category names to corresponding component filenames
+const categoryMapping = {
+  Building: "Building",
+  Infrastructure: "Landscaping",
+  Facility: "Landscaping",
+  Landscaping: "Landscaping",
+  Machinery: "Machinery",
+  Furniture: "Other",
+  RoomQr: "RoomQr", // Adding static RoomQr mapping
 };
 
-// Correct path for the default "Other" category
+// Default component when category is not found
 const DefaultCategory = lazy(() => import("./AssetCategories/Other"));
 
+// Static RoomQr component
+const RoomQrComponent = lazy(() => import("./AssetCategories/Other"));
+
 const MAsset = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
-  const [categories, setCategories] = useState([
-    { id: "Tab1", name: "Building" },
-    { id: "Tab2", name: "Infrastructure & Service" },
-    { id: "Tab3", name: "Facilities & Amenities" },
-    { id: "Tab4", name: "Landscaping" },
-    { id: "Tab5", name: "Machinery & Equipment" },
-    { id: "Tab6", name: "Furniture & Fixture" },
-  ]);
+  const { data: categories, error, isLoading } = useGetCategoryQuery(); // Fetch categories from API
 
-  const [activeTab, setActiveTab] = useState("Tab1");
+  // Ensure categories exist before setting defaultTab
+  const defaultTab =
+    categories && categories.length > 0 ? categories[0].name : "Building";
+  const [activeTab, setActiveTab] = useState(defaultTab);
 
-  // Function to add a new category dynamically
-  const handleAddCategory = (newCategoryName) => {
-    const newCategoryId = `Tab${categories.length + 1}`;
-    setCategories([...categories, { id: newCategoryId, name: newCategoryName }]);
-    setActiveTab(newCategoryId); // Automatically switch to the new category
-  };
+  // Adding RoomQr manually to categories to display in the AssetTap
+  const categoryList = categories
+    ? [...categories, { name: "Room QR" }]
+    : [{ name: "RoomQr" }];
 
+  if (isLoading) return <div>Loading categories...</div>;
+  if (error) return <div>Error fetching categories</div>;
+
+  // Get the correct filename based on the category name
+  const componentFile = categoryMapping[activeTab] || "Other";
+
+  // Lazy load the mapped component dynamically or load RoomQr if selected
+  const CategoryComponent =
+    activeTab === "RoomQr"
+      ? RoomQrComponent
+      : lazy(
+          () =>
+            import(`./AssetCategories/${componentFile}`).catch(
+              () => DefaultCategory
+            ) // If not found, load 'Other.js'
+        );
 
   return (
-
     <div className="ManagerDashboard">
       <div className="container">
         <div>
-          {/* Tabs */}
-          <AssetTap activeTab={activeTab} setActiveTab={setActiveTab} categories={categories} />
+          {/* Render AssetTap with RoomQr included as an option */}
+          {categoryList.length > 0 && (
+            <AssetTap
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              categories={categoryList}
+            />
+          )}
 
           {/* Dynamically Load Component Based on Active Tab */}
           <div className="tab-content">
             <Suspense fallback={<div>Loading...</div>}>
-              {categoryComponents[activeTab] ? (
-                React.createElement(categoryComponents[activeTab])
-              ) : (
-                <DefaultCategory /> // Use 'Other.js' for newly added categories
-              )}
+              <CategoryComponent key={activeTab} category={activeTab} />
             </Suspense>
           </div>
-
-          {/* Button to Add New Category */}
-          {/* <button onClick={() => handleAddCategory("New Custom Category")}>Add New Category</button> */}
         </div>
       </div>
     </div>
-
-
-
   );
 };
 

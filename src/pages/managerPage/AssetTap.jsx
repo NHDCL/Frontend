@@ -1,18 +1,17 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import "./css/assetTap.css";
-import { FaArrowRight } from "react-icons/fa";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowRight, FaArrowLeft } from "react-icons/fa";
 
 const AssetTap = ({ activeTab, setActiveTab, categories }) => {
   const tabsRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = React.useState(false);
+  const [canScrollRight, setCanScrollRight] = React.useState(false);
 
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
+  const handleTabClick = (tabName) => {
+    setActiveTab(tabName); // Use category name instead of ID
   };
 
-  // Check if scrolling is needed
+  // Handle scrolling state
   const handleScroll = () => {
     if (tabsRef.current) {
       setCanScrollLeft(tabsRef.current.scrollLeft > 0);
@@ -40,9 +39,9 @@ const AssetTap = ({ activeTab, setActiveTab, categories }) => {
       <div className="tabs" ref={tabsRef} onScroll={handleScroll}>
         {categories.map((category) => (
           <button
-            key={category.id}
-            className={activeTab === category.id ? "active" : ""}
-            onClick={() => handleTabClick(category.id)}
+            key={category.name}
+            className={activeTab === category.name ? "active" : ""}
+            onClick={() => handleTabClick(category.name)}
           >
             {category.name}
           </button>
