@@ -64,7 +64,7 @@ const AdminUser = () => {
   // console.log("MRoleausers: ", managerRoleId)
 
 
-  // console.log("AAA",academies)
+  console.log("AAA",academies)
   const handleAddUserClick = () => {
     setShowModal(true);
   };
@@ -104,6 +104,7 @@ const AdminUser = () => {
       const res = await createUser(newUser).unwrap();
 
       console.log("res", res)
+
       Swal.fire("Success", "User created successfully", "success");
       setName("");
       setEmail("");
@@ -166,97 +167,17 @@ const AdminUser = () => {
 
   const [data, setData] = useState(users)
   console.log("data", data)
-  useEffect(() => {
-    if (users) {
-      setData(users);
-    }
-  }, [users]);
-  // const [data, setData] = useState([
-  //   {
-  //     image: img,
-  //     name: "Tenzin Om",
-  //     email: "Omtenzin@gmail.com",
-  //     location: "Khotokha",
-  //     role: "Manager",
-  //   },
-  //   {
-  //     image: img,
-  //     name: "Yangchen Wangmo",
-  //     email: "Omtenzin@gmail.com",
-  //     location: "Khotokha",
-  //     role: "Manager",
-  //   },
-  //   {
-  //     image: img,
-  //     name: "Pema",
-  //     email: "Omtenzin@gmail.com",
-  //     location: "Pemathang",
-  //     role: "Manager",
-  //   },
-  //   {
-  //     image: img,
-  //     name: "Dawa",
-  //     email: "Omtenzin@gmail.com",
-  //     location: "Gyelpozhing",
-  //     role: "Manager",
-  //   },
-  //   {
-  //     image: img,
-  //     name: "Karma Tenzin",
-  //     email: "karma@example.com",
-  //     location: "Block-B-202",
-  //     department: "Plumbing Team",
-  //     role: "Supervisor",
-  //   },
-  //   {
-  //     image: img,
-  //     name: "Sonam Zangmo",
-  //     email: "sonam@example.com",
-  //     location: "Block-C-303",
-  //     department: "Electrical Team",
-  //     role: "Supervisor",
-  //   },
-  //   {
-  //     image: img,
-  //     name: "Pema Choden",
-  //     email: "pema@example.com",
-  //     location: "Block-E-505",
-  //     department: "Mechanical Team",
-  //     role: "Supervisor",
-  //   },
-  //   {
-  //     image: img,
-  //     name: "Tshering Zangmo",
-  //     email: "tshering@example.com",
-  //     location: "Block-F-606",
-  //     department: "Plumbing Team",
-  //     role: "Technician",
-  //   },
-  //   {
-  //     image: img,
-  //     name: "Dorji Wangchuk",
-  //     email: "dorji@example.com",
-  //     location: "Block-G-707",
-  //     department: "Electrical Team",
-  //     role: "Technician",
-  //   },
-  //   {
-  //     image: img,
-  //     name: "Ugyen Tenzin",
-  //     email: "ugyen@example.com",
-  //     location: "Block-J-1010",
-  //     department: "Mechanical Team",
-  //     role: "Technician",
-  //   },
-  // ]);
 
-  const filteredData = data.filter(
+
+  const filteredData = (users || []).filter(
     (item) =>
-      item.role === activeTab &&
+      item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
       Object.values(item).some((value) =>
         value.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
   );
+  
+  console.log("FD",filteredData)
 
   const handleDelete = (index) => {
     setData(data.filter((_, i) => i !== index));
@@ -267,6 +188,8 @@ const AdminUser = () => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+  
+
 
   return (
     <div className="user-dashboard">
@@ -355,9 +278,9 @@ const AdminUser = () => {
                   </td>
                   <td>{item.name}</td>
                   <td>{item.email}</td>
-                  <td>{item.location}</td>
+                  <td>{item.academies}</td>
                   {activeTab !== "Manager" && <td>{item.department}</td>}
-                  <td>{item.role}</td>
+                  <td>{item.role ? item.role.name : "No Role"}</td>
                   <td>
                     <RiDeleteBin6Line
                       onClick={() => handleDelete(index)}

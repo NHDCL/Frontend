@@ -32,6 +32,7 @@ const AdminAccount = () => {
   const [isNewImageSelected, setIsNewImageSelected] = useState(false); // 👈 new flag
   const originalImageRef = useRef(img);
   const email = useSelector(getUserEmail);
+  console.log(email);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState({
     oldPassword: false,
@@ -55,6 +56,7 @@ const AdminAccount = () => {
       }));
       originalImageRef.current = data.user.image || img;
     }
+    console.log(data);
 
     if (error) {
       console.error("Failed to fetch profile data:", error);
@@ -126,7 +128,7 @@ const AdminAccount = () => {
       ) {
         madeChanges = true;
         try {
-          const res = await updateUserPassword({
+          await updateUserPassword({
             email: profile.email,
             oldPassword: profile.oldPassword,
             newPassword: profile.newPassword,
@@ -163,7 +165,7 @@ const AdminAccount = () => {
   const handleImageUpdate = async () => {
     if (profile.imageFile && profile.imageFile !== originalImageRef.current) {
       try {
-        const response = await updateUserProfile({
+        await updateUserProfile({
           email: profile.email,
           image: profile.imageFile,
         }).unwrap();

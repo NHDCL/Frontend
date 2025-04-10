@@ -35,13 +35,17 @@ const AdminSidebar = () => {
         await logoutUser();
 
         // Clearing session and authentication tokens
-        sessionStorage.removeItem("token");
+        // sessionStorage.removeItem("token");
 
         // Dispatching the logout action
         dispatch(logout()); // Dispatch the logout action
 
+        sessionStorage.clear(); // Clear all session storage, not just token
+        localStorage.clear(); // Clear all local storage
+
         // Removing user info from localStorage
-        localStorage.removeItem("userInfo");
+        // localStorage.removeItem("userInfo");
+        // localStorage.removeItem("userRole");
 
         // Showing success message on successful logout
         Swal.fire({
@@ -53,8 +57,8 @@ const AdminSidebar = () => {
           timer: 2000,
         });
 
-        // Redirecting to the login page after logout
-        navigate("/login");
+        // Redirecting to the login page after logout with replace: true to block back navigation
+        navigate("/login", { replace: true });
       } catch (error) {
         // Handling any errors during logout
         Swal.fire("Error", "Logout failed. Try again.", "error");

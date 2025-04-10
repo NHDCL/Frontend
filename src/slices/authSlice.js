@@ -27,12 +27,11 @@ const authSlice = createSlice({
     logout: (state) => {
       state.userInfo = null;
       state.userRole = null;
+      localStorage.removeItem("userInfo");
+      localStorage.removeItem("userRole");
     },
   },
 });
-
-
-
 
 export const { setCredentials, logout } = authSlice.actions;
 export default authSlice.reducer;

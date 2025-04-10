@@ -80,7 +80,6 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
-
     updateAcademy: builder.mutation({
       query: ({ academyId, name, location, description, image }) => {
         const formData = new FormData();
@@ -139,13 +138,13 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         formData.append("roleId", userData.roleId);
 
         return {
-          url: USERS_URL + '/users',
+          url: USERS_URL + "/users",
           method: "POST",
           body: formData,
         };
       },
     }),
-    
+
     getUserByEmail: builder.query({
       query: (email) => ({
         url: `${USERS_URL}/users/email`,
@@ -168,8 +167,6 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         };
       },
     }),
-
-
 
     changePassword: builder.mutation({
       query: ({ email, oldPassword, newPassword }) => ({
@@ -234,8 +231,6 @@ export const {
   useUpdateUserImageMutation,
   useChangePasswordMutation,
   useLogoutMutation,
-  useGetAllAcademiesQuery,
-  useGetAllDepartmentsQuery,
   useGetAcademyByIdQuery,
   useGetDepartmentByIdQuery,
 } = usersApiSlice;
