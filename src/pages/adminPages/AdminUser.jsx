@@ -166,6 +166,11 @@ const AdminUser = () => {
 
   const [data, setData] = useState(users)
   console.log("data", data)
+  useEffect(() => {
+    if (users) {
+      setData(users);
+    }
+  }, [users]);
   // const [data, setData] = useState([
   //   {
   //     image: img,
