@@ -29,6 +29,7 @@
     "recharts": "^2.15.1",
     "redux-persist": "^6.0.0",
     "sweetalert2": "^11.17.2",
+    "sweetalert2": "^11.17.2",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
