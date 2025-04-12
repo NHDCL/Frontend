@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/TabSwitcher.css";
 import { IoIosSearch } from "react-icons/io";
@@ -6,6 +6,8 @@ import img from "../../assets/images/person_four.jpg";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { AiOutlineUsergroupAdd } from "react-icons/ai";
 import { IoIosCloseCircle } from "react-icons/io";
+import { useGetAcademyQuery, useCreateUserMutation, useGetDepartmentQuery, useCreateDepartmentMutation, useGetUsersQuery } from "../../slices/userApiSlice";
+import Swal from "sweetalert2";
 
 const SAdminUser = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -14,108 +16,107 @@ const SAdminUser = () => {
   const rowsPerPage = 10;
   const [showModal, setShowModal] = useState(false);
 
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [image, setImage] = useState(null);
+
+  const [selectedAcademy, setSelectedAcademy] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [formError, setFormError] = useState(null);
+
+  const { data: academies } = useGetAcademyQuery();
+  const { data: department, refetch } = useGetDepartmentQuery();
+  const { data: users } = useGetUsersQuery();
+  const [createUser, { isLoading }] = useCreateUserMutation();
+
+  const [adminRoleId, setAdminRoleId] = useState(null);
+  console.log("users: ",users)
+
+  useEffect(() => {
+    if (users && Array.isArray(users)) {
+      users.forEach(user => {
+        const roleName = user?.role?.name?.toLowerCase();
+        const roleId = user?.role?.roleId;
+
+        if (roleName === 'admin') {
+          setAdminRoleId(roleId);
+        }
+      });
+    }
+  }, [users]);
+
+
+  const handleCreateUser = async () => {
+    if (!name || !email || !password) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    let imageFile = image; // your image input (e.g., from file input)
+
+    if (!imageFile) {
+      const response = await fetch("/default-user.jpg");
+      const blob = await response.blob();
+      imageFile = new File([blob], "default-user.jpg", { type: "image/jpeg" });
+    }
+
+    // If activeTab is "Manager", use the managerRoleId
+    const roleId = activeTab === "Admin" ? adminRoleId : null;
+
+    console.log("roleid: ", roleId)
+
+    const newUser = {
+      name,
+      email,
+      password,
+      academyId:selectedAcademy,
+      departmentId: activeTab !== "Manager" ? selectedDepartment : null,
+      roleId: roleId,
+      image: imageFile,
+    };
+
+    try {
+      const res = await createUser(newUser).unwrap();
+
+      console.log("res", res)
+
+      Swal.fire("Success", "User created successfully", "success");
+      setName("");
+      setEmail("");
+      setPassword("");
+    } catch (err) {
+      let errorMessage = "Something went wrong. Please try again.";
+
+      if (err?.status === "PARSING_ERROR") {
+        // response was a string, not JSON
+        errorMessage = err?.data || errorMessage;
+      } else if (err?.data?.message) {
+        // if backend returns { message: "error text" }
+        errorMessage = err.data.message;
+      }
+
+      // Show in Swal or a local error field
+      Swal.fire("Error", errorMessage, "error");
+
+      // OR if you want to show under the input:
+      setFormError(errorMessage); // Add useState for this
+    }
+
+  };
+
+
+
   const handleAddUserClick = () => {
     if (activeTab === "Admin") setShowModal(true);
   };
+  const [data, setData] = useState(users)
+  console.log("data", data)
 
-  const [data, setData] = useState([
-    {
-      image: img,
-      name: "Tenzin Om",
-      email: "Omtenzin@gmail.com",
-      location: "Khotokha",
-      role: "Manager",
-    },
-    {
-      image: img,
-      name: "Yangchen Wangmo",
-      email: "Omtenzin@gmail.com",
-      location: "Khotokha",
-      role: "Manager",
-    },
-    {
-      image: img,
-      name: "Pema",
-      email: "Omtenzin@gmail.com",
-      location: "Pemathang",
-      role: "Manager",
-    },
-    {
-      image: img,
-      name: "Dawa",
-      email: "Omtenzin@gmail.com",
-      location: "Gyelpozhing",
-      role: "Manager",
-    },
-    {
-      image: img,
-      name: "Karma Tenzin",
-      email: "karma@example.com",
-      location: "Block-B-202",
-      department: "Plumbing Team",
-      role: "Supervisor",
-    },
-    {
-      image: img,
-      name: "Sonam Zangmo",
-      email: "sonam@example.com",
-      location: "Block-C-303",
-      department: "Electrical Team",
-      role: "Supervisor",
-    },
-    {
-      image: img,
-      name: "Pema Choden",
-      email: "pema@example.com",
-      location: "Block-E-505",
-      department: "Mechanical Team",
-      role: "Supervisor",
-    },
-    {
-      image: img,
-      name: "Tshering Zangmo",
-      email: "tshering@example.com",
-      location: "Block-F-606",
-      department: "Plumbing Team",
-      role: "Technician",
-    },
-    {
-      image: img,
-      name: "Dorji Wangchuk",
-      email: "dorji@example.com",
-      location: "Block-G-707",
-      department: "Electrical Team",
-      role: "Technician",
-    },
-    {
-      image: img,
-      name: "Ugyen Tenzin",
-      email: "ugyen@example.com",
-      location: "Block-J-1010",
-      department: "Mechanical Team",
-      role: "Technician",
-    },
-    {
-      image: img,
-      name: "Dorji Wangchuk",
-      email: "dorji@example.com",
-      location: "Block-G-707",
-      department: "Electrical Team",
-      role: "Admin",
-    },
-    {
-      image: img,
-      name: "Ugyen Tenzin",
-      email: "ugyen@example.com",
-      location: "Block-J-1010",
-      department: "Mechanical Team",
-      role: "Admin",
-    },
-  ]);
-
-  const filteredData = data.filter(
+  const filteredData = (users || []).filter(
     (item) =>
-      item.role === activeTab &&
+      item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
       Object.values(item).some((value) =>
         value.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
@@ -127,6 +128,17 @@ const SAdminUser = () => {
         data.filter((user, i) => !(user.role === "Admin" && i === index))
       );
     }
+  };
+
+
+  const getAcademyName = (academyId) => {
+    const academy = academies?.find(a => a.academyId === academyId);
+    return academy ? academy.name : "Unknown Academy";
+  };
+
+  const getDepartmentName = (departmentID) => {
+    const depart = department?.find(d => d.departmentId === departmentID);
+    return depart ? depart.name : "Unknown department";
   };
 
   return (
@@ -187,8 +199,9 @@ const SAdminUser = () => {
                   <td>
                     <img
                       className="User-profile"
-                      src={item.image}
+                      // src={item.image}
                       alt="User"
+                      onChange={(e) => setImage(e.target.files[0])}
                       style={{
                         width: "50px",
                         height: "50px",
@@ -198,9 +211,9 @@ const SAdminUser = () => {
                   </td>
                   <td>{item.name}</td>
                   <td>{item.email}</td>
-                  <td>{item.location}</td>
-                  {activeTab !== "Manager" && <td>{item.department}</td>}
-                  <td>{item.role}</td>
+                  <td>{getAcademyName(item.academyId)}</td>
+                  {activeTab !== "Manager" && <td>{getDepartmentName(item.departmentId)}</td>}
+                  <td>{item.role ? item.role.name : "No Role"}</td>
                   <td>
                     {activeTab === "Admin" && (
                       <RiDeleteBin6Line
@@ -235,11 +248,11 @@ const SAdminUser = () => {
               </button>
             </div>
             <div className="AdminUser-modal-content">
-              <input type="text" placeholder="Name" required autoComplete="off"/>
-              <input type="email" placeholder="Email" required autoComplete="off"/>
-              <input type="password" placeholder="Password" required autoComplete="off"/>
+              <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="off" />
+              <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="off" />
+              <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="off" />
 
-              <button className="AdminUser-add" type="submit">
+              <button className="AdminUser-add" type="submit" onClick={handleCreateUser}>
                 Add
               </button>
             </div>
