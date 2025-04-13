@@ -21,7 +21,6 @@ const AppRoutes = () => {
       <Route path="/newpassword" element={<Newpasswordpage />} />
       <Route path="/qrdetail" element={<QRDetail />} />
 
-
       {/* Define separate base paths for manager and technician */}
       <Route path="/manager/*" element={<ManagerRoutes />} />
       <Route path="/technician/*" element={<TechnicianRoutes />} />

@@ -3,6 +3,7 @@ import { useContext } from "react";
 import { Routes, Route } from "react-router-dom";
 import { SidebarContext } from "../context/sidebarContext";
 import { UserProvider } from "../context/userContext";
+
 import AdminHome from "../pages/adminPages/AdminHome";
 import AdminAssets from "../pages/adminPages/AdminAssets";
 import AdminRepair from "../pages/adminPages/AdminRepair";
@@ -15,6 +16,8 @@ import SuperAdminSidebar from "../layout/Sidebar/SuperAdminSidebar";
 import SAdminAcademies from "../pages/superAdminPages/SAdminAcademies";
 import SAdminUser from "../pages/superAdminPages/SAdminUser";
 
+import ProtectedRoute from "./ProtectedRoute";
+
 const SuperAdminRoutes = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
 
@@ -24,24 +27,93 @@ const SuperAdminRoutes = () => {
       <div className={`main-content ${isSidebarOpen ? "shifted" : ""}`}>
         <UserProvider>
           <ContentTop />
+          <div className="content-main">
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute
+                    element={<AdminHome />}
+                    requiredRole="SuperAdmin"
+                  />
+                }
+              />
+              <Route
+                path="academies"
+                element={
+                  <ProtectedRoute
+                    element={<SAdminAcademies />}
+                    requiredRole="SuperAdmin"
+                  />
+                }
+              />
+              <Route
+                path="users"
+                element={
+                  <ProtectedRoute
+                    element={<SAdminUser />}
+                    requiredRole="SuperAdmin"
+                  />
+                }
+              />
+              <Route
+                path="assets"
+                element={
+                  <ProtectedRoute
+                    element={<AdminAssets />}
+                    requiredRole="SuperAdmin"
+                  />
+                }
+              />
+              <Route
+                path="repair-maintenance"
+                element={
+                  <ProtectedRoute
+                    element={<AdminRepair />}
+                    requiredRole="SuperAdmin"
+                  />
+                }
+              />
+              <Route
+                path="preventive-maintenance"
+                element={
+                  <ProtectedRoute
+                    element={<AdminMaintenance />}
+                    requiredRole="SuperAdmin"
+                  />
+                }
+              />
+              <Route
+                path="repair-report"
+                element={
+                  <ProtectedRoute
+                    element={<AdminRReport />}
+                    requiredRole="SuperAdmin"
+                  />
+                }
+              />
+              <Route
+                path="maintenance-report"
+                element={
+                  <ProtectedRoute
+                    element={<AdminMReport />}
+                    requiredRole="SuperAdmin"
+                  />
+                }
+              />
+              <Route
+                path="account"
+                element={
+                  <ProtectedRoute
+                    element={<SAdminAccount />}
+                    requiredRole="SuperAdmin"
+                  />
+                }
+              />
+              <Route path="*" element={<h1>404 - Page Not Found</h1>} />
+            </Routes>
+          </div>
         </UserProvider>
-        <div className="content-main">
-          <Routes>
-            <Route path="/" element={<AdminHome />} />
-            <Route path="academies" element={<SAdminAcademies />} />
-            <Route path="Users" element={<SAdminUser />} />
-            <Route path="assets" element={<AdminAssets />} />
-            <Route path="repair-maintenance" element={<AdminRepair />} />
-            <Route
-              path="preventive-maintenance"
-              element={<AdminMaintenance />}
-            />
-            <Route path="repair-report" element={<AdminRReport />} />
-            <Route path="maintenance-report" element={<AdminMReport />} />
-            <Route path="account" element={<SAdminAccount />} />
-            <Route path="*" element={<h1>404 - Page Not Found</h1>} />
-          </Routes>
-        </div>
       </div>
     </div>
   );
