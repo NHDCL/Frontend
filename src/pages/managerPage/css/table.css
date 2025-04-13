@@ -10,6 +10,46 @@
   margin: 14px;
 }
 
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+  gap: 10px;
+}
+
+.asset-image {
+  width: 100%;
+  height: auto;
+  max-width: 350px;
+  border-radius: 10px;
+}
+
+.upload-images {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.upload-images input {
+  padding: 5px;
+  margin-right: 10px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.download-all-btn {
+  padding: 10px 20px;
+  background-color: #315845;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 .table-container{
   width: 100%;
   overflow-x: auto;
@@ -277,6 +317,16 @@ button {
   border-radius: 4px;
   width: 120px;
 
+}
+
+.Pending-status{
+  display: flex;
+  justify-content: center;
+  color: #656c07;
+  background-color: #f1f88e;
+  padding: 6px;
+  border-radius: 4px;
+  width: 120px;
 }
 
 .disposed-status {

@@ -37,13 +37,18 @@ const AdminUser = () => {
 
   const { data: academies } = useGetAcademyQuery();
   const { data: department, refetch } = useGetDepartmentQuery();
-  const { data: users, refetch: refetchUsers } = useGetUsersQuery();
 
+  const { data: users, refetch: refetchUsers } = useGetUsersQuery();
   const [createDepartment] = useCreateDepartmentMutation();
   const [createUser, { isLoading }] = useCreateUserMutation();
   const [softDeleteUser] = useSoftDeleteUserMutation();
 
   const [formError, setFormError] = useState(null);
+
+  // console.log("SA: ", selectedAcademy.value)
+  console.log("dep: ", department);
+
+  // Find the Manager's roleId (assuming the user has a 'role' object with an id field)
   const [managerRoleId, setManagerRoleId] = useState(null);
   const [technicianRoleId, setTechnicianRoleId] = useState(null);
   const [supervisorRoleId, setSupervisorRoleId] = useState(null);
@@ -64,6 +69,8 @@ const AdminUser = () => {
 
   const handleAddUserClick = () => setShowModal(true);
   const handleAddDepartmentClick = () => setShowModalDepartment(true);
+
+  console.log("AAA", academies);
 
   const handleCreateUser = async () => {
     if (
@@ -102,6 +109,8 @@ const AdminUser = () => {
       setSelectedAcademy(null);
       setSelectedDepartment(null);
       refetchUsers();
+
+      await refetchUsers();
     } catch (err) {
       let errorMessage = "Something went wrong. Please try again.";
       if (err?.status === "PARSING_ERROR")
@@ -150,6 +159,8 @@ const AdminUser = () => {
       )
   );
 
+  console.log("FD", filteredData);
+
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
     (currentPage - 1) * rowsPerPage,
@@ -176,6 +187,17 @@ const AdminUser = () => {
       }
     }
   };
+  const getAcademyName = (academyId) => {
+    const academy = academies?.find((a) => a.academyId === academyId);
+    return academy ? academy.name : "Unknown Academy";
+  };
+
+  const getDepartmentName = (departmentID) => {
+    const depart = department?.find((d) => d.departmentId === departmentID);
+    return depart ? depart.name : "Unknown department";
+  };
+
+  console.log("GAN", getAcademyName);
 
   return (
     <div className="user-dashboard">
@@ -263,6 +285,11 @@ const AdminUser = () => {
                   <td>{item.academies}</td>
                   {activeTab !== "Manager" && <td>{item.department}</td>}
                   <td>{item.role?.name || "No Role"}</td>
+                  <td>{getAcademyName(item.academyId)}</td>
+                  {activeTab !== "Manager" && (
+                    <td>{getDepartmentName(item.departmentId)}</td>
+                  )}
+                  <td>{item.role ? item.role.name : "No Role"}</td>
                   <td>
                     <RiDeleteBin6Line
                       onClick={() => handleDelete(item.userId)}

@@ -80,13 +80,33 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    // updateAcademy: builder.mutation({
+    //   query: ({ academyId, name, location, description, image }) => {
+    //     const formData = new FormData();
+    //     formData.append("name", name);
+    //     formData.append("location", location);
+    //     formData.append("description", description);
+    //     if (image) {
+    //       formData.append("image", image);
+    //     }
+
+    //     return {
+    //       url: `${USERS_URL}/academies/${academyId}`,
+    //       method: "PUT",
+    //       body: formData,
+    //     };
+    //   },
+    // }),
+
     updateAcademy: builder.mutation({
       query: ({ academyId, name, location, description, image }) => {
         const formData = new FormData();
         formData.append("name", name);
         formData.append("location", location);
         formData.append("description", description);
-        if (image) {
+
+        // Only append image if it's a File object (and not null or a string)
+        if (image instanceof File) {
           formData.append("image", image);
         }
 
@@ -98,6 +118,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       },
     }),
 
+    // Delete Academy
     deleteAcademy: builder.mutation({
       query: (id) => ({
         url: USERS_URL + `/academies/${id}`,
@@ -122,6 +143,10 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         formData.append("academyId", userData.academyId); // Ensure academyId is appended
         formData.append("departmentId", userData.departmentId); // departmentId should be appended if available
         formData.append("roleId", userData.roleId);
+
+        if (userData.image) {
+          formData.append("image", userData.image);
+        }
 
         return {
           url: USERS_URL + "/users",

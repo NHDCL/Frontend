@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosSearch } from "react-icons/io";
 import { IoMdAdd } from "react-icons/io";
@@ -6,537 +6,968 @@ import { ImFolderDownload } from "react-icons/im";
 import Category from "../AssetCategory";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
+import {
+  useGetAssetByAcademyQuery,
+  usePostUploadImagesMutation,
+  usePostAssetMutation,
+  useGetCategoryQuery,
+  useUploadExcelMutation,
+} from "../../../slices/assetApiSlice";
+import Swal from "sweetalert2";
+import { useSelector } from "react-redux";
+import { createSelector } from "reselect";
+import { useGetUserByEmailQuery } from "../../../slices/userApiSlice";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
+const selectUserInfo = (state) => state.auth.userInfo || {};
+const getUserEmail = createSelector(
+  selectUserInfo,
+  (userInfo) => userInfo?.user?.username || ""
+);
 
-const Landscaping = () => {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
-    const [selectedRows, setSelectedRows] = useState([]);
-    const [selectedStatus, setSelectedStatus] = useState("");
-    const [modalData, setModalData] = useState(null);
-    const [editModalData, setEditModalData] = useState(null);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [newLandscaping, setNewLandscaping] = useState({ category: "", DepreciatedValue: "" });
+const Landscaping = ({ category }) => {
+  const email = useSelector(getUserEmail);
+  const { data: manager } = useGetUserByEmailQuery(email);
+  const { data: categories } = useGetCategoryQuery();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [modalData, setModalData] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [postAsset, { isLoading: isLoading2 }] = usePostAssetMutation();
+  const [newLandscaping, setNewLandscaping] = useState({
+    title: "",
+    assetCode: "",
+    acquireDate: "",
+    lifespan: "",
+    status: "",
+    cost: "",
+    assetArea: "",
+    Size: "",
+  });
 
-    const rowsPerPage = 10;
+  const [academyId, setAcademyId] = useState(null);
+  const [CategoryId, setCategoryId] = useState(null);
+  const [scheduleModalData, setScheduleModalData] = useState(null);
+  const { data: assets, refetch } = useGetAssetByAcademyQuery(academyId);
+  const [data, setData] = useState([]);
+  const fileInputRef = useRef(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
+  const [postUploadImages, { isLoading, error }] =
+    usePostUploadImagesMutation();
+  const [uploadExcel, { isLoading: upLoading }] = useUploadExcelMutation();
 
-    const [data, setData] = useState([
-        {
-            SerialNo: "1",
-            AssetCode: "NHDCL-22-2003",
-            Title: "Storage Tank",
-            AcquireDate: "27-02-2024",
-            Useful_life: 3,
-            size: "10m height, 20m width",
-            Depreciated_value: 4,
-            status: "In Maintenance",
-            cost: 600000,
-            Category: {},
-            Area: "Area-1",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "This is the biggest land we own",
-        },
-        {
-            SerialNo: "2",
-            AssetCode: "NHDCL-22-2004",
-            Title: "Office Building",
-            AcquireDate: "15-03-2023",
-            Useful_life: 20,
-            size: "50m height, 100m width",
-            Depreciated_value: 5,
-            status: "In Usage",
-            cost: 20000000,
-            Category: {},
-            Area: "Area-2",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Main corporate office building",
-        },
-        {
-            SerialNo: "3",
-            AssetCode: "NHDCL-22-2005",
-            Title: "Water Pump",
-            AcquireDate: "10-05-2022",
-            Useful_life: 10,
-            size: "3m height, 5m width",
-            Depreciated_value: 2,
-            status: "disposed",
-            cost: 200000,
-            Category: {},
-            Area: "Area-3",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Essential for water distribution",
-        },
-        {
-            SerialNo: "4",
-            AssetCode: "NHDCL-22-2006",
-            Title: "Solar Panels",
-            AcquireDate: "01-01-2021",
-            Useful_life: 15,
-            size: "50m²",
-            Depreciated_value: 10,
-            status: "In Usage",
-            cost: 500000,
-            Category: {},
-            Area: "Area-4",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Provides sustainable energy",
-        },
-        {
-            SerialNo: "5",
-            AssetCode: "NHDCL-22-2007",
-            Title: "Generator",
-            AcquireDate: "12-06-2020",
-            Useful_life: 12,
-            size: "10m²",
-            Depreciated_value: 6,
-            status: "In Maintenance",
-            cost: 1000000,
-            Category: {},
-            Area: "Area-5",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Backup power source for office",
-        },
-        {
-            SerialNo: "6",
-            AssetCode: "NHDCL-22-2008",
-            Title: "CCTV System",
-            AcquireDate: "08-09-2021",
-            Useful_life: 7,
-            size: "Building-wide coverage",
-            Depreciated_value: 3,
-            status: "disposed",
-            cost: 400000,
-            Category: {},
-            Area: "Area-6",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Security surveillance system",
-        },
-        {
-            SerialNo: "7",
-            AssetCode: "NHDCL-22-2009",
-            Title: "Conference Room Equipment",
-            AcquireDate: "20-11-2023",
-            Useful_life: 5,
-            size: "15m²",
-            Depreciated_value: 1,
-            status: "disposed",
-            cost: 150000,
-            Category: {},
-            Area: "Area-7",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Projector, sound system, and furniture",
-        },
-        {
-            SerialNo: "8",
-            AssetCode: "NHDCL-22-2010",
-            Title: "Underground Parking",
-            AcquireDate: "14-07-2019",
-            Useful_life: 30,
-            size: "2000m²",
-            Depreciated_value: 15,
-            status: "In Usage",
-            cost: 5000000,
-            Category: {},
-            Area: "Area-8",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Parking space for company vehicles",
-        },
-        {
-            SerialNo: "9",
-            AssetCode: "NHDCL-22-2011",
-            Title: "IT Server Room",
-            AcquireDate: "22-05-2022",
-            Useful_life: 10,
-            size: "30m²",
-            Depreciated_value: 3,
-            status: "In Usage",
-            cost: 2000000,
-            Category: {},
-            Area: "Area-9",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Secure and climate-controlled data center",
-        },
-        {
-            SerialNo: "10",
-            AssetCode: "NHDCL-22-2012",
-            Title: "Fire Extinguisher System",
-            AcquireDate: "05-02-2021",
-            Useful_life: 8,
-            size: "Building-wide",
-            Depreciated_value: 2,
-            status: "In Maintenance",
-            cost: 500000,
-            Category: {},
-            Area: "Area-10",
-            Created_by: "12210100.gcit@rub.edu.bt",
-            description: "Fire safety system for emergency response",
-        }
-    ])
+  useEffect(() => {
+    if (manager?.user?.academyId) {
+      setAcademyId(manager.user.academyId);
+    }
+  }, [manager?.user?.academyId]);
 
-    // Filtering data based on search and priority selection and work status
-    const sortedData = [...data].sort((a, b) => b.mid - a.mid);
-    const filteredData = sortedData.filter((item) => {
-        const matchesSearch = Object.values(item).some((value) =>
-            value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        const matchesStatus =
-            selectedStatus === "" || item.status === selectedStatus;
+  useEffect(() => {
+    if (assets) {
+      const filteredAssets = assets.filter(
+        (asset) => asset.categoryDetails?.name === category
+      );
 
-        return matchesSearch && matchesStatus;
+      setData(filteredAssets);
+    }
+  }, [assets, category]);
+
+  useEffect(() => {
+    if (categories) {
+      const filteredCategories = categories.filter(
+        (categorie) => categorie.name === category
+      );
+      setCategoryId(filteredCategories[0].id);
+    }
+  }, [assets]);
+
+  const downloadDummyExcel = () => {
+    const data = [
+      {
+        assetCode: "A001",
+        title: "Monitor",
+        cost: 500,
+        acquireDate: "01/10/2023", // Date as string to match your backend expectation
+        lifespan: "5 years",
+        assetArea: "Office Room",
+        description: "24-inch LCD monitor",
+        status: "Pending",
+        createdBy: "jigme@gmail.com",
+        academyID: "67f017027d756710a12c2fa6",
+        assetCategoryID: "67eeef18d825904ae1f8ce64",
+        // Any extra dynamic attributes can be added too
+        Size: "2m hieght",
+      },
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Assets");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
 
-    const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-    const displayedData = filteredData.slice(
-        (currentPage - 1) * rowsPerPage,
-        currentPage * rowsPerPage
+    saveAs(blob, "Asset_Template.xlsx");
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!newLandscaping.title?.trim()) errors.title = "Title is required";
+    if (!newLandscaping.assetCode?.trim())
+      errors.assetCode = "Asset Code is required";
+    if (!newLandscaping.Size?.trim()) errors.Size = "Size is required";
+    if (!newLandscaping.acquireDate?.trim())
+      errors.acquireDate = "Acquired Date is required";
+    if (!newLandscaping.lifespan?.trim())
+      errors.lifespan = "Lifespan is required";
+    if (!newLandscaping.cost?.trim()) errors.cost = "Cost is required";
+    if (!newLandscaping.assetArea?.trim())
+      errors.assetArea = "Area is required";
+    return errors;
+  };
+
+  const rowsPerPage = 10;
+
+  // Filtering data based on search and priority selection and work status
+  const sortedData = [...data].sort((a, b) => b.mid - a.mid);
+  const filteredData = sortedData.filter((item) => {
+    const matchesSearch = Object.values(item).some((value) =>
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
     );
-    const handleSelectRow = (AID) => {
-        setSelectedRows((prev) =>
-            prev.includes(AID) ? prev.filter((item) => item !== AID) : [...prev, AID]
+
+    const matchesStatus =
+      selectedStatus === "" || item.status === selectedStatus;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const displayedData = filteredData.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  const handleDeleteSelected = () => {
+    setData(data.filter((item) => !selectedRows.includes(item.AID)));
+    setSelectedRows([]);
+  };
+
+  const handleView = (item) => {
+    setModalData(item);
+  };
+
+  const handleScheduleMaintenance = () => {
+    if (!modalData) return; // Optional: prevent errors if modalData is undefined
+
+    setScheduleModalData({
+      Description: modalData.Description || "",
+      Assign: modalData.Assign || "",
+      Lastworkorder: modalData.Lastworkorder || "",
+      Schedule: modalData.Schedule || "",
+      Nextworkorder: modalData.Nextworkorder || "",
+    });
+  };
+
+  const [file, setSelectedFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  // Function to get the class based on workstatus
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "In Maintenance":
+        return "In-maintenance-status";
+      case "In Usage":
+        return "in-usage-status";
+      case "Disposed":
+        return "disposed-status";
+      case "Pending":
+        return "Pending-status";
+      default:
+        return "";
+    }
+  };
+  // Extract unique work statuses from data
+  const uniqueStatuses = [
+    { value: "", label: "All Work status" },
+    ...Array.from(new Set(data.map((item) => item.status))).map((status) => ({
+      value: status,
+      label: status,
+    })),
+  ];
+  const handleCloseModal = () => {
+    setModalData(null);
+  };
+
+  const handleAddLandscaping = () => {
+    setShowAddModal(true);
+  };
+
+  const handleBulkImport = () => {
+    setShowBulkModal(true);
+  };
+
+  const handleBulk = async () => {
+    if (file) {
+      try {
+        const res = await uploadExcel(file).unwrap();
+        refetch();
+        setSelectedFile(null);
+        setShowBulkModal(false);
+        console.log(res);
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Excel file uploaded successfully!",
+        });
+      } catch (err) {
+        console.log(err);
+        Swal.fire({
+          icon: "error",
+          title: "Upload Failed",
+          text: err?.data?.message || "Something went wrong while uploading.",
+        });
+      }
+    } else {
+      Swal.fire({
+        icon: "warning",
+        title: "No File",
+        text: "Please select an Excel file first.",
+      });
+    }
+  };
+
+  const handleSaveNewLandscaping = async () => {
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
+    const payload = {
+      assetCode: newLandscaping.assetCode,
+      title: newLandscaping.title,
+      cost: Number(newLandscaping.cost),
+      acquireDate: newLandscaping.acquireDate,
+      lifespan: newLandscaping.lifespan,
+      assetArea: newLandscaping.assetArea,
+      description: newLandscaping.description,
+      status: "Pending",
+      createdBy: email,
+      deletedBy: null,
+      academyID: academyId,
+      assetCategoryID: CategoryId,
+      attributes: [{ name: "Size", value: newLandscaping.Size }],
+    };
+
+    try {
+      const res = await postAsset(payload).unwrap();
+      const assetId = res.assetID;
+
+      if (selectedFiles.length > 0) {
+        const formData = new FormData();
+
+        // Ensure images is an array of File objects before calling forEach
+        if (
+          !Array.isArray(selectedFiles) ||
+          !selectedFiles.every((file) => file instanceof File)
+        ) {
+          console.error(
+            "selectedFiles is not an array of File objects",
+            selectedFiles
+          );
+          return;
+        }
+
+        // Append assetID to FormData
+        formData.append("assetID", assetId); // Make sure assetID is an integer
+
+        // Append files to FormData
+        selectedFiles.forEach((file) => {
+          console.log("Appending file to formData:", file); // Check the file type
+          if (file instanceof File) {
+            formData.append("images", file); // Append only if it's a valid file
+          } else {
+            console.error("Invalid file detected:", file);
+          }
+        });
+
+        // Call the mutation
+        await postUploadImages(formData);
+      }
+      Swal.fire({
+        icon: "success",
+        title: "Asset created successfully!",
+        confirmButtonColor: "#305845",
+      });
+      refetch();
+      setNewLandscaping({
+        title: "",
+        assetCode: "",
+        acquireDate: "",
+        lifespan: "",
+        status: "",
+        cost: "",
+        assetArea: "",
+        Size: "",
+      });
+      setSelectedFiles([]); // Clear the selected files
+      fileInputRef.current.value = null;
+      setShowAddModal(false);
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to create asset",
+        text: err?.data?.message || "Something went wrong!",
+        confirmButtonColor: "#897463",
+      });
+    }
+  };
+
+  const handleFileSelection = (e) => {
+    const newFiles = [...e.target.files];
+    const totalFiles = newFiles.length + selectedFiles.length;
+
+    if (totalFiles > 5) {
+      // Show SweetAlert with a custom message
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "You can only select up to 5 images!",
+        confirmButtonText: "OK",
+      }).then(() => {
+        // Clear the input and reset the selected files state
+        fileInputRef.current.value = null;
+      });
+      return;
+    }
+
+    // Add the selected files to the state
+    setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles]);
+  };
+
+  const handleUploadButtonClick = (assetID) => {
+    if (selectedFiles.length > 0) {
+      const formData = new FormData();
+
+      // Ensure images is an array of File objects before calling forEach
+      if (
+        !Array.isArray(selectedFiles) ||
+        !selectedFiles.every((file) => file instanceof File)
+      ) {
+        console.error(
+          "selectedFiles is not an array of File objects",
+          selectedFiles
         );
-    };
+        return;
+      }
 
-    const handleDeleteSelected = () => {
-        setData(data.filter((item) => !selectedRows.includes(item.AID)));
-        setSelectedRows([]);
-    };
+      // Append assetID to FormData
+      formData.append("assetID", assetID); // Make sure assetID is an integer
 
-    const handleDeleteRow = (AID) => {
-        setData(data.filter((item) => item.AID !== AID));
-    };
-
-    const handleView = (item) => {
-        setModalData(item);
-    };
-
-    // Function to get the class based on workstatus
-    const getStatusClass = (status) => {
-        switch (status) {
-            case "In Maintenance":
-                return "In-maintenance-status";
-            case "In Usage":
-                return "in-usage-status";
-            case "disposed":
-                return "disposed-status";
-            default:
-                return "";
+      // Append files to FormData
+      selectedFiles.forEach((file) => {
+        console.log("Appending file to formData:", file); // Check the file type
+        if (file instanceof File) {
+          formData.append("images", file); // Append only if it's a valid file
+        } else {
+          console.error("Invalid file detected:", file);
         }
-    };
-    // Extract unique work statuses from data
-    const uniqueStatuses = [
-        { value: "", label: "All Work status" },
-        ...Array.from(new Set(data.map(item => item.status))).map(status => ({
-            value: status,
-            label: status
-        }))
-    ];
-    const handleCloseModal = () => {
-        setModalData(null);
-    };
+      });
 
-    const handleAddLandscaping = () => {
-        setShowAddModal(true);
-        setNewLandscaping({ category: "", DepreciatedValue: "" });
-    };
+      // Call the mutation
+      postUploadImages(formData)
+        .unwrap()
+        .then(() => {
+          Swal.fire({
+            icon: "success",
+            title: "Upload Successful!",
+            text: "Your images have been uploaded.",
+          });
+          setSelectedFiles([]); // Clear the selected files
+          fileInputRef.current.value = null; // Reset the input value
+          refetch();
+          setModalData(null);
+        })
+        .catch((error) => {
+          console.log("Error uploading files:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Upload Failed",
+            text: error?.message || "An error occurred during upload.",
+          });
+        });
+    } else {
+      Swal.fire({
+        icon: "warning",
+        title: "No Files Selected",
+        text: "Please select at least one file to upload.",
+      });
+    }
+  };
 
-    const handleSaveNewLandscaping = () => {
-        if (newLandscaping.Category && newLandscaping.DepreciatedValue) {
-            const newAID = data.length > 0 ? (Math.max(...data.map((item) => Number(item.SerialNo))) + 1).toString() : "1";
-            setData([...data, { AID: newAID, ...newLandscaping }]);
-            setShowAddModal(false);
-            setNewLandscaping({}); // Reset form after adding
-        }
-    };
+  const handleDownloadAllImages = () => {
+    const imageUrls = modalData.attributes
+      .filter((attr) => attr.name.startsWith("image")) // Filter image attributes
+      .map((imageAttr) => imageAttr.value); // Get the image URLs
 
-    return (
-        <div className="managerDashboard" >
-            <div className="search-sort-container">
-                <div className="search-container">
-                    <IoIosSearch style={{ width: "20px", height: "20px" }} />
+    imageUrls.forEach((imageUrl) => {
+      // Create a link element for downloading each image
+      const link = document.createElement("a");
+      link.href = imageUrl;
+      link.download = imageUrl.split("/").pop(); // Download the file with its original name
+
+      // Fetch the image as a Blob and trigger the download
+      fetch(imageUrl)
+        .then((response) => response.blob())
+        .then((blob) => {
+          const objectURL = URL.createObjectURL(blob);
+          link.href = objectURL;
+          link.click(); // Trigger the download
+          URL.revokeObjectURL(objectURL); // Clean up
+        })
+        .catch((error) => {
+          console.error("Error downloading image:", error);
+        });
+    });
+  };
+
+  return (
+    <div className="managerDashboard">
+      <div className="search-sort-container">
+        <div className="search-container">
+          <IoIosSearch style={{ width: "20px", height: "20px" }} />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="dropdown-ls">
+          {/* Work Status Dropdown */}
+          <Select
+            classNamePrefix="custom-select-workstatus"
+            className="workstatus-dropdown"
+            options={uniqueStatuses}
+            value={uniqueStatuses.find(
+              (option) => option.value === selectedStatus
+            )}
+            onChange={(selectedOption) => {
+              setSelectedStatus(selectedOption ? selectedOption.value : "");
+            }}
+            isClearable
+            isSearchable={false}
+          />
+          <div className="create-category-btn">
+            <ImFolderDownload
+              style={{ color: "#ffffff", marginLeft: "12px" }}
+            />
+            <button className="category-btn" onClick={handleBulkImport}>
+              Bulk Import
+            </button>
+          </div>
+          <div className="create-category-btn">
+            <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
+            <button className="category-btn" onClick={handleAddLandscaping}>
+              Create Asset
+            </button>
+          </div>
+        </div>
+      </div>
+      {/* Table */}
+      <div className="table-container">
+        <table className="RequestTable">
+          <thead className="table-header">
+            <tr>
+              {[
+                "SI.No",
+                "Asset Code",
+                "Title",
+                "Acquire Date",
+                "Useful Life(year)",
+                "Size",
+                "Depreciated Value (%)",
+                "Status",
+              ].map((header, index) => (
+                <th key={index}>{header}</th>
+              ))}
+              <th>
+                {selectedRows.length > 0 && (
+                  <button
+                    className="delete-all-btn"
+                    onClick={handleDeleteSelected}
+                  >
+                    <RiDeleteBin6Line
+                      style={{ width: "20px", height: "20px", color: "red" }}
+                    />
+                  </button>
+                )}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {displayedData.map((item, index) => {
+              // Extract values from `attributes`
+              const sizeAttr = item.attributes.find(
+                (attr) => attr.name === "Size"
+              );
+              const size = sizeAttr ? sizeAttr.value : "N/A";
+              return (
+                <tr key={index}>
+                  <td>{index + 1}</td>
+                  <td>{item.assetCode}</td>
+                  <td>{item.title}</td>
+                  <td>{item.acquireDate}</td>
+                  <td>{item.lifespan}</td>
+                  <td>{size}</td>
+                  <td>{item.categoryDetails?.depreciatedValue}</td>
+                  <td>
+                    <div className={getStatusClass(item.status)}>
+                      {item.status}
+                    </div>
+                  </td>
+                  <td className="actions">
+                    <button
+                      className="view-btn"
+                      onClick={() => handleView(item)}
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {/* Pagination */}
+      <div className="pagination">
+        <span>{filteredData.length} Results</span>
+        <div>
+          {[...Array(totalPages).keys()].slice(0, 5).map((num) => (
+            <button
+              key={num}
+              className={currentPage === num + 1 ? "active" : ""}
+              onClick={() => setCurrentPage(num + 1)}
+            >
+              {num + 1}
+            </button>
+          ))}
+          <span>...</span>
+          <button onClick={() => setCurrentPage(totalPages)}>
+            {totalPages}
+          </button>
+        </div>
+      </div>
+
+      {showBulkModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Upload your file</h2>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowBulkModal(false);
+                  setSelectedFile(null);
+                }}
+              >
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <input
+              type="file"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              onChange={handleFileChange}
+            />
+
+            <div style={{ marginTop: "20px" }}>
+              <button
+                className="download-all-btn"
+                style={{ marginBottom: "10px" }}
+                onClick={downloadDummyExcel}
+              >
+                Download Dummy Excel
+              </button>
+
+              <button
+                className="accept-btn"
+                onClick={handleBulk}
+                disabled={upLoading}
+              >
+                {upLoading ? "Uploading..." : "Upload"}
+              </button>
+              <button
+                className="reject-btn"
+                onClick={() => setShowBulkModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Landscaping Modal */}
+      {showAddModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="form-h">Create Asset</h2>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowAddModal(false);
+                  setFormErrors({});
+                }}
+              >
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <div className="schedule-form">
+              <div className="modal-content-field">
+                <label>Title:</label>
+                <input
+                  type="text"
+                  value={newLandscaping.title}
+                  onChange={(e) =>
+                    setNewLandscaping({
+                      ...newLandscaping,
+                      title: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              {formErrors.title && (
+                <span className="error-text">{formErrors.title}</span>
+              )}
+              <div className="modal-content-field">
+                <label>Asset Code:</label>
+                <input
+                  type="text"
+                  value={newLandscaping.assetCode}
+                  onChange={(e) =>
+                    setNewLandscaping({
+                      ...newLandscaping,
+                      assetCode: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              {formErrors.assetCode && (
+                <span className="error-text">{formErrors.assetCode}</span>
+              )}
+              <div className="modal-content-field">
+                <label>Category:</label>
+                <input type="text" value={category} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Size:</label>
+                <input
+                  type="text"
+                  value={newLandscaping.Size}
+                  onChange={(e) =>
+                    setNewLandscaping({
+                      ...newLandscaping,
+                      Size: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              {formErrors.Size && (
+                <span className="error-text">{formErrors.Size}</span>
+              )}
+              <div className="modal-content-field">
+                <label>Acquired Date:</label>
+                <input
+                  type="date"
+                  value={newLandscaping.acquireDate}
+                  onChange={(e) =>
+                    setNewLandscaping({
+                      ...newLandscaping,
+                      acquireDate: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              {formErrors.acquireDate && (
+                <span className="error-text">{formErrors.acquireDate}</span>
+              )}
+              <div className="modal-content-field">
+                <label>Useful Life (Year):</label>
+                <input
+                  type="text"
+                  value={newLandscaping.lifespan}
+                  onChange={(e) =>
+                    setNewLandscaping({
+                      ...newLandscaping,
+                      lifespan: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              {formErrors.lifespan && (
+                <span className="error-text">{formErrors.lifespan}</span>
+              )}
+              <div className="modal-content-field">
+                <label>Cost:</label>
+                <input
+                  type="text"
+                  value={newLandscaping.cost}
+                  onChange={(e) =>
+                    setNewLandscaping({
+                      ...newLandscaping,
+                      cost: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              {formErrors.cost && (
+                <span className="error-text">{formErrors.cost}</span>
+              )}
+              <div className="modal-content-field">
+                <label>Area:</label>
+                <input
+                  type="text"
+                  value={newLandscaping.assetArea}
+                  onChange={(e) =>
+                    setNewLandscaping({
+                      ...newLandscaping,
+                      assetArea: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              {formErrors.assetArea && (
+                <span className="error-text">{formErrors.assetArea}</span>
+              )}
+              <div className="modal-content-field">
+                <label>Description:</label>
+                <input
+                  type="text"
+                  value={newLandscaping.description}
+                  onChange={(e) =>
+                    setNewLandscaping({
+                      ...newLandscaping,
+                      description: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Images:</label>
+                <div className="image-field">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileSelection}
+                    ref={fileInputRef}
+                  />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="accept-btn"
+                  style={{ width: "80px" }}
+                  onClick={handleSaveNewLandscaping}
+                  disabled={isLoading || isLoading2}
+                >
+                  {isLoading || isLoading2 ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Viewing Request */}
+      {modalData && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Asset Details</h2>
+              <button className="close-btn" onClick={handleCloseModal}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <form className="repair-form">
+              <div className="modal-content-field">
+                <label>Asset Id:</label>
+                <input type="text" value={modalData.assetID} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Title:</label>
+                <input type="text" value={modalData.title} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Asset Code:</label>
+                <input type="email" value={modalData.assetCode} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Size</label>
+                <input
+                  type="text"
+                  value={
+                    modalData?.attributes?.find((attr) => attr.name === "Size")
+                      ?.value || "N/A"
+                  }
+                  readOnly
+                />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Cost:</label>
+                <input type="text" value={modalData.cost} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Depreciated Value:</label>
+                <input
+                  value={modalData.categoryDetails?.depreciatedValue}
+                  readOnly
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Acquired Date:</label>
+                <input type="text" value={modalData.acquireDate} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Useful Life(Years):</label>
+                <input value={modalData.lifespan} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>status:</label>
+                <input value={modalData.status} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>category:</label>
+                <input value={modalData.categoryDetails?.name} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Area:</label>
+                <input value={modalData.assetArea} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Created by</label>
+                <input value={modalData.createdBy} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Description: </label>
+                <textarea value={modalData.description} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Images:</label>
+                {modalData &&
+                modalData.attributes &&
+                modalData.attributes.filter((attr) =>
+                  attr.name.startsWith("image")
+                ).length > 0 ? (
+                  <div className="image-gallery">
+                    {modalData.attributes
+                      .filter((attr) => attr.name.startsWith("image"))
+                      .map((imageAttr, index) => (
+                        <div key={index} className="image-container">
+                          <img
+                            src={imageAttr.value}
+                            alt={`Asset Image ${index + 1}`}
+                            className="asset-image"
+                          />
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="inputImage">
                     <input
-                        type="text"
-                        placeholder="Search..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleFileSelection}
+                      ref={fileInputRef}
                     />
+                  </div>
+                )}
+              </div>
+              {/* Other fields here */}
+
+              <div className="modal-buttons">
+                <button
+                  type="button"
+                  className="accept-btn"
+                  style={{ backgroundColor: "red" }}
+                >
+                  <RiDeleteBin6Line />
+                </button>
+
+                <button
+                  type="button" // Prevents form submission
+                  className="accept-btn"
+                  onClick={handleScheduleMaintenance}
+                >
+                  Schedule Maintenance
+                </button>
+
+                {/* Align Download Button with Schedule Maintenance */}
+                <div className="align-buttons">
+                  {modalData.attributes &&
+                  modalData.attributes.some((attr) =>
+                    attr.name.startsWith("image")
+                  ) ? (
+                    <button
+                      type="button"
+                      className="download-all-btn"
+                      onClick={handleDownloadAllImages}
+                    >
+                      Download All Images
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="download-all-btn"
+                        onClick={() =>
+                          handleUploadButtonClick(modalData.assetID)
+                        }
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Uploading..." : "Upload Images"}{" "}
+                      </button>
+                    </>
+                  )}
                 </div>
-                <div className="dropdown-ls">
-                    {/* Work Status Dropdown */}
-                    <Select
-                        classNamePrefix="custom-select-workstatus"
-                        className="workstatus-dropdown"
-                        options={uniqueStatuses}
-                        value={uniqueStatuses.find(option => option.value === selectedStatus)}
-                        onChange={(selectedOption) => {
-                            setSelectedStatus(selectedOption ? selectedOption.value : "");
-                        }}
-                        isClearable
-                        isSearchable={false}
-                    />
-                    <div className="create-category-btn">
-                        <ImFolderDownload style={{ color: "#ffffff", marginLeft: "12px" }} />
-                        <button className="category-btn">Bulk Import</button>
-                    </div>
-                    <div className="create-category-btn">
-                        <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
-                        <button className="category-btn" onClick={handleAddLandscaping} >Create category</button>
-                    </div>
-
-                </div>
-            </div>
-            {/* Table */}
-            <div className="table-container">
-                <table className="RequestTable">
-                    <thead className="table-header">
-                        <tr>
-                            {["SI.No", "Asset Code", "Title", "Acquire Date", "Useful Life(year)", "size", "Depreciated Value (%)", "Status"].map((header, index) => (
-                                <th key={index}>{header}</th>
-                            ))}
-                            <th>
-                                {selectedRows.length > 0 && (
-                                    <button className="delete-all-btn" onClick={handleDeleteSelected}>
-                                        <RiDeleteBin6Line style={{ width: "20px", height: "20px", color: "red" }} />
-                                    </button>
-                                )}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {displayedData.map((item, index) => (
-                            <tr key={index}>
-                                <td>{item.SerialNo}</td>
-                                <td>{item.AssetCode}</td>
-                                <td>{item.Title}</td>
-                                <td>{item.AcquireDate}</td>
-                                <td>{item.Useful_life}</td>
-                                <td>{item.size}</td>
-                                <td>{item.Depreciated_value}</td>
-                                <td>
-                                    <div className={getStatusClass(item.status)}>
-                                        {item.status}
-                                    </div>
-                                </td>
-                                <td className="actions">
-                                    <button className="view-btn" onClick={() => handleView(item)}>
-                                        View
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            {/* Pagination */}
-            <div className="pagination">
-                <span>{filteredData.length} Results</span>
-                <div>
-                    {[...Array(totalPages).keys()].slice(0, 5).map((num) => (
-                        <button key={num} className={currentPage === num + 1 ? "active" : ""} onClick={() => setCurrentPage(num + 1)}>
-                            {num + 1}
-                        </button>
-                    ))}
-                    <span>...</span>
-                    <button onClick={() => setCurrentPage(totalPages)}>{totalPages}</button>
-                </div>
-            </div>
-
-            {/* Add Landscaping Modal */}
-            {showAddModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h2 className="form-h">Create Asset</h2>
-                            <button className="close-btn" onClick={() => setShowAddModal(false)}>
-                                <IoIosCloseCircle style={{ color: "#897463", width: "20px", height: "20px" }} />
-                            </button>
-                        </div>
-                        <div className="schedule-form">
-                            <div className="modal-content-field">
-                                <label>Title:</label>
-                                <input
-                                    type="text"
-                                    value={newLandscaping.Title}
-                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, Title: e.target.value })}
-                                />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Asset Code:</label>
-                                <input
-                                    type="text"
-                                    value={newLandscaping.AssetCode}
-                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, AssetCode: e.target.value })}
-                                />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Category:</label>
-                                <input
-                                    type="text"
-                                    value={newLandscaping.Category}
-                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, Category: e.target.value })}
-                                />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Floor:</label>
-                                <input
-                                    type="text"
-                                    value={newLandscaping.Floor}
-                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, Floor: e.target.value })}
-                                />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Plint Area(sq.m):</label>
-                                <input
-                                    type="text"
-                                    value={newLandscaping.PlintArea}
-                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, PlintArea: e.target.value })}
-                                />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Acquired Date:</label>
-                                <input
-                                    type="text"
-                                    value={newLandscaping.AcquireDate}
-                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, AcquireDate: e.target.value })}
-                                />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Useful Life (Year):</label>
-                                <input
-                                    type="text"
-                                    value={newLandscaping.Useful_life}
-                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, Useful_life: e.target.value })}
-                                />
-                            </div>
-                            {/* <div className="modal-content-field">
-                                        <label>Status:</label>
-                                        <input
-                                          type="text"
-                                          value={newLandscaping.status}
-                                          onChange={(e) =>setNewLandscaping({ ...newLandscaping, Useful_life: e.target.value })}
-                                        />
-                                      </div> */}
-                            <div className="modal-content-field">
-                                <label>Cost:</label>
-                                <input
-                                    type="text"
-                                    value={newLandscaping.cost}
-                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, cost: e.target.value })}
-                                />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Area:</label>
-                                <input
-                                    type="text"
-                                    value={newLandscaping.Area}
-                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, Area: e.target.value })}
-                                />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Depreciated Value (%):</label>
-                                <input
-                                    type="number"
-                                    value={newLandscaping.DepreciatedValue}
-                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, DepreciatedValue: e.target.value })}
-                                />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Description:</label>
-                                <input
-                                    type="text"
-                                    value={newLandscaping.description}
-                                    onChange={(e) => setNewLandscaping({ ...newLandscaping, description: e.target.value })}
-                                />
-                            </div>
-                            <div className="modal-actions">
-                                <button className="accept-btn" style={{ width: "80px" }} onClick={handleSaveNewLandscaping}>Save</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-
-            {/* Modal for Viewing Request */}
-            {modalData && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        {/* Close Button */}
-                        <div className="modal-header">
-                            <h2 className="form-h">Asset Details</h2>
-                            <button className="close-btn" onClick={handleCloseModal}>
-                                <IoIosCloseCircle
-                                    style={{ color: "#897463", width: "20px", height: "20px" }}
-                                />
-                            </button>
-                        </div>
-                        <form className="repair-form">
-                            <div className="modal-content-field">
-                                <label>Asset Id:</label>
-                                <input type="text" value={modalData.SerialNo} readOnly />
-                            </div>
-
-                            <div className="modal-content-field">
-                                <label>Title:</label>
-                                <input type="text" value={modalData.Title} readOnly />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Asset Code:</label>
-                                <input type="email" value={modalData.AssetCode} readOnly />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Size</label>
-                                <input type="text" value={modalData.size} readOnly />
-                            </div>
-
-                            <div className="modal-content-field">
-                                <label>Cost:</label>
-                                <input type="text" value={modalData.cost} readOnly />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Depreciated Value:</label>
-                                <input value={modalData.Depreciated_value} readOnly />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Acquired Date:</label>
-                                <input type="text" value={modalData.AcquireDate} readOnly />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Useful Life(Years):</label>
-                                <input value={modalData.Useful_life} readOnly />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>status:</label>
-                                <input value={modalData.status} readOnly />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>category:</label>
-                                <input value={modalData.category} readOnly />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Area:</label>
-                                <input value={modalData.Area} readOnly />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Created by</label>
-                                <input value={modalData.Created_by} readOnly />
-                            </div>
-                            <div className="modal-content-field">
-                                <label>Description: </label>
-                                <textarea value={modalData.description} readOnly />
-                            </div>
-
-                            <div className="modal-buttons">
-                                <button className="accept-btn" style={{ backgroundColor: "red" }}>
-                                    <RiDeleteBin6Line />
-                                </button>
-                                <button className="reject-btn">Schedule Maintenance</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-        </div >
-    )
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default Landscaping;
