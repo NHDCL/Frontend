@@ -98,20 +98,6 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       },
     }),
 
-    // updateAcademy: builder.mutation({
-    //   query: (updatedData) => {
-    //     console.log('Updating academy with data:', updatedData); // optional: helpful for debugging
-    //     return {
-    //       // url: ${USERS_URL}/academies/${updatedData.academyId}, // use academyId here!
-    //       url: USERS_URL + /academies/${updatedData.academyId},
-
-    //       method: 'PUT',
-    //       body: updatedData,
-    //     };
-    //   },
-    // }),
-
-    // Delete Academy
     deleteAcademy: builder.mutation({
       query: (id) => ({
         url: USERS_URL + `/academies/${id}`,
@@ -210,6 +196,13 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
+
+    softDeleteUser: builder.mutation({
+      query: (id) => ({
+        url: `${USERS_URL}/users/${id}`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -233,4 +226,5 @@ export const {
   useLogoutMutation,
   useGetAcademyByIdQuery,
   useGetDepartmentByIdQuery,
+  useSoftDeleteUserMutation,
 } = usersApiSlice;

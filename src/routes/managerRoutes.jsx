@@ -6,6 +6,7 @@ import { UserProvider } from "../context/userContext";
 
 import Sidebar from "../layout/Sidebar/Sidebar";
 import ContentTop from "../components/ContentTop/ContentTop";
+import ProtectedRoute from "./ProtectedRoute";
 
 import Users from "../pages/managerPage/user";
 import MAsset from "../pages/managerPage/MAsset";
@@ -26,21 +27,84 @@ const ManagerRoutes = () => {
       <div className={`main-content ${isSidebarOpen ? "shifted" : ""}`}>
         <UserProvider>
           <ContentTop />
+          <div className="content-main">
+            <Routes>
+              <Route
+                path=""
+                element={
+                  <ProtectedRoute
+                    element={<ManagerDashboard />}
+                    requiredRole="Manager"
+                  />
+                }
+              />
+              <Route
+                path="users"
+                element={
+                  <ProtectedRoute element={<Users />} requiredRole="Manager" />
+                }
+              />
+              <Route
+                path="assets"
+                element={
+                  <ProtectedRoute element={<MAsset />} requiredRole="Manager" />
+                }
+              />
+              <Route
+                path="category"
+                element={
+                  <ProtectedRoute
+                    element={<Category />}
+                    requiredRole="Manager"
+                  />
+                }
+              />
+              <Route
+                path="repair-maintenance"
+                element={
+                  <ProtectedRoute element={<Repair />} requiredRole="Manager" />
+                }
+              />
+              <Route
+                path="preventive-maintenance"
+                element={
+                  <ProtectedRoute
+                    element={<PMaintenance />}
+                    requiredRole="Manager"
+                  />
+                }
+              />
+              <Route
+                path="repair-report"
+                element={
+                  <ProtectedRoute
+                    element={<RepairReport />}
+                    requiredRole="Manager"
+                  />
+                }
+              />
+              <Route
+                path="maintenance-report"
+                element={
+                  <ProtectedRoute
+                    element={<MaintenanceReport />}
+                    requiredRole="Manager"
+                  />
+                }
+              />
+              <Route
+                path="account"
+                element={
+                  <ProtectedRoute
+                    element={<ManagerAccount />}
+                    requiredRole="Manager"
+                  />
+                }
+              />
+              <Route path="*" element={<h1>404 - Page Not Found</h1>} />
+            </Routes>
+          </div>
         </UserProvider>
-        <div className="content-main">
-          <Routes>
-            <Route path="/" element={<ManagerDashboard />} /> 
-            <Route path="users" element={<Users />} />
-            <Route path="assets" element={<MAsset />} />
-            <Route path="category" element={<Category />} />
-            <Route path="repair-maintenance" element={<Repair />} />
-            <Route path="preventive-maintenance" element={<PMaintenance />} />
-            <Route path="repair-report" element={<RepairReport />} />
-            <Route path="maintenance-report" element={<MaintenanceReport />} />
-            <Route path="account" element={<ManagerAccount />} />
-            <Route path="*" element={<h1>404 - Page Not Found</h1>} />
-          </Routes>
-        </div>
       </div>
     </div>
   );
