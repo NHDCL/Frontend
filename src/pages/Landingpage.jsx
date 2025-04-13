@@ -14,6 +14,7 @@ import Swal from "sweetalert2";
 
 const Landingpage = () => {
     const { data: academies, isLoading, error, refetch } = useGetAcademyQuery();
+    
    useEffect(() => {
       if (error) {
         Swal.fire({

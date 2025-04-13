@@ -80,16 +80,36 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    // updateAcademy: builder.mutation({
+    //   query: ({ academyId, name, location, description, image }) => {
+    //     const formData = new FormData();
+    //     formData.append("name", name);
+    //     formData.append("location", location);
+    //     formData.append("description", description);
+    //     if (image) {
+    //       formData.append("image", image);
+    //     }
+
+    //     return {
+    //       url: `${USERS_URL}/academies/${academyId}`,
+    //       method: "PUT",
+    //       body: formData,
+    //     };
+    //   },
+    // }),
+
     updateAcademy: builder.mutation({
       query: ({ academyId, name, location, description, image }) => {
         const formData = new FormData();
         formData.append("name", name);
         formData.append("location", location);
         formData.append("description", description);
-        if (image) {
+    
+        // Only append image if it's a File object (and not null or a string)
+        if (image instanceof File) {
           formData.append("image", image);
         }
-
+    
         return {
           url: `${USERS_URL}/academies/${academyId}`,
           method: "PUT",
@@ -97,19 +117,6 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         };
       },
     }),
-
-    // updateAcademy: builder.mutation({
-    //   query: (updatedData) => {
-    //     console.log('Updating academy with data:', updatedData); // optional: helpful for debugging
-    //     return {
-    //       // url: ${USERS_URL}/academies/${updatedData.academyId}, // use academyId here!
-    //       url: USERS_URL + /academies/${updatedData.academyId},
-
-    //       method: 'PUT',
-    //       body: updatedData,
-    //     };
-    //   },
-    // }),
 
     // Delete Academy
     deleteAcademy: builder.mutation({
