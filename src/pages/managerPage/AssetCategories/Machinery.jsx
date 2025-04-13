@@ -10,11 +10,26 @@ import { jsPDF } from "jspdf";
 import {
   useGetAssetByAcademyQuery,
   usePostAssetMutation,
+  useGetCategoryQuery,
+  useUploadExcelMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
 import CreatableSelect from "react-select/creatable";
+import { useSelector } from "react-redux";
+import { createSelector } from "reselect";
+import { useGetUserByEmailQuery } from "../../../slices/userApiSlice";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
+const selectUserInfo = (state) => state.auth.userInfo || {};
+const getUserEmail = createSelector(
+  selectUserInfo,
+  (userInfo) => userInfo?.user?.username || ""
+);
 
 const Machinery = ({ category }) => {
+  const email = useSelector(getUserEmail);
+  const { data: manager } = useGetUserByEmailQuery(email);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -23,6 +38,7 @@ const Machinery = ({ category }) => {
   const [editModalData, setEditModalData] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [postAsset, { isLoading: isLoading2 }] = usePostAssetMutation();
+  const { data: categories } = useGetCategoryQuery();
   const [newMachinery, setNewMachinery] = useState({
     title: "",
     assetCode: "",
@@ -33,15 +49,24 @@ const Machinery = ({ category }) => {
     assetArea: "",
     Serial_number: "",
   });
-  const [academyId, setAcademyId] = useState("67f017257d756710a12c2fa7");
+  const [academyId, setAcademyId] = useState(null);
   const { data: assets, refetch } = useGetAssetByAcademyQuery(academyId);
   const [data, setData] = useState([]);
   const [Building, setBuilding] = useState([]);
-  const qrRefs = useRef([]);
-
+  const [errors, setErrors] = useState({});
+  const [CategoryId, setCategoryId] = useState(null);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [uploadExcel, { isLoading: upLoading }] = useUploadExcelMutation();
+  
   const rowsPerPage = 9; // 3x3 grid for QR codes per page
   const qrSize = 40; // Size of each QR code (adjust as needed)
   const qrSpacing = 12; // Spacing between QR codes
+
+  useEffect(() => {
+    if (manager?.user?.academyId) {
+      setAcademyId(manager.user.academyId);
+    }
+  }, [manager?.user?.academyId]);
 
   useEffect(() => {
     if (assets) {
@@ -61,13 +86,20 @@ const Machinery = ({ category }) => {
     }
   }, [assets]);
 
-  const CategoryId = data.length > 0 ? data[0]?.categoryDetails?.id : null;
+  useEffect(() => {
+    if (categories) {
+      const filteredCategories = categories.filter(
+        (categorie) => categorie.name === category
+      );
+      setCategoryId(filteredCategories[0].id);
+    }
+  }, [assets]);
 
   const [selectedBlock, setSelectedBlock] = useState(null);
   const [selectedFloor, setSelectedFloor] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isNewBlock, setIsNewBlock] = useState(false);
-  const [isFormSubmitted, setIsFormSubmitted] = useState(false); 
+  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
 
   const convertAssetsToBlockData = (Building) => {
     const blockData = {};
@@ -96,8 +128,41 @@ const Machinery = ({ category }) => {
     return blockData;
   };
 
+  const downloadDummyExcel = () => {
+    const data = [
+      {
+        assetCode: "A001",
+        title: "Monitor",
+        cost: 500,
+        acquireDate: "01/10/2023", // Date as string to match your backend expectation
+        lifespan: "5 years",
+        assetArea: "Office Room",
+        description: "24-inch LCD monitor",
+        status: "Pending",
+        createdBy: "jigme@gmail.com",
+        academyID: "67f017027d756710a12c2fa6",
+        assetCategoryID: "67eeef18d825904ae1f8ce64",
+        // Any extra dynamic attributes can be added too
+        Serial_number: "2m hieght",
+      },
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Assets");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, "Asset_Template.xlsx");
+  };
+
   const blockData = convertAssetsToBlockData(Building);
-  console.log(blockData);
   const convertAssetsToBlockTitles = (Building) => {
     const blockTitles = [];
 
@@ -114,16 +179,15 @@ const Machinery = ({ category }) => {
   };
 
   const blockTitles = convertAssetsToBlockTitles(Building);
-  console.log(blockTitles);
 
-  const handleBlockChange = (selectedOption, { action }) => { 
+  const handleBlockChange = (selectedOption, { action }) => {
     if (action === "create-option") {
       // If a new block is created by the user, set it as the asset area directly
       setSelectedBlock(selectedOption?.value || null);
       setIsNewBlock(true);
       setSelectedFloor(null);
       setSelectedRoom(null);
-      
+
       // Set the asset area as the newly created block
       setNewMachinery((prev) => ({
         ...prev,
@@ -135,6 +199,33 @@ const Machinery = ({ category }) => {
       setSelectedBlock(selectedOption?.value || null);
       setSelectedFloor(null);
       setSelectedRoom(null);
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!newMachinery.title) newErrors.title = "Title is required";
+    if (!newMachinery.assetCode) newErrors.assetCode = "Asset Code is required";
+    if (!newMachinery.Serial_number)
+      newErrors.Serial_number = "Serial Number is required";
+    if (!newMachinery.acquireDate)
+      newErrors.acquireDate = "Acquired Date is required";
+    if (!newMachinery.lifespan || isNaN(newMachinery.lifespan))
+      newErrors.lifespan = "Useful Life must be a valid number";
+    if (!newMachinery.cost || isNaN(newMachinery.cost))
+      newErrors.cost = "Cost must be a valid number";
+    if (!selectedBlock) newErrors.block = "Area field is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Returns true if there are no errors
+  };
+
+  const [file, setSelectedFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
     }
   };
 
@@ -174,6 +265,40 @@ const Machinery = ({ category }) => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+
+  const handleBulkImport = () => {
+    setShowBulkModal(true);
+  };
+
+  const handleBulk = async () => {
+    if (file) {
+      try {
+        const res = await uploadExcel(file).unwrap();
+        refetch();
+        setSelectedFile(null);
+        setShowBulkModal(false);
+        console.log(res);
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Excel file uploaded successfully!",
+        });
+      } catch (err) {
+        console.log(err);
+        Swal.fire({
+          icon: "error",
+          title: "Upload Failed",
+          text: err?.data?.message || "Something went wrong while uploading.",
+        });
+      }
+    } else {
+      Swal.fire({
+        icon: "warning",
+        title: "No File",
+        text: "Please select an Excel file first.",
+      });
+    }
+  };
 
   const handleDeleteSelected = () => {
     setData(data.filter((item) => !selectedRows.includes(item.AID)));
@@ -235,54 +360,56 @@ const Machinery = ({ category }) => {
   };
 
   const handleSaveNewMachinery = async () => {
-    const payload = {
-      assetCode: newMachinery.assetCode,
-      title: newMachinery.title,
-      cost: Number(newMachinery.cost),
-      acquireDate: newMachinery.acquireDate,
-      lifespan: newMachinery.lifespan,
-      assetArea: newMachinery.assetArea,
-      description: newMachinery.description,
-      status: "Pending",
-      createdBy: "Admin",
-      deletedBy: null,
-      academyID: "67f017257d756710a12c2fa7",
-      assetCategoryID: CategoryId,
-      attributes: [
-        { name: "Serial_number", value: newMachinery.Serial_number },
-      ],
-    };
+    if (validateForm()) {
+      const payload = {
+        assetCode: newMachinery.assetCode,
+        title: newMachinery.title,
+        cost: Number(newMachinery.cost),
+        acquireDate: newMachinery.acquireDate,
+        lifespan: newMachinery.lifespan,
+        assetArea: newMachinery.assetArea,
+        description: newMachinery.description,
+        status: "Pending",
+        createdBy: email,
+        deletedBy: null,
+        academyID: academyId,
+        assetCategoryID: CategoryId,
+        attributes: [
+          { name: "Serial_number", value: newMachinery.Serial_number },
+        ],
+      };
 
-    try {
-      await postAsset(payload).unwrap();
-      Swal.fire({
-        icon: "success",
-        title: "Asset created successfully!",
-        confirmButtonColor: "#305845",
-      });
-      refetch();
-      setShowAddModal(false);
-      setSelectedBlock(null);
-      setSelectedFloor(null);
-      setSelectedRoom(null);
-      setIsNewBlock(false);
-      setIsFormSubmitted(true);
-      setNewMachinery({
-        title: "",
-        assetCode: "",
-        acquireDate: "",
-        lifespan: "",
-        status: "",
-        cost: "",
-        assetArea: "",
-      });
-    } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Failed to create asset",
-        text: err?.data?.message || "Something went wrong!",
-        confirmButtonColor: "#897463",
-      });
+      try {
+        await postAsset(payload).unwrap();
+        Swal.fire({
+          icon: "success",
+          title: "Asset created successfully!",
+          confirmButtonColor: "#305845",
+        });
+        refetch();
+        setShowAddModal(false);
+        setSelectedBlock(null);
+        setSelectedFloor(null);
+        setSelectedRoom(null);
+        setIsNewBlock(false);
+        setIsFormSubmitted(true);
+        setNewMachinery({
+          title: "",
+          assetCode: "",
+          acquireDate: "",
+          lifespan: "",
+          status: "",
+          cost: "",
+          assetArea: "",
+        });
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to create asset",
+          text: err?.data?.message || "Something went wrong!",
+          confirmButtonColor: "#897463",
+        });
+      }
     }
   };
 
@@ -400,7 +527,9 @@ const Machinery = ({ category }) => {
             <ImFolderDownload
               style={{ color: "#ffffff", marginLeft: "12px" }}
             />
-            <button className="category-btn">Bulk Import</button>
+            <button className="category-btn" onClick={handleBulkImport}>
+              Bulk Import
+            </button>
           </div>
           <div className="create-category-btn">
             <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
@@ -498,7 +627,56 @@ const Machinery = ({ category }) => {
           </tbody>
         </table>
       </div>
-      {/* Pagination */}
+      {showBulkModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Upload your file</h2>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowBulkModal(false);
+                  setSelectedFile(null);
+                }}
+              >
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <input
+              type="file"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              onChange={handleFileChange}
+            />
+
+            <div style={{ marginTop: "20px" }}>
+              <button
+                className="download-all-btn"
+                style={{ marginBottom: "10px" }}
+                onClick={downloadDummyExcel}
+              >
+                Download Dummy Excel
+              </button>
+
+              <button
+                className="accept-btn"
+                onClick={handleBulk}
+                disabled={upLoading}
+              >
+                {upLoading ? "Uploading..." : "Upload"}
+              </button>
+              <button
+                className="reject-btn"
+                onClick={() => setShowBulkModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="pagination">
         <span>{filteredData.length} Results</span>
         <div>
@@ -526,7 +704,15 @@ const Machinery = ({ category }) => {
               <h2 className="form-h">Create Asset</h2>
               <button
                 className="close-btn"
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  // Reset area selection fields when closing the modal
+                  setSelectedBlock(null);
+                  setSelectedFloor(null);
+                  setSelectedRoom(null);
+                  setIsNewBlock(false);
+                  setErrors({});
+                }}
               >
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
@@ -544,6 +730,7 @@ const Machinery = ({ category }) => {
                   }
                 />
               </div>
+              {errors.title && <p className="error-text">{errors.title}</p>}
               <div className="modal-content-field">
                 <label>Asset Code:</label>
                 <input
@@ -557,6 +744,9 @@ const Machinery = ({ category }) => {
                   }
                 />
               </div>
+              {errors.assetCode && (
+                <p className="error-text">{errors.assetCode}</p>
+              )}
               <div className="modal-content-field">
                 <label>Category:</label>
                 <input type="text" value={category} readOnly />
@@ -574,6 +764,9 @@ const Machinery = ({ category }) => {
                   }
                 />
               </div>
+              {errors.Serial_number && (
+                <p className="error-text">{errors.Serial_number}</p>
+              )}
               <div className="modal-content-field">
                 <label>Area:</label>
                 <div className="select-group">
@@ -590,8 +783,8 @@ const Machinery = ({ category }) => {
                       placeholder="Select or create block"
                     />
                   </div>
-
-                  {selectedBlock && !isNewBlock && !isFormSubmitted &&(
+                  {errors.block && <p className="error-text">{errors.block}</p>}
+                  {selectedBlock && !isNewBlock && !isFormSubmitted && (
                     <div className="select-wrapper">
                       <Select
                         isClearable
@@ -609,20 +802,23 @@ const Machinery = ({ category }) => {
                     </div>
                   )}
 
-                  {selectedBlock && selectedFloor && !isNewBlock && !isFormSubmitted && (
-                    <div className="select-wrapper">
-                      <Select
-                        isClearable
-                        isSearchable
-                        styles={dropdownStyles}
-                        onChange={handleRoomChange}
-                        options={(
-                          blockData[selectedBlock]?.[selectedFloor] || []
-                        ).map((room) => ({ value: room, label: room }))}
-                        placeholder="Select room"
-                      />
-                    </div>
-                  )}
+                  {selectedBlock &&
+                    selectedFloor &&
+                    !isNewBlock &&
+                    !isFormSubmitted && (
+                      <div className="select-wrapper">
+                        <Select
+                          isClearable
+                          isSearchable
+                          styles={dropdownStyles}
+                          onChange={handleRoomChange}
+                          options={(
+                            blockData[selectedBlock]?.[selectedFloor] || []
+                          ).map((room) => ({ value: room, label: room }))}
+                          placeholder="Select room"
+                        />
+                      </div>
+                    )}
                 </div>
               </div>
               <div className="modal-content-field">
@@ -638,6 +834,9 @@ const Machinery = ({ category }) => {
                   }
                 />
               </div>
+              {errors.acquireDate && (
+                <p className="error-text">{errors.acquireDate}</p>
+              )}
               <div className="modal-content-field">
                 <label>Useful Life (Year):</label>
                 <input
@@ -651,6 +850,9 @@ const Machinery = ({ category }) => {
                   }
                 />
               </div>
+              {errors.lifespan && (
+                <p className="error-text">{errors.lifespan}</p>
+              )}
               <div className="modal-content-field">
                 <label>Cost:</label>
                 <input
@@ -661,6 +863,7 @@ const Machinery = ({ category }) => {
                   }
                 />
               </div>
+              {errors.cost && <p className="error-text">{errors.cost}</p>}
               <div className="modal-content-field">
                 <label>Description:</label>
                 <input

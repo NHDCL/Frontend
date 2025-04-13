@@ -9,10 +9,26 @@ import {
   useGetAssetByAcademyQuery,
   usePostUploadImagesMutation,
   usePostAssetMutation,
+  useGetCategoryQuery,
+  useUploadExcelMutation,
 } from "../../../slices/assetApiSlice";
+import { useGetUserByEmailQuery } from "../../../slices/userApiSlice";
 import Swal from "sweetalert2";
+import { useSelector } from "react-redux";
+import { createSelector } from "reselect";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
+const selectUserInfo = (state) => state.auth.userInfo || {};
+const getUserEmail = createSelector(
+  selectUserInfo,
+  (userInfo) => userInfo?.user?.username || ""
+);
 
 const Building = ({ category }) => {
+  const email = useSelector(getUserEmail);
+  const { data: manager } = useGetUserByEmailQuery(email);
+  const { data: categories } = useGetCategoryQuery();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -38,14 +54,24 @@ const Building = ({ category }) => {
   const [roomInput, setRoomInput] = useState("");
   // const [scheduleModalData, setScheduleModalData] = useState(null);
   const [jsonData, setJson] = useState("");
-  const [academyId, setAcademyId] = useState("67f017257d756710a12c2fa7");
+  const [academyId, setAcademyId] = useState(null);
+  const [CategoryId, setCategoryId] = useState(null);
   const [scheduleModalData, setScheduleModalData] = useState(null);
   const { data: assets, refetch } = useGetAssetByAcademyQuery(academyId);
   const [data, setData] = useState([]);
   const fileInputRef = useRef(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [postUploadImages, { isLoading, error }] =
     usePostUploadImagesMutation();
+  const [uploadExcel, { isLoading: upLoading }] = useUploadExcelMutation();
+
+  useEffect(() => {
+    if (manager?.user?.academyId) {
+      setAcademyId(manager.user.academyId);
+    }
+  }, [manager?.user?.academyId]);
 
   useEffect(() => {
     if (assets) {
@@ -56,7 +82,14 @@ const Building = ({ category }) => {
     }
   }, [assets]);
 
-  const CategoryId = data.length > 0 ? data[0]?.categoryDetails?.id : null;
+  useEffect(() => {
+    if (categories) {
+      const filteredCategories = categories.filter(
+        (categorie) => categorie.name === category
+      );
+      setCategoryId(filteredCategories[0].id);
+    }
+  }, [assets]);
 
   const addRoom = () => {
     if (floorInput.trim() && roomInput.trim()) {
@@ -71,6 +104,40 @@ const Building = ({ category }) => {
       });
       setRoomInput(""); // Clear room input
     }
+  };
+
+  const downloadDummyExcel = () => {
+    const data = [
+      {
+        assetCode: "A001",
+        title: "Monitor",
+        cost: 500,
+        acquireDate: "01/10/2023", // Date as string to match your backend expectation
+        lifespan: "5 years",
+        assetArea: "Office Room",
+        description: "24-inch LCD monitor",
+        status: "Pending",
+        createdBy: "jigme@gmail.com",
+        academyID: "67f017027d756710a12c2fa6",
+        assetCategoryID: "67eeef18d825904ae1f8ce64",
+        // Any extra dynamic attributes can be added too
+        Plint_area: "22",
+      },
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Assets");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, "Asset_Template.xlsx");
   };
 
   const styles = {
@@ -109,6 +176,22 @@ const Building = ({ category }) => {
       color: "#888",
       textAlign: "center",
     },
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!newBuilding.title?.trim()) errors.title = "Title is required";
+    if (!newBuilding.assetCode?.trim())
+      errors.assetCode = "Asset Code is required";
+    if (!newBuilding.PlintArea?.trim())
+      errors.PlintArea = "Plint Area is required";
+    if (!newBuilding.acquireDate?.trim())
+      errors.acquireDate = "Acquired Date is required";
+    if (!newBuilding.lifespan?.trim()) errors.lifespan = "Lifespan is required";
+    if (!newBuilding.cost?.trim()) errors.cost = "Cost is required";
+    if (!newBuilding.assetArea?.trim())
+      errors.assetArea = "Asset Area is required";
+    return errors;
   };
 
   const rowsPerPage = 10;
@@ -155,16 +238,14 @@ const Building = ({ category }) => {
       alert("Please fill out all fields before submitting.");
       return;
     }
-  
+
     // If all fields are filled, process the schedule
     console.log("Creating schedule:", scheduleModalData);
-  
+
     // Only close the modal AFTER schedule creation
     // setIsScheduleModalOpen(false); // Removed from here
     setScheduleModalData(null);
   };
-  
-
 
   // Function to get the class based on workstatus
   const getStatusClass = (status) => {
@@ -192,6 +273,49 @@ const Building = ({ category }) => {
   const handleCloseModal = () => {
     setModalData(null);
     setFloorAndRooms({});
+  };
+
+  const [file, setSelectedFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleBulkImport = () => {
+    setShowBulkModal(true);
+  };
+
+  const handleBulk = async () => {
+    if (file) {
+      try {
+        const res = await uploadExcel(file).unwrap();
+        refetch();
+        setSelectedFile(null);
+        setShowBulkModal(false);
+        console.log(res);
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Excel file uploaded successfully!",
+        });
+      } catch (err) {
+        console.log(err);
+        Swal.fire({
+          icon: "error",
+          title: "Upload Failed",
+          text: err?.data?.message || "Something went wrong while uploading.",
+        });
+      }
+    } else {
+      Swal.fire({
+        icon: "warning",
+        title: "No File",
+        text: "Please select an Excel file first.",
+      });
+    }
   };
 
   const uniqueBuilding = [
@@ -222,6 +346,12 @@ const Building = ({ category }) => {
   };
 
   const handleSaveNewBuilding = async () => {
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
     const payload = {
       assetCode: newBuilding.assetCode,
       title: newBuilding.title,
@@ -231,9 +361,9 @@ const Building = ({ category }) => {
       assetArea: newBuilding.assetArea,
       description: newBuilding.description,
       status: "Pending",
-      createdBy: "Admin",
+      createdBy: email,
       deletedBy: null,
-      academyID: "67f017257d756710a12c2fa7",
+      academyID: academyId,
       assetCategoryID: CategoryId,
       attributes: [
         { name: "Plint_area", value: newBuilding.PlintArea },
@@ -244,10 +374,9 @@ const Building = ({ category }) => {
     try {
       const res = await postAsset(payload).unwrap();
       const assetId = res.assetID;
-
       if (selectedFiles.length > 0) {
         const formData = new FormData();
-  
+
         // Ensure images is an array of File objects before calling forEach
         if (
           !Array.isArray(selectedFiles) ||
@@ -259,10 +388,10 @@ const Building = ({ category }) => {
           );
           return;
         }
-  
+
         // Append assetID to FormData
         formData.append("assetID", assetId); // Make sure assetID is an integer
-  
+
         // Append files to FormData
         selectedFiles.forEach((file) => {
           console.log("Appending file to formData:", file); // Check the file type
@@ -272,7 +401,7 @@ const Building = ({ category }) => {
             console.error("Invalid file detected:", file);
           }
         });
-  
+
         // Call the mutation
         await postUploadImages(formData);
       }
@@ -314,7 +443,7 @@ const Building = ({ category }) => {
   ];
 
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  
+
   const handleScheduleMaintenance = () => {
     if (!modalData) return; // Optional: prevent errors if modalData is undefined
 
@@ -466,7 +595,9 @@ const Building = ({ category }) => {
             <ImFolderDownload
               style={{ color: "#ffffff", marginLeft: "12px" }}
             />
-            <button className="category-btn">Bulk Import</button>
+            <button className="category-btn" onClick={handleBulkImport}>
+              Bulk Import
+            </button>
           </div>
           <div className="create-category-btn">
             <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
@@ -613,6 +744,57 @@ const Building = ({ category }) => {
         </div>
       </div>
 
+      {showBulkModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Upload your file</h2>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowBulkModal(false);
+                  setSelectedFile(null);
+                }}
+              >
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <input
+              type="file"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              onChange={handleFileChange}
+            />
+
+            <div style={{ marginTop: "20px" }}>
+              <button
+                className="download-all-btn"
+                style={{ marginBottom: "10px" }}
+                onClick={downloadDummyExcel}
+              >
+                Download Dummy Excel
+              </button>
+
+              <button
+                className="accept-btn"
+                onClick={handleBulk}
+                disabled={upLoading}
+              >
+                {upLoading ? "Uploading..." : "Upload"}
+              </button>
+              <button
+                className="reject-btn"
+                onClick={() => setShowBulkModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Add Building Modal */}
       {showAddModal && (
         <div className="modal-overlay">
@@ -621,13 +803,15 @@ const Building = ({ category }) => {
               <h2 className="form-h">Create Asset</h2>
               <button
                 className="close-btn"
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setFormErrors({});
+                }}
               >
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
                 />
               </button>
-
             </div>
             <div className="schedule-form">
               <div className="modal-content-field">
@@ -640,6 +824,9 @@ const Building = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.title && (
+                <span className="error-text">{formErrors.title}</span>
+              )}
               <div className="modal-content-field">
                 <label>Asset Code:</label>
                 <input
@@ -653,6 +840,9 @@ const Building = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.assetCode && (
+                <span className="error-text">{formErrors.assetCode}</span>
+              )}
               <div className="modal-content-field">
                 <label>Category:</label>
                 <input type="text" value={category} readOnly />
@@ -670,6 +860,9 @@ const Building = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.PlintArea && (
+                <span className="error-text">{formErrors.PlintArea}</span>
+              )}
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
                 <input
@@ -683,6 +876,9 @@ const Building = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.acquireDate && (
+                <span className="error-text">{formErrors.acquireDate}</span>
+              )}
 
               <div className="modal-content-field">
                 <label>Useful Life (Year):</label>
@@ -697,7 +893,9 @@ const Building = ({ category }) => {
                   }
                 />
               </div>
-
+              {formErrors.lifespan && (
+                <span className="error-text">{formErrors.lifespan}</span>
+              )}
               <div className="modal-content-field">
                 <label>Cost:</label>
                 <input
@@ -708,6 +906,9 @@ const Building = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.cost && (
+                <span className="error-text">{formErrors.cost}</span>
+              )}
               <div className="modal-content-field">
                 <label>Area:</label>
                 <input
@@ -721,6 +922,9 @@ const Building = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.assetArea && (
+                <span className="error-text">{formErrors.assetArea}</span>
+              )}
               <div className="modal-content-field">
                 <label>Description:</label>
                 <input
@@ -818,7 +1022,7 @@ const Building = ({ category }) => {
                   onClick={handleSaveNewBuilding}
                   disabled={isLoading || isLoading2}
                 >
-                  {(isLoading || isLoading2) ? "Saving..." : "Save"}
+                  {isLoading || isLoading2 ? "Saving..." : "Save"}
                 </button>
               </div>
             </div>
@@ -1007,7 +1211,7 @@ const Building = ({ category }) => {
       )}
 
       {/* scheduleModel */}
-      {isScheduleModalOpen && scheduleModalData && ( 
+      {isScheduleModalOpen && scheduleModalData && (
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
