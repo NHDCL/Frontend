@@ -11,10 +11,28 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    // get repir resquest
+    getRepairRequest: builder.query({
+      query:()=> ({
+        url: MAINTENANCE_URL+"/repairs",
+        method:'GET',
+      }),
+      providesTags:["repair"]
+    }),
     
+    // get MAINTENANCE resquest
+    getMaintenanceRequest: builder.query({
+      query:()=> ({
+        url: MAINTENANCE_URL+"/maintenance",
+        method:'GET',
+      }),
+      providesTags:["maintenance"]
+    }),
   }),
 });
 
 export const {
   usePostAssetMutation,
-} = assetApiSlice;
+  useGetRepairRequestQuery,
+  useGetMaintenanceRequestQuery,
+} = maintenanceApiSlice;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./css/card.css";
 import "./css/table.css";
 import "./css/form.css";
@@ -9,7 +9,7 @@ import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select"
 import { TiArrowSortedUp } from "react-icons/ti";
-
+import { useGetRepairRequestQuery } from "../../slices/maintenanceApiSlice";
 
 const ManagerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,98 +19,19 @@ const ManagerDashboard = () => {
   const [selectedPriority, setSelectedPriority] = useState("");
   const rowsPerPage = 10;
 
-  const [data, setData] = useState([
-    {
-      rid: "#1001",
-      assetName: "Air Conditioner",
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      location: "Block-A-101",
-      description: "Cooling issue",
-      priority: "Major",
-      image: img,
-    },
-    {
-      rid: "#1002",
-      assetName: "Heater",
-      name: "Sonam",
-      email: "sonam@example.com",
-      phone: "17654321",
-      location: "Block-B-202",
-      description: "Not working properly",
-      priority: "Minor",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
+  const { data: repairRequest, refetch: refetchRepairRequest } = useGetRepairRequestQuery();
 
-  ]);
+  const [data, setData] = useState([]);
+  console.log('data: ', data)
 
+  useEffect(() => {
+    if (repairRequest) {
+      const sorted = [...repairRequest].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setData(sorted);
+    }
+   
+  }, [repairRequest]);
+  
   // Sorting
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
 
@@ -140,23 +61,29 @@ const ManagerDashboard = () => {
   // Extract unique priorities from data
   const uniquePriorities = [
     { value: "", label: "All Priorities" },
-    ...Array.from(new Set(data.map(item => item.priority))).map(priority => ({
+    ...Array.from(
+      new Set(
+        data.map(item => item.priority?.toLowerCase()).filter(Boolean) // remove undefined/null
+      )
+    ).map(priority => ({
       value: priority,
-      label: priority
+      label: priority.charAt(0).toUpperCase() + priority.slice(1) // Capitalize first letter
     }))
   ];
 
-  const sortedData = [...data].sort((a, b) => b.rid - a.rid);
+  // const sortedData = [...data].sort((a, b) => b.rid - a.rid);
 
-  const filteredData = sortedData.filter((item) => {
-    const matchesSearch = Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const matchesPriority =
-      selectedPriority === "" || item.priority === selectedPriority;
+  const filteredData = data
+    .filter((item) => {
+      const matchesSearch = Object.values(item).some((value) =>
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      const matchesPriority =
+        selectedPriority === "" || item.priority?.toLowerCase() === selectedPriority.toLowerCase();
 
-    return matchesSearch && matchesPriority;
-  });
+      return matchesSearch && matchesPriority;
+    });
+
 
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -274,7 +201,7 @@ const ManagerDashboard = () => {
                   "Asset Name",
                   "Name",
                   "Phone Number",
-                  "Location",
+                  "Area",
                   "Description",
                   " "
                 ].map((header, index) => (
@@ -318,11 +245,11 @@ const ManagerDashboard = () => {
                       onChange={() => handleSelectRow(item.rid)}
                     />
                   </td>
-                  <td>{item.rid}</td>
+                  <td>{index+1}</td>
                   <td>{item.assetName}</td>
                   <td>{item.name}</td>
-                  <td>{item.phone}</td>
-                  <td>{item.location}</td>
+                  <td>{item.phoneNumber}</td>
+                  <td>{item.area}</td>
                   <td className="description">{item.description}</td>
                   <td className="actions">
                     <button className="view-btn" onClick={() => handleView(item)}>
@@ -391,20 +318,20 @@ const ManagerDashboard = () => {
 
               <div className="modal-content-field">
                 <label>Phone Number:</label>
-                <input type="text" value={modalData.phone} readOnly />
+                <input type="text" value={modalData.phoneNumber} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Email:</label>
                 <input type="email" value={modalData.email} readOnly />
               </div>
-              <div className="modal-content-field">
+              {/* <div className="modal-content-field">
                 <label>RID</label>
                 <input type="text" value={modalData.rid} readOnly />
-              </div>
+              </div> */}
 
               <div className="modal-content-field">
                 <label>Area:</label>
-                <input type="text" value={modalData.location} readOnly />
+                <input type="text" value={modalData.area} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Asset Name:</label>

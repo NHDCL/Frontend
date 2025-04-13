@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./css/card.css";
 import "./css/table.css";
 import "./css/form.css";
@@ -9,6 +9,10 @@ import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
 import { TiArrowSortedUp } from "react-icons/ti";
+import { useGetRepairRequestQuery } from "../../slices/maintenanceApiSlice";
+import { useUser } from "../../context/userContext";
+import { useSelector } from "react-redux";
+import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
 
 const Repair = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,82 +25,24 @@ const Repair = () => {
   const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
+
   const rowsPerPage = 10;
+
+  const { data: repairRequest, refetch: refetchRepairRequest } = useGetRepairRequestQuery();
+  const { userInfo, userRole } = useSelector((state) => state.auth);
+  console.log("Logged-in User Info:", userInfo);
 
   const today = new Date().toISOString().split("T")[0];
 
-  const [data, setData] = useState([
-    {
-      rid: "#1001",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-A-101",
-      priority: "Minor",
-      workstatus: "pending"
-    },
-    {
-      rid: "#1002",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-A-101",
-      priority: "Major",
-      workstatus: "In progress"
-    },
-    {
-      rid: "#1003",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-A-101",
-      priority: "Major",
-      workstatus: "Completed"
-    },
-    {
-      rid: "#1004",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-A-101",
-      priority: "Minor",
-      workstatus: "pending"
-    },
-    {
-      rid: "#1005",
-      image: img,
-      name: "Pema",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-B-101",
-      priority: "Major",
-      workstatus: "In progress"
-    },
-    {
-      rid: "#1006",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-C-101",
-      priority: "Major",
-      workstatus: "In progress"
-    },
-    {
-      rid: "#1007",
-      image: img,
-      name: "Dorji",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "lock-A-101",
-      priority: "Major",
-      workstatus: "pending"
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    if (repairRequest) {
+      const sorted = [...repairRequest].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setData(sorted);
     }
-  ]);
+
+  }, [repairRequest]);
 
 
   // Sample workers list
@@ -125,9 +71,9 @@ const Repair = () => {
     switch (status) {
       case "pending":
         return "pending-status";  // Gray color
-      case "In progress":
+      case "inprogress":
         return "in-progress-status";  // Yellow color
-      case "Completed":
+      case "completed":
         return "completed-status";  // Green color
       default:
         return "";
@@ -137,18 +83,22 @@ const Repair = () => {
   // Extract unique priorities from data
   const uniquePriorities = [
     { value: "", label: "All Priorities" },
-    ...Array.from(new Set(data.map(item => item.priority))).map(priority => ({
+    ...Array.from(
+      new Set(
+        data.map(item => item.priority?.toLowerCase()).filter(Boolean)
+      )
+    ).map(priority => ({
       value: priority,
-      label: priority
+      label: priority.charAt(0).toUpperCase() + priority.slice(1)
     }))
   ];
 
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map(item => item.workstatus))).map(status => ({
+    ...Array.from(new Set(data.map(item => item.status?.toLowerCase()))).map(status => ({
       value: status,
-      label: status
+      label: status.charAt(0).toUpperCase() + status.slice(1)
     }))
   ];
 
@@ -161,12 +111,15 @@ const Repair = () => {
     );
 
     const matchesPriority =
-      selectedPriority === "" || item.priority === selectedPriority;
+      selectedPriority === "" ||
+      item.priority?.toLowerCase() === selectedPriority.toLowerCase();
+
     const matchesWorkStatus =
-      selectedWorkStatus === "" || item.workstatus === selectedWorkStatus;
+      selectedWorkStatus === "" || item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
 
     return matchesSearch && matchesPriority && matchesWorkStatus;
   });
+
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -226,7 +179,6 @@ const Repair = () => {
     sortData(column, newSortOrder);
   };
 
-
   return (
     <div className="ManagerDashboard">
       <div className="container">
@@ -246,13 +198,9 @@ const Repair = () => {
               classNamePrefix="custom-select"
               className="priority-dropdown"
               options={uniquePriorities}
-              value={uniquePriorities.find(option => option.value === selectedPriority)} // Ensure selected value is an object
+              value={uniquePriorities.find(option => option.value === selectedPriority)}
               onChange={(selectedOption) => {
-                if (selectedOption) {
-                  setSelectedPriority(selectedOption.value);
-                } else {
-                  setSelectedPriority(""); // Clear the selected priority when null
-                }
+                setSelectedPriority(selectedOption ? selectedOption.value : "");
               }}
               isClearable
               isSearchable={false}
@@ -310,7 +258,6 @@ const Repair = () => {
                             onClick={() =>
                               handleSort(header === "Area" ? "Area" : header.toLowerCase().replace(' ', ''))
                             }
-
                           >
                             <TiArrowSortedUp
                               style={{
@@ -357,27 +304,26 @@ const Repair = () => {
                       onChange={() => handleSelectRow(item.rid)}
                     />
                   </td>
-                  <td>{item.rid}</td>
+                  <td>{index + 1}</td>
                   <td>
                     <img
                       className="User-profile"
-                      src={item.image}
+                      src={item.images[0]}
                       alt="User"
                       style={{
-                        width: "50px",
-                        height: "50px",
-                        borderRadius: "50%",
+                        width: "100px",
+                        height: "100px",
                       }}
                     />
                   </td>
                   <td>{item.name}</td>
                   <td>{item.email}</td>
-                  <td>{item.phone}</td>
-                  <td>{item.Area}</td>
+                  <td>{item.phoneNumber}</td>
+                  <td>{item.area}</td>
                   <td>{item.priority}</td>
                   <td>
-                    <div className={getWorkOrderStatusClass(item.workstatus)}>
-                      {item.workstatus}
+                    <div className={getWorkOrderStatusClass(item.status.toLowerCase().replace(/\s+/g, ""))}>
+                      {item.status}
                     </div>
                   </td>
                   <td className="actions">

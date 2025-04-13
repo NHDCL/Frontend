@@ -20,6 +20,12 @@ export const assetApiSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
+    getAssetByAssetCode: builder.query({
+      query: (assetCode) => ({
+        url: `${ASSETS_URL}/assets/${assetCode}`,
+        method: "GET",
+      }),
+    }),
     postAsset: builder.mutation({
       query: (newAsset) => ({
         url: ASSETS_URL + "/assets", // API endpoint for posting assets
@@ -46,4 +52,5 @@ export const {
   useGetAssetByAcademyQuery,
   usePostAssetMutation,
   usePostUploadImagesMutation,
+  useGetAssetByAssetCodeQuery,
 } = assetApiSlice;
