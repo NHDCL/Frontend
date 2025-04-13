@@ -10,16 +10,33 @@ import {
   useGetAssetByAcademyQuery,
   usePostUploadImagesMutation,
   usePostAssetMutation,
+  useGetCategoryQuery,
+  useUploadExcelMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
+import { useSelector } from "react-redux";
+import { createSelector } from "reselect";
+import { useGetUserByEmailQuery } from "../../../slices/userApiSlice";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
+const selectUserInfo = (state) => state.auth.userInfo || {};
+const getUserEmail = createSelector(
+  selectUserInfo,
+  (userInfo) => userInfo?.user?.username || ""
+);
 
 const Landscaping = ({ category }) => {
+  const email = useSelector(getUserEmail);
+  const { data: manager } = useGetUserByEmailQuery(email);
+  const { data: categories } = useGetCategoryQuery();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [modalData, setModalData] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [postAsset, { isLoading: isLoading2 }] = usePostAssetMutation();
   const [newLandscaping, setNewLandscaping] = useState({
     title: "",
@@ -32,25 +49,92 @@ const Landscaping = ({ category }) => {
     Size: "",
   });
 
-  const [academyId, setAcademyId] = useState("67f017257d756710a12c2fa7");
+  const [academyId, setAcademyId] = useState(null);
+  const [CategoryId, setCategoryId] = useState(null);
   const [scheduleModalData, setScheduleModalData] = useState(null);
   const { data: assets, refetch } = useGetAssetByAcademyQuery(academyId);
   const [data, setData] = useState([]);
   const fileInputRef = useRef(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
   const [postUploadImages, { isLoading, error }] =
     usePostUploadImagesMutation();
+  const [uploadExcel, { isLoading: upLoading }] = useUploadExcelMutation();
+
+  useEffect(() => {
+    if (manager?.user?.academyId) {
+      setAcademyId(manager.user.academyId);
+    }
+  }, [manager?.user?.academyId]);
 
   useEffect(() => {
     if (assets) {
       const filteredAssets = assets.filter(
         (asset) => asset.categoryDetails?.name === category
       );
+
       setData(filteredAssets);
+    }
+  }, [assets, category]);
+
+  useEffect(() => {
+    if (categories) {
+      const filteredCategories = categories.filter(
+        (categorie) => categorie.name === category
+      );
+      setCategoryId(filteredCategories[0].id);
     }
   }, [assets]);
 
-  const CategoryId = data.length > 0 ? data[0]?.categoryDetails?.id : null;
+  const downloadDummyExcel = () => {
+    const data = [
+      {
+        assetCode: "A001",
+        title: "Monitor",
+        cost: 500,
+        acquireDate: "01/10/2023", // Date as string to match your backend expectation
+        lifespan: "5 years",
+        assetArea: "Office Room",
+        description: "24-inch LCD monitor",
+        status: "Pending",
+        createdBy: "jigme@gmail.com",
+        academyID: "67f017027d756710a12c2fa6",
+        assetCategoryID: "67eeef18d825904ae1f8ce64",
+        // Any extra dynamic attributes can be added too
+        Size: "2m hieght",
+      },
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Assets");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, "Asset_Template.xlsx");
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!newLandscaping.title?.trim()) errors.title = "Title is required";
+    if (!newLandscaping.assetCode?.trim())
+      errors.assetCode = "Asset Code is required";
+    if (!newLandscaping.Size?.trim()) errors.Size = "Size is required";
+    if (!newLandscaping.acquireDate?.trim())
+      errors.acquireDate = "Acquired Date is required";
+    if (!newLandscaping.lifespan?.trim())
+      errors.lifespan = "Lifespan is required";
+    if (!newLandscaping.cost?.trim()) errors.cost = "Cost is required";
+    if (!newLandscaping.assetArea?.trim())
+      errors.assetArea = "Area is required";
+    return errors;
+  };
 
   const rowsPerPage = 10;
 
@@ -94,6 +178,15 @@ const Landscaping = ({ category }) => {
     });
   };
 
+  const [file, setSelectedFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
   // Function to get the class based on workstatus
   const getStatusClass = (status) => {
     switch (status) {
@@ -125,88 +218,126 @@ const Landscaping = ({ category }) => {
     setShowAddModal(true);
   };
 
-  const handleSaveNewLandscaping = async () => {
-      const payload = {
-        assetCode: newLandscaping.assetCode,
-        title: newLandscaping.title,
-        cost: Number(newLandscaping.cost),
-        acquireDate: newLandscaping.acquireDate,
-        lifespan: newLandscaping.lifespan,
-        assetArea: newLandscaping.assetArea,
-        description: newLandscaping.description,
-        status: "Pending",
-        createdBy: "Admin",
-        deletedBy: null,
-        academyID: "67f017257d756710a12c2fa7",
-        assetCategoryID: CategoryId,
-        attributes: [
-          { name: "Size", value: newLandscaping.Size }
-        ],
-      };
-  
+  const handleBulkImport = () => {
+    setShowBulkModal(true);
+  };
+
+  const handleBulk = async () => {
+    if (file) {
       try {
-        const res = await postAsset(payload).unwrap();
-        const assetId = res.assetID;
-  
-        if (selectedFiles.length > 0) {
-          const formData = new FormData();
-    
-          // Ensure images is an array of File objects before calling forEach
-          if (
-            !Array.isArray(selectedFiles) ||
-            !selectedFiles.every((file) => file instanceof File)
-          ) {
-            console.error(
-              "selectedFiles is not an array of File objects",
-              selectedFiles
-            );
-            return;
-          }
-    
-          // Append assetID to FormData
-          formData.append("assetID", assetId); // Make sure assetID is an integer
-    
-          // Append files to FormData
-          selectedFiles.forEach((file) => {
-            console.log("Appending file to formData:", file); // Check the file type
-            if (file instanceof File) {
-              formData.append("images", file); // Append only if it's a valid file
-            } else {
-              console.error("Invalid file detected:", file);
-            }
-          });
-    
-          // Call the mutation
-          await postUploadImages(formData);
-        }
+        const res = await uploadExcel(file).unwrap();
+        refetch();
+        setSelectedFile(null);
+        setShowBulkModal(false);
+        console.log(res);
         Swal.fire({
           icon: "success",
-          title: "Asset created successfully!",
-          confirmButtonColor: "#305845",
+          title: "Success",
+          text: "Excel file uploaded successfully!",
         });
-        refetch();
-        setNewLandscaping({
-          title: "",
-          assetCode: "",
-          acquireDate: "",
-          lifespan: "",
-          status: "",
-          cost: "",
-          assetArea: "",
-          Size: "",
-        });
-        setSelectedFiles([]); // Clear the selected files
-        fileInputRef.current.value = null;
-        setShowAddModal(false);
       } catch (err) {
+        console.log(err);
         Swal.fire({
           icon: "error",
-          title: "Failed to create asset",
-          text: err?.data?.message || "Something went wrong!",
-          confirmButtonColor: "#897463",
+          title: "Upload Failed",
+          text: err?.data?.message || "Something went wrong while uploading.",
         });
       }
+    } else {
+      Swal.fire({
+        icon: "warning",
+        title: "No File",
+        text: "Please select an Excel file first.",
+      });
+    }
+  };
+
+  const handleSaveNewLandscaping = async () => {
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
+    const payload = {
+      assetCode: newLandscaping.assetCode,
+      title: newLandscaping.title,
+      cost: Number(newLandscaping.cost),
+      acquireDate: newLandscaping.acquireDate,
+      lifespan: newLandscaping.lifespan,
+      assetArea: newLandscaping.assetArea,
+      description: newLandscaping.description,
+      status: "Pending",
+      createdBy: email,
+      deletedBy: null,
+      academyID: academyId,
+      assetCategoryID: CategoryId,
+      attributes: [{ name: "Size", value: newLandscaping.Size }],
     };
+
+    try {
+      const res = await postAsset(payload).unwrap();
+      const assetId = res.assetID;
+
+      if (selectedFiles.length > 0) {
+        const formData = new FormData();
+
+        // Ensure images is an array of File objects before calling forEach
+        if (
+          !Array.isArray(selectedFiles) ||
+          !selectedFiles.every((file) => file instanceof File)
+        ) {
+          console.error(
+            "selectedFiles is not an array of File objects",
+            selectedFiles
+          );
+          return;
+        }
+
+        // Append assetID to FormData
+        formData.append("assetID", assetId); // Make sure assetID is an integer
+
+        // Append files to FormData
+        selectedFiles.forEach((file) => {
+          console.log("Appending file to formData:", file); // Check the file type
+          if (file instanceof File) {
+            formData.append("images", file); // Append only if it's a valid file
+          } else {
+            console.error("Invalid file detected:", file);
+          }
+        });
+
+        // Call the mutation
+        await postUploadImages(formData);
+      }
+      Swal.fire({
+        icon: "success",
+        title: "Asset created successfully!",
+        confirmButtonColor: "#305845",
+      });
+      refetch();
+      setNewLandscaping({
+        title: "",
+        assetCode: "",
+        acquireDate: "",
+        lifespan: "",
+        status: "",
+        cost: "",
+        assetArea: "",
+        Size: "",
+      });
+      setSelectedFiles([]); // Clear the selected files
+      fileInputRef.current.value = null;
+      setShowAddModal(false);
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to create asset",
+        text: err?.data?.message || "Something went wrong!",
+        confirmButtonColor: "#897463",
+      });
+    }
+  };
 
   const handleFileSelection = (e) => {
     const newFiles = [...e.target.files];
@@ -347,7 +478,9 @@ const Landscaping = ({ category }) => {
             <ImFolderDownload
               style={{ color: "#ffffff", marginLeft: "12px" }}
             />
-            <button className="category-btn">Bulk Import</button>
+            <button className="category-btn" onClick={handleBulkImport}>
+              Bulk Import
+            </button>
           </div>
           <div className="create-category-btn">
             <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
@@ -443,6 +576,57 @@ const Landscaping = ({ category }) => {
         </div>
       </div>
 
+      {showBulkModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Upload your file</h2>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowBulkModal(false);
+                  setSelectedFile(null);
+                }}
+              >
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <input
+              type="file"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              onChange={handleFileChange}
+            />
+
+            <div style={{ marginTop: "20px" }}>
+              <button
+                className="download-all-btn"
+                style={{ marginBottom: "10px" }}
+                onClick={downloadDummyExcel}
+              >
+                Download Dummy Excel
+              </button>
+
+              <button
+                className="accept-btn"
+                onClick={handleBulk}
+                disabled={upLoading}
+              >
+                {upLoading ? "Uploading..." : "Upload"}
+              </button>
+              <button
+                className="reject-btn"
+                onClick={() => setShowBulkModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Add Landscaping Modal */}
       {showAddModal && (
         <div className="modal-overlay">
@@ -451,7 +635,10 @@ const Landscaping = ({ category }) => {
               <h2 className="form-h">Create Asset</h2>
               <button
                 className="close-btn"
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setFormErrors({});
+                }}
               >
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
@@ -472,6 +659,9 @@ const Landscaping = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.title && (
+                <span className="error-text">{formErrors.title}</span>
+              )}
               <div className="modal-content-field">
                 <label>Asset Code:</label>
                 <input
@@ -485,13 +675,12 @@ const Landscaping = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.assetCode && (
+                <span className="error-text">{formErrors.assetCode}</span>
+              )}
               <div className="modal-content-field">
                 <label>Category:</label>
-                <input
-                  type="text"
-                  value={category}
-                  readOnly
-                />
+                <input type="text" value={category} readOnly />
               </div>
 
               <div className="modal-content-field">
@@ -507,6 +696,9 @@ const Landscaping = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.Size && (
+                <span className="error-text">{formErrors.Size}</span>
+              )}
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
                 <input
@@ -520,6 +712,9 @@ const Landscaping = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.acquireDate && (
+                <span className="error-text">{formErrors.acquireDate}</span>
+              )}
               <div className="modal-content-field">
                 <label>Useful Life (Year):</label>
                 <input
@@ -533,6 +728,9 @@ const Landscaping = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.lifespan && (
+                <span className="error-text">{formErrors.lifespan}</span>
+              )}
               <div className="modal-content-field">
                 <label>Cost:</label>
                 <input
@@ -546,6 +744,9 @@ const Landscaping = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.cost && (
+                <span className="error-text">{formErrors.cost}</span>
+              )}
               <div className="modal-content-field">
                 <label>Area:</label>
                 <input
@@ -559,6 +760,9 @@ const Landscaping = ({ category }) => {
                   }
                 />
               </div>
+              {formErrors.assetArea && (
+                <span className="error-text">{formErrors.assetArea}</span>
+              )}
               <div className="modal-content-field">
                 <label>Description:</label>
                 <input
@@ -585,13 +789,13 @@ const Landscaping = ({ category }) => {
                 </div>
               </div>
               <div className="modal-actions">
-              <button
+                <button
                   className="accept-btn"
                   style={{ width: "80px" }}
                   onClick={handleSaveNewLandscaping}
                   disabled={isLoading || isLoading2}
                 >
-                  {(isLoading || isLoading2) ? "Saving..." : "Save"}
+                  {isLoading || isLoading2 ? "Saving..." : "Save"}
                 </button>
               </div>
             </div>

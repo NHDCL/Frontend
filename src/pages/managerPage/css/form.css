@@ -12,6 +12,12 @@
   overflow: hidden;
 }
 
+.error-text {
+  color: red;
+  font-size: 12px;
+  padding-left: 35%;
+}
+
 .select-group {
   display: flex;
   flex-direction: column;
