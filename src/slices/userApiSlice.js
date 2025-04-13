@@ -144,6 +144,10 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         formData.append("departmentId", userData.departmentId); // departmentId should be appended if available
         formData.append("roleId", userData.roleId);
 
+        if (userData.image) {
+          formData.append("image", userData.image);
+        }
+
         return {
           url: USERS_URL + "/users",
           method: "POST",

@@ -4,6 +4,7 @@ import "./css/table.css";
 import { IoIosSearch } from "react-icons/io";
 import img from "../../assets/images/person_four.jpg";
 import { TiArrowSortedUp } from "react-icons/ti";
+import { useGetAcademyQuery, useGetDepartmentQuery, useGetUsersQuery } from "../../slices/userApiSlice";
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -11,106 +12,37 @@ const Users = () => {
   const [activeTab, setActiveTab] = useState("Technician");
   const rowsPerPage = 10;
 
-  const [data, setData] = useState([
-    {
-      image: img,
-      name: "Yangchen Wangmo",
-      email: "yangchen@example.com",
-      location: "Block-A-101",
-      department: "Plumbing Team",
-      role: "Technician",
-      workAssigned: 8,
+  const { data: academies } = useGetAcademyQuery();
+  const { data: department, refetch } = useGetDepartmentQuery();
+  const { data: users } = useGetUsersQuery();
 
-    },
-    {
-      image: img,
-      name: "Karma Tenzin",
-      email: "karma@example.com",
-      location: "Block-B-202",
-      department: "Plumbing Team",
-      role: "Supervisor",
-    },
-    {
-      image: img,
-      name: "Sonam zangmo",
-      email: "sonam@example.com",
-      location: "Block-C-303",
-      department: "Plumbing Team",
-      role: "Supervisor",
-    },
-    {
-      image: img,
-      name: "Jigme Norbu",
-      email: "jigme@example.com",
-      location: "Block-D-404",
-      department: "Plumbing Team",
-      role: "Technician",
-      workAssigned: 8,
+  const getAcademyName = (academyId) => {
+    const academy = academies?.find(a => a.academyId === academyId);
+    return academy ? academy.name : "Unknown Academy";
+  };
 
-    },
-    {
-      image: img,
-      name: "Pema Choden",
-      email: "pema@example.com",
-      location: "Block-E-505",
-      department: "Plumbing Team",
-      role: "Supervisor",
-    },
-    {
-      image: img,
-      name: "Tshering Zangmo",
-      email: "tshering@example.com",
-      location: "Block-F-606",
-      department: "Plumbing Team",
-      role: "Technician",
-      workAssigned: 8,
-
-    },
-    {
-      image: img,
-      name: "Dorji Wangchuk",
-      email: "dorji@example.com",
-      location: "Block-G-707",
-      department: "Plumbing Team",
-      role: "Technician",
-      workAssigned: 8,
-
-    },
-    {
-      image: img,
-      name: "Kinley Dorji",
-      email: "kinley@example.com",
-      location: "Block-H-808",
-      department: "Plumbing Team",
-      role: "Supervisor",
-    },
-    {
-      image: img,
-      name: "Deki Wangmo",
-      email: "deki@example.com",
-      location: "Block-I-909",
-      department: "Plumbing Team",
-      role: "Supervisor",
-    },
-    {
-      image: img,
-      name: "Ugyen Tenzin",
-      email: "ugyen@example.com",
-      location: "Block-J-1010",
-      department: "Plumbing Team",
-      role: "Technician",
-    },
-  ]);
+  const getDepartmentName = (departmentID) => {
+    const depart = department?.find(d => d.departmentId === departmentID);
+    return depart ? depart.name : "Unknown department";
+  };
 
   // Filter data based on selected tab and search
-  const filteredData = data.filter(
+
+  const [data, setData] = useState([])
+  React.useEffect(() => {
+    if (users) {
+      setData(users);
+    }
+  }, [users]);
+
+
+  const filteredData = (users || []).filter(
     (item) =>
-      item.role === activeTab &&
+      item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
       Object.values(item).some((value) =>
         value.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
   );
-
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
     (currentPage - 1) * rowsPerPage,
@@ -178,7 +110,7 @@ const Users = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-              {["Image", "Name", "Email", "Location", "Department", "Role", ...(activeTab === "Technician" ? ["Work Assigned"] : [])].map(
+                {["Image", "Name", "Email", "Location", "Department", "Role", ...(activeTab === "Technician" ? ["Work Assigned"] : [])].map(
                   (header, index) => (
                     <th key={index}>
                       {header === "Name" || header === "Location" || header === "Department" ? (
@@ -234,9 +166,9 @@ const Users = () => {
                   </td>
                   <td>{item.name}</td>
                   <td>{item.email}</td>
-                  <td>{item.location}</td>
-                  <td>{item.department}</td>
-                  <td>{item.role}</td>
+                  <td>{getAcademyName(item.academyId)}</td>
+                  <td>{getDepartmentName(item.departmentId)}</td>
+                  <td>{item.role ? item.role.name : "No Role"}</td>
                   {activeTab === "Technician" && <td>{item.workAssigned ?? 0}</td>}
 
                 </tr>

@@ -30,13 +30,23 @@ export const assetApiSlice = apiSlice.injectEndpoints({
     postUploadImages: builder.mutation({
       query: (formData) => {
         return {
-          url: `${ASSETS_URL}/assets/${formData.get('assetID')}/upload-images`, // Get assetID from formData
+          url: `${ASSETS_URL}/assets/${formData.get("assetID")}/upload-images`, // Get assetID from formData
           method: "POST",
           body: formData,
         };
       },
     }),
-    
+    uploadExcel: builder.mutation({
+      query: (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        return {
+          url: ASSETS_URL + "/assets/upload/excel",
+          method: "POST",
+          body: formData,
+        };
+      },
+    }),
   }),
 });
 
@@ -46,4 +56,5 @@ export const {
   useGetAssetByAcademyQuery,
   usePostAssetMutation,
   usePostUploadImagesMutation,
+  useUploadExcelMutation,
 } = assetApiSlice;
