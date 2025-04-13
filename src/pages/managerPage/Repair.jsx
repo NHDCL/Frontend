@@ -13,6 +13,7 @@ import { useGetRepairRequestQuery } from "../../slices/maintenanceApiSlice";
 import { useUser } from "../../context/userContext";
 import { useSelector } from "react-redux";
 import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
+import { createSelector } from "reselect";
 
 const Repair = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,20 +31,40 @@ const Repair = () => {
 
   const { data: repairRequest, refetch: refetchRepairRequest } = useGetRepairRequestQuery();
   const { userInfo, userRole } = useSelector((state) => state.auth);
-  console.log("Logged-in User Info:", userInfo);
+  console.log("repairRequest:", repairRequest);
+
+
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+  const email = useSelector(getUserEmail);
+  const { data: userByEmial } = useGetUserByEmailQuery(email);
+
+  console.log("e", userByEmial?.user.academyId)
+
+
 
   const today = new Date().toISOString().split("T")[0];
 
   const [data, setData] = useState([]);
+  console.log('data: ', data)
 
   useEffect(() => {
-    if (repairRequest) {
-      const sorted = [...repairRequest].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      setData(sorted);
-    }
-
-  }, [repairRequest]);
-
+    if (!repairRequest || !userByEmial) return;
+  
+    const userAcademy = userByEmial?.user.academyId?.trim().toLowerCase();
+  
+    const filtered = repairRequest.filter((req) => {
+      const requestAcademy = req.academyId?.trim().toLowerCase();
+      return requestAcademy === userAcademy && req.accept === true;
+    });
+  
+    console.log("Filtered Length:", filtered.length);
+    setData(filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+  }, [repairRequest, userByEmial]);
+  
 
   // Sample workers list
   const workersList = [
@@ -59,7 +80,7 @@ const Repair = () => {
     }
 
     alert(
-      `Assigned ${modalData.rid} to ${assignedWorker} at ${assignTime} on ${assignDate}`
+      `Assigned ${modalData.repairID} to ${assignedWorker} at ${assignTime} on ${assignDate}`
     );
 
     // Close the modal after assigning
@@ -103,7 +124,7 @@ const Repair = () => {
   ];
 
   // Filtering data based on search and priority selection and work status
-  const sortedData = [...data].sort((a, b) => b.rid - a.rid);
+  const sortedData = [...data].sort((a, b) => b.repairID - a.repairID);
 
   const filteredData = sortedData.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
@@ -127,22 +148,22 @@ const Repair = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (rid) => {
+  const handleSelectRow = (repairID) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(rid)
-        ? prevSelectedRows.filter((item) => item !== rid)
-        : [...prevSelectedRows, rid]
+      prevSelectedRows.includes(repairID)
+        ? prevSelectedRows.filter((item) => item !== repairID)
+        : [...prevSelectedRows, repairID]
     );
   };
 
   const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.rid));
+    const updatedData = data.filter((item) => !selectedRows.includes(item.repairID));
     // Update the data with the filtered result after deletion
     setData(updatedData);
     setSelectedRows([]); // Reset selected rows after deletion
   };
-  const handleDeleteRow = (rid) => {
-    const updatedData = data.filter((item) => item.rid !== rid);
+  const handleDeleteRow = (repairID) => {
+    const updatedData = data.filter((item) => item.repairID !== repairID);
     setData(updatedData);
   };
 
@@ -233,7 +254,7 @@ const Repair = () => {
                       setSelectedRows(
                         selectedRows.length === displayedData.length
                           ? []
-                          : displayedData.map((item) => item.rid)
+                          : displayedData.map((item) => item.repairID)
                       )
                     }
                   />
@@ -300,8 +321,8 @@ const Repair = () => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedRows.includes(item.rid)}
-                      onChange={() => handleSelectRow(item.rid)}
+                      checked={selectedRows.includes(item.repairID)}
+                      onChange={() => handleSelectRow(item.repairID)}
                     />
                   </td>
                   <td>{index + 1}</td>
@@ -332,7 +353,7 @@ const Repair = () => {
                     </button>
                     <button
                       className="delete-btn"
-                      onClick={() => handleDeleteRow(item.rid)}
+                      onClick={() => handleDeleteRow(item.repairID)}
                     >
                       <RiDeleteBin6Line style={{ width: "20px", height: "20px" }} />
                     </button>

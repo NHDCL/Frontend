@@ -33,8 +33,6 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
 
 export const {
   usePostRepairRequestMutation,
-} = maintenanceApiSlice;
-  usePostAssetMutation,
   useGetRepairRequestQuery,
   useGetMaintenanceRequestQuery,
 } = maintenanceApiSlice;
