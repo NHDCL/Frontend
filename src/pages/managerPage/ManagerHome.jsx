@@ -9,10 +9,12 @@ import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select"
 import { TiArrowSortedUp } from "react-icons/ti";
-import { useGetRepairRequestQuery } from "../../slices/maintenanceApiSlice";
-import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
 import { createSelector } from "reselect";
 import { useSelector } from "react-redux";
+import Swal from "sweetalert2";
+import { useGetRepairRequestQuery, useAcceptOrRejectRepairRequestMutation } from "../../slices/maintenanceApiSlice";
+import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
+
 
 const ManagerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,6 +25,7 @@ const ManagerDashboard = () => {
   const rowsPerPage = 10;
 
   const { data: repairRequest, refetch: refetchRepairRequest } = useGetRepairRequestQuery();
+  const [acceptOrRejectRepairRequest, { isLoading, error, isSuccess }] = useAcceptOrRejectRepairRequestMutation();
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
@@ -46,7 +49,7 @@ const ManagerDashboard = () => {
     const filtered = repairRequest.filter((req) => {
       console.log("Request Academy ID:", req.academyId); // Log each one
       const requestAcademy = req.academyId?.trim().toLowerCase();
-      return requestAcademy === userAcademy;
+      return requestAcademy === userAcademy && req.accept === null;
     });
 
     console.log("Filtered Length:", filtered.length);
@@ -66,6 +69,20 @@ const ManagerDashboard = () => {
     setData(sortedData);
   };
 
+  const handleAccept = async (repairId, acceptValue) => {
+    try {
+      const response = await acceptOrRejectRepairRequest({
+        repairId,
+        accept: acceptValue,
+      }).unwrap();
+  
+      console.log("Server response:", response);
+      alert(response); // or show toast
+    } catch (err) {
+      console.error("Error:", err);
+      alert("Failed to update repair request.");
+    }
+  };
   const handleSort = (column) => {
     const newSortOrder = column === sortOrder.column
       ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
@@ -221,7 +238,7 @@ const ManagerDashboard = () => {
                   "Phone Number",
                   "Area",
                   "Description",
-            
+
                 ].map((header, index) => (
                   <th key={index}>
                     {header === "Asset Name" || header === "Location" ? (
@@ -377,12 +394,12 @@ const ManagerDashboard = () => {
                 <label>Description:</label>
                 <textarea value={modalData.description} readOnly />
               </div>
-              <div className="modal-content-field">
+              {/* <div className="modal-content-field">
                 <label>Image:</label>
                 <div className="profile-img">
-                  {modalData.image ? (
+                  {modalData.images ? (
                     <img
-                      src={modalData.image}
+                      src={modalData.images[0]}
                       alt="Asset"
                       className="modal-image"
                     />
@@ -393,11 +410,53 @@ const ManagerDashboard = () => {
                     </div>
                   )}
                 </div>
+              </div> */}
+              <div className="modal-content-field">
+                <label>Repaired Images:</label>
+                <div className="TModal-profile-img">
+                  {Array.isArray(modalData.images) && modalData.images.length > 0 ? (
+                    modalData.images.map((imgSrc, index) => (
+                      <img
+                        key={index}
+                        src={imgSrc}
+                        alt={`Work Order ${index + 1}`}
+                        className="TModal-modal-image"
+                      />
+                    ))
+                  ) : modalData.images ? (
+                    // If imageUrl is a string, display it as a single image
+                    <img
+                      src={modalData.images}
+                      alt="Work Order"
+                      className="TModal-modal-image"
+                    />
+                  ) : (
+                    <p>No image available</p>
+                  )}
+                </div>
               </div>
 
               <div className="modal-buttons">
-                <button className="accept-btn">Accept</button>
-                <button className="reject-btn">Reject</button>
+                <button
+                  className="accept-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleAccept(modalData.repairID, true);
+                  }}
+                >
+                  Accept
+                </button>
+
+                <button
+                  className="reject-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleAccept(modalData.repairID, false);
+                  }}
+                >
+                  Reject
+                </button>
+
               </div>
             </form>
           </div>
