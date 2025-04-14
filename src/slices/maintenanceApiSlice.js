@@ -11,10 +11,20 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    assignRepair: builder.mutation({
+      query: ({ repairId, email }) => ({
+        url: MAINTENANCE_URL + `/schedule/${repairId}`,
+        method: "PUT",
+        body: { email },
+      }),
+      invalidatesTags: ["MaintenanceRequest"], // adjust as needed
+    }),
+
     
   }),
 });
 
 export const {
   usePostRepairRequestMutation,
+  useAssignRepairMutation,
 } = maintenanceApiSlice;

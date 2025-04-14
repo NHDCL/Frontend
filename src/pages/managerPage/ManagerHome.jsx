@@ -29,7 +29,7 @@ const ManagerDashboard = () => {
       location: "Block-A-101",
       description: "Cooling issue",
       priority: "Major",
-      image: img,
+      image: [img,img]
     },
     {
       rid: "#1002",
