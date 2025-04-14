@@ -2,7 +2,6 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ element, requiredRole }) => {
-  console.log("✅ ProtectedRoute rendered");
   const token = sessionStorage.getItem("token");
   const isAuthenticated = !!token;
 
@@ -12,7 +11,6 @@ const ProtectedRoute = ({ element, requiredRole }) => {
 
   // Debugging the user role (only in development)
   if (process.env.NODE_ENV === "development") {
-    console.log("User role:", userRole); // 🛠️ Debug
   }
 
   if (userRole) {
