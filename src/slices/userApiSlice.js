@@ -104,12 +104,12 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         formData.append("name", name);
         formData.append("location", location);
         formData.append("description", description);
-    
+
         // Only append image if it's a File object (and not null or a string)
         if (image instanceof File) {
           formData.append("image", image);
         }
-    
+
         return {
           url: `${USERS_URL}/academies/${academyId}`,
           method: "PUT",
@@ -221,6 +221,13 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
+
+    softDeleteUser: builder.mutation({
+      query: (id) => ({
+        url: `${USERS_URL}/users/${id}`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -244,4 +251,5 @@ export const {
   useLogoutMutation,
   useGetAcademyByIdQuery,
   useGetDepartmentByIdQuery,
+  useSoftDeleteUserMutation,
 } = usersApiSlice;

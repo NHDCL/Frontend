@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./css/card.css";
 import "./css/table.css";
 import "./css/form.css";
@@ -9,6 +9,11 @@ import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select"
 import { TiArrowSortedUp } from "react-icons/ti";
+import { createSelector } from "reselect";
+import { useSelector } from "react-redux";
+import Swal from "sweetalert2";
+import { useGetRepairRequestQuery, useAcceptOrRejectRepairRequestMutation } from "../../slices/maintenanceApiSlice";
+import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
 
 
 const ManagerDashboard = () => {
@@ -19,97 +24,38 @@ const ManagerDashboard = () => {
   const [selectedPriority, setSelectedPriority] = useState("");
   const rowsPerPage = 10;
 
-  const [data, setData] = useState([
-    {
-      rid: "#1001",
-      assetName: "Air Conditioner",
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      location: "Block-A-101",
-      description: "Cooling issue",
-      priority: "Major",
-      image: [img,img]
-    },
-    {
-      rid: "#1002",
-      assetName: "Heater",
-      name: "Sonam",
-      email: "sonam@example.com",
-      phone: "17654321",
-      location: "Block-B-202",
-      description: "Not working properly",
-      priority: "Minor",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
-    {
-      rid: "#1003",
-      assetName: "Washing Machine",
-      name: "Tashi",
-      email: "tashi@example.com",
-      phone: "17567890",
-      location: "Block-C-303",
-      description: "Drum not spinning",
-      priority: "Major",
-      image: "https://via.placeholder.com/150",
-    },
+  const { data: repairRequest, refetch: refetchRepairRequest } = useGetRepairRequestQuery();
+  const [acceptOrRejectRepairRequest, { isLoading, error, isSuccess }] = useAcceptOrRejectRepairRequestMutation();
 
-  ]);
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+  const email = useSelector(getUserEmail);
+  const { data: userByEmial } = useGetUserByEmailQuery(email);
+
+  const [data, setData] = useState([]);
+  console.log('data: ', data)
+
+  useEffect(() => {
+    if (!repairRequest || !userByEmial) return;
+
+    // console.log("User Email:", email);
+    // console.log("User Academy ID:", userByEmial?.user.academyId);
+
+    const userAcademy = userByEmial?.user.academyId?.trim().toLowerCase();
+
+    const filtered = repairRequest.filter((req) => {
+      console.log("Request Academy ID:", req.academyId); // Log each one
+      const requestAcademy = req.academyId?.trim().toLowerCase();
+      return requestAcademy === userAcademy && req.accept === null;
+    });
+
+    console.log("Filtered Length:", filtered.length);
+    setData(filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+  }, [repairRequest, userByEmial]);
+
 
   // Sorting
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
@@ -123,6 +69,20 @@ const ManagerDashboard = () => {
     setData(sortedData);
   };
 
+  const handleAccept = async (repairId, acceptValue) => {
+    try {
+      const response = await acceptOrRejectRepairRequest({
+        repairId,
+        accept: acceptValue,
+      }).unwrap();
+  
+      console.log("Server response:", response);
+      alert(response); // or show toast
+    } catch (err) {
+      console.error("Error:", err);
+      alert("Failed to update repair request.");
+    }
+  };
   const handleSort = (column) => {
     const newSortOrder = column === sortOrder.column
       ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
@@ -135,29 +95,31 @@ const ManagerDashboard = () => {
     sortData(column, newSortOrder);
   };
 
-
-
   // Extract unique priorities from data
   const uniquePriorities = [
     { value: "", label: "All Priorities" },
-    ...Array.from(new Set(data.map(item => item.priority))).map(priority => ({
+    ...Array.from(
+      new Set(
+        data.map(item => item.priority?.toLowerCase()).filter(Boolean) // remove undefined/null
+      )
+    ).map(priority => ({
       value: priority,
-      label: priority
+      label: priority.charAt(0).toUpperCase() + priority.slice(1) // Capitalize first letter
     }))
   ];
 
-  const sortedData = [...data].sort((a, b) => b.rid - a.rid);
+  // const sortedData = [...data].sort((a, b) => b.rid - a.rid);
 
-  const filteredData = sortedData.filter((item) => {
-    const matchesSearch = Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const matchesPriority =
-      selectedPriority === "" || item.priority === selectedPriority;
+  const filteredData = data
+    .filter((item) => {
+      const matchesSearch = Object.values(item).some((value) =>
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      const matchesPriority =
+        selectedPriority === "" || item.priority?.toLowerCase() === selectedPriority.toLowerCase();
 
-    return matchesSearch && matchesPriority;
-  });
-
+      return matchesSearch && matchesPriority;
+    });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -165,22 +127,22 @@ const ManagerDashboard = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (rid) => {
+  const handleSelectRow = (repairID) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(rid)
-        ? prevSelectedRows.filter((item) => item !== rid)
-        : [...prevSelectedRows, rid]
+      prevSelectedRows.includes(repairID)
+        ? prevSelectedRows.filter((item) => item !== repairID)
+        : [...prevSelectedRows, repairID]
     );
   };
 
   const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.rid));
+    const updatedData = data.filter((item) => !selectedRows.includes(item.repairID));
     // Update the data with the filtered result after deletion
     setData(updatedData);
     setSelectedRows([]); // Reset selected rows after deletion
   };
-  const handleDeleteRow = (rid) => {
-    const updatedData = data.filter((item) => item.rid !== rid);
+  const handleDeleteRow = (repairID) => {
+    const updatedData = data.filter((item) => item.repairID !== repairID);
     setData(updatedData);
   };
 
@@ -264,7 +226,7 @@ const ManagerDashboard = () => {
                       setSelectedRows(
                         selectedRows.length === displayedData.length
                           ? []
-                          : displayedData.map((item) => item.rid)
+                          : displayedData.map((item) => item.repairID)
                       )
                     }
                   />
@@ -274,9 +236,9 @@ const ManagerDashboard = () => {
                   "Asset Name",
                   "Name",
                   "Phone Number",
-                  "Location",
+                  "Area",
                   "Description",
-                  " "
+
                 ].map((header, index) => (
                   <th key={index}>
                     {header === "Asset Name" || header === "Location" ? (
@@ -305,6 +267,20 @@ const ManagerDashboard = () => {
                     )}
                   </th>
                 ))}
+                <th>
+                  {selectedRows.length > 0 ? (
+                    <button
+                      className="delete-all-btn"
+                      onClick={handleDeleteSelected}
+                    >
+                      <RiDeleteBin6Line
+                        style={{ width: "20px", height: "20px", color: "red" }}
+                      />
+                    </button>
+                  ) : (
+                    " "
+                  )}
+                </th>
               </tr>
             </thead>
 
@@ -314,15 +290,15 @@ const ManagerDashboard = () => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedRows.includes(item.rid)}
-                      onChange={() => handleSelectRow(item.rid)}
+                      checked={selectedRows.includes(item.repairID)}
+                      onChange={() => handleSelectRow(item.repairID)}
                     />
                   </td>
-                  <td>{item.rid}</td>
+                  <td>{index + 1}</td>
                   <td>{item.assetName}</td>
                   <td>{item.name}</td>
-                  <td>{item.phone}</td>
-                  <td>{item.location}</td>
+                  <td>{item.phoneNumber}</td>
+                  <td>{item.area}</td>
                   <td className="description">{item.description}</td>
                   <td className="actions">
                     <button className="view-btn" onClick={() => handleView(item)}>
@@ -330,7 +306,7 @@ const ManagerDashboard = () => {
                     </button>
                     <button
                       className="delete-btn"
-                      onClick={() => handleDeleteRow(item.rid)}
+                      onClick={() => handleDeleteRow(item.repairID)}
                     >
                       <RiDeleteBin6Line
                         style={{ width: "20px", height: "20px" }}
@@ -391,20 +367,20 @@ const ManagerDashboard = () => {
 
               <div className="modal-content-field">
                 <label>Phone Number:</label>
-                <input type="text" value={modalData.phone} readOnly />
+                <input type="text" value={modalData.phoneNumber} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Email:</label>
                 <input type="email" value={modalData.email} readOnly />
               </div>
-              <div className="modal-content-field">
+              {/* <div className="modal-content-field">
                 <label>RID</label>
                 <input type="text" value={modalData.rid} readOnly />
-              </div>
+              </div> */}
 
               <div className="modal-content-field">
                 <label>Area:</label>
-                <input type="text" value={modalData.location} readOnly />
+                <input type="text" value={modalData.area} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Asset Name:</label>
@@ -418,12 +394,12 @@ const ManagerDashboard = () => {
                 <label>Description:</label>
                 <textarea value={modalData.description} readOnly />
               </div>
-              <div className="modal-content-field">
+              {/* <div className="modal-content-field">
                 <label>Image:</label>
                 <div className="profile-img">
-                  {modalData.image ? (
+                  {modalData.images ? (
                     <img
-                      src={modalData.image}
+                      src={modalData.images[0]}
                       alt="Asset"
                       className="modal-image"
                     />
@@ -434,11 +410,53 @@ const ManagerDashboard = () => {
                     </div>
                   )}
                 </div>
+              </div> */}
+              <div className="modal-content-field">
+                <label>Repaired Images:</label>
+                <div className="TModal-profile-img">
+                  {Array.isArray(modalData.images) && modalData.images.length > 0 ? (
+                    modalData.images.map((imgSrc, index) => (
+                      <img
+                        key={index}
+                        src={imgSrc}
+                        alt={`Work Order ${index + 1}`}
+                        className="TModal-modal-image"
+                      />
+                    ))
+                  ) : modalData.images ? (
+                    // If imageUrl is a string, display it as a single image
+                    <img
+                      src={modalData.images}
+                      alt="Work Order"
+                      className="TModal-modal-image"
+                    />
+                  ) : (
+                    <p>No image available</p>
+                  )}
+                </div>
               </div>
 
               <div className="modal-buttons">
-                <button className="accept-btn">Accept</button>
-                <button className="reject-btn">Reject</button>
+                <button
+                  className="accept-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleAccept(modalData.repairID, true);
+                  }}
+                >
+                  Accept
+                </button>
+
+                <button
+                  className="reject-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleAccept(modalData.repairID, false);
+                  }}
+                >
+                  Reject
+                </button>
+
               </div>
             </form>
           </div>

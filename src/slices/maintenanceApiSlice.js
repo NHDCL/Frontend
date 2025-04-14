@@ -20,11 +20,40 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ["MaintenanceRequest"], // adjust as needed
     }),
 
+    // get repir resquest
+    getRepairRequest: builder.query({
+      query:()=> ({
+        url: MAINTENANCE_URL+"/repairs",
+        method:'GET',
+      }),
+      providesTags:["repair"]
+    }),
     
+    // get MAINTENANCE resquest
+    getMaintenanceRequest: builder.query({
+      query:()=> ({
+        url: MAINTENANCE_URL+"/maintenance",
+        method:'GET',
+      }),
+      providesTags:["maintenance"]
+    }),
+
+    acceptOrRejectRepairRequest: builder.mutation({
+      query: ({ repairId, accept }) => ({
+        url: `/repairs/${repairId}/accept`, // Adjust if the base path differs
+        method: "PUT",
+        body: { accept },
+      }),
+      invalidatesTags: ["RepairRequest"], // Optional: for refetching if needed
+    }),   
+
   }),
 });
 
 export const {
   usePostRepairRequestMutation,
   useAssignRepairMutation,
+  useGetRepairRequestQuery,
+  useGetMaintenanceRequestQuery,
+  useAcceptOrRejectRepairRequestMutation,
 } = maintenanceApiSlice;

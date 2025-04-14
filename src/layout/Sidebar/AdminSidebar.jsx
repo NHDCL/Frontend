@@ -5,20 +5,20 @@ import { adminnavigationLinks } from "../../data/data";
 import "./Sidebar.css";
 import { SidebarContext } from "../../context/sidebarContext";
 import logo from "../../assets/images/Nlogo.jpeg";
-import { useLogoutMutation } from "../../slices/userApiSlice"; // import logout mutation
-import { useDispatch } from "react-redux"; // Import useDispatch
-import { logout } from "../../slices/authSlice"; // Import logout action
+import { useLogoutMutation } from "../../slices/userApiSlice";
+import { useDispatch } from "react-redux";
+import { logout } from "../../slices/authSlice";
 
 const AdminSidebar = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
-  const splitIndex = adminnavigationLinks.length - 2;
+  console.log("isSidebarOpen:", isSidebarOpen);
+  const splitIndex = adminnavigationLinks.length - 2; // Split before Account and Logout
   const navigate = useNavigate();
-  const dispatch = useDispatch(); // Initialize dispatch
+  const dispatch = useDispatch();
 
-  const [logoutUser] = useLogoutMutation(); // use logout mutation
+  const [logoutUser] = useLogoutMutation();
 
   const handleLogout = async () => {
-    // Confirming with the user if they really want to log out
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "You will be logged out!",
@@ -31,23 +31,11 @@ const AdminSidebar = () => {
 
     if (result.isConfirmed) {
       try {
-        // Logging out the user by calling the API mutation
         await logoutUser();
+        dispatch(logout());
+        sessionStorage.clear();
+        localStorage.clear();
 
-        // Clearing session and authentication tokens
-        // sessionStorage.removeItem("token");
-
-        // Dispatching the logout action
-        dispatch(logout()); // Dispatch the logout action
-
-        sessionStorage.clear(); // Clear all session storage, not just token
-        localStorage.clear(); // Clear all local storage
-
-        // Removing user info from localStorage
-        // localStorage.removeItem("userInfo");
-        // localStorage.removeItem("userRole");
-
-        // Showing success message on successful logout
         Swal.fire({
           icon: "success",
           title: "Logged out successfully!",
@@ -57,10 +45,8 @@ const AdminSidebar = () => {
           timer: 2000,
         });
 
-        // Redirecting to the login page after logout with replace: true to block back navigation
         navigate("/login", { replace: true });
       } catch (error) {
-        // Handling any errors during logout
         Swal.fire("Error", "Logout failed. Try again.", "error");
         console.error("Logout error:", error);
       }
@@ -77,36 +63,24 @@ const AdminSidebar = () => {
 
       <nav className="navigation">
         <ul className="nav-list">
-          {adminnavigationLinks.slice(0, splitIndex).map((link) => (
-            <li className="nav-item" key={link.id}>
-              <NavLink
-                to={`/admin/${link.path}`}
-                className={({ isActive }) =>
-                  isActive ? "nav-link active" : "nav-link"
-                }
-                end
-              >
-                <link.icon className="nav-link-icon" />
-                <span className="nav-link-text">{link.title}</span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-
-        <div className="bottom-links">
-          <hr className="nav-divider" />
-          <ul className="nav-list">
-            {adminnavigationLinks.slice(splitIndex).map((link) => (
+          {adminnavigationLinks.slice(0, splitIndex).map((link) => {
+            const IconComponent = link.icon;
+            return (
               <li className="nav-item" key={link.id}>
-                {link.title === "Logout" ? (
-                  <button
-                    className="nav-link logout-btn"
-                    onClick={handleLogout} // Logout button triggers handleLogout function
+                {link.path === "" ? (
+                  // For home/dashboard, use exact /admin path
+                  <NavLink
+                    to="/admin"
+                    className={({ isActive }) =>
+                      isActive ? "nav-link active" : "nav-link"
+                    }
+                    end
                   >
-                    <link.icon className="nav-link-icon" />
+                    <IconComponent className="nav-link-icon" />
                     <span className="nav-link-text">{link.title}</span>
-                  </button>
+                  </NavLink>
                 ) : (
+                  // For all other links, append the path to /admin/
                   <NavLink
                     to={`/admin/${link.path}`}
                     className={({ isActive }) =>
@@ -114,12 +88,45 @@ const AdminSidebar = () => {
                     }
                     end
                   >
-                    <link.icon className="nav-link-icon" />
+                    <IconComponent className="nav-link-icon" />
                     <span className="nav-link-text">{link.title}</span>
                   </NavLink>
                 )}
               </li>
-            ))}
+            );
+          })}
+        </ul>
+
+        <div className="bottom-links">
+          <hr className="nav-divider" />
+          <ul className="nav-list">
+            {adminnavigationLinks.slice(splitIndex).map((link) => {
+              const IconComponent = link.icon;
+              return (
+                <li className="nav-item" key={link.id}>
+                  {link.title === "Logout" ? (
+                    <button
+                      className="nav-link logout-btn"
+                      onClick={handleLogout}
+                    >
+                      <IconComponent className="nav-link-icon" />
+                      <span className="nav-link-text">{link.title}</span>
+                    </button>
+                  ) : (
+                    <NavLink
+                      to={`/admin/${link.path}`}
+                      className={({ isActive }) =>
+                        isActive ? "nav-link active" : "nav-link"
+                      }
+                      end
+                    >
+                      <IconComponent className="nav-link-icon" />
+                      <span className="nav-link-text">{link.title}</span>
+                    </NavLink>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       </nav>
