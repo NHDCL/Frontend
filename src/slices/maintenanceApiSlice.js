@@ -2,7 +2,7 @@ import { MAINTENANCE_URL } from "../constants";
 import { apiSlice } from "./apiSlice";
 export const maintenanceApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-   
+
     postRepairRequest: builder.mutation({
       query: (requestData) => ({
         url: MAINTENANCE_URL + "/repairs", // API endpoint for posting assets
@@ -13,31 +13,35 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
 
     // get repir resquest
     getRepairRequest: builder.query({
-      query:()=> ({
-        url: MAINTENANCE_URL+"/repairs",
-        method:'GET',
+      query: () => ({
+        url: MAINTENANCE_URL + "/repairs",
+        method: 'GET',
       }),
-      providesTags:["repair"]
+      providesTags: ["repair"]
     }),
-    
+
     // get MAINTENANCE resquest
     getMaintenanceRequest: builder.query({
-      query:()=> ({
-        url: MAINTENANCE_URL+"/maintenance",
-        method:'GET',
+      query: () => ({
+        url: MAINTENANCE_URL + "/maintenance",
+        method: 'GET',
       }),
-      providesTags:["maintenance"]
+      providesTags: ["maintenance"]
     }),
 
     acceptOrRejectRepairRequest: builder.mutation({
       query: ({ repairId, accept }) => ({
-        url: `/repairs/${repairId}/accept`, // Adjust if the base path differs
+        url: `${MAINTENANCE_URL}/repairs/${repairId}/accept`,
         method: "PUT",
-        body: { accept },
+        body: JSON.stringify({ accept }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        responseHandler: (response) => response.text(), // 👈 Tell it to handle text
       }),
-      invalidatesTags: ["RepairRequest"], // Optional: for refetching if needed
-    }),   
-
+      invalidatesTags: ["RepairRequest"],
+    }),
+    
   }),
 });
 

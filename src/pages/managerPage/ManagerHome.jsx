@@ -70,17 +70,39 @@ const ManagerDashboard = () => {
   };
 
   const handleAccept = async (repairId, acceptValue) => {
-    try {
-      const response = await acceptOrRejectRepairRequest({
-        repairId,
-        accept: acceptValue,
-      }).unwrap();
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to accept this repair request?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, accept it!",
+    });
   
-      console.log("Server response:", response);
-      alert(response); // or show toast
-    } catch (err) {
-      console.error("Error:", err);
-      alert("Failed to update repair request.");
+    if (confirm.isConfirmed) {
+      try {
+        const response = await acceptOrRejectRepairRequest({
+          repairId,
+          accept: acceptValue,
+        }).unwrap();
+  
+        console.log("Server response:", response);
+  
+        await Swal.fire({
+          title: "Accepted!",
+          text: "Successed mail successfully sent to user.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        handleCloseModal();
+        refetchRepairRequest();
+
+      } catch (err) {
+        console.error("Error:", err);
+        Swal.fire("Error", "Failed to update repair request.", "error");
+      }
     }
   };
   const handleSort = (column) => {
