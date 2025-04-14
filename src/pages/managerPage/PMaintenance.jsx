@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./css/card.css";
 import "./css/table.css";
 import "./css/form.css";
@@ -8,6 +8,8 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { FaEdit } from "react-icons/fa";
 import Select from "react-select";
+import { useGetMaintenanceRequestQuery } from "../../slices/maintenanceApiSlice";
+import { useGetAssetQuery } from "../../slices/assetApiSlice";
 
 const PMaintenance = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,51 +22,23 @@ const PMaintenance = () => {
   const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
+  const {data: maintenanceRequest, refetch: refetchMaintenanceRequest } = useGetMaintenanceRequestQuery();
+  const {data:assetData, refetch:refetchAssetData} = useGetAssetQuery();
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const [data, setData] = useState([]);
+  console.log('assetdata: ', assetData)
+
+  useEffect(() => {
+    if (maintenanceRequest) {
+      const sorted = [...maintenanceRequest].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setData(sorted);
+    }
+
+  }, [maintenanceRequest]);
 
   const rowsPerPage = 10;
-
-  const [data, setData] = useState([
-    {
-      mid: "#1001",
-      Assetname: "Yangchen",
-      Description: "Temperature check",
-      Schedule: "1",
-      Lastworkorder: "Nov3, 2024",
-      Nextworkorder: "March3, 2025",
-      Assign: "Plumbing team",
-      workstatus: "pending"
-    },
-    {
-      mid: "#1002",
-      Assetname: "Yangchen",
-      Description: "Temperature check",
-      Schedule: "3",
-      Lastworkorder: "Nov3, 2024",
-      Nextworkorder: "March3, 2025",
-      Assign: "Plumbing team",
-      workstatus: "pending"
-    },
-    {
-      mid: "#1003",
-      Assetname: "Yangchen",
-      Description: "Temperature check",
-      Schedule: "4",
-      Lastworkorder: "Nov3, 2024",
-      Nextworkorder: "March3, 2025",
-      Assign: "Plumbing team",
-      workstatus: "Completed"
-    },
-    {
-      mid: "#1004",
-      Assetname: "Yangchen",
-      Description: "Temperature check",
-      Schedule: "2",
-      Lastworkorder: "Nov3, 2024",
-      Nextworkorder: "March3, 2025",
-      Assign: "Plumbing team",
-      workstatus: "In progress"
-    }
-  ]);
 
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {

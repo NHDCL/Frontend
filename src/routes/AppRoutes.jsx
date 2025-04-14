@@ -10,6 +10,7 @@ import AdminRoutes from "./AdminRoutes";
 import SuperAdminRoutes from "./SuperAdminRoutes";
 import SupervisorRoutes from "./SupervisorRoutes";
 import QRDetail from "../pages/QRDetail";
+import RoomQRDetail from "../pages/RoomQRDetail";
 
 const AppRoutes = () => {
   return (
@@ -20,6 +21,7 @@ const AppRoutes = () => {
       <Route path="/otp" element={<Otppages />} />
       <Route path="/newpassword" element={<Newpasswordpage />} />
       <Route path="/qrdetail" element={<QRDetail />} />
+      <Route path="/roomqrdetail" element={<RoomQRDetail />} />
 
       {/* Define separate base paths for manager and technician */}
       <Route path="/manager/*" element={<ManagerRoutes />} />

@@ -19,12 +19,59 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
       transformResponse: (response) => {
-        // Assuming response is { success: true, data: [...] }
         return response.data;
       },
+    }),
+
+    // Assign Repair
+    assignRepair: builder.mutation({
+      query: ({ repairId, email }) => ({
+        url: MAINTENANCE_URL + `/schedule/${repairId}`,
+        method: "PUT",
+        body: { email },
+      }),
+      invalidatesTags: ["MaintenanceRequest"],
+    }),
+
+    // GET Repair Requests
+    getRepairRequest: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/repairs",
+        method: "GET",
+      }),
+      providesTags: ["repair"],
+    }),
+
+    // GET Maintenance Requests
+    getMaintenanceRequest: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/maintenance",
+        method: "GET",
+      }),
+      providesTags: ["maintenance"],
+    }),
+
+    // Accept or Reject Repair Request
+    acceptOrRejectRepairRequest: builder.mutation({
+      query: ({ repairId, accept }) => ({
+        url: `${MAINTENANCE_URL}/repairs/${repairId}/accept`,
+        method: "PUT",
+        body: JSON.stringify({ accept }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        responseHandler: (response) => response.text(),
+      }),
+      invalidatesTags: ["RepairRequest"],
     }),
   }),
 });
 
-export const { usePostRepairRequestMutation, useGetAllRepairsQuery } =
-  maintenanceApiSlice;
+export const {
+  usePostRepairRequestMutation,
+  useGetAllRepairsQuery,
+  useAssignRepairMutation,
+  useGetRepairRequestQuery,
+  useGetMaintenanceRequestQuery,
+  useAcceptOrRejectRepairRequestMutation,
+} = maintenanceApiSlice;
