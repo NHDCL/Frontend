@@ -105,6 +105,51 @@ const ManagerDashboard = () => {
       }
     }
   };
+
+
+
+  const handleReject = async (repairId) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to reject this repair request?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, reject it!",
+    });
+  
+    if (confirm.isConfirmed) {
+      try {
+        const response = await acceptOrRejectRepairRequest({
+          repairId,
+          accept: false, // Set accept to false to reject
+        }).unwrap();
+  
+        console.log("Server response:", response);
+  
+        await Swal.fire({
+          title: "Rejected!",
+          text: "Repair request has been rejected successfully.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+  
+        // Close the modal after success
+        handleCloseModal();  // Add this line to close the modal
+  
+        refetchRepairRequest();
+      } catch (err) {
+        console.error("Error:", err);
+        Swal.fire("Error", "Failed to update repair request.", "error");
+      }
+    } else {
+      // Close the modal if the user cancels the rejection
+      handleCloseModal();
+    }
+  };
+  
   const handleSort = (column) => {
     const newSortOrder = column === sortOrder.column
       ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
@@ -240,19 +285,6 @@ const ManagerDashboard = () => {
           <table className="RequestTable" style={{ width: "100% ", minWidth: "800px" }}>
             <thead className="table-header">
               <tr>
-                <th>
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.length === displayedData.length} // Select all checkboxes when all rows are selected
-                    onChange={() =>
-                      setSelectedRows(
-                        selectedRows.length === displayedData.length
-                          ? []
-                          : displayedData.map((item) => item.repairID)
-                      )
-                    }
-                  />
-                </th>
                 {[
                   "RID",
                   "Asset Name",
@@ -260,7 +292,7 @@ const ManagerDashboard = () => {
                   "Phone Number",
                   "Area",
                   "Description",
-
+                  
                 ].map((header, index) => (
                   <th key={index}>
                     {header === "Asset Name" || header === "Location" ? (
@@ -280,7 +312,6 @@ const ManagerDashboard = () => {
                                 transition: "transform 0.3s ease",
                               }}
                             />
-
                           </button>
                         </div>
                       </div>
@@ -290,18 +321,6 @@ const ManagerDashboard = () => {
                   </th>
                 ))}
                 <th>
-                  {selectedRows.length > 0 ? (
-                    <button
-                      className="delete-all-btn"
-                      onClick={handleDeleteSelected}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px", color: "red" }}
-                      />
-                    </button>
-                  ) : (
-                    " "
-                  )}
                 </th>
               </tr>
             </thead>
@@ -309,13 +328,6 @@ const ManagerDashboard = () => {
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(item.repairID)}
-                      onChange={() => handleSelectRow(item.repairID)}
-                    />
-                  </td>
                   <td>{index + 1}</td>
                   <td>{item.assetName}</td>
                   <td>{item.name}</td>
@@ -325,14 +337,6 @@ const ManagerDashboard = () => {
                   <td className="actions">
                     <button className="view-btn" onClick={() => handleView(item)}>
                       View
-                    </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDeleteRow(item.repairID)}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px" }}
-                      />
                     </button>
                   </td>
                 </tr>
@@ -473,7 +477,7 @@ const ManagerDashboard = () => {
                   className="reject-btn"
                   onClick={(e) => {
                     e.preventDefault();
-                    handleAccept(modalData.repairID, false);
+                    handleReject(modalData.repairID, false);
                   }}
                 >
                   Reject
