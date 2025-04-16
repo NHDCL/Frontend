@@ -151,6 +151,18 @@ const MaintenanceRequest = () => {
     });
     requestData.append("academyId", academy.trim());
 
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to send this repair request?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, send it!",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+    });
+  
+    if (!result.isConfirmed) return;
   
     try {
       await postRepairRequest(requestData).unwrap();

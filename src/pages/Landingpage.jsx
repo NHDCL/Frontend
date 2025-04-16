@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import "./css/landingpage.css";
 import Header from "../components/LandingComponents/Header";
 import Academies from "../components/LandingComponents/Academies";
@@ -14,16 +14,24 @@ import Swal from "sweetalert2";
 
 const Landingpage = () => {
     const { data: academies, isLoading, error, refetch } = useGetAcademyQuery();
+    const [academyList, setAcademyList] = useState([]);
+
+     
     
-   useEffect(() => {
-      if (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: "Failed to fetch academies.",
-        });
-      }
-    }, [error]);
+  useEffect(() => {
+    if (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Failed to fetch academies.",
+      });
+    }
+
+    // Set academy list when data is available
+    if (academies) {
+      setAcademyList(academies); // use correct state and data
+    }
+  }, [error, academies]); // add academies as dependency
 
     
   return (
