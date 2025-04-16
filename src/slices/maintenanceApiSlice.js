@@ -51,6 +51,15 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ["RepairRequest"],
     }),
     
+    updatePreventiveMaintenance: builder.mutation({
+      query: ({ id, maintenance }) => ({
+        url: `${MAINTENANCE_URL}/maintenance/${id}`,
+        method: "PUT",
+        body: maintenance,
+      }),
+      invalidatesTags: ["maintenance"], // optional: useful for refetch
+    }),
+
   }),
 });
 
@@ -60,4 +69,5 @@ export const {
   useGetRepairRequestQuery,
   useGetMaintenanceRequestQuery,
   useAcceptOrRejectRepairRequestMutation,
+  useUpdatePreventiveMaintenanceMutation,
 } = maintenanceApiSlice;

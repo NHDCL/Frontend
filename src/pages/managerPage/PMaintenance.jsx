@@ -8,8 +8,11 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { FaEdit } from "react-icons/fa";
 import Select from "react-select";
-import { useGetMaintenanceRequestQuery } from "../../slices/maintenanceApiSlice";
+import { createSelector } from "reselect";
+import { useSelector } from "react-redux";
+import { useGetMaintenanceRequestQuery, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
 import { useGetAssetQuery } from "../../slices/assetApiSlice";
+import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
 
 const PMaintenance = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -22,21 +25,68 @@ const PMaintenance = () => {
   const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
-  const {data: maintenanceRequest, refetch: refetchMaintenanceRequest } = useGetMaintenanceRequestQuery();
-  const {data:assetData, refetch:refetchAssetData} = useGetAssetQuery();
+  const { data: maintenanceRequest, refetch: refetchMaintenanceRequest } = useGetMaintenanceRequestQuery();
+  const [updatePreventiveMaintenance, { isLoading, error }] = useUpdatePreventiveMaintenanceMutation();
+  const { data: assetData, refetch: refetchAssetData } = useGetAssetQuery();
+
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+
+  const email = useSelector(getUserEmail);
+  const { data: userByEmial } = useGetUserByEmailQuery(email);
+
+  const academyName = userByEmial?.user.academyId;
 
   const today = new Date().toISOString().split("T")[0];
 
   const [data, setData] = useState([]);
-  console.log('assetdata: ', assetData)
+  // console.log('mdata: ', maintenanceRequest)
+  // console.log('adata: ', assetData)
+  console.log('data: ', data)
 
   useEffect(() => {
-    if (maintenanceRequest) {
-      const sorted = [...maintenanceRequest].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if (maintenanceRequest && assetData && userByEmial) {
+      const userAcademyId = userByEmial?.user?.academyId;
+      console.log("User Academy ID:", userAcademyId);
+
+      console.log("Asset Data:", assetData);
+      console.log("Maintenance Requests:", maintenanceRequest);
+
+      const filtered = maintenanceRequest
+        .map((request) => {
+          const matchedAsset = assetData.find(
+            (a) =>
+              a.assetCode === request.assetCode &&
+              a.academyID === userAcademyId
+          );
+
+          if (matchedAsset) {
+            console.log(`Match found for assetCode ${request.assetCode}:`, matchedAsset.title);
+            return {
+              ...request,
+              assetName: matchedAsset.title, // Attach the asset name
+            };
+          }
+
+          return null;
+        })
+        .filter((r) => r !== null); // Remove unmatched
+
+      console.log("Filtered Maintenance Requests with Asset Names:", filtered);
+
+      const sorted = filtered.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      console.log("Sorted Maintenance Requests with Asset Names:", sorted);
+
       setData(sorted);
     }
+  }, [maintenanceRequest, assetData, userByEmial]);
 
-  }, [maintenanceRequest]);
 
   const rowsPerPage = 10;
 
@@ -45,32 +95,51 @@ const PMaintenance = () => {
     switch (status) {
       case "pending":
         return "pending-status";  // Gray color
-      case "In progress":
+      case "inprogress":
         return "in-progress-status";  // Yellow color
-      case "Completed":
+      case "completed":
         return "completed-status";  // Green color
       default:
         return "";
     }
   };
 
+
+  const handleUpdate = async () => {
+    const updatedMaintenance = {
+      title: "New Title",
+      description: "Updated description",
+      // ...other fields
+    };
+
+    try {
+      const res = await updatePreventiveMaintenance({
+        id: "1234567890",
+        maintenance: updatedMaintenance,
+      }).unwrap();
+      console.log("Update successful:", res);
+    } catch (err) {
+      console.error("Update failed:", err);
+    }
+  };
+
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map(item => item.workstatus))).map(status => ({
+    ...Array.from(new Set(data.map(item => item.status?.toLowerCase()))).map(status => ({
       value: status,
-      label: status
+      label: status.charAt(0).toUpperCase() + status.slice(1)
     }))
   ];
 
   // Filtering data based on search and priority selection and work status
-  const sortedData = [...data].sort((a, b) => b.mid - a.mid);
+  const sortedData = [...data].sort((a, b) => b.assetCode - a.assetCode);
   const filteredData = sortedData.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
     const matchesWorkStatus =
-      selectedWorkStatus === "" || item.workstatus === selectedWorkStatus;
+      selectedWorkStatus === "" || item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
 
     return matchesSearch && matchesWorkStatus;
   });
@@ -81,22 +150,22 @@ const PMaintenance = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (mid) => {
+  const handleSelectRow = (assetCode) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(mid)
-        ? prevSelectedRows.filter((item) => item !== mid)
-        : [...prevSelectedRows, mid]
+      prevSelectedRows.includes(assetCode)
+        ? prevSelectedRows.filter((item) => item !== assetCode)
+        : [...prevSelectedRows, assetCode]
     );
   };
 
   const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.mid));
+    const updatedData = data.filter((item) => !selectedRows.includes(item.assetCode));
     // Update the data with the filtered result after deletion
     setData(updatedData);
     setSelectedRows([]); // Reset selected rows after deletion
   };
-  const handleDeleteRow = (mid) => {
-    const updatedData = data.filter((item) => item.mid !== mid);
+  const handleDeleteRow = (assetCode) => {
+    const updatedData = data.filter((item) => item.assetCode !== assetCode);
     setData(updatedData);
   };
 
@@ -119,7 +188,7 @@ const PMaintenance = () => {
 
     setData((prevData) =>
       prevData.map((row) =>
-        row.mid === editModalData.mid ? editModalData : row
+        row.assetCode === editModalData.assetCode ? editModalData : row
       )
     );
 
@@ -192,18 +261,18 @@ const PMaintenance = () => {
                       setSelectedRows(
                         selectedRows.length === displayedData.length
                           ? []
-                          : displayedData.map((item) => item.mid)
+                          : displayedData.map((item) => item.assetCode)
                       )
                     }
                   />
                 </th>
                 {[
-                  "MID",
+                  "Asset Code",
                   "Asset Name",
                   "Description",
                   "Schedule(month)",
-                  "Last Work Order",
-                  "Next Work Order",
+                  "Start Date",
+                  "End Date",
                   "Assign to",
                   "Workstatus"
                 ].map((header, index) => (
@@ -231,20 +300,20 @@ const PMaintenance = () => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedRows.includes(item.mid)}
-                      onChange={() => handleSelectRow(item.mid)}
+                      checked={selectedRows.includes(item.assetCode)}
+                      onChange={() => handleSelectRow(item.assetCode)}
                     />
                   </td>
-                  <td>{item.mid}</td>
-                  <td>{item.Assetname}</td>
-                  <td>{item.Description}</td>
-                  <td>{item.Schedule}</td>
-                  <td>{item.Lastworkorder}</td>
-                  <td>{item.Nextworkorder}</td>
-                  <td>{item.Assign}</td>
+                  <td>{item.assetCode}</td>
+                  <td>{item.assetName}</td>
+                  <td>{item.description}</td>
+                  <td>{item.repeat}</td>
+                  <td>{item.startDate}</td>
+                  <td>{item.endDate}</td>
+                  <td>{item.assignedSupervisors}</td>
                   <td>
-                    <div className={getWorkOrderStatusClass(item.workstatus)}>
-                      {item.workstatus}
+                    <div className={getWorkOrderStatusClass(item.status.toLowerCase().replace(/\s+/g, ""))}>
+                      {item.status}
                     </div>
                   </td>
                   <td className="actions">
@@ -256,7 +325,7 @@ const PMaintenance = () => {
                     </button>
                     <button
                       className="delete-btn"
-                      onClick={() => handleDeleteRow(item.mid)}
+                      onClick={() => handleDeleteRow(item.assetCode)}
                     >
                       <RiDeleteBin6Line style={{ width: "20px", height: "20px" }} />
                     </button>
@@ -305,7 +374,7 @@ const PMaintenance = () => {
               <p className="sub-title">Maintenance Detail</p>
               <div className="modal-content-field">
                 <label htmlFor="">Description: </label>
-                <input type="text" value={editModalData.Description} onChange={(e) => setEditModalData({ ...editModalData, Description: e.target.value })} />
+                <input type="text" value={editModalData.description} onChange={(e) => setEditModalData({ ...editModalData, description: e.target.value })} />
               </div>
               <div className="modal-content-field">
                 <label htmlFor="">Assign: </label>
@@ -327,25 +396,27 @@ const PMaintenance = () => {
                 <label htmlFor="">Starts on: </label>
                 <input
                   type="date"
-                  value={editModalData.Lastworkorder ? new Date(editModalData.Lastworkorder).toISOString().split("T")[0] : ""}
-                  onChange={(e) => setEditModalData({ ...editModalData, Lastworkorder: e.target.value })}
-                />
+                  value={editModalData.startDate}
+                  onChange={(e) =>
+                    setEditModalData({ ...editModalData, startDate: e.target.value })
+                  } />
               </div>
               <div className="modal-content-field">
                 <label htmlFor="">Schedule time: </label>
-                <input type="time" value={editModalData.Schedule} onChange={(e) => setEditModalData({ ...editModalData, Schedule: e.target.value })} />
+                <input type="time" value={editModalData.timeStart} onChange={(e) => setEditModalData({ ...editModalData, timeStart: e.target.value })} />
               </div>
               <div className="modal-content-field">
                 <label htmlFor="">Repeats: </label>
-                <input type="text" value={editModalData.Schedule} onChange={(e) => setEditModalData({ ...editModalData, Schedule: e.target.value })} />
+                <input type="text" value={editModalData.repeat} onChange={(e) => setEditModalData({ ...editModalData, repeat: e.target.value })} />
               </div>
               <div className="modal-content-field">
                 <label htmlFor="">Ends on: </label>
                 <input
                   type="date"
-                  value={editModalData.Nextworkorder ? new Date(editModalData.Nextworkorder).toISOString().split("T")[0] : ""}
-                  onChange={(e) => setEditModalData({ ...editModalData, Nextworkorder: e.target.value })}
-                />
+                  value={editModalData.endDate}
+                  onChange={(e) =>
+                    setEditModalData({ ...editModalData, endDate: e.target.value })
+                  } />
               </div>
 
             </div>
