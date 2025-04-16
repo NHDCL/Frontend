@@ -10,15 +10,42 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
         body: requestData, // Send the new asset data as the request body
       }),
     }),
+    // postRepairSchedule: builder.mutation({
+    //   query: () => ({
+    //     url: MAINTENANCE_URL + "/schedules", // API endpoint for posting assets
+    //     method: "POST",
+    //   }),
+    // }),
+    postRepairSchedule: builder.mutation({
+      query: (scheduleData) => ({
+        url: MAINTENANCE_URL + "/schedules",
+        method: "POST",
+        body: scheduleData,
+        headers: {
+          "Content-Type": "application/json", // make sure backend expects JSON
+        },
+      }),
+
+    }),
 
     assignRepair: builder.mutation({
       query: ({ repairId, email }) => ({
-        url: MAINTENANCE_URL + `/schedule/${repairId}`,
+        url: `${MAINTENANCE_URL}/repairs/schedule/${repairId}`,
         method: "PUT",
-        body: { email },
+        // body: { email },
+        // headers: {
+        //   "Content-Type": "application/json",
+        body: JSON.stringify({ email }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        responseHandler: (response) => response.text(),
+        // },
       }),
-      invalidatesTags: ["MaintenanceRequest"], // adjust as needed
+      invalidatesTags: ["MaintenanceRequest"],
+
     }),
+    
 
     // get repir resquest
     getRepairRequest: builder.query({
@@ -56,6 +83,7 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
 
 export const {
   usePostRepairRequestMutation,
+  usePostRepairScheduleMutation,
   useAssignRepairMutation,
   useGetRepairRequestQuery,
   useGetMaintenanceRequestQuery,
