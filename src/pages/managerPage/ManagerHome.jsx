@@ -15,7 +15,6 @@ import Swal from "sweetalert2";
 import { useGetRepairRequestQuery, useAcceptOrRejectRepairRequestMutation } from "../../slices/maintenanceApiSlice";
 import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
 
-
 const ManagerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,6 +27,7 @@ const ManagerDashboard = () => {
   const [acceptOrRejectRepairRequest, { isLoading, error, isSuccess }] = useAcceptOrRejectRepairRequestMutation();
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
+
   const getUserEmail = createSelector(
     selectUserInfo,
     (userInfo) => userInfo?.user?.username || ""
@@ -106,8 +106,6 @@ const ManagerDashboard = () => {
     }
   };
 
-
-
   const handleReject = async (repairId) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
@@ -178,15 +176,16 @@ const ManagerDashboard = () => {
   // const sortedData = [...data].sort((a, b) => b.rid - a.rid);
 
   const filteredData = data
-    .filter((item) => {
-      const matchesSearch = Object.values(item).some((value) =>
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      const matchesPriority =
-        selectedPriority === "" || item.priority?.toLowerCase() === selectedPriority.toLowerCase();
+  .filter((item) => {
+    const matchesSearch = Object.values(item).some((value) =>
+      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const matchesPriority =
+      selectedPriority === "" || item.priority?.toLowerCase() === selectedPriority.toLowerCase();
 
-      return matchesSearch && matchesPriority;
-    });
+    return matchesSearch && matchesPriority;
+  });
+
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(

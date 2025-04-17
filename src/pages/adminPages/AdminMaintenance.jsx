@@ -1,70 +1,77 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./../managerPage/css/card.css";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/form.css";
 import "./../managerPage/css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
 import Select from "react-select";
+import { useGetMaintenanceRequestQuery } from "../../slices/maintenanceApiSlice";
+import { useGetAssetQuery } from "../../slices/assetApiSlice";
+import { useGetAcademyQuery } from "../../slices/userApiSlice";
 
 const AdminMaintenance = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
-
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const { data: maintenanceRequest, refetch: refetchMaintenanceRequest } = useGetMaintenanceRequestQuery();
+  const { data: assetData, refetch: refetchAssetData } = useGetAssetQuery();
+  const { data: academy, } = useGetAcademyQuery()
 
   const rowsPerPage = 10;
+  const [data, setData] = useState([]);
+  console.log('data: ', data)
+  console.log('a: ', assetData)
 
-  const [data, setData] = useState([ 
-    {
-      mid: "#1001",
-      Assetname: "Yangchen",
-      Description: "Temperature check",
-      Schedule: "1",
-      Lastworkorder: "Nov3, 2024",
-      Nextworkorder: "March3, 2025",
-      Assign: "Plumbing team",
-      workstatus: "pending"
-    },
-    {
-      mid: "#1002",
-      Assetname: "Yangchen",
-      Description: "Temperature check",
-      Schedule: "3",
-      Lastworkorder: "Nov3, 2024",
-      Nextworkorder: "March3, 2025",
-      Assign: "Plumbing team",
-      workstatus: "pending"
-    },
-    {
-      mid: "#1003",
-      Assetname: "Yangchen",
-      Description: "Temperature check",
-      Schedule: "4",
-      Lastworkorder: "Nov3, 2024",
-      Nextworkorder: "March3, 2025",
-      Assign: "Plumbing team",
-      workstatus: "Completed"
-    },
-    {
-      mid: "#1004",
-      Assetname: "Yangchen",
-      Description: "Temperature check",
-      Schedule: "2",
-      Lastworkorder: "Nov3, 2024",
-      Nextworkorder: "March3, 2025",
-      Assign: "Plumbing team",
-      workstatus: "In progress"
+  useEffect(() => {
+    if (maintenanceRequest && assetData) {
+
+      const filtered = maintenanceRequest
+        .map((request) => {
+          const matchedAsset = assetData.find(
+            (a) =>
+              a.assetCode === request.assetCode
+          );
+
+          if (matchedAsset) {
+            console.log(`Match found for assetCode ${request.assetCode}:`, matchedAsset.title);
+            return {
+              ...request,
+              assetName: matchedAsset.title, // Attach the asset name
+              academyID: matchedAsset.academyID,
+            };
+          }
+
+          return null;
+        })
+        .filter((r) => r !== null); // Remove unmatched
+
+      console.log("Filtered Maintenance Requests with Asset Names:", filtered);
+
+      const sorted = filtered.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      console.log("Sorted Maintenance Requests with Asset Names:", sorted);
+
+      setData(sorted);
     }
-  ]);
+  }, [maintenanceRequest, assetData]);
+
+  const getAcademyName = (academyID) => {
+    const match = academy?.find((a) => a.academyId === academyID);
+    return match ? match.name : "Unknown";
+  };
+
 
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {
     switch (status) {
       case "pending":
         return "pending-status";  // Gray color
-      case "In progress":
+      case "inprogress":
         return "in-progress-status";  // Yellow color
-      case "Completed":
+      case "completed":
         return "completed-status";  // Green color
       default:
         return "";
@@ -74,22 +81,34 @@ const AdminMaintenance = () => {
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map(item => item.workstatus))).map(status => ({
+    ...Array.from(new Set(data.map(item => item.status?.toLowerCase()))).map(status => ({
       value: status,
-      label: status
+      label: status.charAt(0).toUpperCase() + status.slice(1)
+    }))
+  ];
+
+
+  const uniqueLocation = [
+    { value: "", label: "All Location" },
+    ...Array.from(new Set(data.map(item => getAcademyName(item.academyID)?.toLowerCase()))).map(location => ({
+      value: location,
+      label: location.charAt(0).toUpperCase() + location.slice(1)
     }))
   ];
 
   // Filtering data based on search and priority selection and work status
-  const sortedData = [...data].sort((a, b) => b.mid - a.mid);
+  const sortedData = [...data].sort((a, b) => b.assetCode - a.assetCode);
   const filteredData = sortedData.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
     const matchesWorkStatus =
-      selectedWorkStatus === "" || item.workstatus === selectedWorkStatus;
+      selectedWorkStatus === "" || item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
 
-    return matchesSearch && matchesWorkStatus;
+    const matchesLocation =
+      selectedLocation === "" || getAcademyName(item.academyID)?.toLowerCase() === selectedLocation.toLowerCase();
+
+    return matchesSearch && matchesWorkStatus && matchesLocation;
   });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -125,6 +144,17 @@ const AdminMaintenance = () => {
               isClearable
               isSearchable={false}
             />
+            <Select
+              classNamePrefix="custom-select-workstatus"
+              className="workstatus-dropdown"
+              options={uniqueLocation}
+              value={uniqueLocation.find(option => option.value === selectedLocation)}
+              onChange={(selectedOption) => {
+                setSelectedLocation(selectedOption ? selectedOption.value : "");
+              }}
+              isClearable
+              isSearchable={false}
+            />
           </div>
 
         </div>
@@ -133,39 +163,39 @@ const AdminMaintenance = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-               
+
                 {[
-                  "MID",
+                  "Asset Code",
                   "Asset Name",
                   "Description",
                   "Schedule(month)",
-                  "Last Work Order",
-                  "Next Work Order",
+                  "Start Date",
+                  "End Date",
                   "Assign to",
                   "Workstatus"
                 ].map((header, index) => (
                   <th key={index}>{header}</th>
                 ))}
-               
+
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  
-                  <td>{item.mid}</td>
-                  <td>{item.Assetname}</td>
-                  <td>{item.Description}</td>
-                  <td>{item.Schedule}</td>
-                  <td>{item.Lastworkorder}</td>
-                  <td>{item.Nextworkorder}</td>
-                  <td>{item.Assign}</td>
+
+                  <td>{item.assetCode}</td>
+                  <td>{item.assetName}</td>
+                  <td>{item.description}</td>
+                  <td>{item.repeat}</td>
+                  <td>{item.startDate}</td>
+                  <td>{item.endDate}</td>
+                  <td>{item.assignedSupervisors}</td>
                   <td>
-                    <div className={getWorkOrderStatusClass(item.workstatus)}>
-                      {item.workstatus}
+                    <div className={getWorkOrderStatusClass(item.status.toLowerCase().replace(/\s+/g, ""))}>
+                      {item.status}
                     </div>
                   </td>
-                 
+
                 </tr>
               ))}
             </tbody>
@@ -192,7 +222,7 @@ const AdminMaintenance = () => {
           </div>
         </div>
       </div>
-      
+
 
 
     </div>
