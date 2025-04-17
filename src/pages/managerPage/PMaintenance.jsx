@@ -8,11 +8,13 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { FaEdit } from "react-icons/fa";
 import Select from "react-select";
+import Swal from 'sweetalert2';
 import { createSelector } from "reselect";
 import { useSelector } from "react-redux";
 import { useGetMaintenanceRequestQuery, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
 import { useGetAssetQuery } from "../../slices/assetApiSlice";
-import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
+import { useGetUserByEmailQuery, useGetUsersQuery, useGetDepartmentQuery } from "../../slices/userApiSlice";
+
 
 const PMaintenance = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,6 +23,8 @@ const PMaintenance = () => {
   const [modalData, setModalData] = useState(null);
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [editModalData, setEditModalData] = useState(null);
+  const [userID, setUserID] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
@@ -28,6 +32,8 @@ const PMaintenance = () => {
   const { data: maintenanceRequest, refetch: refetchMaintenanceRequest } = useGetMaintenanceRequestQuery();
   const [updatePreventiveMaintenance, { isLoading, error }] = useUpdatePreventiveMaintenanceMutation();
   const { data: assetData, refetch: refetchAssetData } = useGetAssetQuery();
+  const { data: allUsers } = useGetUsersQuery(); // hypothetical slice
+  const { data: allDepartment } = useGetDepartmentQuery(); // hypothetical slice
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
@@ -48,12 +54,15 @@ const PMaintenance = () => {
   console.log('data: ', data)
 
   useEffect(() => {
-    if (maintenanceRequest && assetData && userByEmial) {
-      const userAcademyId = userByEmial?.user?.academyId;
-      console.log("User Academy ID:", userAcademyId);
+    if (maintenanceRequest && assetData && userByEmial && allUsers && allDepartment) {
+      console.log("🔧 Raw Maintenance Requests:", maintenanceRequest);
+      console.log("📦 Asset Data:", assetData);
+      console.log("📧 All Users:", allUsers);
+      console.log("🏛️ Departments:", allDepartment);
+      console.log("👤 Logged-in User:", userByEmial);
 
-      console.log("Asset Data:", assetData);
-      console.log("Maintenance Requests:", maintenanceRequest);
+      const userAcademyId = userByEmial?.user?.academyId;
+      console.log("🏫 User's Academy ID:", userAcademyId);
 
       const filtered = maintenanceRequest
         .map((request) => {
@@ -63,29 +72,43 @@ const PMaintenance = () => {
               a.academyID === userAcademyId
           );
 
+          const user = allUsers.find((u) => u?.userId === request.userID);
+          const email = user ? user.email : "N/A";
+          const department = user
+            ? allDepartment.find((d) => d?.departmentId === user.departmentId)
+            : null;
+          const departmentName = department ? department.name : "N/A";
+
+          console.log("📝 Request:", request);
+          console.log("📎 Matched Asset:", matchedAsset);
+          console.log("📨 User Email:", email);
+          console.log("🏛️ Department Name:", departmentName);
+
           if (matchedAsset) {
-            console.log(`Match found for assetCode ${request.assetCode}:`, matchedAsset.title);
             return {
               ...request,
-              assetName: matchedAsset.title, // Attach the asset name
+              assetName: matchedAsset.title,
+              userEmail: email,
+              userDepartment: departmentName,
             };
           }
 
           return null;
         })
-        .filter((r) => r !== null); // Remove unmatched
+        .filter((r) => r !== null);
 
-      console.log("Filtered Maintenance Requests with Asset Names:", filtered);
+      console.log("✅ Filtered & Enriched Requests:", filtered);
 
       const sorted = filtered.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
 
-      console.log("Sorted Maintenance Requests with Asset Names:", sorted);
+      console.log("📊 Sorted Requests:", sorted);
 
       setData(sorted);
     }
-  }, [maintenanceRequest, assetData, userByEmial]);
+  }, [maintenanceRequest, assetData, userByEmial, allUsers, allDepartment]);
+
 
 
   const rowsPerPage = 10;
@@ -182,17 +205,55 @@ const PMaintenance = () => {
     setEditModalData(item);
   };
 
-  // Update Edited Data
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editModalData) return;
 
-    setData((prevData) =>
-      prevData.map((row) =>
-        row.assetCode === editModalData.assetCode ? editModalData : row
-      )
-    );
+    setIsSaving(true);
 
-    setEditModalData(null); // Close modal after saving
+    try {
+      const payload = {
+        id: editModalData.maintenanceID,
+        maintenance: {
+          description: editModalData.description,
+          startDate: editModalData.startDate,
+          timeStart: editModalData.timeStart,
+          repeat: editModalData.repeat,
+          endDate: editModalData.endDate,
+          status: editModalData.status || "pending",
+          userID: userID,
+        },
+      };
+
+      const response = await updatePreventiveMaintenance(payload).unwrap();
+      console.log("✅ Maintenance updated:", response);
+
+      setUserID(null);
+
+      setData((prevData) =>
+        prevData.map((item) =>
+          item.maintenanceID === payload.id ? { ...item, ...payload.maintenance } : item
+        )
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Saved!",
+        text: "The maintenance record has been updated successfully.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      setEditModalData(null);
+    } catch (err) {
+      console.error("❌ Failed to update maintenance:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Failed to update the maintenance record. Please try again.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
 
@@ -211,12 +272,18 @@ const PMaintenance = () => {
   };
 
   // Sample workers list
-  const workersList = [
-    { value: "Worker A", label: "Worker A" },
-    { value: "Worker B", label: "Worker B" },
-    { value: "Worker C", label: "Worker C" },
-  ];
+  const workersList = (allUsers || [])
+    .filter(user => {
+      const dept = allDepartment?.find(d => d?.departmentId === user?.departmentId);
+      return dept?.name === editModalData?.userDepartment;
+    })
+    .map(user => ({
+      value: user.userId, // This is what you want to send to backend
+      label: user.email,  // Display the email
+    }));
 
+  console.log("🛠️ Workers List for Department:", editModalData?.userDepartment);
+  console.log("👥 Matched Workers:", workersList);
 
   return (
     <div className="ManagerDashboard">
@@ -300,8 +367,8 @@ const PMaintenance = () => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedRows.includes(item.assetCode)}
-                      onChange={() => handleSelectRow(item.assetCode)}
+                      checked={selectedRows.includes(item.maintenanceID)}
+                      onChange={() => handleSelectRow(item.maintenanceID)}
                     />
                   </td>
                   <td>{item.assetCode}</td>
@@ -310,7 +377,7 @@ const PMaintenance = () => {
                   <td>{item.repeat}</td>
                   <td>{item.startDate}</td>
                   <td>{item.endDate}</td>
-                  <td>{item.assignedSupervisors}</td>
+                  <td>{item.userEmail}</td>
                   <td>
                     <div className={getWorkOrderStatusClass(item.status.toLowerCase().replace(/\s+/g, ""))}>
                       {item.status}
@@ -382,13 +449,29 @@ const PMaintenance = () => {
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
                   options={workersList}
-                  value={workersList.find(worker => worker.value === editModalData.Assign) || null} // Ensure correct selection
+                  value={
+                    workersList.find(worker => worker.value === editModalData.userID) || null
+                  }
                   onChange={(selectedOption) => {
-                    setEditModalData({ ...editModalData, Assign: selectedOption?.value || "" }); // Update state correctly
+                    if (selectedOption) {
+                      setEditModalData({
+                        ...editModalData,
+                        userID: selectedOption.value,      // Set the userID
+                        userEmail: selectedOption.label,   // Optionally keep email for display
+                      });
+                      setUserID(selectedOption.value);     // Keep in sync
+                    } else {
+                      setEditModalData({ ...editModalData, userID: "", userEmail: "" });
+                      setUserID(null);
+                    }
                   }}
+                  placeholder="Select worker"
                   isClearable
                   isSearchable
+                  noOptionsMessage={() => "No workers found for this department"}
                 />
+
+
               </div>
 
               <p className="sub-title">Schedule</p>
@@ -423,7 +506,15 @@ const PMaintenance = () => {
 
             {/* <button className="save-btn" onClick={handleSaveEdit}>Save</button> */}
             <div className="modal-buttons">
-              <button className="accept-btn" style={{ width: "80px" }} onClick={handleSaveEdit}>Save</button>
+              <button
+                className="accept-btn"
+                style={{ width: "80px" }}
+                onClick={handleSaveEdit}
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "Save"}
+              </button>
+
             </div>
           </div>
         </div>
