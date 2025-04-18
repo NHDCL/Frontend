@@ -21,6 +21,15 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
         },
       }),
     }),
+    updateRepairSchedule: builder.mutation({
+      query: ({ scheduleId, updatedData }) => ({
+        url: `${MAINTENANCE_URL}/schedules/${scheduleId}`,
+        method: "PUT",
+        body: updatedData,
+      }),
+      invalidatesTags: ["RepairSchedule"], // adjust tag if needed
+    }),
+
 
     assignRepair: builder.mutation({
       query: ({ repairId, email }) => ({
@@ -38,7 +47,7 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
     }),
 
     getSchedulesByRepairID: builder.query({
-      query: (repairID) => `${MAINTENANCE_URL}/schedule/repair/${repairID}`,
+      query: (repairID) => `${MAINTENANCE_URL}/schedules/repair/${repairID}`,
     }),
     // get repair schedule
     // getRepairRequestSchedule: builder.query({
@@ -104,6 +113,7 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
 export const {
   usePostRepairRequestMutation,
   usePostRepairScheduleMutation,
+  useUpdateRepairScheduleMutation,
   useAssignRepairMutation,
   useGetSchedulesByRepairIDQuery,
   useGetRepairRequestScheduleQuery,
