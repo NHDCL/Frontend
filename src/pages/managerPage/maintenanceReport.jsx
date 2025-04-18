@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./css/card.css";
 import "./css/table.css";
 import "./css/form.css";
@@ -12,6 +12,14 @@ import jsPDF from "jspdf";
 import "tippy.js/dist/tippy.css";
 import Tippy from "@tippyjs/react";
 import autoTable from "jspdf-autotable";
+import { createSelector } from "reselect";
+import { useSelector } from "react-redux";
+import {
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+  useGetAcademyQuery,
+} from "../../slices/userApiSlice";
+import { useGetMaintenanceReportsQuery, useGetMaintenanceRequestQuery } from "../../slices/maintenanceApiSlice";
 
 import Select from "react-select"
 
@@ -28,125 +36,77 @@ const Maintenancereport = () => {
 
   const rowsPerPage = 10;
 
-  const [data, setData] = useState([
-    {
-      rid: "#1001",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "1I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-      imageUrl:[
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+  const { data: maintenanceRequest, refetch: refetchRepairRequest } = useGetMaintenanceRequestQuery();
+  const { data: maintenanceReport } = useGetMaintenanceReportsQuery();
+  const { data: academy } = useGetAcademyQuery();
 
-      ],
-    },
-    {
-      rid: "#1002",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
-      imageUrl:[
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+  const email = useSelector(getUserEmail);
+  const { data: userByEmial } = useGetUserByEmailQuery(email);
+  const [data, setData] = useState([]);
 
-      ],
-    },
-    {
-      rid: "#1003",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-      imageUrl:[
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+  useEffect(()=>{
+    if (maintenanceReport && maintenanceRequest && academy && userByEmial){
+      console.log("🔧 Repair Reports:", maintenanceReport);
+      console.log("📋 Repair Requests:", maintenanceRequest);
+      console.log("🎓 Academies:", academy);
+      // console.log("👤 Users:", users);
 
-      ],
-    },
-    {
-      rid: "#1004",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "Cooling issue",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-      imageUrl:[
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+      const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
 
-      ],
-    },
-    {
-      rid: "#1004",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "Cooling issue",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "1I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-      imageUrl:[
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-
-      ],
-    },
-
-  ]);
-
-  // Filtering data based on search and priority selection
-  // const filteredData = data.filter((item) => {
-  //   const matchesSearch = Object.values(item).some((value) =>
-  //     value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  //   );
-  //   const matchesPriority =
-  //     selectedPriority === "" || item.priority === selectedPriority;
-
-  //   return matchesSearch && matchesPriority;
-  // });
+      const mergedData = maintenanceReport
+        .map((report) => {
+          const matchingRequest = maintenanceRequest.find(
+            (request) => request.maintenanceID === report.preventiveMaintenanceID
+          );
+  
+          // Skip if no matching request
+          if (!matchingRequest) return null;
+  
+          const requestAcademyId = matchingRequest.academyId?.trim().toLowerCase();
+  
+          // Only keep records matching the login user's academy
+          if (requestAcademyId !== loginAcademyId) return null;
+  
+          // Count technicians
+          let total = 0;
+          if (report.technicians) {
+            const technicianList = report.technicians
+              .split(",")
+              .filter((email) => email.trim() !== "");
+            total = technicianList.length;
+            console.log("👷‍♂️ Technicians for Report ID", report.repairID, ":", total);
+          }
+  
+          // 🏫 Match academyId to academyName
+          const matchingAcademy = academy.find(
+            (a) => a.academyId?.trim().toLowerCase() === requestAcademyId
+          );
+  
+          const merged = {
+            ...report,
+            academyId: matchingRequest.academyId || null,
+            academyName: matchingAcademy?.name || "Unknown Academy",
+            assetName: matchingRequest.assetName || report.assetName || "N/A",
+            area: matchingRequest.area || "N/A",
+            description: matchingRequest.description || "N/A",
+            totalTechnicians: total,
+          };
+  
+          console.log("🧩 Merged Item:", merged);
+          return merged;
+        })
+        .filter(Boolean); // 🔥 Remove any nulls (non-matching academy or request)
+  
+      console.log("📦 Final Merged Data:", mergedData);
+      setData(mergedData);
+    }
+  }, [maintenanceReport, maintenanceRequest, academy, userByEmial]);
+  console.log("dataa", data)
 
   const handleDownloadSelected = () => {
     if (selectedRows.length === 0) return;
@@ -224,15 +184,15 @@ const Maintenancereport = () => {
   // **Function to handle PDF download**
   const handleDownloadPDF = () => {
     if (!modalData) return; // Prevent function execution if no data is selected
-  
+
     const doc = new jsPDF();
-  
+
     // Add title
     doc.text("Repair Report", 14, 15);
-  
+
     // Define table headers
     const columns = ["Field", "Value"];
-  
+
     // Map modalData dynamically into table rows
     const rows = [
       ["RID", modalData.rid],
@@ -250,7 +210,7 @@ const Maintenancereport = () => {
       ["Assigned Technician", modalData.Assigned_Technician],
       ["Additional Info", modalData.Additional_information],
     ];
-  
+
     // Generate the table using autoTable
     autoTable(doc, {
       head: [columns],
@@ -260,7 +220,7 @@ const Maintenancereport = () => {
       styles: { fontSize: 10 },
       headStyles: { fillColor: [41, 128, 185] }, // Blue header background
     });
-  
+
     // Save the PDF
     doc.save(`Repair_Report_${modalData.rid}.pdf`);
   };
@@ -319,7 +279,7 @@ const Maintenancereport = () => {
                 <th>
                   {selectedRows.length > 0 ? (
                     <button
-                      className="download-all-btn"
+                      // className="download-all-btn"
                       onClick={handleDownloadSelected}
                     >
                       < LuDownload
@@ -460,29 +420,29 @@ const Maintenancereport = () => {
                   <textarea value={modalData.Additional_information} readOnly />
                 </div>
                 <div className="modal-content-field">
-            <label>Repaired Images:</label>
-            <div className="TModal-profile-img">
-              {Array.isArray(modalData.imageUrl) && modalData.imageUrl.length > 0 ? (
-                modalData.imageUrl.map((imgSrc, index) => (
-                  <img
-                    key={index}
-                    src={imgSrc}
-                    alt={`Work Order ${index + 1}`}
-                    className="TModal-modal-image"
-                  />
-                ))
-              ) : modalData.imageUrl ? (
-                // If `imageUrl` is a string, display it as a single image
-                <img
-                  src={modalData.imageUrl}
-                  alt="Work Order"
-                  className="TModal-modal-image"
-                />
-              ) : (
-                <p>No image available</p>
-              )}
-            </div>
-          </div>
+                  <label>Repaired Images:</label>
+                  <div className="TModal-profile-img">
+                    {Array.isArray(modalData.imageUrl) && modalData.imageUrl.length > 0 ? (
+                      modalData.imageUrl.map((imgSrc, index) => (
+                        <img
+                          key={index}
+                          src={imgSrc}
+                          alt={`Work Order ${index + 1}`}
+                          className="TModal-modal-image"
+                        />
+                      ))
+                    ) : modalData.imageUrl ? (
+                      // If `imageUrl` is a string, display it as a single image
+                      <img
+                        src={modalData.imageUrl}
+                        alt="Work Order"
+                        className="TModal-modal-image"
+                      />
+                    ) : (
+                      <p>No image available</p>
+                    )}
+                  </div>
+                </div>
                 <div className="modal-content-field">
                   <label>Additional Cost:</label>
                   <input name="Additional_cost" value={editableData.Additional_cost} onChange={handleInputChange} />

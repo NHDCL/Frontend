@@ -45,7 +45,7 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ["MaintenanceRequest"],
 
     }),
-    
+
 
     // get repir resquest
     getRepairRequest: builder.query({
@@ -65,6 +65,26 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       providesTags: ["maintenance"]
     }),
 
+    // GET All Repair Reports
+    getRepairReports: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/repair-reports",
+        method: "GET",
+      }),
+      transformResponse: (response) => response, // Optional, if no nesting like { data: [...] }
+      providesTags: ["RepairReports"],
+    }),
+
+    // GET All maintenance Reports
+    getMaintenanceReports: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/maintenance-reports",
+        method: "GET",
+      }),
+      transformResponse: (response) => response, // Optional, if no nesting like { data: [...] }
+      providesTags: ["maintenanceReports"],
+    }),
+
     acceptOrRejectRepairRequest: builder.mutation({
       query: ({ repairId, accept }) => ({
         url: `${MAINTENANCE_URL}/repairs/${repairId}/accept`,
@@ -77,7 +97,7 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["RepairRequest"],
     }),
-    
+
     updatePreventiveMaintenance: builder.mutation({
       query: ({ id, maintenance }) => ({
         url: `${MAINTENANCE_URL}/maintenance/${id}`,
@@ -98,4 +118,6 @@ export const {
   useGetMaintenanceRequestQuery,
   useAcceptOrRejectRepairRequestMutation,
   useUpdatePreventiveMaintenanceMutation,
+  useGetRepairReportsQuery,
+  useGetMaintenanceReportsQuery,
 } = maintenanceApiSlice;
