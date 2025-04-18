@@ -10,12 +10,7 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
         body: requestData, // Send the new asset data as the request body
       }),
     }),
-    // postRepairSchedule: builder.mutation({
-    //   query: () => ({
-    //     url: MAINTENANCE_URL + "/schedules", // API endpoint for posting assets
-    //     method: "POST",
-    //   }),
-    // }),
+
     postRepairSchedule: builder.mutation({
       query: (scheduleData) => ({
         url: MAINTENANCE_URL + "/schedules",
@@ -25,16 +20,21 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
           "Content-Type": "application/json", // make sure backend expects JSON
         },
       }),
-
     }),
+    updateRepairSchedule: builder.mutation({
+      query: ({ scheduleId, updatedData }) => ({
+        url: `${MAINTENANCE_URL}/schedules/${scheduleId}`,
+        method: "PUT",
+        body: updatedData,
+      }),
+      invalidatesTags: ["RepairSchedule"], // adjust tag if needed
+    }),
+
 
     assignRepair: builder.mutation({
       query: ({ repairId, email }) => ({
         url: `${MAINTENANCE_URL}/repairs/schedule/${repairId}`,
         method: "PUT",
-        // body: { email },
-        // headers: {
-        //   "Content-Type": "application/json",
         body: JSON.stringify({ email }),
         headers: {
           "Content-Type": "application/json",
@@ -44,6 +44,26 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["MaintenanceRequest"],
 
+    }),
+
+    getSchedulesByRepairID: builder.query({
+      query: (repairID) => `${MAINTENANCE_URL}/schedules/repair/${repairID}`,
+    }),
+    // get repair schedule
+    // getRepairRequestSchedule: builder.query({
+    //   query: () => ({
+    //     url: MAINTENANCE_URL + "/schedules",
+    //     method: 'GET',
+    //   }),
+    //   providesTags: ["repairRequestSchedule"]
+    // }),
+
+    getRepairRequestSchedule: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/schedules",
+        method: 'GET',
+      }),
+      providesTags: ["repairRequestSchedule"]
     }),
 
 
@@ -113,7 +133,10 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
 export const {
   usePostRepairRequestMutation,
   usePostRepairScheduleMutation,
+  useUpdateRepairScheduleMutation,
   useAssignRepairMutation,
+  useGetSchedulesByRepairIDQuery,
+  useGetRepairRequestScheduleQuery,
   useGetRepairRequestQuery,
   useGetMaintenanceRequestQuery,
   useAcceptOrRejectRepairRequestMutation,

@@ -32,7 +32,7 @@ const MaintenanceRequest = () => {
   });
   console.log("formdata",formData)
 
-  const [postRepairRequest] = usePostRepairRequestMutation();
+  const [postRepairRequest, { isLoading: requesting }] = usePostRepairRequestMutation();
   const { data: academies = [], isLoading, error } = useGetAcademyQuery();
   const { data: assets = [], error1 } = useGetAssetQuery();
 
@@ -376,8 +376,9 @@ const MaintenanceRequest = () => {
               )}
             </div>
 
-            <button style={{backgroundColor:"#897463"}} type="submit" className="mr-submit-btn">
-              Request
+            <button disabled={requesting}
+style={{backgroundColor:"#897463"}} type="submit" className="mr-submit-btn">
+              {requesting ? "Requesting..." : "Request"}{" "}
             </button>
           </form>
         </div>

@@ -5,7 +5,6 @@ import "./css/form.css";
 import "./css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
 import { TiArrowSortedUp } from "react-icons/ti";
@@ -13,6 +12,9 @@ import {
   useGetRepairRequestQuery,
   useAssignRepairMutation,
   usePostRepairScheduleMutation,
+  useGetRepairRequestScheduleQuery,
+  useGetSchedulesByRepairIDQuery,
+  useUpdateRepairScheduleMutation,
 } from "../../slices/maintenanceApiSlice";
 import { useUser } from "../../context/userContext";
 import { useSelector } from "react-redux";
@@ -29,17 +31,45 @@ const Repair = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [modalData, setModalData] = useState(null);
+  const [rescheduleModalData, setRescheduleModalData] = useState(null);
   const [selectedPriority, setSelectedPriority] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
+  console.log("dt",assignDate)
 
   const rowsPerPage = 10;
 
-  const { data: repairRequest, refetch: refetchRepairRequest } = useGetRepairRequestQuery();
+  const { data: repairRequest, refetch: refetchRepairRequest } =
+    useGetRepairRequestQuery();
 
-  const [assignRepair] = useAssignRepairMutation();
+  const repairID = rescheduleModalData?.repairID;
+  console.log("rid", repairID);
+
+  const {
+    data: scheduleData,
+    isLoading,
+    error,
+  } = useGetSchedulesByRepairIDQuery(repairID, {
+    skip: !repairID,
+  });
+
+  const [updateSchedule] = useUpdateRepairScheduleMutation();
+
+
+  useEffect(() => {
+    if (repairID) {
+      console.log("Fetching schedule for repair ID:", repairID);
+    }
+  }, [repairID]);
+
+  if (error) {
+    console.error("Error fetching schedule data:", error);
+  }
+  console.log("Schedule Data:", scheduleData);
+
+  const [assignRepair, {isLoading:scheduling}] = useAssignRepairMutation();
   const { userInfo, userRole } = useSelector((state) => state.auth);
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
@@ -50,7 +80,6 @@ const Repair = () => {
 
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);
-  // console.log("assignedWorker email", email);
 
   const academyId = userByEmial?.user?.academyId;
   const { data: departments, isLoading: departmentsLoading } =
@@ -93,24 +122,22 @@ const Repair = () => {
   }));
 
   const [postRepairSchedule] = usePostRepairScheduleMutation();
-
   console.log("aw", assignedWorker);
+
 
   const handleAssignAndSchedule = async () => {
     if (!assignedWorker || !assignTime || !assignDate || !modalData?.repairID) {
       Swal.fire("Warning", "Please fill all required fields.", "warning");
       return;
     }
-
     const formattedDate = new Date(assignDate).toISOString().split("T")[0];
-
     const scheduleData = {
-      startTime: `${assignTime}:00`,
-      reportingDate: formattedDate,
-      userID: assignedWorker?.value, // user ID from Select's value
       repairID: modalData.repairID,
+      reportingDate: formattedDate,
+      startTime: `${assignTime}:00`,
+      userID: assignedWorker?.value, // user ID from Select's value
     };
-      console.log("sc data", scheduleData);
+    console.log("sc data", scheduleData);
 
   try {
     // 1. First assign the repair
@@ -118,65 +145,92 @@ const Repair = () => {
       repairId: modalData.repairID,
       email: assignedWorker?.label,
     }).unwrap();
-
-    console.log("Assign Response Message:", assignmentResponse.message);
-
-    // 2. Then post the schedule to backend
-    await postRepairSchedule(scheduleData).unwrap();
-
-    Swal.fire(
-      "Success",
-      assignmentResponse.message || "Repair assigned and scheduled!",
-      "success"
-    );
-
-    refetchRepairRequest();
-    handleCloseModal();
-  } catch (error) {
-    Swal.fire(
-      "Error",
-      error?.data?.message || "Something went wrong",
-      "error"
-    );
-    console.error("Full Error:", error);
-  }
-};
-
-  const handleAssignRequested = async () => {
-    if (!modalData?.repairID || !assignedWorker) {
-      Swal.fire("Error", "Missing repair ID or assigned worker.", "error");
-      return;
-    }
-
     try {
-      // await assignRepair({
-      //   repairId: modalData.repairID,
-      //   email: assignedWorker.label,
-      // });
-      // Swal.fire("Success", "Repair task assigned successfully!", "success");
-      // refetchRepairRequest();
-      // handleCloseModal();
+      // 1. First assign the repair
       const assignmentResponse = await assignRepair({
         repairId: modalData.repairID,
         email: assignedWorker?.label,
-      }).unwrap();
+      });
 
-      console.log("Assign Response Message:", assignmentResponse.message); // this works now
+      console.log("Assign Response Message:", assignmentResponse);
 
-      Swal.fire(
-        "Success",
-        assignmentResponse.message || "Repair assigned!",
-        "success"
-      );
+      // 2. Then post the schedule to backend
+      const scheduleResponse = await postRepairSchedule(scheduleData);
+      console.log("Schedule Response:", scheduleResponse);
+
+      // Swal.fire(
+      //   "Success",
+      //   assignmentResponse.message || "Repair assigned and scheduled!",
+      //   "success"
+      // );
+       Swal.fire({
+                icon: "success",
+                title: "Repair assigned and scheduled!",
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 2000,
+              });
+
+      refetchRepairRequest();
+      handleCloseModal();
     } catch (error) {
       Swal.fire(
-        "Assignment Failed",
-        error?.data?.message || "Something went wrong.",
+        "Error",
+        error?.data?.message || JSON.stringify(error) || "Something went wrong",
         "error"
       );
+      console.log("Full Error:", error);
     }
   };
 
+  const handleUpdateSchedule = async () => {
+    // Ensure that scheduleData is not empty or undefined
+    if (!scheduleData || scheduleData.length === 0) {
+      Swal.fire("Warning", "No schedule data found to update.", "warning");
+      return;
+    }
+  
+    // Assuming you're working with the first item in the scheduleData array (adjust as needed)
+    const scheduleToUpdate = scheduleData[0];
+    
+    // Log the selected schedule data to ensure we're getting the correct schedule
+    console.log("Selected Schedule to Update:", scheduleToUpdate);
+  
+    const scheduleId = scheduleToUpdate?.scheduleId; // Extract scheduleId from the selected schedule
+    
+    if (!scheduleId) {
+      Swal.fire("Error", "Schedule ID is missing.", "error");
+      return;
+    }
+  
+    console.log("Schedule ID to Update:", scheduleId);
+  
+    // Prepare updated data
+    const updatedData = {
+      startTime: `${assignTime}:00`,  // Ensure this comes from the input
+      endTime: "16:00",  // Change this if necessary to dynamically set the end time
+    };
+    console.log("Updated Data:", updatedData);
+    try {
+      // Make the API request using the mutation
+      const response = await updateSchedule({
+        scheduleId,
+        updatedData,
+      }).unwrap(); // unwrap to handle the response directly
+  
+      console.log("API Response:", response);
+  
+      Swal.fire("Success", "Schedule updated successfully!", "success");
+      refetchRepairRequest();  // Refetch repair requests if necessary
+      handleCloseModal2();  // Close the modal after success
+    } catch (error) {
+      Swal.fire("Error", error?.data?.message || "Update failed", "error");
+      console.error("Error while updating schedule:", error);
+    }
+  };
+  
+  
   const today = new Date().toISOString().split("T")[0];
 
   const [data, setData] = useState([]);
@@ -284,12 +338,19 @@ const Repair = () => {
   const handleCloseModal = () => {
     setModalData(null);
   };
+  const handleCloseModal2 = () => {
+    setRescheduleModalData(null);
+  };
 
   const handleRescheduleView = (item) => {
-    setModalData(item);
-    setAssignedWorker(item?.assignedWorker || null);
-    setAssignDate(item?.assignDate || "");
-    setAssignTime(item?.assignTime || "");
+    setRescheduleModalData(item);
+    setAssignedWorker(
+      item?.assignedWorker
+        ? { value: item.assignedWorker.userID, label: item.assignedWorker.email }
+        : null
+    );
+    setAssignDate(item?.reportingDate || "");
+    setAssignTime(item?.startTime?.slice(0, 5) || "");
     setSelectedDepartment(item?.departmentId || null);
   };
 
@@ -484,12 +545,6 @@ const Repair = () => {
                     </div>
                   </td>
                   <td className="actions">
-                    {/* <button
-                      className="schedule-btn"
-                      onClick={() => handleScheduleView(item)}
-                    >
-                      Schedule
-                    </button> */}
                     {item.scheduled === false ? (
                       <button
                         className="schedule-btn"
@@ -548,7 +603,7 @@ const Repair = () => {
           <div className="modal-content">
             {/* Close Button */}
             <div className="modal-header">
-              <h2 className="form-h">Schedule Form: {modalData.repairID}</h2>
+              <h2 className="form-h">Schedule Form</h2>
               <button className="close-btn" onClick={handleCloseModal}>
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
@@ -558,41 +613,6 @@ const Repair = () => {
 
             {/* Assign Dropdown */}
             <div className="schedule-form">
-              {/* <div className="modal-content-field">
-                <label>Department:</label>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={departmentOptions}
-                  value={departmentOptions.find(
-                    (opt) => opt.value === selectedDepartment
-                  )}
-                  onChange={(option) => setSelectedDepartment(
-  departmentOptions.find((opt) => opt.value === item?.departmentId) || null
-)}
-                  isLoading={departmentsLoading}
-                  isClearable
-                />
-              </div> */}
-
-              {/* <div className="modal-content-field">
-                <label>Assign Supervisor:</label>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workerOptions}
-                  value={
-                    workerOptions.find((w) => w.value === assignedWorker) ||
-                    null
-                  }
-                  onChange={(selectedOption) => {
-                    setAssignedWorker(selectedOption?.value || "");
-                    console.log("Selected Worker Email:", selectedOption);
-                  }}
-                  isClearable
-                />
-              </div> */}
-
               <div className="modal-content-field">
                 <label>Department:</label>
                 <Select
@@ -614,24 +634,6 @@ const Repair = () => {
 
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
-                {/* <Select
-    classNamePrefix="custom-select-department"
-    className="workstatus-dropdown"
-    options={workerOptions}
-    // value={workerOptions.find((w) => w.value === assignedWorker) || null}
-    // onChange={(selectedOption) => {
-    //   setAssignedWorker(selectedOption?.value || "");
-    //   console.log("Selected Worker Email:", selectedOption?.label || "None");
-    // }}
-    // value={assignedWorker}
-    value={workerOptions.find((w) => w.value === assignedWorker) || null}
-
-    onChange={(selectedOption) => {
-      setAssignedWorker(selectedOption || null); // store full object
-      console.log("Selected Worker Email:", selectedOption?.label || "None");
-    }}
-    isClearable
-  /> */}
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -671,12 +673,61 @@ const Repair = () => {
               <div className="modal-buttons">
                 <button
                   className="accept-btn"
-                  style={{ width: "80px" }}
-                  // onClick={handleAssignRequested}
+                  style={{ width: "100px" }}
                   onClick={handleAssignAndSchedule}
+                  disabled={scheduling}
+
                 >
-                  Done
+                  {/* Done */}
+                  {scheduling ? "Scheduling.." : "Schedule   "}{" "}
+
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Reschedule Request */}
+      {rescheduleModalData && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Reschedule Form: {rescheduleModalData.repairID}</h2>
+              <button className="close-btn" onClick={handleCloseModal2}>
+                <IoIosCloseCircle />
+              </button>
+            </div>
+            <div className="schedule-form">
+              <div>
+                <label>Department:</label>
+                <Select
+                  options={departmentOptions}
+                  value={departmentOptions.find((opt) => opt.value === selectedDepartment) || null}
+                  onChange={(option) => setSelectedDepartment(option?.value || "")}
+                  isLoading={departmentsLoading}
+                  isClearable
+                />
+              </div>
+              <div>
+                <label>Assign Supervisor:</label>
+                <Select
+                  options={workerOptions}
+                  value={assignedWorker}
+                  onChange={setAssignedWorker}
+                  isClearable
+                />
+              </div>
+              <div>
+                <label>Assign Date:</label>
+                <input type="date" value={assignDate} min={today} onChange={(e) => setAssignDate(e.target.value)} />
+              </div>
+              <div>
+                <label>Assign Time:</label>
+                <input type="time" value={assignTime} onChange={(e) => setAssignTime(e.target.value)} />
+              </div>
+              <div>
+                <button className="accept-btn" onClick={handleUpdateSchedule}>Done</button>
               </div>
             </div>
           </div>
