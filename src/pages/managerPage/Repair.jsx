@@ -139,12 +139,6 @@ const Repair = () => {
     };
     console.log("sc data", scheduleData);
 
-  try {
-    // 1. First assign the repair
-    const assignmentResponse = await assignRepair({
-      repairId: modalData.repairID,
-      email: assignedWorker?.label,
-    }).unwrap();
     try {
       // 1. First assign the repair
       const assignmentResponse = await assignRepair({
@@ -250,7 +244,6 @@ const Repair = () => {
     );
   }, [repairRequest, userByEmial]);
 
-  
   const getWorkOrderStatusClass = (status) => {
     switch (status) {
       case "pending":

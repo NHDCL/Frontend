@@ -17,10 +17,12 @@ import { useSelector } from "react-redux";
 import {
   useGetUserByEmailQuery,
   useGetUsersQuery,
-  useGetAcademyQuery,
+  useGetAcademyQuery
 } from "../../slices/userApiSlice";
 import { useGetMaintenanceReportsQuery, useGetMaintenanceRequestQuery } from "../../slices/maintenanceApiSlice";
-
+import {
+  useGetAssetQuery
+} from "../../slices/assetApiSlice";
 import Select from "react-select"
 
 const Maintenancereport = () => {
@@ -39,6 +41,8 @@ const Maintenancereport = () => {
   const { data: maintenanceRequest, refetch: refetchRepairRequest } = useGetMaintenanceRequestQuery();
   const { data: maintenanceReport } = useGetMaintenanceReportsQuery();
   const { data: academy } = useGetAcademyQuery();
+  const { data: users } = useGetUsersQuery();
+  const { data: assets } = useGetAssetQuery();
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
@@ -49,12 +53,13 @@ const Maintenancereport = () => {
   const { data: userByEmial } = useGetUserByEmailQuery(email);
   const [data, setData] = useState([]);
 
-  useEffect(()=>{
-    if (maintenanceReport && maintenanceRequest && academy && userByEmial){
-      console.log("🔧 Repair Reports:", maintenanceReport);
-      console.log("📋 Repair Requests:", maintenanceRequest);
+  useEffect(() => {
+    if (maintenanceReport && maintenanceRequest && academy && userByEmial && users && assets) {
+      console.log("🔧 Maintenance Reports:", maintenanceReport);
+      console.log("📋 Maintenance Requests:", maintenanceRequest);
       console.log("🎓 Academies:", academy);
-      // console.log("👤 Users:", users);
+      console.log("👤 Users:", users);
+      console.log("📦 Assets:", assets);
 
       const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
 
@@ -63,16 +68,20 @@ const Maintenancereport = () => {
           const matchingRequest = maintenanceRequest.find(
             (request) => request.maintenanceID === report.preventiveMaintenanceID
           );
-  
-          // Skip if no matching request
+
           if (!matchingRequest) return null;
-  
-          const requestAcademyId = matchingRequest.academyId?.trim().toLowerCase();
-  
-          // Only keep records matching the login user's academy
+
+          const requestUser = users.find(
+            (user) => user.userId === matchingRequest.userID
+          );
+
+          if (!requestUser) return null;
+
+          const requestAcademyId = requestUser.academyId?.trim().toLowerCase();
+
           if (requestAcademyId !== loginAcademyId) return null;
-  
-          // Count technicians
+
+          // 🔍 Count technicians
           let total = 0;
           if (report.technicians) {
             const technicianList = report.technicians
@@ -81,31 +90,36 @@ const Maintenancereport = () => {
             total = technicianList.length;
             console.log("👷‍♂️ Technicians for Report ID", report.repairID, ":", total);
           }
-  
-          // 🏫 Match academyId to academyName
+
           const matchingAcademy = academy.find(
             (a) => a.academyId?.trim().toLowerCase() === requestAcademyId
           );
-  
+
+          // 🧩 Match asset using assetCode from the request
+          const matchingAsset = assets.find(
+            (asset) => asset.assetCode === matchingRequest.assetCode
+          );
+
           const merged = {
             ...report,
-            academyId: matchingRequest.academyId || null,
+            academyId: requestUser.academyId || null,
             academyName: matchingAcademy?.name || "Unknown Academy",
-            assetName: matchingRequest.assetName || report.assetName || "N/A",
-            area: matchingRequest.area || "N/A",
+            assetName: matchingAsset?.title || "N/A",
+            area: matchingAsset?.assetArea || "N/A",
             description: matchingRequest.description || "N/A",
             totalTechnicians: total,
           };
-  
+
           console.log("🧩 Merged Item:", merged);
           return merged;
         })
-        .filter(Boolean); // 🔥 Remove any nulls (non-matching academy or request)
-  
+        .filter(Boolean); // ✅ Remove nulls
+
       console.log("📦 Final Merged Data:", mergedData);
       setData(mergedData);
     }
-  }, [maintenanceReport, maintenanceRequest, academy, userByEmial]);
+  }, [maintenanceReport, maintenanceRequest, academy, userByEmial, users, assets]);
+
   console.log("dataa", data)
 
   const handleDownloadSelected = () => {
@@ -199,16 +213,16 @@ const Maintenancereport = () => {
       ["Asset Name", modalData.assetName],
       ["Start Time", modalData.startTime],
       ["End Time", modalData.endTime],
-      ["Date", modalData.Date],
-      ["Area", modalData.Area],
+      ["Date", modalData.finishedDate],
+      ["Area", modalData.area],
       ["Total Cost", modalData.Total_cost],
       ["Part Used", modalData.part_used],
       ["Location", modalData.location],
       ["Description", modalData.description],
-      ["Total Technicians", modalData.total_technician],
+      ["Total Technicians", modalData.totalTechnicians],
       ["Assigned Supervisor", modalData.Assigned_supervisor],
       ["Assigned Technician", modalData.Assigned_Technician],
-      ["Additional Info", modalData.Additional_information],
+      ["Additional Info", modalData.information],
     ];
 
     // Generate the table using autoTable
@@ -302,13 +316,13 @@ const Maintenancereport = () => {
                       onChange={() => handleSelectRow(item.rid)}
                     />
                   </td>
-                  <td>{item.rid}</td>
+                  <td>{index + 1}</td>
                   <td>{item.assetName}</td>
                   <td>{[item.startTime, item.endTime].join(" - ")}</td>
-                  <td>{item.Date}</td>
-                  <td>{item.Area}</td>
-                  <td>{item.Total_cost}</td>
-                  <td>{item.part_used}</td>
+                  <td>{item.finishedDate}</td>
+                  <td>{item.area}</td>
+                  <td>{item.totalCost}</td>
+                  <td>{item.partsUsed}</td>
                   <td className="description">
                     <Tippy content={item.description} placement="top">
                       <span>
@@ -317,7 +331,8 @@ const Maintenancereport = () => {
                           : item.description}
                       </span>
                     </Tippy>
-                  </td>                  <td className="actions">
+                  </td>
+                  <td className="actions">
                     <button className="view-btn" onClick={() => handleView(item)}>
                       View
                     </button>
@@ -384,46 +399,46 @@ const Maintenancereport = () => {
                 </div>
                 <div className="modal-content-field">
                   <label>Date</label>
-                  <input type="text" value={modalData.Date} readOnly />
+                  <input type="text" value={modalData.finishedDate} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Area</label>
-                  <input type="text" value={modalData.Area} readOnly />
+                  <input type="text" value={modalData.area} readOnly />
                 </div>
 
                 <div className="modal-content-field">
                   <label>Parts used: </label>
-                  <input type="text" value={modalData.part_used} readOnly />
+                  <input type="text" value={modalData.partsUsed} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Total Technicians</label>
-                  <input type="text" value={modalData.total_technician} readOnly />
+                  <input type="text" value={modalData.totalTechnicians} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Assigned Technicians</label>
-                  <input type="text" value={modalData.Assigned_Technician} readOnly />
+                  <input type="text" value={modalData.technicians} readOnly />
                 </div>
-                <div className="modal-content-field">
+                {/* <div className="modal-content-field">
                   <label>Assigned Supervisor</label>
                   <input type="text" value={modalData.Assigned_supervisor} readOnly />
-                </div>
+                </div> */}
                 <div className="modal-content-field">
                   <label>Description:</label>
                   <textarea value={modalData.description} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Total Cost: </label>
-                  <input type="text" value={modalData.Total_cost} readOnly />
+                  <input type="text" value={modalData.totalCost} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Additional Informations: </label>
-                  <textarea value={modalData.Additional_information} readOnly />
+                  <textarea value={modalData.information} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Repaired Images:</label>
                   <div className="TModal-profile-img">
-                    {Array.isArray(modalData.imageUrl) && modalData.imageUrl.length > 0 ? (
-                      modalData.imageUrl.map((imgSrc, index) => (
+                    {Array.isArray(modalData.images) && modalData.images.length > 0 ? (
+                      modalData.images.map((imgSrc, index) => (
                         <img
                           key={index}
                           src={imgSrc}
@@ -431,10 +446,10 @@ const Maintenancereport = () => {
                           className="TModal-modal-image"
                         />
                       ))
-                    ) : modalData.imageUrl ? (
+                    ) : modalData.images ? (
                       // If `imageUrl` is a string, display it as a single image
                       <img
-                        src={modalData.imageUrl}
+                        src={modalData.images}
                         alt="Work Order"
                         className="TModal-modal-image"
                       />

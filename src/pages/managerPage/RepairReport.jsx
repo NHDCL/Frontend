@@ -430,14 +430,14 @@ const Repairreport = () => {
                     readOnly
                   />
                 </div>
-                <div className="modal-content-field">
+                {/* <div className="modal-content-field">
                   <label>Assigned Supervisor</label>
                   <input
                     type="text"
                     value={modalData.Assigned_supervisor}
                     readOnly
                   />
-                </div>
+                </div> */}
                 <div className="modal-content-field">
                   <label>Description:</label>
                   <textarea value={modalData.description} readOnly />
