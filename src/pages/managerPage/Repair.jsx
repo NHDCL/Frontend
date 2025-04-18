@@ -116,7 +116,9 @@ const Repair = () => {
         label: dep.name,
       })) || [];
 
-  const workerOptions = supervisorsFromSameAcademy.map((user) => ({
+  const workerOptions = supervisorsFromSameAcademy
+  .filter(user => user.departmentId === selectedDepartment)
+  .map(user => ({
     value: user.userId,
     label: user.email,
   }));
@@ -139,12 +141,6 @@ const Repair = () => {
     };
     console.log("sc data", scheduleData);
 
-  try {
-    // 1. First assign the repair
-    const assignmentResponse = await assignRepair({
-      repairId: modalData.repairID,
-      email: assignedWorker?.label,
-    }).unwrap();
     try {
       // 1. First assign the repair
       const assignmentResponse = await assignRepair({
@@ -165,7 +161,7 @@ const Repair = () => {
       // );
        Swal.fire({
                 icon: "success",
-                title: "Repair assigned and scheduled!",
+                title: "Repair Request assigned and scheduled!",
                 toast: true,
                 position: "top-end",
                 showConfirmButton: false,
@@ -250,7 +246,6 @@ const Repair = () => {
     );
   }, [repairRequest, userByEmial]);
 
-  
   const getWorkOrderStatusClass = (status) => {
     switch (status) {
       case "pending":
