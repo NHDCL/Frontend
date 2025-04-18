@@ -116,7 +116,9 @@ const Repair = () => {
         label: dep.name,
       })) || [];
 
-  const workerOptions = supervisorsFromSameAcademy.map((user) => ({
+  const workerOptions = supervisorsFromSameAcademy
+  .filter(user => user.departmentId === selectedDepartment)
+  .map(user => ({
     value: user.userId,
     label: user.email,
   }));
@@ -159,7 +161,7 @@ const Repair = () => {
       // );
        Swal.fire({
                 icon: "success",
-                title: "Repair assigned and scheduled!",
+                title: "Repair Request assigned and scheduled!",
                 toast: true,
                 position: "top-end",
                 showConfirmButton: false,

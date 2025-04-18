@@ -468,8 +468,12 @@ const ManagerDashboard = () => {
                     e.preventDefault();
                     handleAccept(modalData.repairID, true);
                   }}
+                  disabled={isLoading}
+
                 >
-                  Accept
+                  {/* Accept */}
+                  {isLoading ? "Accepting.." : "Accept   "}{" "}
+
                 </button>
 
                 <button
@@ -478,8 +482,11 @@ const ManagerDashboard = () => {
                     e.preventDefault();
                     handleReject(modalData.repairID, false);
                   }}
+                  disabled={isLoading}
                 >
-                  Reject
+                  {/* Reject */}
+                  {isLoading ? "Rejecting.." : "Reject"}{" "}
+
                 </button>
 
               </div>
