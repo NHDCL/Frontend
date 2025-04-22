@@ -37,7 +37,12 @@ const Repair = () => {
   const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
-  console.log("dt",assignDate)
+  const [updateAssignedWorker, setUpdateAssignedWorker] = useState("");
+  const [assignTimeU, setAssignTimeU] = useState("");
+  const [assignDateU, setAssignDateU] = useState("");
+  console.log(
+    "start........................................................................."
+  );
 
   const rowsPerPage = 10;
 
@@ -45,7 +50,6 @@ const Repair = () => {
     useGetRepairRequestQuery();
 
   const repairID = rescheduleModalData?.repairID;
-  console.log("rid", repairID);
 
   const {
     data: scheduleData,
@@ -56,7 +60,6 @@ const Repair = () => {
   });
 
   const [updateSchedule] = useUpdateRepairScheduleMutation();
-
 
   useEffect(() => {
     if (repairID) {
@@ -69,7 +72,7 @@ const Repair = () => {
   }
   console.log("Schedule Data:", scheduleData);
 
-  const [assignRepair, {isLoading:scheduling}] = useAssignRepairMutation();
+  const [assignRepair, { isLoading: scheduling }] = useAssignRepairMutation();
   const { userInfo, userRole } = useSelector((state) => state.auth);
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
@@ -117,15 +120,228 @@ const Repair = () => {
       })) || [];
 
   const workerOptions = supervisorsFromSameAcademy
-  .filter(user => user.departmentId === selectedDepartment)
-  .map(user => ({
-    value: user.userId,
-    label: user.email,
-  }));
+    .filter((user) => user.departmentId === selectedDepartment)
+    .map((user) => ({
+      value: user.userId,
+      label: user.email,
+    }));
+
+  //   const userID = scheduleData?.[0]?.userID;
+  //   const matchedSupervisor = supervisorsFromSameAcademy?.find(
+  //     (supervisor) => supervisor.userId === userID
+  //   );
+  //   console.log("✅ UserID matches a supervisor:", matchedSupervisor);
+
+  //   const supervisorEmail = matchedSupervisor?.email;
+  //   const [selectedSupervisorId, setSelectedSupervisorId] = useState(null);
+
+  //   // const supervisorsInDepartment = supervisorsFromSameAcademy
+  //   // ?.filter(
+  //   //   (user) =>
+  //   //     user.role === "Supervisor" &&
+  //   //     String(user.departmentId) === String(selectedDepartmentU)
+  //   // )
+  //   // .map((user) => ({
+  //   //   label: user.email,
+  //   //   value: user.userId,
+  //   // })) || [];
+
+  //   // console.log("✅ supervisorsInDepartment:", supervisorsInDepartment);
+
+  //   // const supervisorOption = supervisorEmail
+  //   //   ? { label: supervisorEmail, value: matchedSupervisor.userId }
+  //   //   : null;
+  //   // const supervisorOption = supervisorEmail
+  //   // ? { label: supervisorEmail, value: matchedSupervisor?.userId }
+  //   // : null
+  //   console.log("✅ Supervisor all:", supervisorsFromSameAcademy);
+
+  //   console.log("✅ Supervisor email:", supervisorEmail);
+  //   console.log("✅ supervisorOption:", supervisorOption);
+
+  //   console.log("departments:", departments);
+
+  //   // Extract departmentId from the supervisor
+  //   const supervisorDepartmentId = matchedSupervisor?.departmentId;
+  //   console.log("departmentID:", supervisorDepartmentId);
+
+  //   const supervisorDepartment = Array.isArray(departments)
+  //     ? departments.find((dept) => dept.departmentId === supervisorDepartmentId)
+  //     : null;
+
+  //   console.log("Supervisor's Department Info:", supervisorDepartment);
+
+  //   // Extract department name or use fallback
+  //   const departmentName = supervisorDepartment?.name || "Unknown";
+  //   console.log("✅ Department Name:", departmentName);
+
+  //   // Update selected department when matchedSupervisor is found
+  // useEffect(() => {
+  //   if (supervisorDepartmentId) {
+  //     setSelectedDepartmentU(supervisorDepartmentId);
+  //     setSelectedDepartmentName(departmentName);
+  //   }
+  // }, [supervisorDepartmentId, departmentName]);
+
+  // // Supervisor select options
+  // const supervisorsInDepartment =
+  //   supervisorsFromSameAcademy
+  //     ?.filter(
+  //       (user) =>
+  //         user.role === "Supervisor" &&
+  //         String(user.departmentId) === String(selectedDepartmentU)
+  //     )
+  //     .map((user) => ({
+  //       label: user.email,
+  //       value: user.userId,
+  //     })) || [];
+  //     const supervisorOption = supervisorEmail
+  //   ? { label: supervisorEmail, value: matchedSupervisor?.userId }
+  //   : null;
+
+  // const finalOptions =
+  //   supervisorsInDepartment.length > 0
+  //     ? supervisorsInDepartment
+  //     : supervisorOption
+  //     ? [supervisorOption]
+  //     : [];
+
+  // // Logging (keep or clean later)
+  // console.log("✅ UserID matches a supervisor:", matchedSupervisor);
+  // console.log("✅ Supervisor email:", supervisorEmail);
+  // console.log("✅ Supervisor Option:", supervisorOption);
+  // console.log("✅ Supervisors in Department:", supervisorsInDepartment);
+  // console.log("✅ Selected DepartmentU:", selectedDepartmentU);
+  //   // Manage state
+  //   const [selectedDepartmentU, setSelectedDepartmentU] = useState(
+  //     supervisorDepartmentId
+  //   );
+  //   const [selectedDepartmentName, setSelectedDepartmentName] =
+  //     useState(departmentName);
+
+  //   // Safely prepare department options
+  //   const departmentOptionsU = Array.isArray(departments)
+  //     ? departments.map((dept) => ({
+  //         label: dept.name,
+  //         value: dept.departmentId,
+  //       }))
+  //     : [];
+  //     const initialDepartmentOption = departmentOptionsU.find(
+  //       (opt) => opt.label === departmentName
+  //     );
+
+  //   console.log("✅ initialOption:", initialDepartmentOption);
+  //   // console.log("✅ selectedDepartmentOption:", selectedDepartmentOption);
+
+  //   console.log("✅ departmentOptions:", departmentOptionsU);
+  //   console.log("✅ selectedDepartmentU:", selectedDepartmentU);
+
+  //   useEffect(() => {
+  //     // Check if ScheduleData is an array and has at least one element
+  //     if (Array.isArray(scheduleData) && scheduleData.length > 0) {
+  //       const schedule = scheduleData[0];
+  //       setAssignDateU(schedule.reportingDate); // Already in YYYY-MM-DD
+  //       setAssignTimeU(schedule.startTime);     // Already in HH:MM:SS or HH:MM
+  //     }
+  //   }, [scheduleData]);
+  const userID = scheduleData?.[0]?.userID;
+
+  const matchedSupervisor = supervisorsFromSameAcademy?.find(
+    (supervisor) => supervisor.userId === userID
+  );
+  const supervisorEmail = matchedSupervisor?.email;
+
+  const supervisorDepartmentId = matchedSupervisor?.departmentId;
+  const supervisorDepartment = Array.isArray(departments)
+    ? departments.find((dept) => dept.departmentId === supervisorDepartmentId)
+    : null;
+  const departmentName = supervisorDepartment?.name || "Unknown";
+
+  // Manage state
+  const [selectedDepartmentU, setSelectedDepartmentU] = useState(
+    supervisorDepartmentId
+  );
+  const [selectedDepartmentName, setSelectedDepartmentName] =
+    useState(departmentName);
+  const [selectedSupervisorId, setSelectedSupervisorId] = useState(null);
+
+  // Update selected department when matchedSupervisor is found
+  useEffect(() => {
+    if (supervisorDepartmentId) {
+      setSelectedDepartmentU(supervisorDepartmentId);
+      setSelectedDepartmentName(departmentName);
+    }
+  }, [supervisorDepartmentId, departmentName]);
+
+  // Supervisor select options
+  const supervisorsInDepartment =
+    supervisorsFromSameAcademy
+      ?.filter(
+        (user) => String(user.departmentId) === String(selectedDepartmentU) // only check department
+      )
+      .map((user) => ({
+        label: user.email,
+        value: user.userId,
+      })) || [];
+
+  const supervisorOption = supervisorEmail
+    ? { label: supervisorEmail, value: matchedSupervisor?.userId }
+    : null;
+
+  const finalOptions =
+    supervisorsInDepartment.length > 0
+      ? supervisorsInDepartment
+      : supervisorOption
+      ? [supervisorOption]
+      : [];
+
+  // Department dropdown options
+  const departmentOptionsU = Array.isArray(departments)
+    ? departments.map((dept) => ({
+        label: dept.name,
+        value: dept.departmentId,
+      }))
+    : [];
+
+  // For default department selection
+  const initialDepartmentOption = departmentOptionsU.find(
+    (opt) => opt.label === departmentName
+  );
+  console.log("👉 selectedDepartmentU:", selectedDepartmentU);
+  console.log("👉 supervisorsFromSameAcademy:", supervisorsFromSameAcademy);
+  console.log("supervisorsInDepartment", supervisorsInDepartment);
+  console.log("supervisorOption", supervisorOption);
+  console.log("finalOptions", finalOptions);
+  console.log("departmentOptionsU", departmentOptionsU);
+
+  // Set reporting time/date
+  useEffect(() => {
+    if (Array.isArray(scheduleData) && scheduleData.length > 0) {
+      const schedule = scheduleData[0];
+      setAssignDateU(schedule.reportingDate);
+      setAssignTimeU(schedule.startTime);
+    }
+  }, [scheduleData]);
+
+  const handleRescheduleView = async (item) => {
+    setRescheduleModalData(item);
+
+    setUpdateAssignedWorker(
+      item?.updateAssignedWorker
+        ? {
+            value: item.updateAssignedWorker.userID,
+            label: item.updateAssignedWorker.email,
+          }
+        : null
+    );
+
+    setAssignDateU(item?.reportingDate || "");
+    setAssignTimeU(item?.startTime?.slice(0, 5) || "");
+    setSelectedDepartmentName(item?.departmentId || "");
+  };
+  console.log("update", updateAssignedWorker);
 
   const [postRepairSchedule] = usePostRepairScheduleMutation();
-  console.log("aw", assignedWorker);
-
 
   const handleAssignAndSchedule = async () => {
     if (!assignedWorker || !assignTime || !assignDate || !modalData?.repairID) {
@@ -154,19 +370,14 @@ const Repair = () => {
       const scheduleResponse = await postRepairSchedule(scheduleData);
       console.log("Schedule Response:", scheduleResponse);
 
-      // Swal.fire(
-      //   "Success",
-      //   assignmentResponse.message || "Repair assigned and scheduled!",
-      //   "success"
-      // );
-       Swal.fire({
-                icon: "success",
-                title: "Repair Request assigned and scheduled!",
-                toast: true,
-                position: "top-end",
-                showConfirmButton: false,
-                timer: 2000,
-              });
+      Swal.fire({
+        icon: "success",
+        title: "Repair Request assigned and scheduled!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
 
       refetchRepairRequest();
       handleCloseModal();
@@ -181,52 +392,53 @@ const Repair = () => {
   };
 
   const handleUpdateSchedule = async () => {
-    // Ensure that scheduleData is not empty or undefined
-    if (!scheduleData || scheduleData.length === 0) {
-      Swal.fire("Warning", "No schedule data found to update.", "warning");
+    console.log("Schedule Data1:", scheduleData);
+  
+    if (!scheduleData?.[0]?.scheduleID) {
+      Swal.fire("Error", "Schedule data not found.", "error");
       return;
     }
   
-    // Assuming you're working with the first item in the scheduleData array (adjust as needed)
-    const scheduleToUpdate = scheduleData[0];
-    
-    // Log the selected schedule data to ensure we're getting the correct schedule
-    console.log("Selected Schedule to Update:", scheduleToUpdate);
+    const scheduleId = scheduleData[0].scheduleID;
   
-    const scheduleId = scheduleToUpdate?.scheduleId; // Extract scheduleId from the selected schedule
-    
-    if (!scheduleId) {
-      Swal.fire("Error", "Schedule ID is missing.", "error");
-      return;
+    // ensure time is in HH:mm:ss format
+    let formattedTime = assignTimeU;
+    if (assignTimeU.length === 5) {
+      // if it's HH:mm, add seconds
+      formattedTime = `${assignTimeU}:00`;
     }
   
-    console.log("Schedule ID to Update:", scheduleId);
-  
-    // Prepare updated data
     const updatedData = {
-      startTime: `${assignTime}:00`,  // Ensure this comes from the input
-      endTime: "16:00",  // Change this if necessary to dynamically set the end time
+      startTime: formattedTime,
+      reportingDate: assignDateU,
+      userID: selectedSupervisorId || supervisorOption.value,
+      repairID: scheduleData[0].repairID,
     };
+  
     console.log("Updated Data:", updatedData);
+  
     try {
-      // Make the API request using the mutation
-      const response = await updateSchedule({
-        scheduleId,
-        updatedData,
-      }).unwrap(); // unwrap to handle the response directly
-  
-      console.log("API Response:", response);
-  
-      Swal.fire("Success", "Schedule updated successfully!", "success");
-      refetchRepairRequest();  // Refetch repair requests if necessary
-      handleCloseModal2();  // Close the modal after success
+      await updateSchedule({ scheduleId, updatedData }).unwrap();
+      Swal.fire({
+        icon: "success",
+        title: "Schedule updated successfully!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      refetchRepairRequest();
+      handleCloseModal2();
     } catch (error) {
       Swal.fire("Error", error?.data?.message || "Update failed", "error");
-      console.error("Error while updating schedule:", error);
+      console.error("Update schedule error:", error);
     }
   };
+  console.log("aw", selectedSupervisorId);
+
   
   
+
   const today = new Date().toISOString().split("T")[0];
 
   const [data, setData] = useState([]);
@@ -245,6 +457,8 @@ const Repair = () => {
       filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     );
   }, [repairRequest, userByEmial]);
+
+  console.log("data", data);
 
   const getWorkOrderStatusClass = (status) => {
     switch (status) {
@@ -332,21 +546,22 @@ const Repair = () => {
 
   const handleCloseModal = () => {
     setModalData(null);
+    setAssignedWorker(null);
+    setAssignDate(null);
+    setAssignTime(null);
+    setSelectedDepartment(null);
+    refetchRepairRequest();
+
   };
   const handleCloseModal2 = () => {
     setRescheduleModalData(null);
-  };
+    setAssignedWorker(null);
+    setAssignDate(null);
+    setAssignTime(null);
+    setSelectedDepartment(null);
+    setSelectedSupervisorId(null)
+    refetchRepairRequest();
 
-  const handleRescheduleView = (item) => {
-    setRescheduleModalData(item);
-    setAssignedWorker(
-      item?.assignedWorker
-        ? { value: item.assignedWorker.userID, label: item.assignedWorker.email }
-        : null
-    );
-    setAssignDate(item?.reportingDate || "");
-    setAssignTime(item?.startTime?.slice(0, 5) || "");
-    setSelectedDepartment(item?.departmentId || null);
   };
 
   const [sortOrder, setSortOrder] = useState({
@@ -550,7 +765,7 @@ const Repair = () => {
                     ) : (
                       <button
                         className="schedule-btn"
-                        style={{ backgroundColor: "#979797" }}
+                        style={{ backgroundColor: "#315845" }}
                         onClick={() => handleRescheduleView(item)}
                       >
                         Reschedule
@@ -598,7 +813,7 @@ const Repair = () => {
           <div className="modal-content">
             {/* Close Button */}
             <div className="modal-header">
-              <h2 className="form-h">Schedule Form</h2>
+              <h2 style={{fontSize:"18px"}} className="form-h">Schedule Form</h2>
               <button className="close-btn" onClick={handleCloseModal}>
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
@@ -671,11 +886,9 @@ const Repair = () => {
                   style={{ width: "100px" }}
                   onClick={handleAssignAndSchedule}
                   disabled={scheduling}
-
                 >
                   {/* Done */}
                   {scheduling ? "Scheduling.." : "Schedule   "}{" "}
-
                 </button>
               </div>
             </div>
@@ -688,41 +901,81 @@ const Repair = () => {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h2>Reschedule Form: {rescheduleModalData.repairID}</h2>
+              <h2 style={{fontSize:"18px"}} className="form-h">Reschedule Form</h2>
               <button className="close-btn" onClick={handleCloseModal2}>
                 <IoIosCloseCircle />
               </button>
             </div>
             <div className="schedule-form">
-              <div>
+              <div className="modal-content-field">
                 <label>Department:</label>
                 <Select
-                  options={departmentOptions}
-                  value={departmentOptions.find((opt) => opt.value === selectedDepartment) || null}
-                  onChange={(option) => setSelectedDepartment(option?.value || "")}
-                  isLoading={departmentsLoading}
-                  isClearable
+                classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={departmentOptionsU}
+                  value={
+                    departmentOptionsU.find(
+                      (opt) => opt.value === selectedDepartmentU
+                    ) ||
+                    initialDepartmentOption ||
+                    null
+                  }
+                  onChange={(selected) =>
+                    setSelectedDepartmentU(selected.value)
+                  }
                 />
               </div>
-              <div>
+              <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
                 <Select
-                  options={workerOptions}
-                  value={assignedWorker}
-                  onChange={setAssignedWorker}
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  value={
+                    finalOptions.find(
+                      (opt) => opt.value === selectedSupervisorId
+                    ) ||supervisorOption|| null
+                  }
+                  options={finalOptions}
                   isClearable
+                  onChange={(selectedOption) => {
+                    setSelectedSupervisorId(selectedOption?.value || null);
+                    console.log(
+                      "Selected Supervisor Email:",
+                      selectedOption?.label || "None"
+                    );
+                  }}
                 />
               </div>
-              <div>
+              <div className="modal-content-field">
                 <label>Assign Date:</label>
-                <input type="date" value={assignDate} min={today} onChange={(e) => setAssignDate(e.target.value)} />
+                <input
+                  type="date"
+                  value={assignDateU!== ""
+                    ? assignDateU
+                    : rescheduleModalData?.reportingDate || ""}
+                  min={today}
+                  onChange={(e) => setAssignDateU(e.target.value)}
+                />
               </div>
-              <div>
+
+              <div className="modal-content-field">
                 <label>Assign Time:</label>
-                <input type="time" value={assignTime} onChange={(e) => setAssignTime(e.target.value)} />
+                <input
+                  type="time"
+                  value={assignTimeU!== ""
+                    ? assignTimeU
+                    : rescheduleModalData?.startTime?.slice(0, 5) || ""}
+                  onChange={(e) => setAssignTimeU(e.target.value)}
+                />
               </div>
+
               <div>
-                <button className="accept-btn" onClick={handleUpdateSchedule}>Done</button>
+                <button
+                  className="accept-btn"
+                  onClick={handleUpdateSchedule}
+                  >
+                  Done
+                </button>
               </div>
             </div>
           </div>
