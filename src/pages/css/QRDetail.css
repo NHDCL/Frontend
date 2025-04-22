@@ -17,17 +17,12 @@
     max-width: 400px;
   }
   
-  .asset-info .asset-image {
-    width: 100%;
-    max-height: 150px;
-    object-fit: contain;
-    margin-bottom: 1rem;
-  }
   .asset_detail{
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    margin-bottom: 20px;
   }
   .pp{
     display: flex;
@@ -68,7 +63,7 @@
     padding: 0.75rem;
     border: 1.5px solid #897463;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 14px;
   }
   
   .report-form textarea {
@@ -83,7 +78,7 @@
     text-align: center;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 14px;
     color: #555;
   }
   

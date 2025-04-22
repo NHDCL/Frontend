@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./css/card.css";
 import "./css/table.css";
 import "./css/form.css";
@@ -13,10 +13,20 @@ import jsPDF from "jspdf";
 import "tippy.js/dist/tippy.css";
 import Tippy from "@tippyjs/react";
 import autoTable from "jspdf-autotable";
-
+import { useGetRepairReportsQuery, useGetRepairRequestQuery, } from "../../slices/maintenanceApiSlice";
 import Select from "react-select"
+import { createSelector } from "reselect";
+import { useSelector } from "react-redux";
+
+import {
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+  useGetAcademyQuery,
+  useGetDepartmentQuery,
+} from "../../slices/userApiSlice";
 
 const Repairreport = () => {
+  const [totalTechnicians, setTotalTechnicians] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -29,112 +39,92 @@ const Repairreport = () => {
 
   const rowsPerPage = 10;
 
-  const [data, setData] = useState([
-    {
-      rid: "#1001",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description:
-        "Cooling issue A chair is a piece of furniture designed to provide seating support for a single person. It typically consists of a seat, a backrest, and four legs, although variations exist with three legs, armrests, and cushioning.",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information:
-        "I am writing to report that the air conditioning unit in Room 305 is not working properly. It is blowing warm air even when set to cooling mode, making the room uncomfortable.",
-      imageUrl: [
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      ],
-    },
-    {
-      rid: "#1002",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "Cooling issue",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
-      imageUrl: [
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      ],
-    },
-    {
-      rid: "#1003",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "Cooling issue",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
-      imageUrl: [
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      ],
-    },
-    {
-      rid: "#1004",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "Cooling issue",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
-      imageUrl: [
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      ],
-    },
-    {
-      rid: "#1004",
-      assetName: "Air Conditioner",
-      startTime: "2:00AM",
-      endTime: "3:00PM",
-      Date: "23/4/2024",
-      Area: "Block-203",
-      Total_cost: "NU.400",
-      part_used: "screw driver",
-      location: "Block-A-101",
-      description: "Cooling issue",
-      total_technician: "4",
-      Assigned_supervisor: "12210.gcit@gmail.com",
-      Assigned_Technician: "12210.gcit@gmail.com",
-      Additional_information: "12210.gcit@gmail.com",
-      imageUrl: [
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      ],
-    },
-  ]);
+  const { data: repairRequest, refetch: refetchRepairRequest } = useGetRepairRequestQuery();
+  const { data: repairReport } = useGetRepairReportsQuery();
+  const { data: academy } = useGetAcademyQuery();
 
-  const sortedData = [...data].sort((a, b) => b.rid - a.rid);
+
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+  const email = useSelector(getUserEmail);
+  const { data: userByEmial } = useGetUserByEmailQuery(email);
+
+
+  const academyId = userByEmial?.user?.academyId;
+  const { data: departments, isLoading: departmentsLoading } =
+    useGetDepartmentQuery();
+
+  const { data: users } = useGetUsersQuery();
+  const [data, setData] = useState([]);
+
+
+  useEffect(() => {
+    if (repairReport && repairRequest && academy && users && userByEmial) {
+      console.log("🔧 Repair Reports:", repairReport);
+      console.log("📋 Repair Requests:", repairRequest);
+      console.log("🎓 Academies:", academy);
+      console.log("👤 Users:", users);
+  
+      const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
+  
+      const mergedData = repairReport
+        .map((report) => {
+          const matchingRequest = repairRequest.find(
+            (request) => request.repairID === report.repairID
+          );
+  
+          // Skip if no matching request
+          if (!matchingRequest) return null;
+  
+          const requestAcademyId = matchingRequest.academyId?.trim().toLowerCase();
+  
+          // ✅ Only keep records matching the login user's academy
+          if (requestAcademyId !== loginAcademyId) return null;
+  
+          // 🔍 Count technicians
+          let total = 0;
+          if (report.technicians) {
+            const technicianList = report.technicians
+              .split(",")
+              .filter((email) => email.trim() !== "");
+            total = technicianList.length;
+            console.log("👷‍♂️ Technicians for Report ID", report.repairID, ":", total);
+          }
+  
+          // 🏫 Match academyId to academyName
+          const matchingAcademy = academy.find(
+            (a) => a.academyId?.trim().toLowerCase() === requestAcademyId
+          );
+  
+          const merged = {
+            ...report,
+            academyId: matchingRequest.academyId || null,
+            academyName: matchingAcademy?.name || "Unknown Academy",
+            assetName: matchingRequest.assetName || report.assetName || "N/A",
+            area: matchingRequest.area || "N/A",
+            description: matchingRequest.description || "N/A",
+            totalTechnicians: total,
+          };
+  
+          console.log("🧩 Merged Item:", merged);
+          return merged;
+        })
+        .filter(Boolean); // 🔥 Remove any nulls (non-matching academy or request)
+  
+      console.log("📦 Final Merged Data:", mergedData);
+      setData(mergedData);
+    }
+  }, [repairReport, repairRequest, academy, users, userByEmial]);
+  
+  
+  
+
+  console.log("dataa", data)
+
+  const sortedData = [...data].sort((a, b) => b.repairReportID - a.repairReportID);
 
   const filteredData = sortedData.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
@@ -150,16 +140,16 @@ const Repairreport = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (rid) => {
+  const handleSelectRow = (repairReportID) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(rid)
-        ? prevSelectedRows.filter((item) => item !== rid)
-        : [...prevSelectedRows, rid]
+      prevSelectedRows.includes(repairReportID)
+        ? prevSelectedRows.filter((item) => item !== repairReportID)
+        : [...prevSelectedRows, repairReportID]
     );
   };
 
   const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.rid));
+    const updatedData = data.filter((item) => !selectedRows.includes(item.repairReportID));
     // Update the data with the filtered result after deletion
     setData(updatedData);
     setSelectedRows([]);
@@ -183,33 +173,33 @@ const Repairreport = () => {
   // **Function to handle PDF download**
   const handleDownloadPDF = () => {
     if (!modalData) return; // Prevent function execution if no data is selected
-  
+
     const doc = new jsPDF();
-  
+
     // Add title
     doc.text("Repair Report", 14, 15);
-  
+
     // Define table headers
     const columns = ["Field", "Value"];
-  
+
     // Map modalData dynamically into table rows
     const rows = [
-      ["RID", modalData.rid],
+      ["RID", modalData.repairReportID],
       ["Asset Name", modalData.assetName],
       ["Start Time", modalData.startTime],
       ["End Time", modalData.endTime],
-      ["Date", modalData.Date],
-      ["Area", modalData.Area],
-      ["Total Cost", modalData.Total_cost],
-      ["Part Used", modalData.part_used],
+      ["Date", modalData.finishedDate],
+      ["Area", modalData.area],
+      ["Total Cost", modalData.totalCost],
+      ["Part Used", modalData.partsUsed],
       ["Location", modalData.location],
       ["Description", modalData.description],
-      ["Total Technicians", modalData.total_technician],
+      ["Total Technicians", modalData.totalTechnicians],
       ["Assigned Supervisor", modalData.Assigned_supervisor],
-      ["Assigned Technician", modalData.Assigned_Technician],
+      ["Assigned Technician", modalData.technicians],
       ["Additional Info", modalData.Additional_information],
     ];
-  
+
     // Generate the table using autoTable
     autoTable(doc, {
       head: [columns],
@@ -219,23 +209,23 @@ const Repairreport = () => {
       styles: { fontSize: 10 },
       headStyles: { fillColor: [41, 128, 185] }, // Blue header background
     });
-  
+
     // Save the PDF
-    doc.save(`Repair_Report_${modalData.rid}.pdf`);
+    doc.save(`Repair_Report_${modalData.repairReportID}.pdf`);
   };
 
   // download 
   const handleDownloadSelected = () => {
     if (selectedRows.length === 0) return;
 
-    const selectedData = data.filter((item) => selectedRows.includes(item.rid));
+    const selectedData = data.filter((item) => selectedRows.includes(item.repairReportID));
 
     const csvContent = [
       ["Repair ID", "Asset Name", "Start Time", "End Time", "Date", "Area", "Total Cost", "Parts Used", "Location", "Description", "Total Technicians", "Assigned Supervisor", "Assigned Technician"],
       ...selectedData.map((item) => [
-        item.rid, item.assetName, item.startTime, item.endTime, item.Date,
-        item.Area, item.Total_cost, item.part_used, item.location,
-        item.description, item.total_technician, item.Assigned_supervisor, item.Assigned_Technician
+        item.repairReportID, item.assetName, item.startTime, item.endTime, item.finishedDate,
+        item.area, item.totalCost, item.partsUsed, item.location,
+        item.description, item.totalTechnicians, item.Assigned_supervisor, item.technicians
       ])
     ].map(row => row.join(",")).join("\n");
 
@@ -282,7 +272,7 @@ const Repairreport = () => {
                       setSelectedRows(
                         selectedRows.length === displayedData.length
                           ? []
-                          : displayedData.map((item) => item.rid)
+                          : displayedData.map((item) => item.repairReportID)
                       )
                     }
                   />
@@ -302,7 +292,7 @@ const Repairreport = () => {
                 <th>
                   {selectedRows.length > 0 ? (
                     <button
-                      className="download-all-btn"
+                      // className="download-all-btn"
                       onClick={handleDownloadSelected}
                     >
                       < LuDownload
@@ -323,17 +313,17 @@ const Repairreport = () => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedRows.includes(item.rid)}
-                      onChange={() => handleSelectRow(item.rid)}
+                      checked={selectedRows.includes(item.repairReportID)}
+                      onChange={() => handleSelectRow(item.repairReportID)}
                     />
                   </td>
-                  <td>{item.rid}</td>
+                  <td>{index + 1}</td>
                   <td>{item.assetName}</td>
                   <td>{[item.startTime, item.endTime].join(" - ")}</td>
-                  <td>{item.Date}</td>
-                  <td>{item.Area}</td>
-                  <td>{item.Total_cost}</td>
-                  <td>{item.part_used}</td>
+                  <td>{item.finishedDate}</td>
+                  <td>{item.area}</td>
+                  <td>{item.totalCost}</td>
+                  <td>{item.partsUsed}</td>
                   <td className="description">
                     <Tippy content={item.description} placement="top">
                       <span>
@@ -413,22 +403,22 @@ const Repairreport = () => {
                 </div>
                 <div className="modal-content-field">
                   <label>Date</label>
-                  <input type="text" value={modalData.Date} readOnly />
+                  <input type="text" value={modalData.finishedDate} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Area</label>
-                  <input type="text" value={modalData.Area} readOnly />
+                  <input type="text" value={modalData.area} readOnly />
                 </div>
 
                 <div className="modal-content-field">
                   <label>Parts used: </label>
-                  <input type="text" value={modalData.part_used} readOnly />
+                  <input type="text" value={modalData.partsUsed} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Total Technicians</label>
                   <input
                     type="text"
-                    value={modalData.total_technician}
+                    value={modalData.totalTechnicians}
                     readOnly
                   />
                 </div>
@@ -436,36 +426,36 @@ const Repairreport = () => {
                   <label>Assigned Technicians</label>
                   <input
                     type="text"
-                    value={modalData.Assigned_Technician}
+                    value={modalData.technicians}
                     readOnly
                   />
                 </div>
-                <div className="modal-content-field">
+                {/* <div className="modal-content-field">
                   <label>Assigned Supervisor</label>
                   <input
                     type="text"
                     value={modalData.Assigned_supervisor}
                     readOnly
                   />
-                </div>
+                </div> */}
                 <div className="modal-content-field">
                   <label>Description:</label>
                   <textarea value={modalData.description} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Total Cost: </label>
-                  <input type="text" value={modalData.Total_cost} readOnly />
+                  <input type="text" value={modalData.totalCost} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Additional Informations: </label>
-                  <textarea value={modalData.Additional_information} readOnly />
+                  <textarea value={modalData.information} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Repaired Images:</label>
                   <div className="TModal-profile-img">
-                    {Array.isArray(modalData.imageUrl) &&
-                    modalData.imageUrl.length > 0 ? (
-                      modalData.imageUrl.map((imgSrc, index) => (
+                    {Array.isArray(modalData.images) &&
+                      modalData.images.length > 0 ? (
+                      modalData.images.map((imgSrc, index) => (
                         <img
                           key={index}
                           src={imgSrc}

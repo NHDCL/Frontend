@@ -35,7 +35,7 @@ const AdminAcademies = () => {
   const [addAcademy] = usePostAcademyMutation();
   const [updateAcademy] = useUpdateAcademyMutation();
   const [deleteAcademy] = useDeleteAcademyMutation();
-  // console.log("add academy:", newAcademy);
+  console.log("add academy:", newAcademy);
 
   useEffect(() => {
     if (error) {
@@ -66,6 +66,7 @@ const AdminAcademies = () => {
       }
     }
   };
+  
 
   const handleAdd = async () => {
     const { name, location, description, image } = newAcademy;
@@ -136,6 +137,8 @@ const AdminAcademies = () => {
         description,
         image, // this is a File object now
       }).unwrap();
+      
+      console.log("update",currentAcademy)
 
       Swal.fire({
         icon: "success",
@@ -157,6 +160,43 @@ const AdminAcademies = () => {
       });
     }
   };
+
+  // const handleEdit = async () => {
+  //   try {
+  //     const { academyId, name, location, description, image } = currentAcademy;
+  
+  //     const payload = {
+  //       academyId,
+  //       name,
+  //       location,
+  //       description,
+  //       image, // ✅ keep it — it's either File or string (URL)
+  //     };
+  
+  //     await updateAcademy(payload).unwrap();
+  
+  //     Swal.fire({
+  //       icon: "success",
+  //       title: "Academy updated!",
+  //       toast: true,
+  //       position: "top-end",
+  //       showConfirmButton: false,
+  //       timer: 2000,
+  //     });
+  
+  //     setShowEditModal(false);
+  //     refetch();
+  //   } catch (err) {
+  //     console.error("Update failed:", err);
+  //     Swal.fire({
+  //       icon: "error",
+  //       title: "Failed to update academy",
+  //       text: err?.data?.message || err?.error || "Something went wrong.",
+  //     });
+  //   }
+  // };
+  
+
 
   const handleDelete = (id) => {
     if (!id) {
@@ -237,7 +277,7 @@ const AdminAcademies = () => {
                       name: academy.name,
                       location: academy.location,
                       description: academy.description,
-                      image: null, // this is where new File will go (if uploaded)
+                      image: academy.image, // this is where new File will go (if uploaded)
                       imagePreview: academy.image, // keep the current image for preview
                     });
                     setShowEditModal(true);
@@ -316,7 +356,7 @@ const AdminAcademies = () => {
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleImageUpload(e)}
+                onChange={(e) => handleImageUpload(e, true)}
                 className="AdminA-profile-hidden"
               />
 

@@ -171,7 +171,7 @@ const AdminAccount = () => {
         }).unwrap();
         Swal.fire("Success", "Profile Image Updated Successfully!", "success");
         originalImageRef.current = profile.imageFile;
-        setIsNewImageSelected(false); // 👈 hide update button
+        setIsNewImageSelected(false); // hide update button
         // Refetch the profile data to update the image
         refetch();
       } catch (error) {

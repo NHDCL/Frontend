@@ -1,10 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./css/TabSwitcher.css";
 import "./css/table.css";
 import { IoIosSearch } from "react-icons/io";
 import img from "../../assets/images/person_four.jpg";
 import { TiArrowSortedUp } from "react-icons/ti";
 import { useGetAcademyQuery, useGetDepartmentQuery, useGetUsersQuery } from "../../slices/userApiSlice";
+import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
+import { useSelector } from "react-redux";
+import { createSelector } from "reselect";
+
+
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,6 +20,16 @@ const Users = () => {
   const { data: academies } = useGetAcademyQuery();
   const { data: department, refetch } = useGetDepartmentQuery();
   const { data: users } = useGetUsersQuery();
+
+
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+  const email = useSelector(getUserEmail);
+  const { data: userByEmial } = useGetUserByEmailQuery(email);
+
 
   const getAcademyName = (academyId) => {
     const academy = academies?.find(a => a.academyId === academyId);
@@ -29,20 +44,32 @@ const Users = () => {
   // Filter data based on selected tab and search
 
   const [data, setData] = useState([])
-  React.useEffect(() => {
-    if (users) {
-      setData(users);
-    }
-  }, [users]);
 
+  useEffect(() => {
+    if (!users || !userByEmial?.user?.academyId) return;
 
-  const filteredData = (users || []).filter(
+    const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
+    console.log("loh", loginAcademyId)
+
+    // Filter users based on login user's academy
+    const filtered = users.filter((user) =>
+      user.academyId?.trim().toLowerCase() === loginAcademyId
+    );
+    console.log("mm", filtered)
+
+    setData(filtered);
+  }, [users, userByEmial]);
+
+  console.log("DAT", data)
+
+  const filteredData = (data || []).filter(
     (item) =>
-      item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
+      item.role?.name.toLowerCase() === activeTab.toLowerCase() &&
       Object.values(item).some((value) =>
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
   );
+
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
     (currentPage - 1) * rowsPerPage,

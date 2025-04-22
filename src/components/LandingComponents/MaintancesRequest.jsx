@@ -1,38 +1,83 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./../../pages/css/MaintenanceRequest.css";
 import { RiImageAddLine } from "react-icons/ri";
 import Select from "react-select";
+import Swal from "sweetalert2";
+import { usePostRepairRequestMutation } from "./../../slices/maintenanceApiSlice";
+import { useGetAcademyQuery } from "./../../slices/userApiSlice";
+import { useGetAssetQuery } from "./../../slices/assetApiSlice";
 
-const academies = [
-  "Pemathang",
-  "Khotokha",
-  "Jamtsholing",
-  "Taraythang",
-  "Gyalpozhing",
+const priorities = [
+  { value: "Immediate", label: "Immediate (Within 24 hours)" },
+  { value: "High", label: "High (Within 1-2 days)" },
+  { value: "Moderate", label: "Moderate (Within 1 week)" },
+  { value: "Low", label: "Low (More than a week)" },
 ];
-const areaOptions = {
-  Pemathang: ["Block A", "Ground", "Footpath", "Room1"],
-  Khotokha: ["Library", "Canteen", "Lab"],
-  Jamtsholing: ["Main Hall", "Office", "Hostel"],
-  Taraythang: ["Parking", "Garden", "Playground"],
-  Gyalpozhing: ["Block B", "Corridor", "Stairs"],
-};
-const priorities = ["Immediate(Within 24 hours)", "High(Within 1-2 days)", "Moderate(Within 1 week)", "Low(More than a week)"];
 
 const MaintenanceRequest = () => {
   const [formData, setFormData] = useState({
     name: "",
-    phone: "",
-    asset: "",
-    academy: "",
-    area: "",
-    priority: "",
-    description: "",
+  phoneNumber: "",
+  email: "",
+  priority: "",
+  academy: "",
+  area: "",
+  description: "",
+  assetName: "",
+  scheduled: false,
+  assetCode: "",
+  images: [],
+  status: "Pending",
+  // academyId:"",
   });
+  console.log("formdata",formData)
 
-  const [images, setImages] = useState([]); // Change to array for multiple images
+  const [postRepairRequest, { isLoading: requesting }] = usePostRepairRequestMutation();
+  const { data: academies = [], isLoading, error } = useGetAcademyQuery();
+  const { data: assets = [], error1 } = useGetAssetQuery();
+
+  const [areaList, setAreaList] = useState([]);
+  const [images, setImages] = useState([]);
   const [errors, setErrors] = useState({});
   const [imageError, setImageError] = useState("");
+
+  useEffect(() => {
+    if (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Failed to fetch academies.",
+      });
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (error1) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Failed to fetch asset.",
+      });
+    }
+  }, [error1]);
+
+  useEffect(() => {
+    if (formData.academy && assets.length > 0) {
+      const matchedAssets = assets.filter(
+        (asset) => asset.academyID === formData.academy
+      );
+
+      const filteredAreas = matchedAssets
+        .map((asset) => asset.assetArea)
+        .filter((area, index, self) => area && self.indexOf(area) === index);
+
+      setAreaList(filteredAreas);
+    } else {
+      setAreaList([]);
+    }
+  }, [formData.academy, assets]);
+
+  // console.log("dt", formData);
 
   const handleInputChange = (e, field) => {
     if (field) {
@@ -41,6 +86,7 @@ const MaintenanceRequest = () => {
       setFormData({ ...formData, [e.target.name]: e.target.value });
     }
   };
+
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length > 5) {
@@ -48,19 +94,20 @@ const MaintenanceRequest = () => {
       return;
     }
     setImageError("");
-    const imageUrls = files.map((file) => URL.createObjectURL(file));
-    setImages((prevImages) => [...prevImages, ...imageUrls]);
+    setImages((prevImages) => [...prevImages, ...files]);
   };
 
   const removeImage = (index) => {
-    setImages(images.filter((_, i) => i !== index)); // Remove image by index
+    setImages(images.filter((_, i) => i !== index));
   };
 
   const validateForm = () => {
     let newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Name is required.";
-    if (!formData.phone.trim()) newErrors.phone = "Phone number is required.";
-    if (!formData.asset.trim()) newErrors.asset = "Asset name is required.";
+    if (!formData.phoneNumber.trim())
+      newErrors.phoneNumber = "Phone number is required.";
+    if (!formData.assetName.trim())
+      newErrors.assetName = "Asset name is required.";
     if (!formData.academy) newErrors.academy = "Please select an academy.";
     if (!formData.area) newErrors.area = "Please select an area.";
     if (!formData.priority) newErrors.priority = "Please select a priority.";
@@ -71,12 +118,91 @@ const MaintenanceRequest = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      alert("Form submitted successfully! 🎉");
+    if (!validateForm()) return;
+  
+    const {
+      name,
+      phoneNumber,
+      email,
+      priority,
+      status,
+      area,
+      description,
+      assetName,
+      academy,
+    } = formData;
+  
+    const requestData = new FormData();
+    requestData.append("name", name.trim());
+    requestData.append("phoneNumber", phoneNumber.trim());
+    requestData.append("email", email.trim());
+    requestData.append("priority", priority.trim());
+    requestData.append("status", status || "Pending");
+    requestData.append("area", area);
+    requestData.append("description", description.trim());
+    requestData.append("assetName", assetName.trim());
+    requestData.append("scheduled", "false");
+    requestData.append("assetCode", ""); // null as empty string
+  
+    images.forEach((imageFile) => {
+      requestData.append("images", imageFile);
+    });
+    requestData.append("academyId", academy.trim());
+
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to send this repair request?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, send it!",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+    });
+  
+    if (!result.isConfirmed) return;
+  
+    try {
+      await postRepairRequest(requestData).unwrap();
+  
+      Swal.fire({
+        icon: "success",
+        title: "Repair Request Sent!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+  
+      setFormData({
+        name: "",
+        phoneNumber: "",
+        email: "",
+        priority: "",
+        status: "Pending",
+        academy: "",
+        area: "",
+        description: "",
+        assetName: "",
+        scheduled: false,
+        assetCode: "",
+        images: [],
+        academyId:"",
+
+      });
+      setImages([]);
+    } catch (err) {
+      console.error("Error sending request", err);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to send Repair Request",
+        text: err?.data?.message || "Something went wrong.",
+      });
     }
   };
+  
 
   return (
     <div className="mr-container">
@@ -109,46 +235,59 @@ const MaintenanceRequest = () => {
 
             <input
               type="text"
-              name="phone"
-              value={formData.phone}
+              name="phoneNumber"
+              value={formData.phoneNumber}
               onChange={handleInputChange}
               className="mr-input"
               placeholder="Enter your phone number"
             />
-            {errors.phone && <p className="error-text">{errors.phone}</p>}
+            {errors.phoneNumber && (
+              <p className="error-text">{errors.phoneNumber}</p>
+            )}
 
             <input
               type="text"
-              name="asset"
-              value={formData.asset}
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="mr-input"
+              placeholder="Enter your email"
+            />
+
+            <input
+              type="text"
+              name="assetName"
+              value={formData.assetName}
               onChange={handleInputChange}
               className="mr-input"
               placeholder="Enter asset name"
             />
-            {errors.asset && <p className="error-text">{errors.asset}</p>}
+            {errors.assetName && (
+              <p className="error-text">{errors.assetName}</p>
+            )}
 
             <Select
               classNamePrefix="customm-select-department"
               name="academy"
-              value={
-                formData.academy
-                  ? { value: formData.academy, label: formData.academy }
-                  : null
-              }
               onChange={(selectedOption) =>
-                handleInputChange(selectedOption, "academy")
+                setFormData({
+                  ...formData,
+                  academy: selectedOption ? selectedOption.value : "",
+                  academyId: selectedOption ? selectedOption.value : "",
+                  area: "",
+                })
               }
-              options={academies.map((academy) => ({
-                value: academy,
-                label: academy,
+              options={academies.map((a) => ({
+                value: a.academyId,
+                label: a.name,
               }))}
+              isLoading={isLoading}
               isClearable
               isSearchable={false}
               placeholder="Select Academy"
             />
             {errors.academy && <p className="error-text">{errors.academy}</p>}
 
-            {/* Area Selection (Filtered by Selected Academy) */}
             <Select
               classNamePrefix="customm-select-department"
               name="area"
@@ -160,18 +299,13 @@ const MaintenanceRequest = () => {
               onChange={(selectedOption) =>
                 handleInputChange(selectedOption, "area")
               }
-              options={
-                formData.academy
-                  ? areaOptions[formData.academy].map((area) => ({
-                      value: area,
-                      label: area,
-                    }))
-                  : []
-              }
+              options={areaList.map((area) => ({
+                value: area,
+                label: area,
+              }))}
+              placeholder="Select Area"
               isClearable
               isSearchable={false}
-              placeholder="Select Area"
-              isDisabled={!formData.academy} // Disable if no academy is selected
             />
             {errors.area && <p className="error-text">{errors.area}</p>}
 
@@ -179,20 +313,17 @@ const MaintenanceRequest = () => {
               classNamePrefix="customm-select-department"
               name="priority"
               value={
-                priorities.find((priority) => priority === formData.priority)
-                  ? { value: formData.priority, label: formData.priority }
+                formData.priority
+                  ? priorities.find((p) => p.value === formData.priority)
                   : null
               }
               onChange={(selectedOption) =>
                 handleInputChange(selectedOption, "priority")
               }
-              options={priorities.map((priority) => ({
-                value: priority,
-                label: priority,
-              }))}
+              options={priorities}
+              placeholder="Select Priority"
               isClearable
               isSearchable={false}
-              placeholder="Select Priority"
             />
             {errors.priority && <p className="error-text">{errors.priority}</p>}
 
@@ -207,25 +338,47 @@ const MaintenanceRequest = () => {
               <p className="error-text">{errors.description}</p>
             )}
 
-<input type="file" accept="image/*" id="imageUpload" multiple onChange={handleImageUpload} style={{ display: "none" }} />
+            <input
+              type="file"
+              accept="image/*"
+              id="imageUpload"
+              multiple
+              onChange={handleImageUpload}
+              style={{ display: "none" }}
+            />
+
             <div className="mr-upload-box-img">
               {imageError && <p className="error-text">{imageError}</p>}
-              {images.map((imgSrc, index) => (
+              {images.map((imgFile, index) => (
                 <div key={index} className="mr-image-wrapper">
-                  <img src={imgSrc} alt={`Uploaded Preview ${index}`} className="mr-upload-preview" />
-                  <button type="button" className="mr-remove-btn" onClick={() => removeImage(index)}>×</button>
+                  <img
+                    src={URL.createObjectURL(imgFile)}
+                    alt={`Preview ${index}`}
+                    className="mr-upload-preview"
+                  />
+                  <button
+                    type="button"
+                    className="mr-remove-btn"
+                    onClick={() => removeImage(index)}
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
               {images.length < 5 && (
-                <div className="mr-upload-box" onClick={() => document.getElementById("imageUpload").click()}>
+                <div
+                  className="mr-upload-box"
+                  onClick={() => document.getElementById("imageUpload").click()}
+                >
                   <RiImageAddLine className="mr-upload-icon" />
                   <p className="mr-pimg">Upload Images</p>
                 </div>
               )}
             </div>
 
-            <button type="submit" className="mr-submit-btn">
-              Request
+            <button disabled={requesting}
+style={{backgroundColor:"#897463"}} type="submit" className="mr-submit-btn">
+              {requesting ? "Requesting..." : "Request"}{" "}
             </button>
           </form>
         </div>
