@@ -11,6 +11,7 @@ import {
   usePostAssetMutation,
   useGetCategoryQuery,
   useUploadExcelMutation,
+  useRequestDisposeMutation,
 } from "../../../slices/assetApiSlice";
 import { useGetUserByEmailQuery } from "../../../slices/userApiSlice";
 import Swal from "sweetalert2";
@@ -66,6 +67,8 @@ const Building = ({ category }) => {
   const [postUploadImages, { isLoading, error }] =
     usePostUploadImagesMutation();
   const [uploadExcel, { isLoading: upLoading }] = useUploadExcelMutation();
+  const [requestDispose, { isLoading: isDeleting }] =
+    useRequestDisposeMutation();
 
   useEffect(() => {
     if (manager?.user?.academyId) {
@@ -80,7 +83,7 @@ const Building = ({ category }) => {
       );
       setData(filteredAssets);
     }
-  }, [assets]);
+  }, [assets, category]);
 
   useEffect(() => {
     if (categories) {
@@ -116,10 +119,9 @@ const Building = ({ category }) => {
         lifespan: "5 years",
         assetArea: "Office Room",
         description: "24-inch LCD monitor",
-        status: "Pending",
         createdBy: "jigme@gmail.com",
-        academyID: "67f017027d756710a12c2fa6",
-        assetCategoryID: "67eeef18d825904ae1f8ce64",
+        academyID: academyId,
+        assetCategoryID: CategoryId,
         // Any extra dynamic attributes can be added too
         Plint_area: "22",
       },
@@ -564,6 +566,46 @@ const Building = ({ category }) => {
     });
   };
 
+  const handleDeleteAsset = async () => {
+    if (!modalData.assetCode && !email) return;
+
+    const confirmResult = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to mark this asset as disposed?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (confirmResult.isConfirmed) {
+      try {
+        const result = await requestDispose({
+          assetCode: modalData.assetCode,
+          email: email,
+        }).unwrap();
+        console.log(result);
+        refetch();
+        setModalData(null);
+
+        Swal.fire({
+          title: "Deleted!",
+          text: result.message || "Asset marked as disposed.",
+          icon: "success",
+        });
+
+        // Optionally close modal or refresh list
+      } catch (err) {
+        Swal.fire({
+          title: "Error!",
+          text: err?.data?.message || "Something went wrong.",
+          icon: "error",
+        });
+      }
+    }
+  };
+
   return (
     <div className="managerDashboard">
       <div className="search-sort-container">
@@ -607,8 +649,7 @@ const Building = ({ category }) => {
           </div>
         </div>
       </div>
-      <div className="Building-sort">
-        {/* Building Dropdown */}
+      {/* <div className="Building-sort">
         <Select
           classNamePrefix="custom-select-workstatus"
           className="workstatus-dropdown"
@@ -618,12 +659,10 @@ const Building = ({ category }) => {
           )}
           onChange={(selectedOption) => {
             setSelectedBuilding(selectedOption ? selectedOption.value : "");
-            setSelectedFloor(""); // Reset floor selection when a new building is chosen
+            setSelectedFloor("");
           }}
           isClearable
         />
-
-        {/* Floor Dropdown (Only Shows if Building is Selected) */}
         {selectedBuilding && (
           <Select
             classNamePrefix="custom-select-workstatus"
@@ -638,7 +677,7 @@ const Building = ({ category }) => {
             isClearable
           />
         )}
-      </div>
+      </div> */}
 
       {/* Table */}
       <div className="table-container">
@@ -646,7 +685,7 @@ const Building = ({ category }) => {
           <thead className="table-header">
             <tr>
               {[
-                "SI.No",
+                "Sl. No.",
                 "Asset Code",
                 "Title",
                 "Acquire Date",
@@ -1164,8 +1203,10 @@ const Building = ({ category }) => {
                   type="button"
                   className="accept-btn"
                   style={{ backgroundColor: "red" }}
+                  onClick={handleDeleteAsset}
+                  disabled={isDeleting}
                 >
-                  <RiDeleteBin6Line />
+                  {isDeleting ? "Deleting..." : <RiDeleteBin6Line />}
                 </button>
 
                 <button

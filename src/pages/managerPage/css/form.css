@@ -108,6 +108,17 @@
   padding: 12px;
 }
 
+.floor-room-list{
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #897463;
+  border-radius: 10px;
+  max-width: 350px;
+  height: auto;
+  font-size: 13px;
+  padding: 12px;
+  text-align: left;
+}
 .image-field{
   width: 350px;
 }
