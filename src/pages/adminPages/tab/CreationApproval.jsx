@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./../../managerPage/css/card.css";
 import "./../../managerPage/css/table.css";
 import "./../../managerPage/css/form.css";
@@ -6,61 +6,37 @@ import "./../../managerPage/css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import {
+  useUpdateAssetStatusMutation,
+  useGetAssetQuery,
+  useUpdateAssetMutation,
+} from "../../../slices/assetApiSlice";
+import Swal from "sweetalert2";
 
 const CreationApproval = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [modalData, setModalData] = useState(null);
+  const [updateStatus] = useUpdateAssetStatusMutation();
+  const { data: assets, refetch } = useGetAssetQuery();
+  const [data, setData] = useState([]);
+  const [isDeclining, setIsDeclining] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [updatedAsset, setUpdatedAsset] = useState(null);
+  const [updateAsset] = useUpdateAssetMutation();
 
   const rowsPerPage = 10;
 
-  const [data, setData] = useState([
-    {
-      Asset_ID: "128",
-      Title: "Laptop",
-      Asset_Code: "NHDCL-22-2003",
-      Serial_Number: "NHDCL-22-2003",
-      Cost: "600",
-      Acquired_Date: "25/3/2025",
-      Estimated_Lifespan: "1 year",
-      Status: "In Maintenance",
-      Category: "Machinery & Equipment",
-      Area: "Block-C, 2nd Floor, Room 203",
-      Description: "This laptop was brought from BT",
-      Created_By: "12210100.gcit@rub.edu.bt",
-    },
-    {
-      Asset_ID: "129",
-      Title: "Printer",
-      Asset_Code: "NHDCL-22-2004",
-      Serial_Number: "NHDCL-22-2004",
-      Cost: "1200",
-      Acquired_Date: "12/5/2024",
-      Estimated_Lifespan: "3 years",
-      Status: "Operational",
-      Category: "Office Equipment",
-      Area: "Block-B, 1st Floor, Room 102",
-      Description: "Printer for office use, HP LaserJet",
-      Created_By: "12210101.gcit@rub.edu.bt",
-    },
-    {
-      Asset_ID: "130",
-      Title: "Projector",
-      Asset_Code: "NHDCL-22-2005",
-      Serial_Number: "NHDCL-22-2005",
-      Cost: "800",
-      Acquired_Date: "30/7/2023",
-      Estimated_Lifespan: "5 years",
-      Status: "Needs Repair",
-      Category: "Multimedia Equipment",
-      Area: "Block-A, 3rd Floor, Room 305",
-      Description: "Ceiling-mounted projector with HDMI support",
-      Created_By: "12210102.gcit@rub.edu.bt",
-    },
-  ]);
+  useEffect(() => {
+    if (assets) {
+      const filteredAssets = assets.filter(
+        (asset) => asset.status === "Pending" && asset.deleted === false
+      );
+      setData(filteredAssets);
+    }
+  }, [assets]);
 
   const sortedData = [...data].sort((a, b) => b.rid - a.rid);
 
@@ -78,16 +54,121 @@ const CreationApproval = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (rid) => {
-    setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(rid)
-        ? prevSelectedRows.filter((item) => item !== rid)
-        : [...prevSelectedRows, rid]
-    );
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setUpdatedAsset((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleInputChange = (e, field) => {
-    setModalData({ ...modalData, [field]: e.target.value });
+  const handleSave = async (e) => {
+    e.preventDefault?.();
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You are about to update the asset details.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, update it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res=await updateAsset({
+          assetCode: updatedAsset.assetCode,
+          assetData: updatedAsset,
+        }).unwrap();
+        console.log(res)
+        setIsEditing(false);
+        refetch()
+
+        Swal.fire({
+          title: "Updated!",
+          text: "Asset details have been successfully updated.",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to update asset. Please try again.",
+          icon: "error",
+        });
+      }
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!modalData) return;
+    setIsLoading(true);
+
+    try {
+      await updateStatus({
+        assetCode: modalData.assetCode,
+        status: "In Usage",
+        email: modalData.createdBy,
+        action: "accept",
+      });
+
+      refetch(); // Refresh the asset list
+      handleCloseModal();
+      Swal.fire({
+        title: "Approved!",
+        text: "The asset has been approved successfully.",
+        icon: "success",
+        confirmButtonText: "Okay",
+      });
+    } catch (error) {
+      console.error("Failed to update status", error);
+
+      // Show SweetAlert error message
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to approve the asset. Please try again.",
+        icon: "error",
+        confirmButtonText: "Retry",
+      });
+    } finally {
+      setIsLoading(false); // End loading
+    }
+  };
+
+  const handleDecline = async () => {
+    if (!modalData) return;
+    setIsDeclining(true);
+
+    try {
+      const res = await updateStatus({
+        assetCode: modalData.assetCode,
+        email: modalData.createdBy,
+        action: "decline",
+      });
+      console.log(res);
+
+      refetch(); // Refresh the asset list
+      handleCloseModal();
+      Swal.fire({
+        title: "Approved!",
+        text: "The asset has been approved successfully.",
+        icon: "success",
+        confirmButtonText: "Okay",
+      });
+    } catch (error) {
+      console.error("Failed to update status", error);
+
+      // Show SweetAlert error message
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to approve the asset. Please try again.",
+        icon: "error",
+        confirmButtonText: "Retry",
+      });
+    } finally {
+      setIsDeclining(false); // End loading
+    }
   };
 
   const handleDeleteSelected = () => {
@@ -99,14 +180,15 @@ const CreationApproval = () => {
 
   const handleView = (item) => {
     setModalData(item);
+    setUpdatedAsset(item)
   };
   const handleCloseModal = () => {
     setModalData(null);
+    setUpdatedAsset(null)
   };
 
   // Ref for the modal
   const modalRef = useRef(null);
-
 
   return (
     <div className="ManagerDashboard">
@@ -128,7 +210,7 @@ const CreationApproval = () => {
             <thead className="table-header">
               <tr>
                 {[
-                  "Asset ID",
+                  "Sl. No.",
                   "Asset_Code",
                   "Asset Name",
                   "Area",
@@ -155,11 +237,11 @@ const CreationApproval = () => {
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  <td>{item.Asset_ID}</td>
-                  <td>{item.Asset_Code}</td>
-                  <td>{item.Title}</td>
-                  <td>{item.Area}</td>
-                  <td>{item.Created_By}</td>
+                  <td>{index + 1}</td>
+                  <td>{item.assetCode}</td>
+                  <td>{item.title}</td>
+                  <td>{item.assetArea}</td>
+                  <td>{item.createdBy}</td>
                   <td className="actions">
                     <button
                       style={{ marginLeft: "10px" }}
@@ -200,7 +282,7 @@ const CreationApproval = () => {
       {modalData && (
         <div className="modal-overlay">
           <div className="modal-content" ref={modalRef}>
-            {/* Close Button */}
+            {/* Modal Header */}
             <div className="modal-header">
               <h2 className="form-h">Asset Details</h2>
               <button className="close-btn" onClick={handleCloseModal}>
@@ -209,27 +291,628 @@ const CreationApproval = () => {
                 />
               </button>
             </div>
-            <div className="modal-body" ref={modalRef}>
-              <form className="repair-form">
-                {Object.keys(modalData).map((field) => (
-                <div key={field} className="modal-content-field">
-                  <label>{field.replace("_", " ")}:</label>
-                  {field !== "Created_By" ? (
+
+            {/* Modal Body */}
+            <div className="modal-body">
+              {modalData.categoryDetails?.name === "Building" && (
+                <form className="repair-form">
+                  <div className="modal-content-field">
+                    <label>Asset Id:</label>
+                    <input type="text" value={modalData.assetID} readOnly />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Title:</label>
                     <input
                       type="text"
-                      value={modalData[field]}
-                      onChange={(e) => handleInputChange(e, field)}
+                      name="title"
+                      value={updatedAsset.title || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
                     />
-                  ) : (
-                    <input type="text" value={modalData[field]} readOnly />
-                  )}
-                </div>
-              ))}
-                <div className="modal-buttons">
-                  <button className="accept-btn">Approve</button>
-                  <button className="reject-btn">Decline</button>
-                </div>
-              </form>
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Asset Code:</label>
+                    <input type="email" value={modalData.assetCode} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Cost:</label>
+                    <input
+                      type="text"
+                      name="cost"
+                      value={updatedAsset?.cost || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Plint Area:</label>
+                    <input
+                      type="text"
+                      name="Plint_area"
+                      value={
+                        updatedAsset?.attributes?.find(
+                          (attr) => attr.name === "Plint_area"
+                        )?.value || ""
+                      }
+                      onChange={(e) => {
+                        const newValue = e.target.value;
+                        setUpdatedAsset((prev) => ({
+                          ...prev,
+                          attributes: prev.attributes
+                            ? prev.attributes.map((attr) =>
+                                attr.name === "Plint_area"
+                                  ? { ...attr, value: newValue }
+                                  : attr
+                              )
+                            : [],
+                        }));
+                      }}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Depreciated Value:</label>
+                    <input
+                      value={modalData.categoryDetails?.depreciatedValue}
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Floors & Rooms:</label>
+                    <div className="floor-room-list">
+                      {(() => {
+                        const floorAttr = modalData?.attributes?.find(
+                          (attr) => attr.name === "Floor and rooms"
+                        );
+                        if (floorAttr) {
+                          try {
+                            const floorData = JSON.parse(floorAttr.value);
+                            return Object.entries(floorData).map(
+                              ([floorName, rooms]) => (
+                                <div
+                                  key={floorName}
+                                  className="floor-room-item"
+                                >
+                                  <strong>{floorName}</strong>:{" "}
+                                  {rooms.join(", ")}
+                                </div>
+                              )
+                            );
+                          } catch (error) {
+                            return <span>Invalid floor data</span>;
+                          }
+                        }
+                        return <span>N/A</span>;
+                      })()}
+                    </div>
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Acquired Date:</label>
+                    <input
+                      type="text"
+                      name="acquireDate"
+                      value={updatedAsset?.acquireDate || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Useful Life (Years):</label>
+                    <input
+                      type="text"
+                      name="lifespan"
+                      value={updatedAsset?.lifespan || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Status:</label>
+                    <input value={modalData.status} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Category:</label>
+                    <input value={modalData.categoryDetails?.name} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Area:</label>
+                    <input
+                      type="text"
+                      name="assetArea"
+                      value={updatedAsset?.assetArea || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Created by:</label>
+                    <input value={modalData.createdBy} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Description:</label>
+                    <textarea
+                      name="description"
+                      value={updatedAsset?.description || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-buttons">
+                    {!isEditing ? (
+                      <button
+                      type="button"
+                        className="download-all-btn"
+                        onClick={(e) => {
+                          e.preventDefault(); // 👈 prevent form submit
+                          setIsEditing(true);
+                        }}
+                      >
+                        Edit
+                      </button>
+                    ) : (
+                      <button type="button" className="download-all-btn" onClick={handleSave}>
+                        Save
+                      </button>
+                    )}
+                    <button
+                      className="accept-btn"
+                      onClick={handleApprove}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Approving..." : "Approve"}
+                    </button>
+
+                    <button
+                      className="reject-btn"
+                      onClick={handleDecline}
+                      disabled={isDeclining}
+                    >
+                      {isDeclining ? "Declining..." : "Decline"}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {(modalData.categoryDetails?.name === "Landscaping" ||
+                modalData.categoryDetails?.name === "Facility" ||
+                modalData.categoryDetails?.name === "Infrastructure") && (
+                <form className="repair-form">
+                  <div className="modal-content-field">
+                    <label>Asset Id:</label>
+                    <input type="text" value={modalData.assetID} readOnly />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Title:</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={updatedAsset.title || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Asset Code:</label>
+                    <input type="email" value={modalData.assetCode} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Size</label>
+                    <input
+                      type="text"
+                      value={
+                        updatedAsset?.attributes?.find(
+                          (attr) => attr.name === "Size"
+                        )?.value || ""
+                      }
+                      onChange={(e) => {
+                        const newValue = e.target.value;
+                        setUpdatedAsset((prev) => ({
+                          ...prev,
+                          attributes: prev.attributes
+                            ? prev.attributes.map((attr) =>
+                                attr.name === "Size"
+                                  ? { ...attr, value: newValue }
+                                  : attr
+                              )
+                            : [],
+                        }));
+                      }}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Cost:</label>
+                    <input
+                      type="text"
+                      name="cost"
+                      value={updatedAsset?.cost || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Depreciated Value:</label>
+                    <input
+                      value={modalData.categoryDetails?.depreciatedValue}
+                      readOnly
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Acquired Date:</label>
+                    <input
+                      type="text"
+                      name="acquireDate"
+                      value={updatedAsset?.acquireDate || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Useful Life (Years):</label>
+                    <input
+                      type="text"
+                      name="lifespan"
+                      value={updatedAsset?.lifespan || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>status:</label>
+                    <input value={modalData.status} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>category:</label>
+                    <input value={modalData.categoryDetails?.name} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Area:</label>
+                    <input
+                      type="text"
+                      name="assetArea"
+                      value={updatedAsset?.assetArea || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Created by</label>
+                    <input value={modalData.createdBy} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Description:</label>
+                    <textarea
+                      name="description"
+                      value={updatedAsset?.description || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-buttons">
+                  {!isEditing ? (
+                      <button
+                      type="button"
+                        className="download-all-btn"
+                        onClick={(e) => {
+                          e.preventDefault(); // 👈 prevent form submit
+                          setIsEditing(true);
+                        }}
+                      >
+                        Edit
+                      </button>
+                    ) : (
+                      <button type="button" className="download-all-btn" onClick={handleSave}>
+                        Save
+                      </button>
+                    )}
+                    <button
+                      className="accept-btn"
+                      onClick={handleApprove}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Approving..." : "Approve"}
+                    </button>
+
+                    <button
+                      className="reject-btn"
+                      onClick={handleDecline}
+                      disabled={isDeclining}
+                    >
+                      {isDeclining ? "Declining..." : "Decline"}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {modalData.categoryDetails?.name === "Machinery" && (
+                <form className="repair-form">
+                  <div className="modal-content-field">
+                    <label>Asset Id:</label>
+                    <input type="text" value={modalData.assetID} readOnly />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Title:</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={updatedAsset.title || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Asset Code:</label>
+                    <input type="email" value={modalData.assetCode} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Serial Number:</label>
+                    <input
+                      type="text"
+                      value={
+                        updatedAsset?.attributes?.find(
+                          (attr) => attr.name === "Serial_number"
+                        )?.value || ""
+                      }
+                      onChange={(e) => {
+                        const newValue = e.target.value;
+                        setUpdatedAsset((prev) => ({
+                          ...prev,
+                          attributes: prev.attributes
+                            ? prev.attributes.map((attr) =>
+                                attr.name === "Serial_number"
+                                  ? { ...attr, value: newValue }
+                                  : attr
+                              )
+                            : [],
+                        }));
+                      }}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Cost:</label>
+                    <input
+                      type="text"
+                      name="cost"
+                      value={updatedAsset?.cost || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Depreciated Value:</label>
+                    <input
+                      value={modalData.categoryDetails?.depreciatedValue}
+                      readOnly
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Acquired Date:</label>
+                    <input
+                      type="text"
+                      name="acquireDate"
+                      value={updatedAsset?.acquireDate || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Useful Life (Years):</label>
+                    <input
+                      type="text"
+                      name="lifespan"
+                      value={updatedAsset?.lifespan || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Status:</label>
+                    <input value={modalData.status} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Category:</label>
+                    <input value={modalData.categoryDetails?.name} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Area:</label>
+                    <input
+                      type="text"
+                      name="assetArea"
+                      value={updatedAsset?.assetArea || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Created by</label>
+                    <input value={modalData.createdBy} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Description:</label>
+                    <textarea
+                      name="description"
+                      value={updatedAsset?.description || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-buttons">
+                  {!isEditing ? (
+                      <button
+                      type="button"
+                        className="download-all-btn"
+                        onClick={(e) => {
+                          e.preventDefault(); // 👈 prevent form submit
+                          setIsEditing(true);
+                        }}
+                      >
+                        Edit
+                      </button>
+                    ) : (
+                      <button type="button" className="download-all-btn" onClick={handleSave}>
+                        Save
+                      </button>
+                    )}
+                    <button
+                      className="accept-btn"
+                      onClick={handleApprove}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Approving..." : "Approve"}
+                    </button>
+
+                    <button
+                      className="reject-btn"
+                      onClick={handleDecline}
+                      disabled={isDeclining}
+                    >
+                      {isDeclining ? "Declining..." : "Decline"}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* For other categories */}
+              {![
+                "Building",
+                "Landscaping",
+                "Facility",
+                "Infrastructure",
+                "Machinery",
+              ].includes(modalData.categoryDetails?.name) && (
+                <form className="repair-form">
+                  <div className="modal-content-field">
+                    <label>Asset Id:</label>
+                    <input type="text" value={modalData.assetID} readOnly />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Title:</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={updatedAsset.title || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Asset Code:</label>
+                    <input type="email" value={modalData.assetCode} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Cost:</label>
+                    <input
+                      type="text"
+                      name="cost"
+                      value={updatedAsset?.cost || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Depreciated Value:</label>
+                    <input
+                      value={modalData.categoryDetails?.depreciatedValue}
+                      readOnly
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Acquired Date:</label>
+                    <input
+                      type="text"
+                      name="acquireDate"
+                      value={updatedAsset?.acquireDate || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Useful Life (Years):</label>
+                    <input
+                      type="text"
+                      name="lifespan"
+                      value={updatedAsset?.lifespan || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Status:</label>
+                    <input value={modalData.status} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Category:</label>
+                    <input value={modalData.categoryDetails?.name} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Area:</label>
+                    <input
+                      type="text"
+                      name="assetArea"
+                      value={updatedAsset?.assetArea || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Created by</label>
+                    <input value={modalData.createdBy} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Description:</label>
+                    <textarea
+                      name="description"
+                      value={updatedAsset?.description || ""}
+                      onChange={handleEditChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="modal-buttons">
+                  {!isEditing ? (
+                      <button
+                      type="button"
+                        className="download-all-btn"
+                        onClick={(e) => {
+                          e.preventDefault(); // 👈 prevent form submit
+                          setIsEditing(true);
+                        }}
+                      >
+                        Edit
+                      </button>
+                    ) : (
+                      <button type="button" className="download-all-btn" onClick={handleSave}>
+                        Save
+                      </button>
+                    )}
+                    <button
+                      className="accept-btn"
+                      onClick={handleApprove}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Approving..." : "Approve"}
+                    </button>
+
+                    <button
+                      className="reject-btn"
+                      onClick={handleDecline}
+                      disabled={isDeclining}
+                    >
+                      {isDeclining ? "Declining..." : "Decline"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

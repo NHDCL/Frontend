@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "./../../managerPage/css/card.css";
 import "./../../managerPage/css/table.css";
 import "./../../managerPage/css/form.css";
@@ -7,62 +7,32 @@ import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 // import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import {
+  useGetAssetQuery,
+  useHandleAssetDeletionMutation,
+} from "../../../slices/assetApiSlice";
+import Swal from "sweetalert2";
 
 const DeletionApproval = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [modalData, setModalData] = useState(null);
+  const { data: assets, refetch } = useGetAssetQuery();
+  const [data, setData] = useState([]);
+  const [isDeclining, setIsDeclining] = useState(false);
+  const [handleAssetDeletion, { isLoading }] = useHandleAssetDeletionMutation();
+  const [loadingApprove, setLoadingApprove] = useState(false);
 
-
+  useEffect(() => {
+    if (assets) {
+      const filteredAssets = assets.filter(
+        (asset) => asset.status === "Pending" && asset.deleted === true
+      );
+      setData(filteredAssets);
+    }
+  }, [assets]);
   const rowsPerPage = 10;
-
-  const [data, setData] = useState([
-    {
-      Asset_ID: "128",
-      Title: "Laptop",
-      Asset_Code: "NHDCL-22-2003",
-      Serial_Number: "NHDCL-22-2003",
-      Cost: "600",
-      Acquired_Date: "25/3/2025",
-      Estimated_Lifespan: "1 year",
-      Status: "In Maintenance",
-      Category: "Machinery & Equipment",
-      Area: "Block-C, 2nd Floor, Room 203",
-      Description: "This laptop was brought from BT",
-      Deleted_By: "12210100.gcit@rub.edu.bt",
-    },
-    {
-      Asset_ID: "129",
-      Title: "Printer",
-      Asset_Code: "NHDCL-22-2004",
-      Serial_Number: "NHDCL-22-2004",
-      Cost: "1200",
-      Acquired_Date: "12/5/2024",
-      Estimated_Lifespan: "3 years",
-      Status: "Operational",
-      Category: "Office Equipment",
-      Area: "Block-B, 1st Floor, Room 102",
-      Description: "Printer for office use, HP LaserJet",
-      Deleted_By: "12210101.gcit@rub.edu.bt",
-    },
-    {
-      Asset_ID: "130",
-      Title: "Projector",
-      Asset_Code: "NHDCL-22-2005",
-      Serial_Number: "NHDCL-22-2005",
-      Cost: "800",
-      Acquired_Date: "30/7/2023",
-      Estimated_Lifespan: "5 years",
-      Status: "Needs Repair",
-      Category: "Multimedia Equipment",
-      Area: "Block-A, 3rd Floor, Room 305",
-      Description: "Ceiling-mounted projector with HDMI support",
-      Deleted_By: "12210102.gcit@rub.edu.bt",
-    },
-  ]);
 
   const sortedData = [...data].sort((a, b) => b.rid - a.rid);
 
@@ -101,6 +71,101 @@ const DeletionApproval = () => {
   // Ref for the modal
   const modalRef = useRef(null);
 
+  const handleApprove = async (e) => {
+    e.preventDefault();
+
+    const assetCode = modalData.assetCode;
+    const email = modalData.deletedBy;
+    const action = "accept";
+
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You are about to approve this asset deletion request.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, approve it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setLoadingApprove(true);
+        const response = await handleAssetDeletion({
+          assetCode,
+          email,
+          action,
+        }).unwrap();
+        refetch();
+        setLoadingApprove(false);
+
+        Swal.fire({
+          icon: "success",
+          title: "Approved!",
+          text: response.message,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        handleCloseModal(); // close the modal if needed
+      } catch (err) {
+        setLoadingApprove(false);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: err?.data?.message || "Failed to approve asset.",
+        });
+      }
+    }
+  };
+
+  const handleDecline = async (e) => {
+    e.preventDefault();
+
+    const assetCode = modalData.assetCode;
+    const email = modalData.deletedBy;
+    const action = "decline";
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You are about to decline this asset deletion request.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, decline it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setIsDeclining(true);
+        const response = await handleAssetDeletion({
+          assetCode,
+          email,
+          action,
+        }).unwrap();
+        refetch();
+        setIsDeclining(false);
+
+        Swal.fire({
+          icon: "success",
+          title: "Declined!",
+          text: response.message,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        handleCloseModal(); // close the modal if needed
+      } catch (err) {
+        setIsDeclining(false);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: err?.data?.message || "Failed to approve asset.",
+        });
+      }
+    }
+  };
+
   return (
     <div className="ManagerDashboard">
       {/* Home table */}
@@ -121,7 +186,7 @@ const DeletionApproval = () => {
             <thead className="table-header">
               <tr>
                 {[
-                  "Asset ID",
+                  "Sl. No.",
                   "Asset_Code",
                   "Asset Name",
                   "Area",
@@ -148,11 +213,11 @@ const DeletionApproval = () => {
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  <td>{item.Asset_ID}</td>
-                  <td>{item.Asset_Code}</td>
-                  <td>{item.Title}</td>
-                  <td>{item.Area}</td>
-                  <td>{item.Deleted_By}</td>
+                  <td>{index + 1}</td>
+                  <td>{item.assetCode}</td>
+                  <td>{item.title}</td>
+                  <td>{item.assetArea}</td>
+                  <td>{item.deletedBy}</td>
                   <td className="actions">
                     <button
                       style={{ marginLeft: "10px" }}
@@ -193,7 +258,7 @@ const DeletionApproval = () => {
       {modalData && (
         <div className="modal-overlay">
           <div className="modal-content" ref={modalRef}>
-            {/* Close Button */}
+            {/* Modal Header */}
             <div className="modal-header">
               <h2 className="form-h">Asset Details</h2>
               <button className="close-btn" onClick={handleCloseModal}>
@@ -202,27 +267,382 @@ const DeletionApproval = () => {
                 />
               </button>
             </div>
-            <div className="modal-body" ref={modalRef}>
-              <form className="repair-form">
-              {Object.keys(modalData).map((field) => (
-                <div key={field} className="modal-content-field">
-                  <label>{field.replace("_", " ")}:</label>
-                  {field !== "Deleted_By" ? (
+
+            {/* Modal Body */}
+            <div className="modal-body">
+              {modalData.categoryDetails?.name === "Building" && (
+                <form className="repair-form">
+                  <div className="modal-content-field">
+                    <label>Asset Id:</label>
+                    <input type="text" value={modalData.assetID} readOnly />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Title:</label>
+                    <input type="text" value={modalData.title} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Asset Code:</label>
+                    <input type="email" value={modalData.assetCode} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Cost:</label>
+                    <input type="text" value={modalData.cost} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Plint Area:</label>
+                    <input
+                      value={
+                        modalData?.attributes?.find(
+                          (attr) => attr.name === "Plint_area"
+                        )?.value || "N/A"
+                      }
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Depreciated Value:</label>
+                    <input
+                      value={modalData.categoryDetails?.depreciatedValue}
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Floors & Rooms:</label>
+                    <div className="floor-room-list">
+                      {(() => {
+                        const floorAttr = modalData?.attributes?.find(
+                          (attr) => attr.name === "Floor and rooms"
+                        );
+                        if (floorAttr) {
+                          try {
+                            const floorData = JSON.parse(floorAttr.value);
+                            return Object.entries(floorData).map(
+                              ([floorName, rooms]) => (
+                                <div
+                                  key={floorName}
+                                  className="floor-room-item"
+                                >
+                                  <strong>{floorName}</strong>:{" "}
+                                  {rooms.join(", ")}
+                                </div>
+                              )
+                            );
+                          } catch (error) {
+                            return <span>Invalid floor data</span>;
+                          }
+                        }
+                        return <span>N/A</span>;
+                      })()}
+                    </div>
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Acquired Date:</label>
+                    <input type="text" value={modalData.acquireDate} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Useful Life(Years):</label>
+                    <input value={modalData.lifespan} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Status:</label>
+                    <input value={modalData.status} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Category:</label>
+                    <input value={modalData.categoryDetails?.name} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Area:</label>
+                    <input value={modalData.assetArea} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Delete Request by:</label>
+                    <input value={modalData.deletedBy} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Description: </label>
+                    <textarea value={modalData.description} readOnly />
+                  </div>
+                  <div className="modal-buttons">
+                    <button
+                      className="accept-btn"
+                      onClick={handleApprove}
+                      disabled={loadingApprove}
+                    >
+                      {loadingApprove ? "Accepting..." : "Accept"}
+                    </button>
+
+                    <button
+                      className="reject-btn"
+                      onClick={handleDecline}
+                      disabled={isDeclining}
+                    >
+                      {isDeclining ? "Declining..." : "Decline"}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {(modalData.categoryDetails?.name === "Landscaping" ||
+                modalData.categoryDetails?.name === "Facility" ||
+                modalData.categoryDetails?.name === "Infrastructure") && (
+                <form className="repair-form">
+                  <div className="modal-content-field">
+                    <label>Asset Id:</label>
+                    <input type="text" value={modalData.assetID} readOnly />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Title:</label>
+                    <input type="text" value={modalData.title} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Asset Code:</label>
+                    <input type="email" value={modalData.assetCode} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Size</label>
                     <input
                       type="text"
-                      value={modalData[field]}
-                      onChange={(e) => handleInputChange(e, field)}
+                      value={
+                        modalData?.attributes?.find(
+                          (attr) => attr.name === "Size"
+                        )?.value || "N/A"
+                      }
+                      readOnly
                     />
-                  ) : (
-                    <input type="text" value={modalData[field]} readOnly />
-                  )}
-                </div>
-              ))}
-                <div className="modal-buttons">
-                  <button className="accept-btn">Approve</button>
-                  <button className="reject-btn">Decline</button>
-                </div>
-              </form>
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Cost:</label>
+                    <input type="text" value={modalData.cost} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Depreciated Value:</label>
+                    <input
+                      value={modalData.categoryDetails?.depreciatedValue}
+                      readOnly
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Acquired Date:</label>
+                    <input type="text" value={modalData.acquireDate} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Useful Life(Years):</label>
+                    <input value={modalData.lifespan} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>status:</label>
+                    <input value={modalData.status} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>category:</label>
+                    <input value={modalData.categoryDetails?.name} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Area:</label>
+                    <input value={modalData.assetArea} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Created by</label>
+                    <input value={modalData.createdBy} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Description: </label>
+                    <textarea value={modalData.description} readOnly />
+                  </div>
+                  <div className="modal-buttons">
+                    <button
+                      className="accept-btn"
+                      onClick={handleApprove}
+                      disabled={loadingApprove}
+                    >
+                      {loadingApprove ? "Accepting..." : "Accept"}
+                    </button>
+
+                    <button
+                      className="reject-btn"
+                      onClick={handleDecline}
+                      disabled={isDeclining}
+                    >
+                      {isDeclining ? "Declining..." : "Decline"}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {modalData.categoryDetails?.name === "Machinery" && (
+                <form className="repair-form">
+                  <div className="modal-content-field">
+                    <label>Asset Id:</label>
+                    <input type="text" value={modalData.assetID} readOnly />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Title:</label>
+                    <input type="text" value={modalData.title} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Asset Code:</label>
+                    <input type="email" value={modalData.assetCode} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Serial Number:</label>
+                    <input
+                      type="text"
+                      value={
+                        modalData?.attributes?.find(
+                          (attr) => attr.name === "Serial_number"
+                        )?.value || "N/A"
+                      }
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Cost:</label>
+                    <input type="text" value={modalData.cost} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Depreciated Value:</label>
+                    <input
+                      value={modalData.categoryDetails?.depreciatedValue}
+                      readOnly
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Acquired Date:</label>
+                    <input type="text" value={modalData.acquireDate} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Useful Life(Years):</label>
+                    <input value={modalData.lifespan} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Status:</label>
+                    <input value={modalData.status} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Category:</label>
+                    <input value={modalData.categoryDetails?.name} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Area:</label>
+                    <input value={modalData.assetArea} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Created by</label>
+                    <input value={modalData.createdBy} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Description: </label>
+                    <textarea value={modalData.description} readOnly />
+                  </div>
+                  <div className="modal-buttons">
+                    <button
+                      className="accept-btn"
+                      onClick={handleApprove}
+                      disabled={loadingApprove}
+                    >
+                      {loadingApprove ? "Accepting..." : "Accept"}
+                    </button>
+
+                    <button
+                      className="reject-btn"
+                      onClick={handleDecline}
+                      disabled={isDeclining}
+                    >
+                      {isDeclining ? "Declining..." : "Decline"}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* For other categories */}
+              {![
+                "Building",
+                "Landscaping",
+                "Facility",
+                "Infrastructure",
+                "Machinery",
+              ].includes(modalData.categoryDetails?.name) && (
+                <form className="repair-form">
+                  <div className="modal-content-field">
+                    <label>Asset Id:</label>
+                    <input type="text" value={modalData.assetID} readOnly />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Title:</label>
+                    <input type="text" value={modalData.title} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Asset Code:</label>
+                    <input type="email" value={modalData.assetCode} readOnly />
+                  </div>
+
+                  <div className="modal-content-field">
+                    <label>Cost:</label>
+                    <input type="text" value={modalData.cost} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Depreciated Value:</label>
+                    <input
+                      value={modalData.categoryDetails?.depreciatedValue}
+                      readOnly
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Acquired Date:</label>
+                    <input type="text" value={modalData.acquireDate} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Useful Life(Years):</label>
+                    <input value={modalData.lifespan} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Status:</label>
+                    <input value={modalData.status} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Category:</label>
+                    <input value={modalData.categoryDetails?.name} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Area:</label>
+                    <input value={modalData.assetArea} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Created by</label>
+                    <input value={modalData.createdBy} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Description: </label>
+                    <textarea value={modalData.description} readOnly />
+                  </div>
+                  <div className="modal-buttons">
+                    <button
+                      className="accept-btn"
+                      onClick={handleApprove}
+                      disabled={loadingApprove}
+                    >
+                      {loadingApprove ? "Accepting..." : "Accept"}
+                    </button>
+
+                    <button
+                      className="reject-btn"
+                      onClick={handleDecline}
+                      disabled={isDeclining}
+                    >
+                      {isDeclining ? "Declining..." : "Decline"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

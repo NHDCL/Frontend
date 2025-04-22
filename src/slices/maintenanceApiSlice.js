@@ -43,20 +43,11 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
         // },
       }),
       invalidatesTags: ["MaintenanceRequest"],
-
     }),
 
     getSchedulesByRepairID: builder.query({
       query: (repairID) => `${MAINTENANCE_URL}/schedules/repair/${repairID}`,
     }),
-    // get repair schedule
-    // getRepairRequestSchedule: builder.query({
-    //   query: () => ({
-    //     url: MAINTENANCE_URL + "/schedules",
-    //     method: 'GET',
-    //   }),
-    //   providesTags: ["repairRequestSchedule"]
-    // }),
 
     getRepairRequestSchedule: builder.query({
       query: () => ({
@@ -127,6 +118,48 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ["maintenance"], // optional: useful for refetch
     }),
 
+    updateSchedule: builder.mutation({
+      query: ({ scheduleID, updatedSchedule }) => ({
+        url: `${MAINTENANCE_URL}/schedules/${scheduleID}`,
+        method: 'PUT',
+        body: updatedSchedule,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }),
+      invalidatesTags: ['Schedule'], // Optional: to refetch data after mutation
+    }),
+
+    getScheduleByRepairID: builder.query({
+      query: (repairID) => `${MAINTENANCE_URL}/schedules/repair/${repairID}`,
+    }),
+
+    getRepairById: builder.query({
+      query: (repairID) => `${MAINTENANCE_URL}/repairs/${repairID}`,
+    }),
+
+    // Fetch preventive maintenance by ID
+    getMaintenanceById: builder.query({
+      query: (id) => `${MAINTENANCE_URL}/maintenance/${id}`, // Using the /{id} endpoint
+    }),
+
+    getSchedulesByUserID: builder.query({
+      query: (userID) => `${MAINTENANCE_URL}/schedules/user/${userID}`,
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ id }) => ({ type: 'Schedule', id })), { type: 'Schedule', id: 'LIST' }]
+          : [{ type: 'Schedule', id: 'LIST' }],
+    }),
+
+    // Endpoint to fetch schedules by user ID
+    getPreventiveSchedulesByUserID: builder.query({
+      query: (userID) => `${MAINTENANCE_URL}/maintenance/user/${userID}`,
+    }),
+
+    // Fetch maintenance records by asset code
+    getMaintenanceByAssetCode: builder.query({
+      query: (assetCode) => `${MAINTENANCE_URL}/maintenance/asset/${assetCode}`,  // Using the /asset/{assetCode} endpoint
+    }),
   }),
 });
 
@@ -143,4 +176,12 @@ export const {
   useUpdatePreventiveMaintenanceMutation,
   useGetRepairReportsQuery,
   useGetMaintenanceReportsQuery,
+  useUpdateScheduleMutation,
+  useLazyGetScheduleByRepairIDQuery,
+  useGetScheduleByRepairIDQuery,
+  useGetSchedulesByUserIDQuery,
+  useGetRepairByIdQuery,
+  useGetPreventiveSchedulesByUserIDQuery,
+  useGetMaintenanceByAssetCodeQuery,
+  useGetMaintenanceByIdQuery,
 } = maintenanceApiSlice;

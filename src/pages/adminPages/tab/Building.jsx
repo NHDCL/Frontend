@@ -1,14 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosSearch } from "react-icons/io";
-import { IoMdAdd } from "react-icons/io";
-import { ImFolderDownload } from "react-icons/im";
-import Category from "../../managerPage/AssetCategory";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
+import { useGetAssetQuery } from "../../../slices/assetApiSlice";
 
-
-const Building = () => {
+const Building = ({ category }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -16,179 +13,34 @@ const Building = () => {
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedFloor, setSelectedFloor] = useState("");
   const [modalData, setModalData] = useState(null);
-  const [editModalData, setEditModalData] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [floorInput, setFloorInput] = useState("");
-  const [roomInput, setRoomInput] = useState("");
-  // const [scheduleModalData, setScheduleModalData] = useState(null);
-  const [jsonData, setJson] = useState("");
-  const [assetCode, setAssetCode] = useState("");
-  const [title, setTitle] = useState("");
-  const [assetCategoryName, setAssetCategoryName] = useState("");
-  const [scheduleModalData, setScheduleModalData] = useState({
-    Description: "",
-    Assign: "",
-    Lastworkorder: "",
-    Schedule: "",
-    Nextworkorder: ""
-  });
+  const { data: assets } = useGetAssetQuery();
+  const [data, setData] = useState([]);
 
-
-  const styles = {
-    textArea: {
-      width: "100%",
-      height: "120px",
-      padding: "10px",
-      fontSize: "14px",
-      background: "#f8f8f8",
-      border: "1px solid #ddd",
-      borderRadius: "4px",
-      resize: "none",
-    },
-    floorBlock: {
-      marginBottom: "10px",
-    },
-    floorTitle: {
-      fontWeight: "bold",
-      fontSize: "14px",
-      color: "#305845",
-    },
-    roomText: {
-      fontSize: "13px",
-      color: "#333",
-      marginLeft: "10px",
-    },
-    noRoomText: {
-      fontSize: "13px",
-      color: "#888",
-      fontStyle: "italic",
-      marginLeft: "10px",
-    },
-    emptyMessage: {
-      fontStyle: "italic",
-      color: "#888",
-      textAlign: "center",
-    },
-  };
-
-
+  useEffect(() => {
+    if (assets) {
+      const filteredAssets = assets.filter(
+        (asset) => asset.categoryDetails?.name === category
+      );
+      setData(filteredAssets);
+    }
+  }, [assets, category]);
 
   const rowsPerPage = 10;
-
-  const [data, setData] = useState([
-    {
-      SerialNo: "1",
-      AssetCode: "NHDCL-22-2003",
-      Title: "Block A",
-      AcquireDate: "27-02-2024",
-      Useful_life: 3,
-      Floor: 4,
-      PlintArea: 4,
-      Depreciated_value: 4,
-      status: "In Maintenance",
-      cost: 600000,
-      Category: {},
-      Area: "Area-1",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "This is the biggest land we own",
-    },
-    {
-      SerialNo: "2",
-      AssetCode: "NHDCL-22-2003",
-      Title: "Block B",
-      AcquireDate: "27-02-2024",
-      Useful_life: 3,
-      Floor: 4,
-      PlintArea: 4,
-      Depreciated_value: 4,
-      status: "In Maintenance",
-      cost: 600000,
-      Category: {},
-      Area: "Area-1",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "This is the biggest land we own",
-    },
-    {
-      SerialNo: "3",
-      AssetCode: "NHDCL-22-2003",
-      Title: "Block C",
-      AcquireDate: "27-02-2024",
-      Useful_life: 3,
-      Floor: 6,
-      PlintArea: 4,
-      Depreciated_value: 4,
-      status: "In Maintenance",
-      cost: 600000,
-      Category: {},
-      Area: "Area-1",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "This is the biggest land we own",
-    },
-    {
-      SerialNo: "4",
-      AssetCode: "NHDCL-22-2003",
-      Title: "Block D",
-      AcquireDate: "27-02-2024",
-      Useful_life: 3,
-      Floor: 4,
-      PlintArea: 4,
-      Depreciated_value: 4,
-      status: "In Usage",
-      cost: 600000,
-      Category: {},
-      Area: "Area-1",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "This is the biggest land we own",
-    },
-    {
-      SerialNo: "5",
-      AssetCode: "NHDCL-22-2003",
-      Title: "Block E",
-      AcquireDate: "27-02-2024",
-      Useful_life: 3,
-      Floor: 3,
-      PlintArea: 4,
-      Depreciated_value: 4,
-      status: "disposed",
-      cost: 600000,
-      Category: {},
-      Area: "Area-1",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "This is the biggest land we own",
-    },
-    {
-      SerialNo: "6",
-      AssetCode: "NHDCL-22-2003",
-      Title: "Block A",
-      AcquireDate: "27-02-2024",
-      Useful_life: 3,
-      Floor: 1,
-      PlintArea: 4,
-      Depreciated_value: 4,
-      status: "In Maintenance",
-      cost: 600000,
-      Category: {},
-      Area: "Area-1",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "This is the biggest land we own",
-    },
-
-  ])
 
   // Filtering data based on search and priority selection and work status
   const sortedData = [...data].sort((a, b) => b.mid - a.mid);
   const filteredData = sortedData.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
     );
+
     const matchesStatus =
       selectedStatus === "" || item.status === selectedStatus;
 
     const matchesBuilding =
-      selectedBuilding === "" || item.Title === selectedBuilding;
+      selectedBuilding === "" || item.title === selectedBuilding;
 
-    const matchesFloor =
-      selectedFloor === "" || item.Floor === selectedFloor;
+    const matchesFloor = selectedFloor === "" || item.Floor === selectedFloor;
 
     return matchesSearch && matchesStatus && matchesBuilding && matchesFloor;
   });
@@ -200,11 +52,11 @@ const Building = () => {
   );
 
   const handleDeleteSelected = () => {
-    setData(data.filter((item) => !selectedRows.includes(item.AID)));
+    setData(assets.filter((item) => !selectedRows.includes(item.AID)));
     setSelectedRows([]);
   };
   const handleView = (item) => {
-    setModalData(item);
+    setModalData(item); // This will set the selected asset data for the modal
   };
 
   // Function to get the class based on workstatus
@@ -214,8 +66,10 @@ const Building = () => {
         return "In-maintenance-status";
       case "In Usage":
         return "in-usage-status";
-      case "disposed":
+      case "Disposed":
         return "disposed-status";
+      case "Pending":
+        return "Pending-status";
       default:
         return "";
     }
@@ -223,72 +77,43 @@ const Building = () => {
   // Extract unique work statuses from data
   const uniqueStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map(item => item.status))).map(status => ({
+    ...Array.from(new Set(data.map((item) => item.status))).map((status) => ({
       value: status,
-      label: status
-    }))
+      label: status,
+    })),
   ];
   const handleCloseModal = () => {
     setModalData(null);
   };
 
-  // Extract unique work statuses from data
-  const uniqueBuilding = [
-    { value: "", label: "All buildings" },
-    ...Array.from(new Set(data.map(item => item.Title))).map(Title => ({
-      value: Title,
-      label: Title
-    }))
-  ];
+  const handleDownloadAllImages = () => {
+    const imageUrls = modalData.attributes
+      .filter((attr) => attr.name.startsWith("image")) // Filter image attributes
+      .map((imageAttr) => imageAttr.value); // Get the image URLs
 
-  const uniqueFloors = [
-    { value: "", label: "All Floors" },
-    ...Array.from(new Set(
-      data
-        .filter(item => selectedBuilding === "" || item.Title === selectedBuilding)
-        .map(item => item.Floor)
-    )).map(floor => ({
-      value: floor,
-      label: `Floor ${floor}`
-    }))
-  ];
+    imageUrls.forEach((imageUrl) => {
+      // Create a link element for downloading each image
+      const link = document.createElement("a");
+      link.href = imageUrl;
+      link.download = imageUrl.split("/").pop(); // Download the file with its original name
 
-  // Update Edited Data
-  const handleSaveEdit = () => {
-    if (!editModalData) return;
-
-    setData((prevData) =>
-      prevData.map((row) =>
-        row.mid === editModalData.mid ? editModalData : row
-      )
-    );
-
-    setEditModalData(null); // Close modal after saving
-  };
-  // const handleSaveSchedule =()=>{
-
-  // }
-
-  // Sample workers list
-  const workersList = [
-    { value: "Worker A", label: "Worker A" },
-    { value: "Worker B", label: "Worker B" },
-    { value: "Worker C", label: "Worker C" },
-  ];
-
-  const handleScheduleMaintenance = () => {
-    setScheduleModalData({
-      ...modalData, // Passing in modalData to populate the schedule form
-      Schedule: modalData.Schedule || "",
-      Lastworkorder: modalData.Lastworkorder || "",
-      Nextworkorder: modalData.Nextworkorder || "",
-      Assign: modalData.Assign || "",
+      // Fetch the image as a Blob and trigger the download
+      fetch(imageUrl)
+        .then((response) => response.blob())
+        .then((blob) => {
+          const objectURL = URL.createObjectURL(blob);
+          link.href = objectURL;
+          link.click(); // Trigger the download
+          URL.revokeObjectURL(objectURL); // Clean up
+        })
+        .catch((error) => {
+          console.error("Error downloading image:", error);
+        });
     });
   };
 
-
   return (
-    <div className="managerDashboard" >
+    <div className="managerDashboard">
       <div className="search-sort-container">
         <div className="search-container">
           <IoIosSearch style={{ width: "20px", height: "20px" }} />
@@ -305,7 +130,9 @@ const Building = () => {
             classNamePrefix="custom-select-workstatus"
             className="workstatus-dropdown"
             options={uniqueStatuses}
-            value={uniqueStatuses.find(option => option.value === selectedStatus)}
+            value={uniqueStatuses.find(
+              (option) => option.value === selectedStatus
+            )}
             onChange={(selectedOption) => {
               setSelectedStatus(selectedOption ? selectedOption.value : "");
             }}
@@ -314,77 +141,117 @@ const Building = () => {
           />
         </div>
       </div>
-      <div className="Building-sort">
-        {/* Building Dropdown */}
+      {/* <div className="Building-sort">
         <Select
           classNamePrefix="custom-select-workstatus"
           className="workstatus-dropdown"
           options={uniqueBuilding}
-          value={uniqueBuilding.find(option => option.value === selectedBuilding)}
+          value={uniqueBuilding.find(
+            (option) => option.value === selectedBuilding
+          )}
           onChange={(selectedOption) => {
             setSelectedBuilding(selectedOption ? selectedOption.value : "");
-            setSelectedFloor(""); // Reset floor selection when a new building is chosen
+            setSelectedFloor("");
           }}
           isClearable
         />
-
-        {/* Floor Dropdown (Only Shows if Building is Selected) */}
         {selectedBuilding && (
           <Select
             classNamePrefix="custom-select-workstatus"
             className="workstatus-dropdown"
             options={uniqueFloors}
-            value={uniqueFloors.find(option => option.value === selectedFloor)}
+            value={uniqueFloors.find(
+              (option) => option.value === selectedFloor
+            )}
             onChange={(selectedOption) => {
               setSelectedFloor(selectedOption ? selectedOption.value : "");
             }}
             isClearable
           />
         )}
-      </div>
-
+      </div> */}
 
       {/* Table */}
       <div className="table-container">
         <table className="RequestTable">
           <thead className="table-header">
             <tr>
-
-              {["SI.No", "Asset Code", "Title", "Acquire Date", "Useful Life(year)", "Floors", "Plint_area(sq.,)", "Depreciated Value (%)", "Status"].map((header, index) => (
+              {[
+                "Sl. No.",
+                "Asset Code",
+                "Title",
+                "Acquire Date",
+                "Useful Life(year)",
+                "Floors",
+                "Plint_area(sq.,)",
+                "Depreciated Value (%)",
+                "Status",
+              ].map((header, index) => (
                 <th key={index}>{header}</th>
               ))}
               <th>
                 {selectedRows.length > 0 && (
-                  <button className="delete-all-btn" onClick={handleDeleteSelected}>
-                    <RiDeleteBin6Line style={{ width: "20px", height: "20px", color: "red" }} />
+                  <button
+                    className="delete-all-btn"
+                    onClick={handleDeleteSelected}
+                  >
+                    <RiDeleteBin6Line
+                      style={{ width: "20px", height: "20px", color: "red" }}
+                    />
                   </button>
                 )}
               </th>
             </tr>
           </thead>
           <tbody>
-            {displayedData.map((item, index) => (
-              <tr key={index}>
-                <td>{item.SerialNo}</td>
-                <td>{item.AssetCode}</td>
-                <td>{item.Title}</td>
-                <td>{item.AcquireDate}</td>
-                <td>{item.Useful_life}</td>
-                <td>{item.Floor}</td>
-                <td>{item.PlintArea}</td>
-                <td>{item.Depreciated_value}</td>
-                <td>
-                  <div className={getStatusClass(item.status)}>
-                    {item.status}
-                  </div>
-                </td>
-                <td className="actions">
-                  <button className="view-btn" onClick={() => handleView(item)}>
-                    View
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {displayedData.map((item, index) => {
+              // Extract values from `attributes`
+              const plintAreaAttr = item.attributes.find(
+                (attr) => attr.name === "Plint_area"
+              );
+              // const depreciatedValueAttr = item.attributes.find(
+              //   (attr) => attr.name === "Depreciated_Value"
+              // );
+              const floorAttr = item.attributes.find(
+                (attr) => attr.name === "Floor and rooms"
+              );
+
+              // Get values or fallback to 'N/A'
+              const plintArea = plintAreaAttr ? plintAreaAttr.value : "N/A";
+              // const depreciatedValue = depreciatedValueAttr
+              //   ? depreciatedValueAttr.value
+              //   : "N/A";
+              const floorCount = floorAttr
+                ? Object.keys(JSON.parse(floorAttr.value)).length
+                : "N/A";
+
+              return (
+                <tr key={index}>
+                  <td>{index + 1}</td>
+                  <td>{item.assetCode}</td>
+                  <td>{item.title}</td>
+                  <td>{item.acquireDate}</td>
+                  <td>{item.lifespan}</td>
+                  <td>{floorCount}</td> {/* Number of floors */}
+                  <td>{plintArea}</td> {/* Plint area */}
+                  <td>{item.categoryDetails?.depreciatedValue}</td>{" "}
+                  {/* Depreciated value */}
+                  <td>
+                    <div className={getStatusClass(item.status)}>
+                      {item.status}
+                    </div>
+                  </td>
+                  <td className="actions">
+                    <button
+                      className="view-btn"
+                      onClick={() => handleView(item)}
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -393,15 +260,20 @@ const Building = () => {
         <span>{filteredData.length} Results</span>
         <div>
           {[...Array(totalPages).keys()].slice(0, 5).map((num) => (
-            <button key={num} className={currentPage === num + 1 ? "active" : ""} onClick={() => setCurrentPage(num + 1)}>
+            <button
+              key={num}
+              className={currentPage === num + 1 ? "active" : ""}
+              onClick={() => setCurrentPage(num + 1)}
+            >
               {num + 1}
             </button>
           ))}
           <span>...</span>
-          <button onClick={() => setCurrentPage(totalPages)}>{totalPages}</button>
+          <button onClick={() => setCurrentPage(totalPages)}>
+            {totalPages}
+          </button>
         </div>
       </div>
-
 
       {/* Modal for Viewing Request */}
       {modalData && (
@@ -419,66 +291,131 @@ const Building = () => {
             <form className="repair-form">
               <div className="modal-content-field">
                 <label>Asset Id:</label>
-                <input type="text" value={modalData.SerialNo} readOnly />
+                <input type="text" value={modalData.assetID} readOnly />
               </div>
 
               <div className="modal-content-field">
                 <label>Title:</label>
-                <input type="text" value={modalData.Title} readOnly />
+                <input type="text" value={modalData.title} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Asset Code:</label>
-                <input type="email" value={modalData.AssetCode} readOnly />
+                <input type="email" value={modalData.assetCode} readOnly />
               </div>
-              <div className="modal-content-field">
-                <label>Size</label>
-                <input type="text" value={modalData.size} readOnly />
-              </div>
-
               <div className="modal-content-field">
                 <label>Cost:</label>
                 <input type="text" value={modalData.cost} readOnly />
               </div>
               <div className="modal-content-field">
+                <label>Plint Area:</label>
+                <input
+                  value={
+                    modalData?.attributes?.find(
+                      (attr) => attr.name === "Plint_area"
+                    )?.value || "N/A"
+                  }
+                  readOnly
+                />
+              </div>
+
+              <div className="modal-content-field">
                 <label>Depreciated Value:</label>
-                <input value={modalData.Depreciated_value} readOnly />
+                <input
+                  value={modalData.categoryDetails?.depreciatedValue}
+                  readOnly
+                />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Floors:</label>
+                <input
+                  value={(() => {
+                    const floorAttr = modalData?.attributes?.find(
+                      (attr) => attr.name === "Floor and rooms"
+                    );
+                    if (floorAttr) {
+                      const floorData = JSON.parse(floorAttr.value);
+                      return Object.keys(floorData).length; // Total number of floors
+                    }
+                    return "N/A";
+                  })()}
+                  readOnly
+                />
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={modalData.AcquireDate} readOnly />
+                <input type="text" value={modalData.acquireDate} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>
-                <input value={modalData.Useful_life} readOnly />
+                <input value={modalData.lifespan} readOnly />
               </div>
               <div className="modal-content-field">
-                <label>status:</label>
+                <label>Status:</label>
                 <input value={modalData.status} readOnly />
               </div>
               <div className="modal-content-field">
-                <label>category:</label>
-                <input value={modalData.category} readOnly />
+                <label>Category:</label>
+                <input value={modalData.categoryDetails?.name} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Area:</label>
-                <input value={modalData.Area} readOnly />
+                <input value={modalData.assetArea} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Created by:</label>
-                <input value={modalData.Created_by} readOnly />
+                <input value={modalData.createdBy} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Description: </label>
                 <textarea value={modalData.description} readOnly />
               </div>
+              {modalData &&
+                modalData.attributes &&
+                modalData.attributes.filter((attr) =>
+                  attr.name.startsWith("image")
+                ).length > 0 && (
+                  <div className="modal-content-field">
+                    <label>Images:</label>
+                    <div className="image-gallery">
+                      {modalData.attributes
+                        .filter((attr) => attr.name.startsWith("image"))
+                        .map((imageAttr, index) => (
+                          <div key={index} className="image-container">
+                            <img
+                              src={imageAttr.value}
+                              alt={`Asset Image ${index + 1}`}
+                              className="asset-image"
+                            />
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
 
+              <div className="modal-buttons">
+                {/* Align Download Button with Schedule Maintenance */}
+                <div className="align-buttons">
+                  {modalData.attributes &&
+                  modalData.attributes.some((attr) =>
+                    attr.name.startsWith("image")
+                  ) ? (
+                    <button
+                      type="button"
+                      className="download-all-btn"
+                      onClick={handleDownloadAllImages}
+                    >
+                      Download All Images
+                    </button>
+                  ) : null}
+                </div>
+              </div>
             </form>
           </div>
         </div>
       )}
-
-    </div >
-  )
+    </div>
+  );
 };
 
 export default Building;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./../managerPage/css/card.css";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/form.css";
@@ -7,6 +7,19 @@ import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
+import { TiArrowSortedUp } from "react-icons/ti";
+import { useGetRepairRequestQuery, useAssignRepairMutation, useGetSchedulesByRepairIDQuery, useUpdateRepairScheduleMutation, useGetSchedulesByUserIDQuery, useGetRepairByIdQuery } from "../../slices/maintenanceApiSlice";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice"
+
+import {
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+  useGetDepartmentQuery,
+} from "../../slices/userApiSlice";
+import { createSelector } from "reselect";
+import Swal from "sweetalert2";
 
 import Select from "react-select";
 
@@ -17,11 +30,85 @@ const SupervisorHome = () => {
   const [modalData, setModalData] = useState(null);
   const [selectedPriority, setSelectedPriority] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
+  const [rescheduleModalData, setRescheduleModalData] = useState(null);
 
   const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
   const rowsPerPage = 10;
+
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+
+  const email = useSelector(getUserEmail);
+  const { data: userByEmial } = useGetUserByEmailQuery(email);
+
+  const userID = userByEmial?.user?.userId;
+
+  console.log("userID", userID)
+
+  const {
+    data: userSchedules,
+    isLoading: userSchedulesLoading,
+    error: userSchedulesError,
+  } = useGetSchedulesByUserIDQuery(userID, {
+    skip: !userID, // skip until userID is available
+  });
+
+  const repairID = userSchedules?.[0]?.repairID;
+  console.log("rid", repairID);
+  console.log("userSchedule", userSchedules);
+
+  // SCHEDULE BY REPAIR ID
+
+  const {
+    data: scheduleData,
+    isLoading,
+    error,
+  } = useGetRepairByIdQuery(repairID, {
+    skip: !repairID,
+  });
+
+  const [data, setData] = useState([]);
+  const [repairs, setRepairs] = useState([]);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchRepairDetails = async () => {
+      if (userSchedules && userSchedules.length) {
+        const repairPromises = userSchedules.map(async (schedule) => {
+          try {
+            const repair = await dispatch(
+              maintenanceApiSlice.endpoints.getRepairById.initiate(schedule?.repairID)
+            ).unwrap();
+
+            return {
+              ...schedule, // include all original schedule details
+              repairInfo: repair, // attach fetched repair data under `repairInfo`
+            };
+          } catch (err) {
+            console.error(`Error fetching repair ${schedule?.repairID}:`, err);
+            return null;
+          }
+        });
+
+        const repairResults = await Promise.all(repairPromises);
+        const validData = repairResults.filter(Boolean);
+        setData(validData); // ✅ now contains both schedule & repair info
+      }
+    };
+
+    fetchRepairDetails();
+  }, [userSchedules, dispatch]);
+
+
+  console.log("Dataaa", data)
+  const { data: users } = useGetUsersQuery();
+
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
 
   const [teamMembers, setTeamMembers] = useState([]);
   const [newMember, setNewMember] = useState("");
@@ -39,188 +126,6 @@ const SupervisorHome = () => {
 
   const today = new Date().toISOString().split("T")[0];
 
-  const [data, setData] = useState([
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Minor",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "John Doe",
-        time: "10:00 AM",
-        assignDate: "25/4/2025",
-        teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "Jane Smith",
-        time: "02:00 PM",
-        assignDate: "26/4/2025",
-        teamMembers: ["12210015.gcit@rub.edu.bt"],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "Mike Lee",
-        time: "11:30 AM",
-        assignDate: "27/4/2025",
-        teamMembers: ["12210012.gcit@rub.edu.bt", "12210013.gcit@rub.edu.bt"],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "pending",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "Emily Davis",
-        time: "09:45 AM",
-        assignDate: "28/4/2025",
-        teamMembers: ["12210017.gcit@rub.edu.bt", "12210018.gcit@rub.edu.bt"],
-      },
-    },
-  ]);
 
   // Sample workers list
   const workersList = [
@@ -247,11 +152,11 @@ const SupervisorHome = () => {
   const getWorkOrderStatusClass = (status) => {
     switch (status) {
       case "pending":
-        return "pending-status"; // Gray color
-      case "In progress":
-        return "in-progress-status"; // Yellow color
-      case "Completed":
-        return "completed-status"; // Green color
+        return "pending-status";
+      case "inprogress":
+        return "in-progress-status";
+      case "completed":
+        return "completed-status";
       default:
         return "";
     }
@@ -260,39 +165,54 @@ const SupervisorHome = () => {
   // Extract unique priorities from data
   const uniquePriorities = [
     { value: "", label: "All Priorities" },
-    ...Array.from(new Set(data.map((item) => item.priority))).map(
-      (priority) => ({
-        value: priority,
-        label: priority,
-      })
-    ),
+    ...Array.from(
+      new Set(data.map((item) => item.repairInfo.priority?.toLowerCase()).filter(Boolean))
+    ).map((priority) => ({
+      value: priority,
+      label: priority ? priority.charAt(0).toUpperCase() + priority.slice(1) : ""
+
+    })),
   ];
 
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map((item) => item.workstatus))).map(
+    ...Array.from(new Set(data.map((item) => item.repairInfo.status?.toLowerCase()))).map(
       (status) => ({
         value: status,
-        label: status,
+        label: status ? status.charAt(0).toUpperCase() + status.slice(1) : ""
       })
     ),
   ];
 
   // Filtering data based on search and priority selection and work status
-  const sortedData = [...data].sort((a, b) => b.MID - a.MID);
-  const filteredData = sortedData.filter((item) => {
-    const matchesSearch = Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  // Helper function to recursively search through nested objects
+  const searchRecursively = (obj, searchTerm) => {
+    if (typeof obj !== 'object' || obj === null) {
+      return obj && obj.toString().toLowerCase().includes(searchTerm?.toLowerCase() || '');
+    }
 
+    // Check all values in the object (including nested objects)
+    return Object.values(obj).some((value) => searchRecursively(value, searchTerm));
+  };
+
+  const filteredData = (data && data.length) ? data.filter((item) => {
+    // Match search term with any field at any level in the object
+    const matchesSearch = searchRecursively(item, searchTerm);
+  
     const matchesPriority =
-      selectedPriority === "" || item.priority === selectedPriority;
+      selectedPriority === "" ||
+      item.repairInfo.priority?.toLowerCase() === selectedPriority.toLowerCase();
+  
     const matchesWorkStatus =
-      selectedWorkStatus === "" || item.workstatus === selectedWorkStatus;
-
+      selectedWorkStatus === "" ||
+      item.repairInfo.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
+  
     return matchesSearch && matchesPriority && matchesWorkStatus;
-  });
+  }) : [];
+  
+
+
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -300,37 +220,77 @@ const SupervisorHome = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (MID) => {
+  const handleSelectRow = (repairID) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(MID)
-        ? prevSelectedRows.filter((item) => item !== MID)
-        : [...prevSelectedRows, MID]
+      prevSelectedRows.includes(repairID)
+        ? prevSelectedRows.filter((item) => item !== repairID)
+        : [...prevSelectedRows, repairID]
     );
   };
 
   const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.MID));
-    // Update the data with the filtered result after deletion
+    const updatedData = data.filter(
+      (item) => !selectedRows.includes(item.repairID)
+    );
     setData(updatedData);
-    setSelectedRows([]); // Reset selected rows after deletion
+    setSelectedRows([]);
   };
-  const handleDeleteRow = (MID) => {
-    const updatedData = data.filter((item) => item.MID !== MID);
+
+  const handleDeleteRow = (repairID) => {
+    const updatedData = data.filter((item) => item.repairID !== repairID);
     setData(updatedData);
   };
 
   const handleScheduleView = (item) => {
     setModalData(item);
-    setAssignedWorker(null); // Reset worker selection when opening modal
+    setAssignedWorker(null);
+    setAssignDate("");
+    setAssignTime("");
+    setSelectedDepartment(null);
   };
 
   const handleCloseModal = () => {
     setModalData(null);
   };
+  const handleRescheduleView = (item) => {
+    setRescheduleModalData(item);
+    setAssignedWorker(
+      item?.assignedWorker
+        ? { value: item.assignedWorker.userID, label: item.assignedWorker.email }
+        : null
+    );
+    setAssignDate(item?.reportingDate || "");
+    setAssignTime(item?.startTime?.slice(0, 5) || "");
+    setSelectedDepartment(item?.departmentId || null);
+  };
+
+  const [sortOrder, setSortOrder] = useState({
+    column: null,
+    direction: "asc",
+  });
+
+  const handleSort = (column) => {
+    setSortOrder((prev) => ({
+      column,
+      direction:
+        prev.column === column && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const sortedData = [...data].sort((a, b) => {
+    if (!sortOrder.column) return b.repairID - a.repairID;
+
+    const valA = a[sortOrder.column];
+    const valB = b[sortOrder.column];
+
+    if (valA < valB) return sortOrder.direction === "asc" ? -1 : 1;
+    if (valA > valB) return sortOrder.direction === "asc" ? 1 : -1;
+    return 0;
+  });
 
   return (
     <div className="ManagerDashboard">
-        <div className="cardwrap">
+      <div className="cardwrap">
         {/* Card counts */}
         <div className="cardCount cardCount1">
           <div className="CardContent">
@@ -350,7 +310,7 @@ const SupervisorHome = () => {
             <p className="count">56</p>
           </div>
         </div>
-    
+
       </div>
       <h3 className="heading">Repair request</h3>
 
@@ -375,11 +335,7 @@ const SupervisorHome = () => {
                 (option) => option.value === selectedPriority
               )} // Ensure selected value is an object
               onChange={(selectedOption) => {
-                if (selectedOption) {
-                  setSelectedPriority(selectedOption.value);
-                } else {
-                  setSelectedPriority(""); // Clear the selected priority when null
-                }
+                setSelectedPriority(selectedOption ? selectedOption.value : "");
               }}
               isClearable
               isSearchable={false}
@@ -411,36 +367,87 @@ const SupervisorHome = () => {
                 {[
                   "MID",
                   "Asset Name",
-                  "Report Time",
+                  // "Email",
                   "Date",
-                  "Asset ID",
+                  "Phone No. ",
                   "Area",
                   "Priority",
                   "Workstatus",
                   "Description",
                   "",
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header === "Area" || header === "Name" ? (
+                      <div className="header-title">
+                        {header}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() =>
+                              handleSort(
+                                header === "Area"
+                                  ? "Area"
+                                  : header.toLowerCase().replace(" ", "")
+                              )
+                            }
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform:
+                                  sortOrder.column ===
+                                    header.toLowerCase().replace(" ", "") &&
+                                    sortOrder.ascending
+                                    ? "rotate(0deg)" // Ascending
+                                    : sortOrder.column ===
+                                      header.toLowerCase().replace(" ", "") &&
+                                      !sortOrder.ascending
+                                      ? "rotate(180deg)" // Descending
+                                      : "rotate(0deg)", // Default
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header
+                    )}
+                  </th>
                 ))}
+                <th>
+                  {selectedRows.length > 0 ? (
+                    <button
+                      className="delete-all-btn"
+                      onClick={handleDeleteSelected}
+                    >
+                      <RiDeleteBin6Line
+                        style={{ width: "20px", height: "20px", color: "red" }}
+                      />
+                    </button>
+                  ) : (
+                    " "
+                  )}
+                </th>
+
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  <td>{item.MID}</td>
-                  <td>{item.assetName}</td>
-                  <td>{item.reportingTime}</td>
-                  <td>{item.date}</td>
-                  <td>{item.assetID}</td>
-                  <td>{item.area}</td>
-                  <td>{item.priority}</td>
+                  <td>{index + 1}</td>
+                  <td>{item.repairInfo.assetName}</td>
+                  {/* <td>{item.email}</td> */}
+                  <td>{item.reportingDate}</td>
+                  <td>{item.repairInfo.phoneNumber}</td>
+                  <td>{item.repairInfo.area}</td>
+                  <td>{item.repairInfo.priority}</td>
                   <td>
-                    <div className={getWorkOrderStatusClass(item.workstatus)}>
-                      {item.workstatus}
+                    <div className={getWorkOrderStatusClass(item.repairInfo.status?.toLowerCase().replace(/\s+/g, "") || "")}>
+                      {item.repairInfo.status}
                     </div>
                   </td>
-                  <td className="description">{item.description}</td>
-
+                  <td className="description">{item.repairInfo.description}</td>
                   <td className="actions">
                     <button
                       className="schedule-btn"

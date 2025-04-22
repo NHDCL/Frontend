@@ -1,182 +1,42 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosSearch } from "react-icons/io";
 import { IoMdAdd } from "react-icons/io";
 import { ImFolderDownload } from "react-icons/im";
-import Category from "../../managerPage/AssetCategory";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
+import { FaDownload } from "react-icons/fa";
+import { jsPDF } from "jspdf";
+import {
+  useGetAssetQuery
+} from "../../../slices/assetApiSlice";
 
-const Other = () => {
+
+const Other = ({ category }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [modalData, setModalData] = useState(null);
-  const [editModalData, setEditModalData] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newCategory, setNewCategory] = useState({ category: "", DepreciatedValue: "" });
+  const { data: assets } = useGetAssetQuery();
+  const [data, setData] = useState([]);
 
-  const rowsPerPage = 10;
-
-  const [data, setData] = useState([
-    {
-      SerialNo: "1",
-      AssetCode: "NHDCL-22-2003",
-      Title: "Football ground",
-      AcquireDate: "27-02-2024",
-      Useful_life: 3,
-      size: "10m height, 20m width",
-      Depreciated_value: 4,
-      status: "In Maintenance",
-      cost: 600000,
-      Category: {},
-      Area: "Area-1",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "This is the biggest land we own",
-    },
-    {
-      SerialNo: "2",
-      AssetCode: "NHDCL-22-2004",
-      Title: "Football ground",
-      AcquireDate: "15-03-2023",
-      Useful_life: 20,
-      size: "50m height, 100m width",
-      Depreciated_value: 5,
-      status: "In Usage",
-      cost: 20000000,
-      Category: {},
-      Area: "Area-2",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Main corporate office building",
-    },
-    {
-      SerialNo: "3",
-      AssetCode: "NHDCL-22-2005",
-      Title: "Football ground",
-      AcquireDate: "10-05-2022",
-      Useful_life: 10,
-      size: "3m height, 5m width",
-      Depreciated_value: 2,
-      status: "disposed",
-      cost: 200000,
-      Category: {},
-      Area: "Area-3",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Essential for water distribution",
-    },
-    {
-      SerialNo: "4",
-      AssetCode: "NHDCL-22-2006",
-      Title: "Football ground",
-      AcquireDate: "01-01-2021",
-      Useful_life: 15,
-      size: "50m²",
-      Depreciated_value: 10,
-      status: "In Usage",
-      cost: 500000,
-      Category: {},
-      Area: "Area-4",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Provides sustainable energy",
-    },
-    {
-      SerialNo: "5",
-      AssetCode: "NHDCL-22-2007",
-      Title: "Football ground",
-      AcquireDate: "12-06-2020",
-      Useful_life: 12,
-      size: "10m²",
-      Depreciated_value: 6,
-      status: "In Maintenance",
-      cost: 1000000,
-      Category: {},
-      Area: "Area-5",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Backup power source for office",
-    },
-    {
-      SerialNo: "6",
-      AssetCode: "NHDCL-22-2008",
-      Title: "Football ground",
-      AcquireDate: "08-09-2021",
-      Useful_life: 7,
-      size: "Building-wide coverage",
-      Depreciated_value: 3,
-      status: "disposed",
-      cost: 400000,
-      Category: {},
-      Area: "Area-6",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Security surveillance system",
-    },
-    {
-      SerialNo: "7",
-      AssetCode: "NHDCL-22-2009",
-      Title: "Football ground",
-      AcquireDate: "20-11-2023",
-      Useful_life: 5,
-      size: "15m²",
-      Depreciated_value: 1,
-      status: "disposed",
-      cost: 150000,
-      Category: {},
-      Area: "Area-7",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Projector, sound system, and furniture",
-    },
-    {
-      SerialNo: "8",
-      AssetCode: "NHDCL-22-2010",
-      Title: "Football ground",
-      AcquireDate: "14-07-2019",
-      Useful_life: 30,
-      size: "2000m²",
-      Depreciated_value: 15,
-      status: "In Usage",
-      cost: 5000000,
-      Category: {},
-      Area: "Area-8",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Parking space for company vehicles",
-    },
-    {
-      SerialNo: "9",
-      AssetCode: "NHDCL-22-2011",
-      Title: "Football ground",
-      AcquireDate: "22-05-2022",
-      Useful_life: 10,
-      size: "30m²",
-      Depreciated_value: 3,
-      status: "In Usage",
-      cost: 2000000,
-      Category: {},
-      Area: "Area-9",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Secure and climate-controlled data center",
-    },
-    {
-      SerialNo: "10",
-      AssetCode: "NHDCL-22-2012",
-      Title: "Football ground",
-      AcquireDate: "05-02-2021",
-      Useful_life: 8,
-      size: "Building-wide",
-      Depreciated_value: 2,
-      status: "In Maintenance",
-      cost: 500000,
-      Category: {},
-      Area: "Area-10",
-      Created_by: "12210100.gcit@rub.edu.bt",
-      description: "Fire safety system for emergency response",
+  const rowsPerPage = 9; // 3x3 grid for QR codes per page
+  const qrSize = 40; // Size of each QR code (adjust as needed)
+  useEffect(() => {
+    if (assets) {
+      const filteredAssets = assets.filter(
+        (asset) => asset.categoryDetails?.name === category
+      );
+      setData(filteredAssets);
     }
-  ])
+  }, [assets, category]);
 
   // Filtering data based on search and priority selection and work status
   const sortedData = [...data].sort((a, b) => b.mid - a.mid);
   const filteredData = sortedData.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
     );
     const matchesStatus =
       selectedStatus === "" || item.status === selectedStatus;
@@ -185,24 +45,6 @@ const Other = () => {
   });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-  const displayedData = filteredData.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
-  const handleSelectRow = (AID) => {
-    setSelectedRows((prev) =>
-      prev.includes(AID) ? prev.filter((item) => item !== AID) : [...prev, AID]
-    );
-  };
-
-  const handleDeleteSelected = () => {
-    setData(data.filter((item) => !selectedRows.includes(item.AID)));
-    setSelectedRows([]);
-  };
-
-  const handleDeleteRow = (AID) => {
-    setData(data.filter((item) => item.AID !== AID));
-  };
 
   const handleView = (item) => {
     setModalData(item);
@@ -215,8 +57,10 @@ const Other = () => {
         return "In-maintenance-status";
       case "In Usage":
         return "in-usage-status";
-      case "disposed":
+      case "Disposed":
         return "disposed-status";
+      case "Pending":
+        return "Pending-status";
       default:
         return "";
     }
@@ -224,17 +68,100 @@ const Other = () => {
   // Extract unique work statuses from data
   const uniqueStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map(item => item.status))).map(status => ({
+    ...Array.from(new Set(data.map((item) => item.status))).map((status) => ({
       value: status,
-      label: status
-    }))
+      label: status,
+    })),
   ];
   const handleCloseModal = () => {
     setModalData(null);
   };
 
+  const getQrImageUrl = (attributes) => {
+    const qrAttr = attributes?.find((attr) => attr.name === "QR Code");
+    return qrAttr?.value || "";
+  };
+
+  const loadImageAsDataURL = async (url) => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const handleSelectRow = (assetCode) => {
+    setSelectedRows((prev) =>
+      prev.includes(assetCode)
+        ? prev.filter((item) => item !== assetCode)
+        : [...prev, assetCode]
+    );
+  };
+
+  const handleSelectAllRows = () => {
+    if (selectedRows.length === filteredData.length) {
+      setSelectedRows([]); // Deselect all if all are selected
+    } else {
+      setSelectedRows(filteredData.map((item) => item.assetCode)); // Select all
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (selectedRows.length === 0) {
+      alert("Please select at least one asset.");
+      return;
+    }
+
+    const doc = new jsPDF();
+    let pageY = 10;
+    let pageX = 20;
+    let rowCount = 0;
+
+    // Loop over selected rows
+    for (const assetID of selectedRows) {
+      const rowData = data.find((item) => item.assetCode === assetID);
+      if (!rowData) continue;
+
+      const qrUrl = getQrImageUrl(rowData.attributes);
+      if (!qrUrl) continue;
+
+      try {
+        const qrDataUrl = await loadImageAsDataURL(qrUrl);
+        doc.addImage(qrDataUrl, "PNG", pageX, pageY, qrSize, qrSize);
+
+        doc.setFontSize(8);
+        pageY += qrSize + 4;
+        doc.text(`Asset Code: ${rowData.assetCode}`, pageX, pageY);
+        pageY += 6;
+        doc.text(`Title: ${rowData.title}`, pageX, pageY);
+        pageY += 6;
+        doc.text(`Category: ${rowData.categoryDetails?.name}`, pageX, pageY);
+        pageY += 10;
+
+        rowCount++;
+
+        if (rowCount % 3 === 0) {
+          pageX += qrSize + 30;
+          pageY = 10;
+        }
+
+        if (rowCount % rowsPerPage === 0) {
+          doc.addPage();
+          pageY = 10;
+          pageX = 20;
+        }
+      } catch (err) {
+        console.error("Failed to load QR image:", err);
+      }
+    }
+
+    doc.save("Assets_with_QR_Codes.pdf");
+  };
+
   return (
-    <div className="managerDashboard" >
+    <div className="managerDashboard">
       <div className="search-sort-container">
         <div className="search-container">
           <IoIosSearch style={{ width: "20px", height: "20px" }} />
@@ -251,24 +178,18 @@ const Other = () => {
             classNamePrefix="custom-select-workstatus"
             className="workstatus-dropdown"
             options={uniqueStatuses}
-            value={uniqueStatuses.find(option => option.value === selectedStatus)}
+            value={uniqueStatuses.find(
+              (option) => option.value === selectedStatus
+            )}
             onChange={(selectedOption) => {
               setSelectedStatus(selectedOption ? selectedOption.value : "");
             }}
             isClearable
             isSearchable={false}
           />
-          {/* <div className="create-category-btn">
-            <ImFolderDownload style={{ color: "#ffffff", marginLeft: "12px" }} />
-            <button className="category-btn">Bulk Import</button>
-          </div>
-          <div className="create-category-btn">
-            <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
-            <button className="category-btn" >Create category</button>
-          </div> */}
-
         </div>
       </div>
+
       {/* Table */}
       <div className="table-container">
         <table className="RequestTable">
@@ -277,55 +198,82 @@ const Other = () => {
               <th>
                 <input
                   type="checkbox"
-                  checked={selectedRows.length === displayedData.length && displayedData.length > 0}
-                  onChange={() =>
-                    setSelectedRows(
-                      selectedRows.length === displayedData.length ? [] : displayedData.map((item) => item.AID)
-                    )
-                  }
+                  checked={selectedRows.length === filteredData.length}
+                  onChange={handleSelectAllRows}
                 />
               </th>
-              {["SI.No", "Asset Code", "Title", "Acquire Date", "Useful Life(year)", "size", "Depreciated Value (%)", "Status"].map((header, index) => (
+              {[
+                "Sl. No.",
+                "Asset Code",
+                "Title",
+                "Acquire Date",
+                "Useful Life(year)",
+                "Area",
+                "Status",
+              ].map((header, index) => (
                 <th key={index}>{header}</th>
               ))}
               <th>
                 {selectedRows.length > 0 && (
-                  <button className="delete-all-btn" onClick={handleDeleteSelected}>
-                    <RiDeleteBin6Line style={{ width: "20px", height: "20px", color: "red" }} />
+                  <button
+                    className="delete-all-btn"
+                    style={{ paddingLeft: "98px" }}
+                    onClick={handleDownloadPDF}
+                  >
+                    <FaDownload
+                      style={{ width: "20px", height: "20px", color: "green" }}
+                    />
                   </button>
                 )}
               </th>
             </tr>
           </thead>
           <tbody>
-            {displayedData.map((item, index) => (
-              <tr key={index}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.includes(item.AID)}
-                    onChange={() => handleSelectRow(item.AID)}
-                  />
-                </td>
-                <td>{item.SerialNo}</td>
-                <td>{item.AssetCode}</td>
-                <td>{item.Title}</td>
-                <td>{item.AcquireDate}</td>
-                <td>{item.Useful_life}</td>
-                <td>{item.size}</td>
-                <td>{item.Depreciated_value}</td>
-                <td>
-                  <div className={getStatusClass(item.status)}>
-                    {item.status}
-                  </div>
-                </td>
-                <td className="actions">
-                  <button className="view-btn" onClick={() => handleView(item)}>
-                    View
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {filteredData.map((item, index) => {
+              const isSelected = selectedRows.includes(item.assetCode); // Use assetCode to track selection
+              return (
+                <tr key={item.assetCode}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleSelectRow(item.assetCode)}
+                    />
+                  </td>
+                  <td>{index + 1}</td> {/* Just showing serial # in table */}
+                  <td>{item.assetCode}</td>
+                  <td>{item.title}</td>
+                  <td>{item.acquireDate}</td>
+                  <td>{item.lifespan}</td>
+                  <td>{item.assetArea}</td>
+                  <td>
+                    <div className={getStatusClass(item.status)}>
+                      {item.status}
+                    </div>
+                  </td>
+                  <td
+                    className="actions"
+                    style={{
+                      display: "flex",
+                      gap: "0.5rem",
+                      maxWidth: "150px",
+                    }}
+                  >
+                    <button
+                      className="view-btn"
+                      onClick={() => handleView(item)}
+                    >
+                      View
+                    </button>
+                    <img
+                      src={getQrImageUrl(item.attributes)}
+                      alt="QR Code"
+                      style={{ width: qrSize, height: qrSize }}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -334,12 +282,18 @@ const Other = () => {
         <span>{filteredData.length} Results</span>
         <div>
           {[...Array(totalPages).keys()].slice(0, 5).map((num) => (
-            <button key={num} className={currentPage === num + 1 ? "active" : ""} onClick={() => setCurrentPage(num + 1)}>
+            <button
+              key={num}
+              className={currentPage === num + 1 ? "active" : ""}
+              onClick={() => setCurrentPage(num + 1)}
+            >
               {num + 1}
             </button>
           ))}
           <span>...</span>
-          <button onClick={() => setCurrentPage(totalPages)}>{totalPages}</button>
+          <button onClick={() => setCurrentPage(totalPages)}>
+            {totalPages}
+          </button>
         </div>
       </div>
 
@@ -359,20 +313,16 @@ const Other = () => {
             <form className="repair-form">
               <div className="modal-content-field">
                 <label>Asset Id:</label>
-                <input type="text" value={modalData.SerialNo} readOnly />
+                <input type="text" value={modalData.assetID} readOnly />
               </div>
 
               <div className="modal-content-field">
                 <label>Title:</label>
-                <input type="text" value={modalData.Title} readOnly />
+                <input type="text" value={modalData.title} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Asset Code:</label>
-                <input type="email" value={modalData.AssetCode} readOnly />
-              </div>
-              <div className="modal-content-field">
-                <label>Size</label>
-                <input type="text" value={modalData.size} readOnly />
+                <input type="email" value={modalData.assetCode} readOnly />
               </div>
 
               <div className="modal-content-field">
@@ -381,49 +331,55 @@ const Other = () => {
               </div>
               <div className="modal-content-field">
                 <label>Depreciated Value:</label>
-                <input value={modalData.Depreciated_value} readOnly />
+                <input
+                  value={modalData.categoryDetails?.depreciatedValue}
+                  readOnly
+                />
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={modalData.AcquireDate} readOnly />
+                <input type="text" value={modalData.acquireDate} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>
-                <input value={modalData.Useful_life} readOnly />
+                <input value={modalData.lifespan} readOnly />
               </div>
               <div className="modal-content-field">
-                <label>status:</label>
+                <label>Status:</label>
                 <input value={modalData.status} readOnly />
               </div>
               <div className="modal-content-field">
-                <label>category:</label>
-                <input value={modalData.category} readOnly />
+                <label>Category:</label>
+                <input value={modalData.categoryDetails?.name} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Area:</label>
-                <input value={modalData.Area} readOnly />
+                <input value={modalData.assetArea} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Created by</label>
-                <input value={modalData.Created_by} readOnly />
+                <input value={modalData.createdBy} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Description: </label>
                 <textarea value={modalData.description} readOnly />
               </div>
-
-              {/* <div className="modal-buttons">
-                <button className="accept-btn" style={{ backgroundColor: "red" }}>
-                  <RiDeleteBin6Line />
-                </button>
-                <button className="reject-btn">Schedule Maintenance</button>
-              </div> */}
+              <div className="modal-content-field">
+                <label>QR: </label>
+                <div className="image-container">
+                  <img
+                    src={getQrImageUrl(modalData.attributes)}
+                    alt="QR Code"
+                    style={{ width: 300, height: 300 }}
+                  />
+                </div>
+              </div>
             </form>
           </div>
         </div>
       )}
-    </div >
-  )
+    </div>
+  );
 };
 
 export default Other;

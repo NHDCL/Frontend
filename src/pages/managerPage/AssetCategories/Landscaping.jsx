@@ -12,6 +12,7 @@ import {
   usePostAssetMutation,
   useGetCategoryQuery,
   useUploadExcelMutation,
+  useRequestDisposeMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
 import { useSelector } from "react-redux";
@@ -60,6 +61,8 @@ const Landscaping = ({ category }) => {
   const [postUploadImages, { isLoading, error }] =
     usePostUploadImagesMutation();
   const [uploadExcel, { isLoading: upLoading }] = useUploadExcelMutation();
+  const [requestDispose, { isLoading: isDeleting }] =
+    useRequestDisposeMutation();
 
   useEffect(() => {
     if (manager?.user?.academyId) {
@@ -72,7 +75,6 @@ const Landscaping = ({ category }) => {
       const filteredAssets = assets.filter(
         (asset) => asset.categoryDetails?.name === category
       );
-
       setData(filteredAssets);
     }
   }, [assets, category]);
@@ -96,10 +98,9 @@ const Landscaping = ({ category }) => {
         lifespan: "5 years",
         assetArea: "Office Room",
         description: "24-inch LCD monitor",
-        status: "Pending",
         createdBy: "jigme@gmail.com",
-        academyID: "67f017027d756710a12c2fa6",
-        assetCategoryID: "67eeef18d825904ae1f8ce64",
+        academyID: academyId,
+        assetCategoryID: CategoryId,
         // Any extra dynamic attributes can be added too
         Size: "2m hieght",
       },
@@ -447,6 +448,43 @@ const Landscaping = ({ category }) => {
     });
   };
 
+  const handleDeleteAsset = async () => {
+    if (!modalData.assetCode && !email) return;
+  
+    const confirmResult = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you really want to mark this asset as disposed?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+    });
+  
+    if (confirmResult.isConfirmed) {
+      try {
+        const result = await requestDispose({assetCode: modalData.assetCode, email: email}).unwrap();
+        console.log(result)
+        refetch()
+        setModalData(null);
+  
+        Swal.fire({
+          title: 'Deleted!',
+          text: result.message || 'Asset marked as disposed.',
+          icon: 'success',
+        });
+  
+        // Optionally close modal or refresh list
+      } catch (err) {
+        Swal.fire({
+          title: 'Error!',
+          text: err?.data?.message || 'Something went wrong.',
+          icon: 'error',
+        });
+      }
+    }
+  };  
+
   return (
     <div className="managerDashboard">
       <div className="search-sort-container">
@@ -496,7 +534,7 @@ const Landscaping = ({ category }) => {
           <thead className="table-header">
             <tr>
               {[
-                "SI.No",
+                "Sl. No.",
                 "Asset Code",
                 "Title",
                 "Acquire Date",
@@ -921,10 +959,11 @@ const Landscaping = ({ category }) => {
                   type="button"
                   className="accept-btn"
                   style={{ backgroundColor: "red" }}
+                  onClick={handleDeleteAsset}
+                  disabled={isDeleting}
                 >
-                  <RiDeleteBin6Line />
+                  {isDeleting ? "Deleting..." : <RiDeleteBin6Line />}
                 </button>
-
                 <button
                   type="button" // Prevents form submission
                   className="accept-btn"

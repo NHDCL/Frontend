@@ -11,12 +11,16 @@ import {
   useGetAssetByAcademyQuery,
   usePostAssetMutation,
   useGetCategoryQuery,
+  useUploadExcelMutation,
+  useRequestDisposeMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
 import CreatableSelect from "react-select/creatable";
 import { useSelector } from "react-redux";
 import { createSelector } from "reselect";
 import { useGetUserByEmailQuery } from "../../../slices/userApiSlice";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
@@ -46,11 +50,16 @@ const Other = ({ category }) => {
     assetArea: "",
   });
   const [errors, setErrors] = useState({});
-  const [academyId, setAcademyId] = useState("67f017257d756710a12c2fa7");
+  const [academyId, setAcademyId] = useState(null);
   const { data: assets, refetch } = useGetAssetByAcademyQuery(academyId);
   const [data, setData] = useState([]);
   const [Building, setBuilding] = useState([]);
   const [CategoryId, setCategoryId] = useState(null);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [uploadExcel, { isLoading: upLoading }] = useUploadExcelMutation();
+  const [requestDispose, { isLoading: isDeleting }] =
+    useRequestDisposeMutation();
+
   const rowsPerPage = 9; // 3x3 grid for QR codes per page
   const qrSize = 40; // Size of each QR code (adjust as needed)
 
@@ -67,7 +76,7 @@ const Other = ({ category }) => {
       );
       setData(filteredAssets);
     }
-  }, [assets]);
+  }, [assets, category]);
 
   useEffect(() => {
     if (assets) {
@@ -118,6 +127,37 @@ const Other = ({ category }) => {
     });
 
     return blockData;
+  };
+
+  const downloadDummyExcel = () => {
+    const data = [
+      {
+        assetCode: "A001",
+        title: "Monitor",
+        cost: 500,
+        acquireDate: "01/10/2023", // Date as string to match your backend expectation
+        lifespan: "5 years",
+        assetArea: "Office Room",
+        description: "24-inch LCD monitor",
+        createdBy: "jigme@gmail.com",
+        academyID: academyId,
+        assetCategoryID: CategoryId,
+      },
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Assets");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, "Asset_Template.xlsx");
   };
 
   const blockData = convertAssetsToBlockData(Building);
@@ -178,6 +218,15 @@ const Other = ({ category }) => {
     }
   };
 
+  const [file, setSelectedFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
   const handleFloorChange = (option) => {
     setSelectedFloor(option?.value);
     setSelectedRoom(null);
@@ -188,8 +237,9 @@ const Other = ({ category }) => {
   };
 
   useEffect(() => {
-    if (selectedBlock && selectedFloor && selectedRoom) {
-      const areaString = `${selectedBlock} - ${selectedFloor} - ${selectedRoom}`;
+    const parts = [selectedBlock, selectedFloor, selectedRoom].filter(Boolean);
+    if (parts.length > 0) {
+      const areaString = parts.join(" - ");
       setNewMachinery((prev) => ({
         ...prev,
         assetArea: areaString,
@@ -271,6 +321,40 @@ const Other = ({ category }) => {
 
   const handleAddMachinery = () => {
     setShowAddModal(true);
+  };
+
+  const handleBulkImport = () => {
+    setShowBulkModal(true);
+  };
+
+  const handleBulk = async () => {
+    if (file) {
+      try {
+        const res = await uploadExcel(file).unwrap();
+        refetch();
+        setSelectedFile(null);
+        setShowBulkModal(false);
+        console.log(res);
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Excel file uploaded successfully!",
+        });
+      } catch (err) {
+        console.log(err);
+        Swal.fire({
+          icon: "error",
+          title: "Upload Failed",
+          text: err?.data?.message || "Something went wrong while uploading.",
+        });
+      }
+    } else {
+      Swal.fire({
+        icon: "warning",
+        title: "No File",
+        text: "Please select an Excel file first.",
+      });
+    }
   };
 
   const handleSaveNewMachinery = async () => {
@@ -407,6 +491,46 @@ const Other = ({ category }) => {
     doc.save("Assets_with_QR_Codes.pdf");
   };
 
+  const handleDeleteAsset = async () => {
+    if (!modalData.assetCode && !email) return;
+
+    const confirmResult = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to mark this asset as disposed?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (confirmResult.isConfirmed) {
+      try {
+        const result = await requestDispose({
+          assetCode: modalData.assetCode,
+          email: email,
+        }).unwrap();
+        console.log(result);
+        refetch();
+        setModalData(null);
+
+        Swal.fire({
+          title: "Deleted!",
+          text: result.message || "Asset marked as disposed.",
+          icon: "success",
+        });
+
+        // Optionally close modal or refresh list
+      } catch (err) {
+        Swal.fire({
+          title: "Error!",
+          text: err?.data?.message || "Something went wrong.",
+          icon: "error",
+        });
+      }
+    }
+  };
+
   return (
     <div className="managerDashboard">
       <div className="search-sort-container">
@@ -438,7 +562,9 @@ const Other = ({ category }) => {
             <ImFolderDownload
               style={{ color: "#ffffff", marginLeft: "12px" }}
             />
-            <button className="category-btn">Bulk Import</button>
+            <button className="category-btn" onClick={handleBulkImport}>
+              Bulk Import
+            </button>
           </div>
           <div className="create-category-btn">
             <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
@@ -462,12 +588,12 @@ const Other = ({ category }) => {
                 />
               </th>
               {[
-                "SI.No",
+                "Sl. No.",
                 "Asset Code",
                 "Title",
                 "Acquire Date",
                 "Useful Life(year)",
-                "Depreciated Value (%)",
+                "Area",
                 "Status",
               ].map((header, index) => (
                 <th key={index}>{header}</th>
@@ -504,7 +630,7 @@ const Other = ({ category }) => {
                   <td>{item.title}</td>
                   <td>{item.acquireDate}</td>
                   <td>{item.lifespan}</td>
-                  <td>{item.categoryDetails?.depreciatedValue}</td>
+                  <td>{item.assetArea}</td>
                   <td>
                     <div className={getStatusClass(item.status)}>
                       {item.status}
@@ -536,6 +662,56 @@ const Other = ({ category }) => {
           </tbody>
         </table>
       </div>
+      {showBulkModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Upload your file</h2>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowBulkModal(false);
+                  setSelectedFile(null);
+                }}
+              >
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <input
+              type="file"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              onChange={handleFileChange}
+            />
+
+            <div style={{ marginTop: "20px" }}>
+              <button
+                className="download-all-btn"
+                style={{ marginBottom: "10px" }}
+                onClick={downloadDummyExcel}
+              >
+                Download Dummy Excel
+              </button>
+
+              <button
+                className="accept-btn"
+                onClick={handleBulk}
+                disabled={upLoading}
+              >
+                {upLoading ? "Uploading..." : "Upload"}
+              </button>
+              <button
+                className="reject-btn"
+                onClick={() => setShowBulkModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Pagination */}
       <div className="pagination">
         <span>{filteredData.length} Results</span>
@@ -816,11 +992,15 @@ const Other = ({ category }) => {
 
               <div className="modal-buttons">
                 <button
+                  type="button"
                   className="accept-btn"
                   style={{ backgroundColor: "red" }}
+                  onClick={handleDeleteAsset}
+                  disabled={isDeleting}
                 >
-                  <RiDeleteBin6Line />
+                  {isDeleting ? "Deleting..." : <RiDeleteBin6Line />}
                 </button>
+
                 <button className="accept-btn">Schedule Maintenance</button>
               </div>
             </form>
