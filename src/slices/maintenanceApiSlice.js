@@ -64,6 +64,37 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["RepairRequest"],
     }),
+
+    // GET All Repair Reports
+    getRepairReports: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/repair-reports",
+        method: "GET",
+      }),
+      transformResponse: (response) => response, // Optional, if no nesting like { data: [...] }
+      providesTags: ["RepairReports"],
+    }),
+
+    // GET All Preventive Maintenance Reports
+    getPreventiveMaintenanceReports: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/maintenance-reports",
+        method: "GET",
+      }),
+      transformResponse: (response) => response, // Optional, if your response is not nested
+      providesTags: ["PreventiveMaintenanceReports"],
+    }),
+
+    // GET Repair by ID
+    getRepairById: builder.query({
+      query: (repairId) => ({
+        url: `${MAINTENANCE_URL}/repairs/${repairId}`,
+        method: "GET",
+      }),
+      providesTags: (result, error, repairId) => [
+        { type: "Repair", id: repairId },
+      ],
+    }),
   }),
 });
 
@@ -74,4 +105,7 @@ export const {
   useGetRepairRequestQuery,
   useGetMaintenanceRequestQuery,
   useAcceptOrRejectRepairRequestMutation,
+  useGetRepairReportsQuery,
+  useGetPreventiveMaintenanceReportsQuery,
+  useGetRepairByIdQuery,
 } = maintenanceApiSlice;

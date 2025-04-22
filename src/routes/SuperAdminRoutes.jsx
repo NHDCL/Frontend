@@ -8,8 +8,8 @@ import AdminHome from "../pages/adminPages/AdminHome";
 import AdminAssets from "../pages/adminPages/AdminAssets";
 import AdminRepair from "../pages/adminPages/AdminRepair";
 import AdminMaintenance from "../pages/adminPages/AdminMaintenance";
-import AdminRReport from "../pages/adminPages/AdminRReport";
-import AdminMReport from "../pages/adminPages/AdminMReport";
+import SAdminRReport from "../pages/superAdminPages/SAdminRRport";
+import SAdminMReport from "../pages/superAdminPages/SAdminMReport";
 import SAdminAccount from "../pages/superAdminPages/SAdminAccount";
 import ContentTop from "../components/ContentTop/ContentTop";
 import SuperAdminSidebar from "../layout/Sidebar/SuperAdminSidebar";
@@ -87,7 +87,7 @@ const SuperAdminRoutes = () => {
                 path="repair-report"
                 element={
                   <ProtectedRoute
-                    element={<AdminRReport />}
+                    element={<SAdminRReport />}
                     requiredRole="SuperAdmin"
                   />
                 }
@@ -96,7 +96,7 @@ const SuperAdminRoutes = () => {
                 path="maintenance-report"
                 element={
                   <ProtectedRoute
-                    element={<AdminMReport />}
+                    element={<SAdminMReport />}
                     requiredRole="SuperAdmin"
                   />
                 }
