@@ -130,7 +130,7 @@ const Maintenancereport = () => {
     const csvContent = [
       ["Repair ID", "Asset Name", "Start Time", "End Time", "Date", "Area", "Total Cost", "Parts Used", "Location", "Description", "Total Technicians", "Assigned Supervisor", "Assigned Technician"],
       ...selectedData.map((item) => [
-        item.rid, item.assetName, item.startTime, item.endTime, item.Date,
+        item.maintenanceReportID, item.assetName, item.startTime, item.endTime, item.Date,
         item.Area, item.Total_cost, item.part_used, item.location,
         item.description, item.total_technician, item.Assigned_supervisor, item.Assigned_Technician
       ])
@@ -146,7 +146,7 @@ const Maintenancereport = () => {
     document.body.removeChild(a);
   };
 
-  const sortedData = [...data].sort((a, b) => b.rid - a.rid);
+  const sortedData = [...data].sort((a, b) => b.maintenanceReportID - a.maintenanceReportID);
 
   const filteredData = sortedData.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
@@ -164,16 +164,16 @@ const Maintenancereport = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (rid) => {
+  const handleSelectRow = (maintenanceReportID) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(rid)
-        ? prevSelectedRows.filter((item) => item !== rid)
-        : [...prevSelectedRows, rid]
+      prevSelectedRows.includes(maintenanceReportID)
+        ? prevSelectedRows.filter((item) => item !== maintenanceReportID)
+        : [...prevSelectedRows, maintenanceReportID]
     );
   };
 
   const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.rid));
+    const updatedData = data.filter((item) => !selectedRows.includes(item.maintenanceReportID));
     // Update the data with the filtered result after deletion
     setData(updatedData);
     setSelectedRows([]); // Reset selected rows after deletion
@@ -209,7 +209,7 @@ const Maintenancereport = () => {
 
     // Map modalData dynamically into table rows
     const rows = [
-      ["RID", modalData.rid],
+      ["RID", modalData.maintenanceReportID],
       ["Asset Name", modalData.assetName],
       ["Start Time", modalData.startTime],
       ["End Time", modalData.endTime],
@@ -236,7 +236,7 @@ const Maintenancereport = () => {
     });
 
     // Save the PDF
-    doc.save(`Repair_Report_${modalData.rid}.pdf`);
+    doc.save(`Repair_Report_${modalData.maintenanceReportID}.pdf`);
   };
 
   return (
@@ -273,7 +273,7 @@ const Maintenancereport = () => {
                       setSelectedRows(
                         selectedRows.length === displayedData.length
                           ? []
-                          : displayedData.map((item) => item.rid)
+                          : displayedData.map((item) => item.maintenanceReportID)
                       )
                     }
                   />
@@ -312,8 +312,8 @@ const Maintenancereport = () => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedRows.includes(item.rid)}
-                      onChange={() => handleSelectRow(item.rid)}
+                      checked={selectedRows.includes(item.maintenanceReportID)}
+                      onChange={() => handleSelectRow(item.maintenanceReportID)}
                     />
                   </td>
                   <td>{index + 1}</td>

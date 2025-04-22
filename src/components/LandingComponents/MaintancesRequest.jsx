@@ -17,20 +17,20 @@ const priorities = [
 const MaintenanceRequest = () => {
   const [formData, setFormData] = useState({
     name: "",
-  phoneNumber: "",
-  email: "",
-  priority: "",
-  academy: "",
-  area: "",
-  description: "",
-  assetName: "",
-  scheduled: false,
-  assetCode: "",
-  images: [],
-  status: "Pending",
-  // academyId:"",
+    phoneNumber: "",
+    email: "",
+    priority: "",
+    academy: "",
+    area: "",
+    description: "",
+    assetName: "",
+    scheduled: false,
+    assetCode: "",
+    images: [],
+    status: "Pending",
+    // academyId:"",
   });
-  console.log("formdata",formData)
+  console.log("formdata", formData)
 
   const [postRepairRequest, { isLoading: requesting }] = usePostRepairRequestMutation();
   const { data: academies = [], isLoading, error } = useGetAcademyQuery();
@@ -121,7 +121,7 @@ const MaintenanceRequest = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-  
+
     const {
       name,
       phoneNumber,
@@ -133,7 +133,7 @@ const MaintenanceRequest = () => {
       assetName,
       academy,
     } = formData;
-  
+
     const requestData = new FormData();
     requestData.append("name", name.trim());
     requestData.append("phoneNumber", phoneNumber.trim());
@@ -145,7 +145,7 @@ const MaintenanceRequest = () => {
     requestData.append("assetName", assetName.trim());
     requestData.append("scheduled", "false");
     requestData.append("assetCode", ""); // null as empty string
-  
+
     images.forEach((imageFile) => {
       requestData.append("images", imageFile);
     });
@@ -161,12 +161,12 @@ const MaintenanceRequest = () => {
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
     });
-  
+
     if (!result.isConfirmed) return;
-  
+
     try {
       await postRepairRequest(requestData).unwrap();
-  
+
       Swal.fire({
         icon: "success",
         title: "Repair Request Sent!",
@@ -175,7 +175,7 @@ const MaintenanceRequest = () => {
         showConfirmButton: false,
         timer: 2000,
       });
-  
+
       setFormData({
         name: "",
         phoneNumber: "",
@@ -189,7 +189,7 @@ const MaintenanceRequest = () => {
         scheduled: false,
         assetCode: "",
         images: [],
-        academyId:"",
+        academyId: "",
 
       });
       setImages([]);
@@ -202,7 +202,7 @@ const MaintenanceRequest = () => {
       });
     }
   };
-  
+
 
   return (
     <div className="mr-container">
@@ -305,7 +305,7 @@ const MaintenanceRequest = () => {
               }))}
               placeholder="Select Area"
               isClearable
-              isSearchable={false}
+              isSearchable={true}
             />
             {errors.area && <p className="error-text">{errors.area}</p>}
 
@@ -377,7 +377,7 @@ const MaintenanceRequest = () => {
             </div>
 
             <button disabled={requesting}
-style={{backgroundColor:"#897463"}} type="submit" className="mr-submit-btn">
+              style={{ backgroundColor: "#897463" }} type="submit" className="mr-submit-btn">
               {requesting ? "Requesting..." : "Request"}{" "}
             </button>
           </form>

@@ -45,7 +45,6 @@ const Repair = () => {
     useGetRepairRequestQuery();
 
   const repairID = rescheduleModalData?.repairID;
-  console.log("rid", repairID);
 
   const {
     data: scheduleData,
@@ -245,6 +244,8 @@ const Repair = () => {
       filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     );
   }, [repairRequest, userByEmial]);
+
+  console.log("data", data)
 
   const getWorkOrderStatusClass = (status) => {
     switch (status) {

@@ -11,13 +11,10 @@ import {
 import Swal from "sweetalert2";
 // import { useEffect } from "react";
 
-
 const Landingpage = () => {
     const { data: academies, isLoading, error, refetch } = useGetAcademyQuery();
     const [academyList, setAcademyList] = useState([]);
 
-     
-    
   useEffect(() => {
     if (error) {
       Swal.fire({
