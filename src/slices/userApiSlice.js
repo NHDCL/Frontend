@@ -11,6 +11,11 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    getRoles: builder.query({
+      query: () => `${USERS_URL}/roles`,
+      providesTags: ['Roles'],
+    }),
+
     forgotPassword: builder.mutation({
       query: (email) => ({
         url: USERS_URL + "/users/forgot-password",
@@ -140,6 +145,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         formData.append("email", userData.email);
         formData.append("password", userData.password);
         formData.append("name", userData.name);
+        formData.append("employeeId", userData.employeeId);
         formData.append("academyId", userData.academyId); // Ensure academyId is appended
         formData.append("departmentId", userData.departmentId); // departmentId should be appended if available
         formData.append("roleId", userData.roleId);
@@ -232,6 +238,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
 });
 
 export const {
+  useGetRolesQuery,
   useLoginMutation,
   useForgotPasswordMutation,
   useVerifyOtpMutation,

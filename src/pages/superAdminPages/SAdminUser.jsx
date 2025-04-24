@@ -6,7 +6,7 @@ import img from "../../assets/images/person_four.jpg";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { AiOutlineUsergroupAdd } from "react-icons/ai";
 import { IoIosCloseCircle } from "react-icons/io";
-import { useGetAcademyQuery, useCreateUserMutation, useGetDepartmentQuery, useCreateDepartmentMutation, useGetUsersQuery } from "../../slices/userApiSlice";
+import { useGetAcademyQuery, useCreateUserMutation, useGetDepartmentQuery, useCreateDepartmentMutation, useGetUsersQuery, useGetRolesQuery } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 
 const SAdminUser = () => {
@@ -16,40 +16,49 @@ const SAdminUser = () => {
   const rowsPerPage = 10;
   const [showModal, setShowModal] = useState(false);
 
-
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [image, setImage] = useState(null);
+  const [password, setPassword] = useState('');  
+  const [employeeId, setEmployeeId] = useState('');  
+  const [image, setImage] = useState(img);
 
   const [selectedAcademy, setSelectedAcademy] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [formError, setFormError] = useState(null);
 
   const { data: academies } = useGetAcademyQuery();
-  const { data: department, refetch } = useGetDepartmentQuery();
-  const { data: users } = useGetUsersQuery();
+  const { data: department } = useGetDepartmentQuery();
+  const { data: users, refetch} = useGetUsersQuery();
+  const { data: roles } = useGetRolesQuery();
   const [createUser, { isLoading }] = useCreateUserMutation();
+  const [data, setData] = useState([])
+  console.log("data", data)
 
   const [adminRoleId, setAdminRoleId] = useState(null);
-  console.log("users: ",users)
+  console.log("users: ",roles)
+  console.log("adminRole: ",adminRoleId)
 
   useEffect(() => {
-    if (users && Array.isArray(users)) {
-      users.forEach(user => {
-        const roleName = user?.role?.name?.toLowerCase();
-        const roleId = user?.role?.roleId;
+    if (roles && Array.isArray(roles)) {
+      roles.forEach(role => {
+        const roleName = role?.name?.toLowerCase();
+        const roleId = role?.roleId;
 
         if (roleName === 'admin') {
           setAdminRoleId(roleId);
         }
       });
     }
+  }, [roles]);
+
+  useEffect(() => {
+    if (users) {
+      setData(users);
+    }
   }, [users]);
 
-
   const handleCreateUser = async () => {
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !employeeId) {
       alert("Please fill all fields");
       return;
     }
@@ -69,13 +78,15 @@ const SAdminUser = () => {
 
     const newUser = {
       name,
+      employeeId,
       email,
       password,
-      academyId:selectedAcademy,
-      departmentId: activeTab !== "Manager" ? selectedDepartment : null,
+      academyId:"null",
+      departmentId: activeTab !== "Manager" ? selectedDepartment : "null",
       roleId: roleId,
       image: imageFile,
     };
+    console.log(newUser)
 
     try {
       const res = await createUser(newUser).unwrap();
@@ -85,7 +96,9 @@ const SAdminUser = () => {
       Swal.fire("Success", "User created successfully", "success");
       setName("");
       setEmail("");
+      setEmployeeId("");
       setPassword("");
+      refetch()
     } catch (err) {
       let errorMessage = "Something went wrong. Please try again.";
 
@@ -106,13 +119,11 @@ const SAdminUser = () => {
 
   };
 
-
-
   const handleAddUserClick = () => {
     if (activeTab === "Admin") setShowModal(true);
   };
-  const [data, setData] = useState(users)
-  console.log("data", data)
+
+  
 
   const filteredData = (users || []).filter(
     (item) =>
@@ -249,6 +260,7 @@ const SAdminUser = () => {
             </div>
             <div className="AdminUser-modal-content">
               <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="off" />
+              <input type="text" placeholder="EmployeeID" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required autoComplete="off" />
               <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="off" />
               <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="off" />
 

@@ -8,7 +8,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import { TiArrowSortedUp } from "react-icons/ti";
-import { useGetRepairRequestQuery, useAssignRepairMutation, useGetSchedulesByRepairIDQuery, useUpdateRepairScheduleMutation, useGetSchedulesByUserIDQuery, useGetRepairByIdQuery } from "../../slices/maintenanceApiSlice";
+import { useGetSchedulesByUserIDQuery, useGetRepairByIdQuery } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice"
@@ -16,7 +16,6 @@ import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice"
 import {
   useGetUserByEmailQuery,
   useGetUsersQuery,
-  useGetDepartmentQuery,
 } from "../../slices/userApiSlice";
 import { createSelector } from "reselect";
 import Swal from "sweetalert2";
@@ -106,7 +105,6 @@ const SupervisorHome = () => {
 
 
   console.log("Dataaa", data)
-  const { data: users } = useGetUsersQuery();
 
   const [selectedDepartment, setSelectedDepartment] = useState(null);
 
