@@ -53,6 +53,56 @@ export const assetApiSlice = apiSlice.injectEndpoints({
         };
       },
     }),
+    postCategory: builder.mutation({
+      query: (newCategory) => ({
+        url: ASSETS_URL + "/categories", // API endpoint for posting assets
+        method: "POST",
+        body: newCategory, // Send the new asset data as the request body
+      }),
+    }),
+    updateCategory: builder.mutation({
+      query: ({ id, updatedCategory }) => ({
+        url: `${ASSETS_URL}/categories/${id}`,
+        method: 'PUT',
+        body: updatedCategory,
+      }),
+    }),
+    softDeleteCategory: builder.mutation({
+      query: (id) => ({
+        url: `${ASSETS_URL}/categories/${id}/delete`,
+        method: 'PUT',
+      }),
+      invalidatesTags: ['Category'],
+    }),
+    updateAssetStatus: builder.mutation({
+      query: (data) => ({
+        url: ASSETS_URL + '/assets/update-status',
+        method: 'POST',
+        body: data,
+      }),
+    }),
+    requestDispose: builder.mutation({
+      query: (data) => ({
+        url: ASSETS_URL + '/assets/request-dispose',
+        method: 'POST',
+        body: data
+      }),
+    }),
+    handleAssetDeletion: builder.mutation({
+      query: ({ assetCode, email, action }) => ({
+        url: ASSETS_URL + '/assets/handle-deletion',
+        method: 'POST',
+        body: { assetCode, email, action },
+      }),
+    }),
+    updateAsset: builder.mutation({
+      query: ({ assetCode, assetData }) => ({
+        url: `${ASSETS_URL}/assets/${assetCode}`,
+        method: 'PUT',
+        body: assetData,
+      }),
+      invalidatesTags: ['Asset'],
+    }),
   }),
 });
 
@@ -64,4 +114,11 @@ export const {
   usePostUploadImagesMutation,
   useGetAssetByAssetCodeQuery,
   useUploadExcelMutation,
+  usePostCategoryMutation,
+  useUpdateCategoryMutation,
+  useSoftDeleteCategoryMutation,
+  useUpdateAssetStatusMutation,
+  useRequestDisposeMutation,
+  useHandleAssetDeletionMutation,
+  useUpdateAssetMutation
 } = assetApiSlice;

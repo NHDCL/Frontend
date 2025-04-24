@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./../managerPage/css/card.css";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/form.css";
@@ -7,6 +7,26 @@ import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
+import { TiArrowSortedUp } from "react-icons/ti";
+import {
+  useAssignRepairMutation,
+  useGetSchedulesByRepairIDQuery,
+  useUpdateRepairScheduleMutation,
+  useGetSchedulesByUserIDQuery,
+  useGetPreventiveSchedulesByUserIDQuery,
+  useGetRepairByIdQuery,
+} from "../../slices/maintenanceApiSlice";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice";
+
+import {
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+  useGetDepartmentQuery,
+} from "../../slices/userApiSlice";
+import { createSelector } from "reselect";
+import Swal from "sweetalert2";
 
 import Select from "react-select";
 
@@ -17,241 +37,277 @@ const SupervisorHome = () => {
   const [modalData, setModalData] = useState(null);
   const [selectedPriority, setSelectedPriority] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
+  const [rescheduleModalData, setRescheduleModalData] = useState(null);
 
-  const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
+  const [selectedTechnicianId, setSelectedTechnicianId] = useState(null);
+  const [selectedTechnicianUpdate, setSelectedTechnicianUpdate] =
+    useState(null);
+
   const rowsPerPage = 10;
+  console.log(
+    "start........................................................................."
+  );
 
-  const [teamMembers, setTeamMembers] = useState([]);
-  const [newMember, setNewMember] = useState("");
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+  console.log("selectedTechnicianId", selectedTechnicianId);
+  console.log("selectedTechnicianUpdate", selectedTechnicianUpdate);
 
-  const handleAddMember = () => {
-    if (newMember.trim() && !teamMembers.includes(newMember)) {
-      setTeamMembers([...teamMembers, newMember]);
-      setNewMember(""); // Reset input field
-    }
-  };
+  const email = useSelector(getUserEmail);
+  const { data: userByEmial} = useGetUserByEmailQuery(email);
 
-  const handleRemoveMember = (index) => {
-    setTeamMembers(teamMembers.filter((_, i) => i !== index));
-  };
+  const userID = userByEmial?.user?.userId;
+  console.log("userID", userID);
+
+  const academyId = userByEmial?.user?.academyId;
+  console.log("academyId", academyId);
+
+  const departmentId = userByEmial?.user?.departmentId;
+  console.log("departmentId", departmentId);
+
+  const { data: users, isLoading: usersLoading } = useGetUsersQuery();
+
+  const filteredUsers = users?.filter(
+    (user) =>
+      user.academyId === academyId &&
+      user.departmentId === departmentId &&
+      typeof user.role?.name === "string" &&
+      user.role.name.toLowerCase() === "technician"
+  );
+  console.log("filteredUsers:", filteredUsers);
+
+  const workerOptions = filteredUsers?.map((user) => ({
+    label: user.email,
+    value: user.email,
+  }));
+  console.log("workerOptions:", workerOptions);
+
+  const updatedOption = workerOptions?.find(
+    (w) => w.label === selectedTechnicianUpdate
+  );
+
+  const {
+    data: userSchedules,
+    isLoading: userSchedulesLoading,
+    error: userSchedulesError,
+    refetch
+  } = useGetSchedulesByUserIDQuery(userID, {
+    skip: !userID, // skip until userID is available
+  });
+
+  const repairID = userSchedules?.repairID;
+  console.log("rid", repairID);
+  console.log("userSchedule", userSchedules);
+ 
+
+
+  const [data, setData] = useState([]);
+  const [repairs, setRepairs] = useState([]);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchRepairDetails = async () => {
+      if (userSchedules && userSchedules.length) {
+        const repairPromises = userSchedules.map(async (schedule) => {
+          try {
+            const repair = await dispatch(
+              maintenanceApiSlice.endpoints.getRepairById.initiate(
+                schedule?.repairID
+              )
+            ).unwrap();
+
+            return {
+              ...schedule, // include all original schedule details
+              repairInfo: repair, // attach fetched repair data under `repairInfo`
+            };
+          } catch (err) {
+            console.error(`Error fetching repair ${schedule?.repairID}:`, err);
+            return null;
+          }
+        });
+
+        const repairResults = await Promise.all(repairPromises);
+        const validData = repairResults.filter(Boolean);
+        setData(validData); // ✅ now contains both schedule & repair info
+      }
+    };
+
+    fetchRepairDetails();
+  }, [userSchedules, dispatch]);
+
+  console.log("Dataaa", data);
+
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
 
   const today = new Date().toISOString().split("T")[0];
 
-  const [data, setData] = useState([
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Minor",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "John Doe",
-        time: "10:00 AM",
-        assignDate: "25/4/2025",
-        teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "Jane Smith",
-        time: "02:00 PM",
-        assignDate: "26/4/2025",
-        teamMembers: ["12210015.gcit@rub.edu.bt"],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "Mike Lee",
-        time: "11:30 AM",
-        assignDate: "27/4/2025",
-        teamMembers: ["12210012.gcit@rub.edu.bt", "12210013.gcit@rub.edu.bt"],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "pending",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "Emily Davis",
-        time: "09:45 AM",
-        assignDate: "28/4/2025",
-        teamMembers: ["12210017.gcit@rub.edu.bt", "12210018.gcit@rub.edu.bt"],
-      },
-    },
-  ]);
+  const [updateSchedule] = useUpdateRepairScheduleMutation();
 
-  // Sample workers list
-  const workersList = [
-    { value: "Worker A", label: "Worker A" },
-    { value: "Worker B", label: "Worker B" },
-    { value: "Worker C", label: "Worker C" },
-  ];
+  const handleSchedule = async () => {
+    const repairID = modalData.repairID;  // Ensure the correct way to access repairID
 
-  const handleAssignRequest = () => {
-    if (!assignedWorker || !assignTime || !assignDate) {
-      alert("Please fill in all fields before assigning.");
+    if (!repairID) {
+      Swal.fire("Error", "Repair ID not found.", "error");
       return;
     }
+    const matchingSchedule = userSchedules.find(schedule => schedule.repairID === repairID);
+  
+    if (!matchingSchedule) {
+      Swal.fire("Error", "No schedule found for the given repairID.", "error");
+      return;
+    }
+  
+    const scheduleId = matchingSchedule.scheduleID;
+    console.log("scheduleId", scheduleId);
+  
+    if (!selectedTechnicianId) {
+      Swal.fire("Error", "Technician email is missing.", "error");
+      return;
+    }
+  
+    // Prepare the updated data for the schedule
+    const updatedData = {
+      technicianEmail: selectedTechnicianId,
+      repairID: matchingSchedule.repairID,  // Use repairID from the matching schedule
+    };
+  
+    console.log("Updated Data:", updatedData);
 
-    alert(
-      `Assigned ${modalData.rid} to ${assignedWorker} at ${assignTime} on ${assignDate}`
-    );
 
-    // Close the modal after assigning
-    handleCloseModal();
+    try {
+      await updateSchedule({ scheduleId, updatedData }).unwrap();
+      Swal.fire({
+        icon: "success",
+        title: "Scheduled successfully!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      // refetchRepairRequest();
+      handleCloseModal();
+    } catch (error) {
+      Swal.fire("Error", error?.data?.message || "Schedule failed", "error");
+      console.error("Schedule error:", error);
+    }
+    refetch()
+
   };
+
+  console.log("Technician Email:", selectedTechnicianId);
+
+  const handleReschedule = async () => {
+    // Assuming userSchedules is an array and repairID is available within the schedules.
+    // We need to find the matching schedule using repairID
+    const repairID = rescheduleModalData.repairID;  // Ensure the correct way to access repairID
+
+    if (!repairID) {
+      Swal.fire("Error", "Repair ID not found.", "error");
+      return;
+    }
+  
+    // Find the schedule that matches the repairID
+    const matchingSchedule = userSchedules.find(schedule => schedule.repairID === repairID);
+  
+    // If no matching schedule is found, show an error
+    if (!matchingSchedule) {
+      Swal.fire("Error", "No schedule found for the given repairID.", "error");
+      return;
+    }
+  
+    // Get the scheduleId from the matching schedule
+    const scheduleId = matchingSchedule.scheduleID;
+    console.log("scheduleId", scheduleId);
+  
+    // Ensure that the selectedTechnicianUpdate exists before proceeding
+    if (!selectedTechnicianUpdate) {
+      Swal.fire("Error", "Technician email is missing.", "error");
+      return;
+    }
+  
+    // Prepare the updated data for the schedule
+    const updatedData = {
+      technicianEmail: selectedTechnicianUpdate,
+      repairID: matchingSchedule.repairID,  // Use repairID from the matching schedule
+    };
+  
+    console.log("Updated Data:", updatedData);
+  
+    // Try updating the schedule with the new data
+    try {
+      await updateSchedule({ scheduleId, updatedData }).unwrap();
+      Swal.fire({
+        icon: "success",
+        title: "Schedule updated successfully!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      
+      handleCloseModal2();  // Close modal on succes
+    } catch (error) {
+      Swal.fire("Error", error?.data?.message || "Update failed", "error");
+      console.error("Update schedule error:", error);
+    }
+    refetch()
+  };
+  console.log("rescheduleModalData:", rescheduleModalData);
+
+
+
+  const userIDD = userByEmial?.user?.userId;
+    const [maintenanceData, setMaintenanceData] = useState([]);
+    const {
+        data: userSchedulesM,
+        isLoading: userSchedulesLoadingM,
+        error: userSchedulesErrorM,
+      } = useGetPreventiveSchedulesByUserIDQuery(userIDD, {
+        skip: !userIDD,
+      })
+  useEffect(() => {
+      const fetchRepairDetails = async () => {
+        if (userSchedulesM && userSchedulesM.length) {
+          const repairPromises = userSchedulesM.map(async (schedule) => {
+            try {
+              const asset = await dispatch(
+                maintenanceApiSlice.endpoints.getAssetByAssetCode.initiate(schedule?.assetCode)
+              ).unwrap();
+  
+              return {
+                ...schedule,
+                asset,
+              };
+            } catch (err) {
+              console.error(`Error fetching asset for ${schedule?.assetCode}:`, err);
+              return null;
+            }
+          });
+  
+          const combinedResults = await Promise.all(repairPromises);
+          const validResults = combinedResults.filter(Boolean); // filter out failed ones
+          setMaintenanceData(validResults); // ✅ Now includes both schedule + asset
+        }
+      };
+  
+      fetchRepairDetails();
+    }, [userSchedules, dispatch]);
+
 
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {
     switch (status) {
       case "pending":
-        return "pending-status"; // Gray color
-      case "In progress":
-        return "in-progress-status"; // Yellow color
-      case "Completed":
-        return "completed-status"; // Green color
+        return "pending-status";
+      case "inprogress":
+        return "in-progress-status";
+      case "completed":
+        return "completed-status";
       default:
         return "";
     }
@@ -260,39 +316,68 @@ const SupervisorHome = () => {
   // Extract unique priorities from data
   const uniquePriorities = [
     { value: "", label: "All Priorities" },
-    ...Array.from(new Set(data.map((item) => item.priority))).map(
-      (priority) => ({
-        value: priority,
-        label: priority,
-      })
-    ),
+    ...Array.from(
+      new Set(
+        data
+          .map((item) => item.repairInfo.priority?.toLowerCase())
+          .filter(Boolean)
+      )
+    ).map((priority) => ({
+      value: priority,
+      label: priority
+        ? priority.charAt(0).toUpperCase() + priority.slice(1)
+        : "",
+    })),
   ];
 
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map((item) => item.workstatus))).map(
-      (status) => ({
-        value: status,
-        label: status,
-      })
-    ),
+    ...Array.from(
+      new Set(data.map((item) => item.repairInfo.status?.toLowerCase()))
+    ).map((status) => ({
+      value: status,
+      label: status ? status.charAt(0).toUpperCase() + status.slice(1) : "",
+    })),
   ];
-
   // Filtering data based on search and priority selection and work status
-  const sortedData = [...data].sort((a, b) => b.MID - a.MID);
-  const filteredData = sortedData.filter((item) => {
-    const matchesSearch = Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  // Helper function to recursively search through nested objects
+  const searchRecursively = (obj, searchTerm) => {
+    if (typeof obj !== "object" || obj === null) {
+      return (
+        obj &&
+        obj
+          .toString()
+          .toLowerCase()
+          .includes(searchTerm?.toLowerCase() || "")
+      );
+    }
+
+    // Check all values in the object (including nested objects)
+    return Object.values(obj).some((value) =>
+      searchRecursively(value, searchTerm)
     );
+  };
 
-    const matchesPriority =
-      selectedPriority === "" || item.priority === selectedPriority;
-    const matchesWorkStatus =
-      selectedWorkStatus === "" || item.workstatus === selectedWorkStatus;
+  const filteredData =
+    data && data.length
+      ? data.filter((item) => {
+          // Match search term with any field at any level in the object
+          const matchesSearch = searchRecursively(item, searchTerm);
 
-    return matchesSearch && matchesPriority && matchesWorkStatus;
-  });
+          const matchesPriority =
+            selectedPriority === "" ||
+            item.repairInfo.priority?.toLowerCase() ===
+              selectedPriority.toLowerCase();
+
+          const matchesWorkStatus =
+            selectedWorkStatus === "" ||
+            item.repairInfo.status?.toLowerCase() ===
+              selectedWorkStatus.toLowerCase();
+
+          return matchesSearch && matchesPriority && matchesWorkStatus;
+        })
+      : [];
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -300,57 +385,99 @@ const SupervisorHome = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (MID) => {
+  const handleSelectRow = (repairID) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(MID)
-        ? prevSelectedRows.filter((item) => item !== MID)
-        : [...prevSelectedRows, MID]
+      prevSelectedRows.includes(repairID)
+        ? prevSelectedRows.filter((item) => item !== repairID)
+        : [...prevSelectedRows, repairID]
     );
   };
 
   const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.MID));
-    // Update the data with the filtered result after deletion
+    const updatedData = data.filter(
+      (item) => !selectedRows.includes(item.repairID)
+    );
     setData(updatedData);
-    setSelectedRows([]); // Reset selected rows after deletion
+    setSelectedRows([]);
   };
-  const handleDeleteRow = (MID) => {
-    const updatedData = data.filter((item) => item.MID !== MID);
+
+  const handleDeleteRow = (repairID) => {
+    const updatedData = data.filter((item) => item.repairID !== repairID);
     setData(updatedData);
   };
 
   const handleScheduleView = (item) => {
     setModalData(item);
-    setAssignedWorker(null); // Reset worker selection when opening modal
+    setAssignDate(item?.reportingDate);
+    setAssignTime(item?.startTime);
   };
 
   const handleCloseModal = () => {
     setModalData(null);
+    setSelectedTechnicianId(null);
+    setAssignDate(null);
+    setAssignTime(null);
   };
+  const handleCloseModal2 = () => {
+    setRescheduleModalData(null);
+    setSelectedTechnicianUpdate(null);
+    setAssignDate(null);
+    setAssignTime(null);
+  };
+
+  const handleRescheduleView = (item) => {
+    setRescheduleModalData(item);
+    setSelectedTechnicianUpdate(item?.technicianEmail || "");
+    setAssignDate(item?.reportingDate);
+    setAssignTime(item?.startTime);
+  };
+
+  const [sortOrder, setSortOrder] = useState({
+    column: null,
+    direction: "asc",
+  });
+
+  const handleSort = (column) => {
+    setSortOrder((prev) => ({
+      column,
+      direction:
+        prev.column === column && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const sortedData = [...data].sort((a, b) => {
+    if (!sortOrder.column) return b.repairID - a.repairID;
+
+    const valA = a[sortOrder.column];
+    const valB = b[sortOrder.column];
+
+    if (valA < valB) return sortOrder.direction === "asc" ? -1 : 1;
+    if (valA > valB) return sortOrder.direction === "asc" ? 1 : -1;
+    return 0;
+  });
 
   return (
     <div className="ManagerDashboard">
-        <div className="cardwrap">
+      <div className="cardwrap">
         {/* Card counts */}
         <div className="cardCount cardCount1">
           <div className="CardContent">
             <h3 className="cardTitle">Total technician</h3>
-            <p className="count">45</p>
+            <p className="count">{filteredUsers?.length || 0}</p>
           </div>
         </div>
         <div className="cardCount">
           <div className="CardContent">
             <h3 className="cardTitle">Total Work Order</h3>
-            <p className="count">10</p>
+            <p className="count">{maintenanceData?.length || 0}</p>
           </div>
         </div>
         <div className="cardCount cardCount1">
           <div className="CardContent">
             <h3 className="cardTitle">Total Repair Request</h3>
-            <p className="count">56</p>
+            <p className="count">{data?.length || 0}</p>
           </div>
         </div>
-    
       </div>
       <h3 className="heading">Repair request</h3>
 
@@ -375,11 +502,7 @@ const SupervisorHome = () => {
                 (option) => option.value === selectedPriority
               )} // Ensure selected value is an object
               onChange={(selectedOption) => {
-                if (selectedOption) {
-                  setSelectedPriority(selectedOption.value);
-                } else {
-                  setSelectedPriority(""); // Clear the selected priority when null
-                }
+                setSelectedPriority(selectedOption ? selectedOption.value : "");
               }}
               isClearable
               isSearchable={false}
@@ -411,51 +534,109 @@ const SupervisorHome = () => {
                 {[
                   "MID",
                   "Asset Name",
-                  "Report Time",
+                  // "Email",
                   "Date",
-                  "Asset ID",
+                  "Phone No. ",
                   "Area",
                   "Priority",
                   "Workstatus",
                   "Description",
                   "",
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header === "Area" || header === "Name" ? (
+                      <div className="header-title">
+                        {header}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() =>
+                              handleSort(
+                                header === "Area"
+                                  ? "Area"
+                                  : header.toLowerCase().replace(" ", "")
+                              )
+                            }
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform:
+                                  sortOrder.column ===
+                                    header.toLowerCase().replace(" ", "") &&
+                                  sortOrder.ascending
+                                    ? "rotate(0deg)" // Ascending
+                                    : sortOrder.column ===
+                                        header.toLowerCase().replace(" ", "") &&
+                                      !sortOrder.ascending
+                                    ? "rotate(180deg)" // Descending
+                                    : "rotate(0deg)", // Default
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header
+                    )}
+                  </th>
                 ))}
+                <th>
+                  {selectedRows.length > 0 ? (
+                    <button
+                      className="delete-all-btn"
+                      onClick={handleDeleteSelected}
+                    >
+                      <RiDeleteBin6Line
+                        style={{ width: "20px", height: "20px", color: "red" }}
+                      />
+                    </button>
+                  ) : (
+                    " "
+                  )}
+                </th>
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  <td>{item.MID}</td>
-                  <td>{item.assetName}</td>
-                  <td>{item.reportingTime}</td>
-                  <td>{item.date}</td>
-                  <td>{item.assetID}</td>
-                  <td>{item.area}</td>
-                  <td>{item.priority}</td>
+                  <td>{index + 1}</td>
+                  <td>{item.repairInfo.assetName}</td>
+                  {/* <td>{item.email}</td> */}
+                  <td>{item.reportingDate}</td>
+                  <td>{item.repairInfo.phoneNumber}</td>
+                  <td>{item.repairInfo.area}</td>
+                  <td>{item.repairInfo.priority}</td>
                   <td>
-                    <div className={getWorkOrderStatusClass(item.workstatus)}>
-                      {item.workstatus}
+                    <div
+                      className={getWorkOrderStatusClass(
+                        item.repairInfo.status
+                          ?.toLowerCase()
+                          .replace(/\s+/g, "") || ""
+                      )}
+                    >
+                      {item.repairInfo.status}
                     </div>
                   </td>
-                  <td className="description">{item.description}</td>
-
+                  <td className="description">{item.repairInfo.description}</td>
                   <td className="actions">
-                    <button
-                      className="schedule-btn"
-                      onClick={() => handleScheduleView(item)}
-                    >
-                      Schedule
-                    </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDeleteRow(item.rid)}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px" }}
-                      />
-                    </button>
+                    {item.technicianEmail === null ? (
+                      <button
+                        className="schedule-btn"
+                        onClick={() => handleScheduleView(item)}
+                      >
+                        Schedule
+                      </button>
+                    ) : (
+                      <button
+                        className="schedule-btn"
+                        style={{ backgroundColor: "#315845" }}
+                        onClick={() => handleRescheduleView(item)}
+                      >
+                        Reschedule
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -490,8 +671,82 @@ const SupervisorHome = () => {
           <div className="modal-content">
             {/* Close Button */}
             <div className="modal-header">
-              <h2 className="form-h">Schedule Form</h2>
+              <h2 style={{ fontSize: "18px" }} className="form-h">
+                Schedule Form: {modalData.scheduleId}
+              </h2>
               <button className="close-btn" onClick={handleCloseModal}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+
+            {/* Assign Dropdown */}
+            <div className="schedule-form">
+              <div className="modal-content-field">
+                <label>Assign Technician:</label>
+                {/* <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={workerOptions}
+                  value={
+                    workerOptions?.find(
+                      (w) => w.value === selectedTechnicianId
+                    ) || null
+                  }
+                  onChange={(selectedOption) => {
+                    setSelectedTechnicianId(selectedOption?.label || "");
+                    console.log("Selected Worker:", selectedOption);
+                  }}
+                  isClearable
+                /> */}
+                <Select
+  classNamePrefix="custom-select-department"
+  className="workstatus-dropdown"
+  options={workerOptions}
+  value={workerOptions?.find((w) => w.value === selectedTechnicianId) || null}
+  onChange={(selectedOption) => {
+    setSelectedTechnicianId(selectedOption?.value || "");
+    console.log("Selected Worker:", selectedOption);
+  }}
+  isClearable
+/>
+              </div>
+              {/* Assign Date */}
+              <div className="modal-content-field">
+                <label>Assign Date:</label>
+                <input type="text" value={assignDate} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                {/* Assign Time */}
+                <label>Assign Time:</label>
+                <input type="text" value={assignTime} readOnly />
+              </div>
+
+              <div className="modal-buttons">
+                <button
+                  className="accept-btn"
+                  style={{ width: "80px" }}
+                  onClick={handleSchedule}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal for schedule Request */}
+      {rescheduleModalData && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 style={{ fontSize: "18px" }} className="form-h">
+                Reschedule Form: {rescheduleModalData.repairID}
+              </h2>
+              <button className="close-btn" onClick={handleCloseModal2}>
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
                 />
@@ -505,13 +760,17 @@ const SupervisorHome = () => {
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
-                  options={workersList}
+                  options={workerOptions}
                   value={
-                    workersList.find((w) => w.value === assignedWorker) || null
-                  } // Ensure default value is handled
+                    workerOptions?.find(
+                      (w) => w.value === selectedTechnicianUpdate
+                    ) ||
+                    updatedOption ||
+                    null
+                  }
                   onChange={(selectedOption) => {
-                    setAssignedWorker(selectedOption?.value || ""); // Ensure it's updated
-                    console.log("Selected Worker:", selectedOption); // Debugging
+                    setSelectedTechnicianUpdate(selectedOption?.value || "");
+                    console.log("Selected Worker:", selectedOption);
                   }}
                   isClearable
                 />
@@ -519,70 +778,20 @@ const SupervisorHome = () => {
               {/* Assign Date */}
               <div className="modal-content-field">
                 <label>Assign Date:</label>
-                <input
-                  type="date"
-                  value={assignDate}
-                  min={today}
-                  onChange={(e) => setAssignDate(e.target.value)}
-                />
+                <input type="text" value={assignDate} readOnly />
               </div>
 
               <div className="modal-content-field">
                 {/* Assign Time */}
                 <label>Assign Time:</label>
-                <input
-                  type="time"
-                  value={assignTime}
-                  onChange={(e) => setAssignTime(e.target.value)}
-                />
+                <input type="text" value={assignTime} readOnly />
               </div>
 
-              <div className="modal-content-field">
-                <label>Team Members:</label>
-                <div className="TModal-outer-team">
-                  <div className="TModal-team-members">
-                    <input
-                      type="text"
-                      placeholder="Enter email"
-                      value={newMember}
-                      onChange={(e) => setNewMember(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="TModal-add-btn"
-                      onClick={handleAddMember}
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal-content-field">
-                <label></label>
-                <div className="TModal-outer-team">
-                  {/* Render only if team members exist */}
-                  {teamMembers.length > 0 && (
-                    <div className="TModal-team-list">
-                      {teamMembers.map((member, index) => (
-                        <div key={index} className="TModal-team-member">
-                          {member}{" "}
-                          <IoMdCloseCircle
-                            onClick={() => handleRemoveMember(index)}
-                            style={{ color: "black" }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                  )}
-                </div>
-              </div>
               <div className="modal-buttons">
                 <button
                   className="accept-btn"
                   style={{ width: "80px" }}
-                  onClick={handleAssignRequest}
+                  onClick={handleReschedule}
                 >
                   Done
                 </button>

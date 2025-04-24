@@ -80,6 +80,7 @@ const PMaintenance = () => {
           const departmentName = department ? department.name : "N/A";
 
           console.log("📝 Request:", request);
+          console.log("📝 usersss:", user);
           console.log("📎 Matched Asset:", matchedAsset);
           console.log("📨 User Email:", email);
           console.log("🏛️ Department Name:", departmentName);

@@ -12,6 +12,7 @@ import {
   usePostAssetMutation,
   useGetCategoryQuery,
   useUploadExcelMutation,
+  useRequestDisposeMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
 import CreatableSelect from "react-select/creatable";
@@ -57,7 +58,8 @@ const Machinery = ({ category }) => {
   const [CategoryId, setCategoryId] = useState(null);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [uploadExcel, { isLoading: upLoading }] = useUploadExcelMutation();
-  
+  const [requestDispose, { isLoading: isDeleting }] =
+    useRequestDisposeMutation();
   const rowsPerPage = 9; // 3x3 grid for QR codes per page
   const qrSize = 40; // Size of each QR code (adjust as needed)
   const qrSpacing = 12; // Spacing between QR codes
@@ -75,7 +77,7 @@ const Machinery = ({ category }) => {
       );
       setData(filteredAssets);
     }
-  }, [assets]);
+  }, [assets, category]);
 
   useEffect(() => {
     if (assets) {
@@ -138,12 +140,11 @@ const Machinery = ({ category }) => {
         lifespan: "5 years",
         assetArea: "Office Room",
         description: "24-inch LCD monitor",
-        status: "Pending",
         createdBy: "jigme@gmail.com",
-        academyID: "67f017027d756710a12c2fa6",
-        assetCategoryID: "67eeef18d825904ae1f8ce64",
+        academyID: academyId,
+        assetCategoryID: CategoryId,
         // Any extra dynamic attributes can be added too
-        Serial_number: "2m hieght",
+        Serial_number: "AB-201-23",
       },
     ];
 
@@ -239,8 +240,9 @@ const Machinery = ({ category }) => {
   };
 
   useEffect(() => {
-    if (selectedBlock && selectedFloor && selectedRoom) {
-      const areaString = `${selectedBlock} - ${selectedFloor} - ${selectedRoom}`;
+    const parts = [selectedBlock, selectedFloor, selectedRoom].filter(Boolean);
+    if (parts.length > 0) {
+      const areaString = parts.join(" - ");
       setNewMachinery((prev) => ({
         ...prev,
         assetArea: areaString,
@@ -496,6 +498,46 @@ const Machinery = ({ category }) => {
     doc.save("Assets_with_QR_Codes.pdf");
   };
 
+  const handleDeleteAsset = async () => {
+    if (!modalData.assetCode && !email) return;
+
+    const confirmResult = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to mark this asset as disposed?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (confirmResult.isConfirmed) {
+      try {
+        const result = await requestDispose({
+          assetCode: modalData.assetCode,
+          email: email,
+        }).unwrap();
+        console.log(result);
+        refetch();
+        setModalData(null);
+
+        Swal.fire({
+          title: "Deleted!",
+          text: result.message || "Asset marked as disposed.",
+          icon: "success",
+        });
+
+        // Optionally close modal or refresh list
+      } catch (err) {
+        Swal.fire({
+          title: "Error!",
+          text: err?.data?.message || "Something went wrong.",
+          icon: "error",
+        });
+      }
+    }
+  };
+
   return (
     <div className="managerDashboard">
       <div className="search-sort-container">
@@ -553,12 +595,12 @@ const Machinery = ({ category }) => {
                 />
               </th>
               {[
-                "SI.No",
+                "Sl. No.",
                 "Asset Code",
                 "Title",
                 "Acquire Date",
                 "Useful Life(year)",
-                "Depreciated Value (%)",
+                "Area",
                 "Status",
               ].map((header, index) => (
                 <th key={index}>{header}</th>
@@ -595,7 +637,7 @@ const Machinery = ({ category }) => {
                   <td>{item.title}</td>
                   <td>{item.acquireDate}</td>
                   <td>{item.lifespan}</td>
-                  <td>{item.categoryDetails?.depreciatedValue}</td>
+                  <td>{item.assetArea}</td>
                   <td>
                     <div className={getStatusClass(item.status)}>
                       {item.status}
@@ -984,10 +1026,13 @@ const Machinery = ({ category }) => {
 
               <div className="modal-buttons">
                 <button
+                  type="button"
                   className="accept-btn"
                   style={{ backgroundColor: "red" }}
+                  onClick={handleDeleteAsset}
+                  disabled={isDeleting}
                 >
-                  <RiDeleteBin6Line />
+                  {isDeleting ? "Deleting..." : <RiDeleteBin6Line />}
                 </button>
                 <button className="accept-btn">Schedule Maintenance</button>
               </div>

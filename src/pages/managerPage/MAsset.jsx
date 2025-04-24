@@ -10,37 +10,39 @@ const categoryMapping = {
   Landscaping: "Landscaping",
   Machinery: "Machinery",
   Furniture: "Other",
-  RoomQr: "RoomQr", // Adding static RoomQr mapping
+  RoomQR: "RoomQR", // Fixing casing to match "roomQR" -> "RoomQR"
 };
 
 // Default component when category is not found
 const DefaultCategory = lazy(() => import("./AssetCategories/Other"));
 
 // Static RoomQr component
-const RoomQrComponent = lazy(() => import("./AssetCategories/Other"));
+const RoomQrComponent = lazy(() => import("./AssetCategories/Room"));
 
 const MAsset = () => {
   const { data: categories, error, isLoading } = useGetCategoryQuery(); // Fetch categories from API
 
+  // Filter out categories where 'deleted' is true
+  const activeCategories = categories ? categories.filter(category => !category.deleted) : [];
+
   // Ensure categories exist before setting defaultTab
   const defaultTab =
-    categories && categories.length > 0 ? categories[0].name : "Building";
+    activeCategories.length > 0 ? activeCategories[0].name : "Building";
   const [activeTab, setActiveTab] = useState(defaultTab);
 
   // Adding RoomQr manually to categories to display in the AssetTap
-  const categoryList = categories
-    ? [...categories, { name: "Room QR" }]
-    : [{ name: "RoomQr" }];
+  const categoryList = [...activeCategories, { name: "Room QR" }];
 
   if (isLoading) return <div>Loading categories...</div>;
   if (error) return <div>Error fetching categories</div>;
 
   // Get the correct filename based on the category name
+  const normalizedTab = activeTab.replace(/\s+/g, "").toLowerCase();
   const componentFile = categoryMapping[activeTab] || "Other";
 
   // Lazy load the mapped component dynamically or load RoomQr if selected
   const CategoryComponent =
-    activeTab === "RoomQr"
+    normalizedTab === "roomqr"
       ? RoomQrComponent
       : lazy(
           () =>

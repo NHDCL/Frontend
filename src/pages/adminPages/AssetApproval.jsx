@@ -1,5 +1,4 @@
 import React,{useState} from "react";
-import BulkFileApproval from "./tab/BulkFileApproval";
 import CreationApproval from "./tab/CreationApproval";
 import DeletionApproval from "./tab/DeletionApproval";
 
@@ -9,7 +8,6 @@ const AssetApproval = () => {
     const categories = [
       { id: "creation", name: "Creation Approval" },
       { id: "deletion", name: "Deletion Approval" },
-      { id: "bulk", name: "Bulk File Approval" },
     ];
   
     return (
@@ -31,7 +29,6 @@ const AssetApproval = () => {
         <div style={{marginRight:"5%"}}>
           {activeTab === "creation" && <CreationApproval />}
           {activeTab === "deletion" && <DeletionApproval />}
-          {activeTab === "bulk" && <BulkFileApproval />}
         </div>
       </div>
     );
