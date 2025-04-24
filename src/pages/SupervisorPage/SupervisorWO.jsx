@@ -263,7 +263,7 @@ const handleSchedule = async () => {
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map((item) => item.repairInfo.status?.toLowerCase()))).map(
+    ...Array.from(new Set(data.map((item) => item.status?.toLowerCase()))).map(
       (status) => ({
         value: status,
         label: status ? status.charAt(0).toUpperCase() + status.slice(1) : "",

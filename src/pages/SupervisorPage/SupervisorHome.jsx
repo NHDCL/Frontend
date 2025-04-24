@@ -8,7 +8,6 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import { TiArrowSortedUp } from "react-icons/ti";
-import { useGetSchedulesByUserIDQuery, useGetRepairByIdQuery } from "../../slices/maintenanceApiSlice";
 import {
   useAssignRepairMutation,
   useGetSchedulesByRepairIDQuery,

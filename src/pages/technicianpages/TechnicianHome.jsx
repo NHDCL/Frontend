@@ -117,14 +117,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
           </div>
 
           <div className="TModal-content-field">
-            <label>Time:</label>
-            <div className="TModal-time-inputs">
-              <input className="TModal-WorkOTime" type="text" value={order.startTime || "N/A"} readOnly />
-              <input className="TModal-WorkOTime" type="text" value={order.startTime || "N/A"} readOnly />
-            </div>
-          </div>
-
-          <div className="TModal-content-field">
             <label>Date:</label>
             <input type="text" value={order.reportingDate || "N/A"} readOnly />
           </div>
