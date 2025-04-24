@@ -52,6 +52,7 @@ const SAdminAccount = () => {
         ...prevProfile,
         name: data.user.name || "",
         email: data.user.email || "",
+        employeeId: data.user.employeeId,
         image: data.user.image || img,
       }));
       originalImageRef.current = data.user.image || img;
@@ -223,6 +224,7 @@ const SAdminAccount = () => {
             value={profile.name}
             onChange={handleChange}
             placeholder="Name"
+            readOnly
           />
           {errors.name && <p className="error-text">{errors.name}</p>}
 
@@ -233,8 +235,20 @@ const SAdminAccount = () => {
             value={profile.email}
             onChange={handleChange}
             placeholder="Email"
+            readOnly
           />
           {errors.email && <p className="error-text">{errors.email}</p>}
+
+          <input
+            className="profile-input"
+            type="text"
+            name="employeeId"
+            value={profile.employeeId}
+            onChange={handleChange}
+            placeholder="Employee Id"
+            readOnly
+          />
+          {errors.name && <p className="error-text">{errors.employeeId}</p>}
 
           {["oldPassword", "newPassword", "confirmPassword"].map((field) => (
             <div className="password-container" key={field}>

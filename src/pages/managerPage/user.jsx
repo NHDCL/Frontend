@@ -1,10 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./css/TabSwitcher.css";
 import "./css/table.css";
 import { IoIosSearch } from "react-icons/io";
-import img from "../../assets/images/person_four.jpg";
+import img from "../../assets/images/defaultImage.png";
 import { TiArrowSortedUp } from "react-icons/ti";
-import { useGetAcademyQuery, useGetDepartmentQuery, useGetUsersQuery } from "../../slices/userApiSlice";
+import {
+  useGetAcademyQuery,
+  useGetDepartmentQuery,
+  useGetUsersQuery,
+} from "../../slices/userApiSlice";
+import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
+import { useSelector } from "react-redux";
+import { createSelector } from "reselect";
+import Swal from "sweetalert2";
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,37 +20,58 @@ const Users = () => {
   const [activeTab, setActiveTab] = useState("Technician");
   const rowsPerPage = 10;
 
-  const { data: academies } = useGetAcademyQuery();
-  const { data: department, refetch } = useGetDepartmentQuery();
-  const { data: users } = useGetUsersQuery();
+  const { data: academies, isLoading: academiesLoading } = useGetAcademyQuery();
+  const { data: department, isLoading: departmentLoading } =
+    useGetDepartmentQuery();
+  const { data: users, isLoading: usersLoading } = useGetUsersQuery();
+
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+  const email = useSelector(getUserEmail);
+  const { data: userByEmial } = useGetUserByEmailQuery(email);
 
   const getAcademyName = (academyId) => {
-    const academy = academies?.find(a => a.academyId === academyId);
+    const academy = academies?.find((a) => a.academyId === academyId);
     return academy ? academy.name : "Unknown Academy";
   };
 
   const getDepartmentName = (departmentID) => {
-    const depart = department?.find(d => d.departmentId === departmentID);
+    const depart = department?.find((d) => d.departmentId === departmentID);
     return depart ? depart.name : "Unknown department";
   };
 
   // Filter data based on selected tab and search
 
-  const [data, setData] = useState([])
-  React.useEffect(() => {
-    if (users) {
-      setData(users);
-    }
-  }, [users]);
+  const [data, setData] = useState([]);
 
+  useEffect(() => {
+    if (!users || !userByEmial?.user?.academyId) return;
 
-  const filteredData = (users || []).filter(
+    const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
+    console.log("loh", loginAcademyId);
+
+    // Filter users based on login user's academy
+    const filtered = users.filter(
+      (user) => user.academyId?.trim().toLowerCase() === loginAcademyId
+    );
+    console.log("mm", filtered);
+
+    setData(filtered);
+  }, [users, userByEmial]);
+
+  console.log("DAT", data);
+
+  const filteredData = (data || []).filter(
     (item) =>
-      item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
+      item.role?.name.toLowerCase() === activeTab.toLowerCase() &&
       Object.values(item).some((value) =>
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
   );
+
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
     (currentPage - 1) * rowsPerPage,
@@ -62,9 +91,10 @@ const Users = () => {
   };
 
   const handleSort = (column) => {
-    const newSortOrder = column === sortOrder.column
-      ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
-      : true; // Start with ascending for a new column
+    const newSortOrder =
+      column === sortOrder.column
+        ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
+        : true; // Start with ascending for a new column
 
     setSortOrder({
       column,
@@ -72,6 +102,24 @@ const Users = () => {
     });
     sortData(column, newSortOrder);
   };
+
+  useEffect(() => {
+    const isLoading = academiesLoading || departmentLoading || usersLoading;
+
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading data...",
+        html: "Please wait while we fetch the latest information",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [academiesLoading, departmentLoading, usersLoading]);
 
   return (
     <div className="user-dashboard">
@@ -110,39 +158,54 @@ const Users = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-                {["Image", "Name", "Email", "Location", "Department", "Role", ...(activeTab === "Technician" ? ["Work Assigned"] : [])].map(
-                  (header, index) => (
-                    <th key={index}>
-                      {header === "Name" || header === "Location" || header === "Department" ? (
-                        <div className="header-title">
-                          {header}
-                          <div className="sort-icons">
-                            <button
-                              className="sort-btn"
-                              onClick={() => handleSort(header.toLowerCase().replace(' ', '', ''))}
-                            >
-                              <TiArrowSortedUp
-                                style={{
-                                  color: "#305845",
-                                  transform: sortOrder.column === header.toLowerCase().replace(' ', '') && sortOrder.ascending
-                                    ? "rotate(0deg)"  // Ascending
-                                    : sortOrder.column === header.toLowerCase().replace(' ', '') && !sortOrder.ascending
-                                      ? "rotate(180deg)" // Descending
-                                      : "rotate(0deg)",  // Default
-                                  transition: "transform 0.3s ease",
-                                }}
-                              />
-
-
-                            </button>
-                          </div>
+                {[
+                  "Image",
+                  "Name",
+                  "Email",
+                  "Location",
+                  "Department",
+                  "Role",
+                  ...(activeTab === "Technician" ? ["Work Assigned"] : []),
+                ].map((header, index) => (
+                  <th key={index}>
+                    {header === "Name" ||
+                    header === "Location" ||
+                    header === "Department" ? (
+                      <div className="header-title">
+                        {header}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() =>
+                              handleSort(
+                                header.toLowerCase().replace(" ", "", "")
+                              )
+                            }
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform:
+                                  sortOrder.column ===
+                                    header.toLowerCase().replace(" ", "") &&
+                                  sortOrder.ascending
+                                    ? "rotate(0deg)" // Ascending
+                                    : sortOrder.column ===
+                                        header.toLowerCase().replace(" ", "") &&
+                                      !sortOrder.ascending
+                                    ? "rotate(180deg)" // Descending
+                                    : "rotate(0deg)", // Default
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
                         </div>
-                      ) : (
-                        header
-                      )}
-                    </th>
-                  )
-                )}
+                      </div>
+                    ) : (
+                      header
+                    )}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -151,7 +214,7 @@ const Users = () => {
                   <td>
                     <img
                       className="User-profile"
-                      src={item.image}
+                      src={item.image || img}
                       alt="User"
                       style={{
                         width: "50px",
@@ -161,7 +224,9 @@ const Users = () => {
                       onMouseOver={(e) =>
                         (e.target.style.transform = "scale(1.3)")
                       }
-                      onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
+                      onMouseOut={(e) =>
+                        (e.target.style.transform = "scale(1)")
+                      }
                     />
                   </td>
                   <td>{item.name}</td>
@@ -169,8 +234,9 @@ const Users = () => {
                   <td>{getAcademyName(item.academyId)}</td>
                   <td>{getDepartmentName(item.departmentId)}</td>
                   <td>{item.role ? item.role.name : "No Role"}</td>
-                  {activeTab === "Technician" && <td>{item.workAssigned ?? 0}</td>}
-
+                  {activeTab === "Technician" && (
+                    <td>{item.workAssigned ?? 0}</td>
+                  )}
                 </tr>
               ))}
             </tbody>

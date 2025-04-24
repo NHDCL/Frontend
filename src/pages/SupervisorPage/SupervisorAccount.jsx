@@ -69,6 +69,7 @@ const SupervisorAccount = () => {
         name: userData.user.name || "",
         email: userData.user.email || "",
         academyId: userData.user.academyId || "",
+        employeeId: userData.user.employeeId,
         departmentId: userData.user.departmentId || "",
         image: userData.user.image || img,
       }));
@@ -260,6 +261,7 @@ const SupervisorAccount = () => {
             value={profile.name}
             onChange={handleChange}
             placeholder="Name"
+            readOnly
           />
           {errors.name && <p className="error-text">{errors.name}</p>}
 
@@ -270,8 +272,20 @@ const SupervisorAccount = () => {
             value={profile.email}
             onChange={handleChange}
             placeholder="Email"
+            readOnly
           />
           {errors.email && <p className="error-text">{errors.email}</p>}
+
+          <input
+            className="profile-input"
+            type="text"
+            name="employeeId"
+            value={profile.employeeId}
+            onChange={handleChange}
+            placeholder="Employee Id"
+            readOnly
+          />
+          {errors.name && <p className="error-text">{errors.employeeId}</p>}
 
           <input
             className="profile-input"
@@ -280,6 +294,7 @@ const SupervisorAccount = () => {
             value={profile.academy}
             placeholder="Academy"
             disabled
+            readOnly
           />
           {errors.academy && <p className="error-text">{errors.academy}</p>}
 
@@ -290,6 +305,7 @@ const SupervisorAccount = () => {
             value={profile.department}
             placeholder="Department"
             disabled
+            readOnly
           />
           {errors.department && (
             <p className="error-text">{errors.department}</p>

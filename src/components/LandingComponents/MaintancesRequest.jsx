@@ -32,7 +32,7 @@ const MaintenanceRequest = () => {
   });
   console.log("formdata",formData)
 
-  const [postRepairRequest] = usePostRepairRequestMutation();
+  const [postRepairRequest, { isLoading: requesting }] = usePostRepairRequestMutation();
   const { data: academies = [], isLoading, error } = useGetAcademyQuery();
   const { data: assets = [], error1 } = useGetAssetQuery();
 
@@ -151,6 +151,18 @@ const MaintenanceRequest = () => {
     });
     requestData.append("academyId", academy.trim());
 
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to send this repair request?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, send it!",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+    });
+  
+    if (!result.isConfirmed) return;
   
     try {
       await postRepairRequest(requestData).unwrap();
@@ -364,8 +376,9 @@ const MaintenanceRequest = () => {
               )}
             </div>
 
-            <button style={{backgroundColor:"#897463"}} type="submit" className="mr-submit-btn">
-              Request
+            <button disabled={requesting}
+style={{backgroundColor:"#897463"}} type="submit" className="mr-submit-btn">
+              {requesting ? "Requesting..." : "Request"}{" "}
             </button>
           </form>
         </div>

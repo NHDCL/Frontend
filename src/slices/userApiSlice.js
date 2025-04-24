@@ -140,6 +140,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         formData.append("email", userData.email);
         formData.append("password", userData.password);
         formData.append("name", userData.name);
+        formData.append("employeeId", userData.employeeId);
         formData.append("academyId", userData.academyId); // Ensure academyId is appended
         formData.append("departmentId", userData.departmentId); // departmentId should be appended if available
         formData.append("roleId", userData.roleId);

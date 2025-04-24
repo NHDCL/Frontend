@@ -23,9 +23,10 @@ const ManagerSidebar = () => {
       title: "Are you sure?",
       text: "You will be logged out!",
       icon: "warning",
+      color: "#305845",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       confirmButtonText: "Yes, Logout!",
     });
 

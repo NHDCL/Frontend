@@ -60,6 +60,7 @@ const ManagerAccount = () => {
         ...prev,
         name: userData.user.name || "",
         email: userData.user.email || "",
+        employeeId: userData.user.employeeId,
         academyId: userData.user.academyId || "",
         image: userData.user.image || img,
       }));
@@ -239,6 +240,7 @@ const ManagerAccount = () => {
             value={profile.name}
             onChange={handleChange}
             placeholder="Name"
+            readOnly
           />
           {errors.name && <p className="error-text">{errors.name}</p>}
 
@@ -249,8 +251,20 @@ const ManagerAccount = () => {
             value={profile.email}
             onChange={handleChange}
             placeholder="Email"
+            readOnly
           />
           {errors.email && <p className="error-text">{errors.email}</p>}
+
+          <input
+            className="profile-input"
+            type="text"
+            name="employeeId"
+            value={profile.employeeId}
+            onChange={handleChange}
+            placeholder="Employee Id"
+            readOnly
+          />
+          {errors.name && <p className="error-text">{errors.employeeId}</p>}
 
           <input
             className="profile-input"
@@ -259,6 +273,7 @@ const ManagerAccount = () => {
             value={profile.academy}
             placeholder="Academy"
             disabled
+            readOnly
           />
           {errors.academy && <p className="error-text">{errors.academy}</p>}
 

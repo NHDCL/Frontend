@@ -68,6 +68,7 @@ const TechnicianAccount = () => {
         ...prev,
         name: userData.user.name || "",
         email: userData.user.email || "",
+        employeeId: userData.user.employeeId,
         academyId: userData.user.academyId || "",
         departmentId: userData.user.departmentId || "",
         image: userData.user.image || img,
@@ -272,6 +273,17 @@ const TechnicianAccount = () => {
             placeholder="Email"
           />
           {errors.email && <p className="error-text">{errors.email}</p>}
+
+          <input
+            className="profile-input"
+            type="text"
+            name="employeeId"
+            value={profile.employeeId}
+            onChange={handleChange}
+            placeholder="Employee Id"
+            readOnly
+          />
+          {errors.name && <p className="error-text">{errors.employeeId}</p>}
 
           <input
             className="profile-input"

@@ -2,54 +2,59 @@ import React, { useState, useEffect } from "react";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/TabSwitcher.css";
 import { IoIosSearch } from "react-icons/io";
-import img from "../../assets/images/person_four.jpg";
+import img from "../../assets/images/defaultImage.png";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { AiOutlineUsergroupAdd } from "react-icons/ai";
 import { IoIosCloseCircle } from "react-icons/io";
-import { useGetAcademyQuery, useCreateUserMutation, useGetDepartmentQuery, useCreateDepartmentMutation, useGetUsersQuery } from "../../slices/userApiSlice";
+import {
+  useGetAcademyQuery,
+  useCreateUserMutation,
+  useGetDepartmentQuery,
+  useGetUsersQuery,
+  useSoftDeleteUserMutation,
+} from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 
 const SAdminUser = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("Manager");
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
   const [showModal, setShowModal] = useState(false);
 
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [employeeId, setEmployeeID] = useState("");
+  const [image] = useState(null);
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [image, setImage] = useState(null);
-
-  const [selectedAcademy, setSelectedAcademy] = useState('');
-  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [selectedAcademy] = useState("");
+  const [selectedDepartment] = useState(null);
   const [formError, setFormError] = useState(null);
 
   const { data: academies } = useGetAcademyQuery();
-  const { data: department, refetch } = useGetDepartmentQuery();
-  const { data: users } = useGetUsersQuery();
-  const [createUser, { isLoading }] = useCreateUserMutation();
+  const { data: department } = useGetDepartmentQuery();
+  const { data: users, refetch: refetchUsers } = useGetUsersQuery();
+  const [createUser] = useCreateUserMutation();
+
+  const [softDeleteUser] = useSoftDeleteUserMutation();
 
   const [adminRoleId, setAdminRoleId] = useState(null);
-  console.log("users: ",users)
+  console.log("users: ", users);
 
   useEffect(() => {
     if (users && Array.isArray(users)) {
-      users.forEach(user => {
+      users.forEach((user) => {
         const roleName = user?.role?.name?.toLowerCase();
         const roleId = user?.role?.roleId;
 
-        if (roleName === 'admin') {
+        if (roleName === "admin") {
           setAdminRoleId(roleId);
         }
       });
     }
   }, [users]);
 
-
   const handleCreateUser = async () => {
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !employeeId) {
       alert("Please fill all fields");
       return;
     }
@@ -65,13 +70,14 @@ const SAdminUser = () => {
     // If activeTab is "Manager", use the managerRoleId
     const roleId = activeTab === "Admin" ? adminRoleId : null;
 
-    console.log("roleid: ", roleId)
+    console.log("roleid: ", roleId);
 
     const newUser = {
       name,
       email,
       password,
-      academyId:selectedAcademy,
+      employeeId,
+      academyId: selectedAcademy,
       departmentId: activeTab !== "Manager" ? selectedDepartment : null,
       roleId: roleId,
       image: imageFile,
@@ -80,12 +86,15 @@ const SAdminUser = () => {
     try {
       const res = await createUser(newUser).unwrap();
 
-      console.log("res", res)
+      console.log("res", res);
 
       Swal.fire("Success", "User created successfully", "success");
       setName("");
       setEmail("");
       setPassword("");
+      setEmployeeID("");
+      setShowModal(false);
+      refetchUsers();
     } catch (err) {
       let errorMessage = "Something went wrong. Please try again.";
 
@@ -103,41 +112,48 @@ const SAdminUser = () => {
       // OR if you want to show under the input:
       setFormError(errorMessage); // Add useState for this
     }
-
   };
-
-
 
   const handleAddUserClick = () => {
     if (activeTab === "Admin") setShowModal(true);
   };
-  const [data, setData] = useState(users)
-  console.log("data", data)
 
   const filteredData = (users || []).filter(
     (item) =>
       item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
       Object.values(item).some((value) =>
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
   );
 
-  const handleDelete = (index) => {
-    if (activeTab === "Admin") {
-      setData(
-        data.filter((user, i) => !(user.role === "Admin" && i === index))
-      );
+  const handleDelete = async (userId) => {
+    console.log("Deleting user with ID:", userId);
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to delete this user?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await softDeleteUser(userId).unwrap();
+        Swal.fire("Deleted!", "User has been deleted.", "success");
+        refetchUsers();
+      } catch (error) {
+        Swal.fire("Error", "Failed to delete user", "error");
+      }
     }
   };
 
-
   const getAcademyName = (academyId) => {
-    const academy = academies?.find(a => a.academyId === academyId);
+    const academy = academies?.find((a) => a.academyId === academyId);
     return academy ? academy.name : "Unknown Academy";
   };
 
   const getDepartmentName = (departmentID) => {
-    const depart = department?.find(d => d.departmentId === departmentID);
+    const depart = department?.find((d) => d.departmentId === departmentID);
     return depart ? depart.name : "Unknown department";
   };
 
@@ -182,10 +198,12 @@ const SAdminUser = () => {
                   "Image",
                   "Name",
                   "Email",
-                  "Location",
-                  activeTab !== "Manager" ? "Department" : "",
+                  activeTab !== "Admin" ? "Location" : "",
+                  activeTab !== "Admin" && activeTab !== "Manager"
+                    ? "Department"
+                    : "",
                   "Role",
-                  " ",
+                  activeTab === "Admin" ? "Action" : "",
                 ]
                   .filter(Boolean)
                   .map((header, index) => (
@@ -199,29 +217,44 @@ const SAdminUser = () => {
                   <td>
                     <img
                       className="User-profile"
-                      // src={item.image}
+                      src={item.image || img}
                       alt="User"
-                      onChange={(e) => setImage(e.target.files[0])}
                       style={{
                         width: "50px",
                         height: "50px",
                         borderRadius: "50%",
+                        objectFit: "cover", // This ensures the image maintains aspect ratio
                       }}
+                      onMouseOver={(e) =>
+                        (e.target.style.transform = "scale(1.3)")
+                      }
+                      onMouseOut={(e) =>
+                        (e.target.style.transform = "scale(1)")
+                      }
                     />
                   </td>
                   <td>{item.name}</td>
                   <td>{item.email}</td>
-                  <td>{getAcademyName(item.academyId)}</td>
-                  {activeTab !== "Manager" && <td>{getDepartmentName(item.departmentId)}</td>}
+                  {activeTab !== "Admin" && (
+                    <td>{getAcademyName(item.academyId)}</td>
+                  )}
+                  {activeTab !== "Admin" && activeTab !== "Manager" && (
+                    <td>{getDepartmentName(item.departmentId)}</td>
+                  )}
                   <td>{item.role ? item.role.name : "No Role"}</td>
-                  <td>
-                    {activeTab === "Admin" && (
+                  {activeTab === "Admin" && (
+                    <td>
                       <RiDeleteBin6Line
-                        onClick={() => handleDelete(index)}
-                        style={{ width: "20px", height: "20px", color: "red" }}
+                        onClick={() => handleDelete(item.userId)}
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          color: "red",
+                          cursor: "pointer",
+                        }}
                       />
-                    )}
-                  </td>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -248,11 +281,44 @@ const SAdminUser = () => {
               </button>
             </div>
             <div className="AdminUser-modal-content">
-              <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="off" />
-              <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="off" />
-              <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="off" />
+              <input
+                type="text"
+                placeholder="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                autoComplete="off"
+              />
+              <input
+                type="text"
+                placeholder="EmployeeID"
+                value={employeeId}
+                onChange={(e) => setEmployeeID(e.target.value)}
+                required
+                autoComplete="off"
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="off"
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="off"
+              />
 
-              <button className="AdminUser-add" type="submit" onClick={handleCreateUser}>
+              <button
+                className="AdminUser-add"
+                type="submit"
+                onClick={handleCreateUser}
+              >
                 Add
               </button>
             </div>

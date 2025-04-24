@@ -1,17 +1,38 @@
-import React, { useState, useRef } from "react";
-import "./../managerPage/css/card.css";
-import "./../managerPage/css/table.css";
-import "./../managerPage/css/form.css";
-import "./../managerPage/css/dropdown.css";
+import React, { useState, useRef, useEffect } from "react";
+import "./css/card.css";
+import "./css/table.css";
+import "./css/form.css";
+import "./css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
+import { RiDeleteBin6Line } from "react-icons/ri";
+import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import { LuDownload } from "react-icons/lu";
+import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import "tippy.js/dist/tippy.css";
 import Tippy from "@tippyjs/react";
-import { useGetRepairReportsQuery } from "../../slices/maintenanceApiSlice";
+import autoTable from "jspdf-autotable";
+import {
+  useGetRepairReportsQuery,
+  useGetRepairRequestQuery,
+  useUpdateScheduleMutation,
+  useLazyGetScheduleByRepairIDQuery,
+} from "../../slices/maintenanceApiSlice";
+import Select from "react-select";
+import { createSelector } from "reselect";
+import { useSelector } from "react-redux";
+import Swal from "sweetalert2";
 
-const RepairReport = () => {
+import {
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+  useGetAcademyQuery,
+  useGetDepartmentQuery,
+} from "../../slices/userApiSlice";
+
+const Repairreport = () => {
+  const [totalTechnicians, setTotalTechnicians] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -22,46 +43,170 @@ const RepairReport = () => {
     Remarks: "",
   });
 
-  const {
-    data: repairReports,
-    isLoading,
-    isError,
-    error,
-  } = useGetRepairReportsQuery();
-
   const rowsPerPage = 10;
 
-  // Process repair reports data
-  const processedData = repairReports
-    ? repairReports
-        .map((item, index) => {
-          return {
-            rid: item.repairReportID || `#${1000 + index}`,
-            startTime: item.startTime || "N/A",
-            endTime: item.endTime || "N/A",
-            Date: item.finishedDate || new Date().toLocaleDateString(),
-            Total_cost: `NU.${item.totalCost || 0}`,
-            part_used: item.partsUsed || "N/A",
-            total_technician: item.technicians
-              ? item.technicians.split(",").length.toString()
-              : "0",
-            Assigned_Technician: item.technicians || "N/A",
-            Additional_information: item.information || "",
-            imageUrl: item.images || [],
-            original: item,
-          };
-        })
-        .sort((a, b) => new Date(b.Date) - new Date(a.Date))
-    : [];
+  const { data: repairRequest, refetch: refetchRepairRequest } =
+    useGetRepairRequestQuery();
+  const { data: repairReport } = useGetRepairReportsQuery();
+  const { data: academy } = useGetAcademyQuery();
+  const [updateSchedule] = useUpdateScheduleMutation();
+  const [fetchSchedulesByRepairID] = useLazyGetScheduleByRepairIDQuery();
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+  const email = useSelector(getUserEmail);
+  const { data: userByEmial } = useGetUserByEmailQuery(email);
 
-  // Filter data based on search term
-  const filteredData = processedData.filter((item) => {
-    return Object.values(item).some(
-      (value) =>
-        value &&
-        typeof value === "string" &&
-        value.toLowerCase().includes(searchTerm.toLowerCase())
+  const academyId = userByEmial?.user?.academyId;
+  const { data: departments, isLoading: departmentsLoading } =
+    useGetDepartmentQuery();
+
+  const { data: users } = useGetUsersQuery();
+  const [data, setData] = useState([]);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    if (repairReport && repairRequest && academy && users && userByEmial) {
+      console.log("🔧 Repair Reports:", repairReport);
+      console.log("📋 Repair Requests:", repairRequest);
+      console.log("🎓 Academies:", academy);
+      console.log("👤 Users:", users);
+
+      const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
+
+      const mergedData = repairReport
+        .map((report) => {
+          const matchingRequest = repairRequest.find(
+            (request) => request.repairID === report.repairID
+          );
+
+          // Skip if no matching request
+          if (!matchingRequest) return null;
+
+          const requestAcademyId = matchingRequest.academyId
+            ?.trim()
+            .toLowerCase();
+
+          // ✅ Only keep records matching the login user's academy
+          if (requestAcademyId !== loginAcademyId) return null;
+
+          // 🔍 Count technicians
+          let total = 0;
+          if (report.technicians) {
+            const technicianList = report.technicians
+              .split(",")
+              .filter((email) => email.trim() !== "");
+            total = technicianList.length;
+            console.log(
+              "👷‍♂ Technicians for Report ID",
+              report.repairID,
+              ":",
+              total
+            );
+          }
+
+          // 🏫 Match academyId to academyName
+          const matchingAcademy = academy.find(
+            (a) => a.academyId?.trim().toLowerCase() === requestAcademyId
+          );
+
+          const merged = {
+            ...report,
+            academyId: matchingRequest.academyId || null,
+            academyName: matchingAcademy?.name || "Unknown Academy",
+            assetName: matchingRequest.assetName || report.assetName || "N/A",
+            area: matchingRequest.area || "N/A",
+            description: matchingRequest.description || "N/A",
+            totalTechnicians: total,
+          };
+
+          console.log("🧩 Merged Item:", merged);
+          return merged;
+        })
+        .filter(Boolean); // 🔥 Remove any nulls (non-matching academy or request)
+
+      console.log("📦 Final Merged Data:", mergedData);
+      setData(mergedData);
+    }
+  }, [repairReport, repairRequest, academy, users, userByEmial]);
+
+  const handleUpdate = async () => {
+    const repairID = modalData?.repairID;
+
+    if (!repairID) {
+      console.error("Repair ID is missing.");
+      Swal.fire({
+        icon: "error",
+        title: "Missing ID",
+        text: "Repair ID is missing. Please try again.",
+      });
+      return;
+    }
+
+    setIsUpdating(true); // 👈 start loading
+    try {
+      const scheduleRes = await fetchSchedulesByRepairID(repairID).unwrap();
+      console.log("Schedule response:", scheduleRes);
+
+      // handle different structures
+      const scheduleID = Array.isArray(scheduleRes)
+        ? scheduleRes[0]?.scheduleID
+        : scheduleRes?.scheduleID;
+
+      if (!scheduleID) {
+        console.error("Schedule ID not found in response.");
+        Swal.fire({
+          icon: "error",
+          title: "Schedule Not Found",
+          text: "Unable to fetch a schedule for this repair ID.",
+        });
+        return;
+      }
+
+      const updatedSchedule = {
+        addcost: editableData.Additional_cost,
+        addHours: editableData.Additional_Hour,
+        remark: editableData.Remarks,
+      };
+
+      const response = await updateSchedule({
+        scheduleID,
+        updatedSchedule,
+      }).unwrap();
+      console.log("Update response:", response);
+
+      Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: "Schedule updated successfully.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Update failed:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: "Something went wrong while updating the schedule.",
+      });
+    }
+    setIsUpdating(false);
+  };
+
+  console.log("dataa", data);
+
+  const sortedData = [...data].sort(
+    (a, b) => b.repairReportID - a.repairReportID
+  );
+
+  const filteredData = sortedData.filter((item) => {
+    const matchesSearch = Object.values(item).some((value) =>
+      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    return matchesSearch;
   });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -70,22 +215,29 @@ const RepairReport = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (rid) => {
+  const handleSelectRow = (repairReportID) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(rid)
-        ? prevSelectedRows.filter((item) => item !== rid)
-        : [...prevSelectedRows, rid]
+      prevSelectedRows.includes(repairReportID)
+        ? prevSelectedRows.filter((item) => item !== repairReportID)
+        : [...prevSelectedRows, repairReportID]
     );
+  };
+
+  const handleDeleteSelected = () => {
+    const updatedData = data.filter(
+      (item) => !selectedRows.includes(item.repairReportID)
+    );
+    // Update the data with the filtered result after deletion
+    setData(updatedData);
+    setSelectedRows([]);
   };
 
   const handleView = (item) => {
     setModalData(item);
   };
-
   const handleCloseModal = () => {
     setModalData(null);
   };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditableData((prev) => ({ ...prev, [name]: value }));
@@ -94,7 +246,7 @@ const RepairReport = () => {
   // Ref for the modal
   const modalRef = useRef(null);
 
-  // Function to handle PDF download
+  // *Function to handle PDF download*
   const handleDownloadPDF = () => {
     if (!modalData) return; // Prevent function execution if no data is selected
 
@@ -108,15 +260,20 @@ const RepairReport = () => {
 
     // Map modalData dynamically into table rows
     const rows = [
-      ["Report ID", modalData.rid || "N/A"],
-      ["Start Time", modalData.startTime || "N/A"],
-      ["End Time", modalData.endTime || "N/A"],
-      ["Finished Date", modalData.Date || "N/A"],
-      ["Total Cost", modalData.Total_cost || "N/A"],
-      ["Parts Used", modalData.part_used || "N/A"],
-      ["Technicians", modalData.Assigned_Technician || "N/A"],
-      ["Additional Information", modalData.Additional_information || "N/A"],
-      ["Repair ID", modalData.original?.repairID || "N/A"],
+      ["RID", modalData.repairReportID],
+      ["Asset Name", modalData.assetName],
+      ["Start Time", modalData.startTime],
+      ["End Time", modalData.endTime],
+      ["Date", modalData.finishedDate],
+      ["Area", modalData.area],
+      ["Total Cost", modalData.totalCost],
+      ["Part Used", modalData.partsUsed],
+      ["Location", modalData.location],
+      ["Description", modalData.description],
+      ["Total Technicians", modalData.totalTechnicians],
+      ["Assigned Supervisor", modalData.Assigned_supervisor],
+      ["Assigned Technician", modalData.technicians],
+      ["Additional Info", modalData.Additional_information],
     ];
 
     // Generate the table using autoTable
@@ -130,39 +287,47 @@ const RepairReport = () => {
     });
 
     // Save the PDF
-    doc.save(`Repair_Report_${modalData.rid}.pdf`);
+    doc.save(`Repair_Report_${modalData.repairReportID}.pdf`);
   };
 
-  // download selected reports as CSV
+  // download
   const handleDownloadSelected = () => {
     if (selectedRows.length === 0) return;
 
-    const selectedData = processedData.filter((item) =>
-      selectedRows.includes(item.rid)
+    const selectedData = data.filter((item) =>
+      selectedRows.includes(item.repairReportID)
     );
 
     const csvContent = [
       [
-        "Report ID",
         "Repair ID",
+        "Asset Name",
         "Start Time",
         "End Time",
-        "Finished Date",
+        "Date",
+        "Area",
         "Total Cost",
         "Parts Used",
-        "Technicians",
-        "Information",
+        "Location",
+        "Description",
+        "Total Technicians",
+        "Assigned Supervisor",
+        "Assigned Technician",
       ],
       ...selectedData.map((item) => [
-        item.rid || "",
-        item.original?.repairID || "",
-        item.startTime || "",
-        item.endTime || "",
-        item.Date || "",
-        item.Total_cost || "",
-        item.part_used || "",
-        item.Assigned_Technician || "",
-        item.Additional_information || "",
+        item.repairReportID,
+        item.assetName,
+        item.startTime,
+        item.endTime,
+        item.finishedDate,
+        item.area,
+        item.totalCost,
+        item.partsUsed,
+        item.location,
+        item.description,
+        item.totalTechnicians,
+        item.Assigned_supervisor,
+        item.technicians,
       ]),
     ]
       .map((row) => row.join(","))
@@ -177,18 +342,6 @@ const RepairReport = () => {
     a.click();
     document.body.removeChild(a);
   };
-
-  if (isLoading) {
-    return <div className="loading">Loading repair reports...</div>;
-  }
-
-  if (isError) {
-    return (
-      <div className="error">
-        Error loading repair reports: {error?.message || "Unknown error"}
-      </div>
-    );
-  }
 
   return (
     <div className="ManagerDashboard">
@@ -207,7 +360,6 @@ const RepairReport = () => {
           {/* Download  */}
           <div className="create-category-btn">
             <button className="category-btn" onClick={handleDownloadSelected}>
-              {" "}
               Download
             </button>
             <LuDownload style={{ color: "#ffffff", marginRight: "12px" }} />
@@ -220,35 +372,32 @@ const RepairReport = () => {
                 <th>
                   <input
                     type="checkbox"
-                    checked={
-                      selectedRows.length === displayedData.length &&
-                      displayedData.length > 0
-                    }
+                    checked={selectedRows.length === displayedData.length} // Select all checkboxes when all rows are selected
                     onChange={() =>
                       setSelectedRows(
                         selectedRows.length === displayedData.length
                           ? []
-                          : displayedData.map((item) => item.rid)
+                          : displayedData.map((item) => item.repairReportID)
                       )
                     }
                   />
                 </th>
                 {[
-                  "Report ID",
-                  "Start Time",
-                  "End Time",
+                  "RRID",
+                  "Asset Name",
+                  "Time",
                   "Date",
+                  "Area",
                   "Total Cost",
-                  "Parts Used",
-                  "Technicians",
-                  "Information",
+                  "Parts_used",
+                  "Description",
                 ].map((header, index) => (
                   <th key={index}>{header}</th>
                 ))}
                 <th>
                   {selectedRows.length > 0 ? (
                     <button
-                      className="download-all-btn"
+                      // className="download-all-btn"
                       onClick={handleDownloadSelected}
                     >
                       <LuDownload
@@ -267,83 +416,69 @@ const RepairReport = () => {
               </tr>
             </thead>
             <tbody>
-              {displayedData.length > 0 ? (
-                displayedData.map((item, index) => (
-                  <tr key={index}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selectedRows.includes(item.rid)}
-                        onChange={() => handleSelectRow(item.rid)}
-                      />
-                    </td>
-                    <td>{item.rid}</td>
-                    <td>{item.startTime}</td>
-                    <td>{item.endTime}</td>
-                    <td>{item.Date}</td>
-                    <td>{item.Total_cost}</td>
-                    <td>{item.part_used}</td>
-                    <td>{item.Assigned_Technician}</td>
-                    <td className="description">
-                      <Tippy
-                        content={item.Additional_information}
-                        placement="top"
-                      >
-                        <span>
-                          {item.Additional_information.length > 20
-                            ? item.Additional_information.substring(0, 20) +
-                              "..."
-                            : item.Additional_information}
-                        </span>
-                      </Tippy>
-                    </td>
-                    <td className="actions">
-                      <button
-                        style={{ marginLeft: "10px" }}
-                        className="view-btn"
-                        onClick={() => handleView(item)}
-                      >
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="10" className="no-data">
-                    No repair reports found
+              {displayedData.map((item, index) => (
+                <tr key={index}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.includes(item.repairReportID)}
+                      onChange={() => handleSelectRow(item.repairReportID)}
+                    />
+                  </td>
+                  <td>{index + 1}</td>
+                  <td>{item.assetName}</td>
+                  <td>{[item.startTime, item.endTime].join(" - ")}</td>
+                  <td>{item.finishedDate}</td>
+                  <td>{item.area}</td>
+                  <td>{item.totalCost}</td>
+                  <td>{item.partsUsed}</td>
+                  <td className="description">
+                    <Tippy content={item.description} placement="top">
+                      <span>
+                        {item.description.length > 20
+                          ? item.description.substring(0, 20) + "..."
+                          : item.description}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="actions">
+                    <button
+                      className="view-btn"
+                      onClick={() => handleView(item)}
+                    >
+                      View
+                    </button>
                   </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        {displayedData.length > 0 && (
-          <div className="pagination">
-            <span>{filteredData.length} Results</span>
-            <div>
-              {totalPages > 0 &&
-                [...Array(Math.min(totalPages, 5)).keys()].map((num) => (
-                  <button
-                    key={num}
-                    className={currentPage === num + 1 ? "active" : ""}
-                    onClick={() => setCurrentPage(num + 1)}
-                  >
-                    {num + 1}
-                  </button>
-                ))}
-              {totalPages > 5 && (
-                <>
-                  <span>...</span>
-                  <button onClick={() => setCurrentPage(totalPages)}>
-                    {totalPages}
-                  </button>
-                </>
-              )}
-            </div>
+        <div className="pagination">
+          <span>{filteredData.length} Results</span>
+          <div>
+            {[...Array(totalPages).keys()].slice(0, 5).map((num) => (
+              <button
+                key={num}
+                className={currentPage === num + 1 ? "active" : ""}
+                onClick={() => setCurrentPage(num + 1)}
+              >
+                {num + 1}
+              </button>
+            ))}
+            <span>...</span>
+            <button onClick={() => setCurrentPage(totalPages)}>
+              {totalPages}
+            </button>
           </div>
+        </div>
+        {selectedRows.length > 0 && (
+          <button
+            className="delete-selected-btn"
+            onClick={handleDeleteSelected}
+          ></button>
         )}
       </div>
 
@@ -363,89 +498,68 @@ const RepairReport = () => {
             <div className="modal-body" ref={modalRef}>
               <form className="repair-form">
                 <div className="modal-content-field">
-                  <label>Report ID:</label>
-                  <input type="text" value={modalData.rid || ""} readOnly />
-                </div>
-
-                <div className="modal-content-field">
-                  <label>Repair ID:</label>
-                  <input
-                    type="text"
-                    value={modalData.original?.repairID || ""}
-                    readOnly
-                  />
+                  <label>Asset Name:</label>
+                  <input type="text" value={modalData.assetName} readOnly />
                 </div>
 
                 <div className="modal-content-field">
                   <label>Time</label>
                   <div className="time-input">
-                    <input
-                      type="text"
-                      value={modalData.startTime || ""}
-                      readOnly
-                    />
-                    <input
-                      type="text"
-                      value={modalData.endTime || ""}
-                      readOnly
-                    />
+                    <input type="text" value={modalData.startTime} readOnly />
+                    <input type="text" value={modalData.endTime} readOnly />
                   </div>
                 </div>
                 <div className="modal-content-field">
-                  <label>Finished Date</label>
-                  <input
-                    type="text"
-                    value={modalData.Date || "Not completed"}
-                    readOnly
-                  />
+                  <label>Date</label>
+                  <input type="text" value={modalData.finishedDate} readOnly />
+                </div>
+                <div className="modal-content-field">
+                  <label>Area</label>
+                  <input type="text" value={modalData.area} readOnly />
                 </div>
 
                 <div className="modal-content-field">
                   <label>Parts used: </label>
-                  <input
-                    type="text"
-                    value={modalData.part_used || ""}
-                    readOnly
-                  />
+                  <input type="text" value={modalData.partsUsed} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Total Technicians</label>
                   <input
                     type="text"
-                    value={modalData.total_technician || ""}
+                    value={modalData.totalTechnicians}
                     readOnly
                   />
                 </div>
                 <div className="modal-content-field">
-                  <label>Technicians</label>
+                  <label>Assigned Technicians</label>
+                  <input type="text" value={modalData.technicians} readOnly />
+                </div>
+                {/* <div className="modal-content-field">
+                  <label>Assigned Supervisor</label>
                   <input
                     type="text"
-                    value={modalData.Assigned_Technician || ""}
+                    value={modalData.Assigned_supervisor}
                     readOnly
                   />
+                </div> */}
+                <div className="modal-content-field">
+                  <label>Description:</label>
+                  <textarea value={modalData.description} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Total Cost: </label>
-                  <input
-                    type="text"
-                    value={modalData.Total_cost || ""}
-                    readOnly
-                  />
+                  <input type="text" value={modalData.totalCost} readOnly />
                 </div>
                 <div className="modal-content-field">
-                  <label>Information: </label>
-                  <textarea
-                    value={modalData.Additional_information || ""}
-                    readOnly
-                  />
+                  <label>Additional Informations: </label>
+                  <textarea value={modalData.information} readOnly />
                 </div>
-
                 <div className="modal-content-field">
-                  <label>Repair Images:</label>
+                  <label>Repaired Images:</label>
                   <div className="TModal-profile-img">
-                    {Array.isArray(modalData.imageUrl) &&
-                    modalData.imageUrl.length > 0 ? (
-                      modalData.imageUrl.map((imgSrc, index) => (
+                    {Array.isArray(modalData.images) &&
+                    modalData.images.length > 0 ? (
+                      modalData.images.map((imgSrc, index) => (
                         <img
                           key={index}
                           src={imgSrc}
@@ -453,10 +567,10 @@ const RepairReport = () => {
                           className="TModal-modal-image"
                         />
                       ))
-                    ) : modalData.imageUrl ? (
-                      // If `imageUrl` is a string, display it as a single image
+                    ) : modalData.images ? (
+                      // If imageUrl is a string, display it as a single image
                       <img
-                        src={modalData.imageUrl}
+                        src={modalData.images}
                         alt="Work Order"
                         className="TModal-modal-image"
                       />
@@ -489,14 +603,18 @@ const RepairReport = () => {
                     onChange={handleInputChange}
                   />
                 </div>
+
                 <div className="modal-buttons">
-                  <button
-                    type="button"
-                    className="accept-btn"
-                    onClick={handleDownloadPDF}
-                  >
+                  <button className="accept-btn" onClick={handleDownloadPDF}>
                     Download
                     <LuDownload style={{ marginLeft: "12px" }} />
+                  </button>
+                  <button
+                    className="reject-btn"
+                    onClick={handleUpdate}
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? "Updating..." : "Done"}
                   </button>
                 </div>
               </form>
@@ -508,4 +626,4 @@ const RepairReport = () => {
   );
 };
 
-export default RepairReport;
+export default Repairreport;

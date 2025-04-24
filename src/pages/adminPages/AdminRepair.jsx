@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "./../managerPage/css/card.css";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/form.css";
@@ -7,6 +7,8 @@ import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import img from "../../assets/images/person_four.jpg";
 import Select from "react-select";
+import { useGetRepairRequestQuery } from "../../slices/maintenanceApiSlice";
+import { useGetAcademyQuery } from "../../slices/userApiSlice";
 
 const AdminRepair = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -14,130 +16,82 @@ const AdminRepair = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedPriority, setSelectedPriority] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
-
+  const [selectedLocation, setSelectedLocation] = useState("");
 
   const rowsPerPage = 10;
+  const { data: repairRequest, refetch: refetchRepairRequest } = useGetRepairRequestQuery();
+  const { data: academy, } = useGetAcademyQuery()
 
+  const [data, setData] = useState([]);
+  console.log('data: ', data)
+  console.log('academy: ', academy)
 
-  const [data, setData] = useState([
-    {
-      rid: "#1001",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-A-101",
-      priority: "Minor",
-      workstatus: "pending"
-    },
-    {
-      rid: "#1002",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-A-101",
-      priority: "Major",
-      workstatus: "In progress"
-    },
-    {
-      rid: "#1003",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-A-101",
-      priority: "Major",
-      workstatus: "Completed"
-    },
-    {
-      rid: "#1004",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-A-101",
-      priority: "Minor",
-      workstatus: "pending"
-    },
-    {
-      rid: "#1005",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-A-101",
-      priority: "Major",
-      workstatus: "In progress"
-    },
-    {
-      rid: "#1006",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-A-101",
-      priority: "Major",
-      workstatus: "In progress"
-    },
-    {
-      rid: "#1007",
-      image: img,
-      name: "Yangchen",
-      email: "yangchen@example.com",
-      phone: "17748323",
-      Area: "Block-A-101",
-      priority: "Major",
-      workstatus: "pending"
-    }
-  ]);
-
+  useEffect(() => {
+    if (!repairRequest) return;
+    setData(repairRequest);
+  }, [repairRequest]);
 
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {
     switch (status) {
       case "pending":
         return "pending-status";  // Gray color
-      case "In progress":
+      case "inprogress":
         return "in-progress-status";  // Yellow color
-      case "Completed":
+      case "completed":
         return "completed-status";  // Green color
       default:
         return "";
     }
   };
 
+  const getAcademyName = (academyID) => {
+    const match = academy?.find((a) => a.academyId === academyID);
+    return match ? match.name : "Unknown";
+  };
+  
+
   // Extract unique priorities from data
   const uniquePriorities = [
     { value: "", label: "All Priorities" },
-    ...Array.from(new Set(data.map(item => item.priority))).map(priority => ({
+    ...Array.from(new Set(data.map(item => item.priority?.toLowerCase()).filter(Boolean))).map(priority => ({
       value: priority,
-      label: priority
+      label: priority.charAt(0).toUpperCase() + priority.slice(1)
     }))
   ];
 
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map(item => item.workstatus))).map(status => ({
+    ...Array.from(new Set(data.map(item => item.status?.toLowerCase()))).map(status => ({
       value: status,
-      label: status
+      label: status.charAt(0).toUpperCase() + status.slice(1)
+    }))
+  ];
+
+  const uniqueLocation = [
+    { value: "", label: "All Location" },
+    ...Array.from(new Set(data.map(item => getAcademyName(item.academyId)?.toLowerCase()))).map(location => ({
+      value: location,
+      label: location.charAt(0).toUpperCase() + location.slice(1)
     }))
   ];
 
   // Filtering data based on search and priority selection and work status
-  const sortedData = [...data].sort((a, b) => b.rid - a.rid);
+  const sortedData = [...data].sort((a, b) => b.repairID - a.repairID);
   const filteredData = sortedData.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const matchesPriority =
-      selectedPriority === "" || item.priority === selectedPriority;
+      selectedPriority === "" || item.priority?.toLowerCase() === selectedPriority.toLowerCase();
     const matchesWorkStatus =
-      selectedWorkStatus === "" || item.workstatus === selectedWorkStatus;
+      selectedWorkStatus === "" || item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
+    const matchesLocation =
+      selectedLocation === "" || getAcademyName(item.academyId)?.toLowerCase() === selectedLocation.toLowerCase();
 
-    return matchesSearch && matchesPriority && matchesWorkStatus;
+    return matchesSearch && matchesPriority && matchesWorkStatus && matchesLocation;
   });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -146,16 +100,16 @@ const AdminRepair = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (rid) => {
+  const handleSelectRow = (repairID) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(rid)
-        ? prevSelectedRows.filter((item) => item !== rid)
-        : [...prevSelectedRows, rid]
+      prevSelectedRows.includes(repairID)
+        ? prevSelectedRows.filter((item) => item !== repairID)
+        : [...prevSelectedRows, repairID]
     );
   };
 
   const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.rid));
+    const updatedData = data.filter((item) => !selectedRows.includes(item.repairID));
     // Update the data with the filtered result after deletion
     setData(updatedData);
     setSelectedRows([]); // Reset selected rows after deletion
@@ -205,6 +159,19 @@ const AdminRepair = () => {
               isSearchable={false}
             />
 
+            {/* location dropdown */}
+            <Select
+              classNamePrefix="custom-select-workstatus"
+              className="workstatus-dropdown"
+              options={uniqueLocation}
+              value={uniqueLocation.find(option => option.value === selectedLocation)}
+              onChange={(selectedOption) => {
+                setSelectedLocation(selectedOption ? selectedOption.value : "");
+              }}
+              isClearable
+              isSearchable={false}
+            />
+
           </div>
 
 
@@ -221,38 +188,39 @@ const AdminRepair = () => {
                   "Email",
                   "phone",
                   "Area",
+                  "Location",
                   "Priority",
                   "Workstatus"
                 ].map((header, index) => (
                   <th key={index}>{header}</th>
                 ))}
-              
+
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  <td>{item.rid}</td>
+                  <td>{index+1}</td>
                   <td>
                     <img
                       className="User-profile"
-                      src={item.image}
+                      src={item.images[0]}
                       alt="User"
                       style={{
-                        width: "50px",
-                        height: "50px",
-                        borderRadius: "50%",
+                        width: "100px",
+                        height: "100px",
                       }}
                     />
                   </td>
                   <td>{item.name}</td>
                   <td>{item.email}</td>
-                  <td>{item.phone}</td>
-                  <td>{item.Area}</td>
+                  <td>{item.phoneNumber}</td>
+                  <td>{item.area}</td>
+                  <td>{getAcademyName(item.academyId)}</td>
                   <td>{item.priority}</td>
                   <td>
-                    <div className={getWorkOrderStatusClass(item.workstatus)}>
-                      {item.workstatus}
+                    <div className={getWorkOrderStatusClass(item.status.toLowerCase().replace(/\s+/g, ""))}>
+                      {item.status}
                     </div>
                   </td>
                   {/* <td className="actions">
@@ -293,7 +261,7 @@ const AdminRepair = () => {
         </div>
       </div>
 
-      
+
 
     </div>
   );

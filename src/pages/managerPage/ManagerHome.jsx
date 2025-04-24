@@ -15,7 +15,6 @@ import Swal from "sweetalert2";
 import { useGetRepairRequestQuery, useAcceptOrRejectRepairRequestMutation } from "../../slices/maintenanceApiSlice";
 import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
 
-
 const ManagerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,6 +27,7 @@ const ManagerDashboard = () => {
   const [acceptOrRejectRepairRequest, { isLoading, error, isSuccess }] = useAcceptOrRejectRepairRequestMutation();
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
+
   const getUserEmail = createSelector(
     selectUserInfo,
     (userInfo) => userInfo?.user?.username || ""
@@ -73,7 +73,7 @@ const ManagerDashboard = () => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
       text: "Do you want to accept this repair request?",
-      icon: "warning",
+      icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
@@ -105,8 +105,6 @@ const ManagerDashboard = () => {
       }
     }
   };
-
-
 
   const handleReject = async (repairId) => {
     const confirm = await Swal.fire({
@@ -178,15 +176,16 @@ const ManagerDashboard = () => {
   // const sortedData = [...data].sort((a, b) => b.rid - a.rid);
 
   const filteredData = data
-    .filter((item) => {
-      const matchesSearch = Object.values(item).some((value) =>
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      const matchesPriority =
-        selectedPriority === "" || item.priority?.toLowerCase() === selectedPriority.toLowerCase();
+  .filter((item) => {
+    const matchesSearch = Object.values(item).some((value) =>
+      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const matchesPriority =
+      selectedPriority === "" || item.priority?.toLowerCase() === selectedPriority.toLowerCase();
 
-      return matchesSearch && matchesPriority;
-    });
+    return matchesSearch && matchesPriority;
+  });
+
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -469,8 +468,12 @@ const ManagerDashboard = () => {
                     e.preventDefault();
                     handleAccept(modalData.repairID, true);
                   }}
+                  disabled={isLoading}
+
                 >
-                  Accept
+                  {/* Accept */}
+                  {isLoading ? "Accepting.." : "Accept   "}{" "}
+
                 </button>
 
                 <button
@@ -479,8 +482,11 @@ const ManagerDashboard = () => {
                     e.preventDefault();
                     handleReject(modalData.repairID, false);
                   }}
+                  disabled={isLoading}
                 >
-                  Reject
+                  {/* Reject */}
+                  {isLoading ? "Rejecting.." : "Reject"}{" "}
+
                 </button>
 
               </div>

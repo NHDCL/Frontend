@@ -38,6 +38,20 @@ const AdminAcademies = () => {
   console.log("add academy:", newAcademy);
 
   useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading academies...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
     if (error) {
       Swal.fire({
         icon: "error",
@@ -66,7 +80,6 @@ const AdminAcademies = () => {
       }
     }
   };
-  
 
   const handleAdd = async () => {
     const { name, location, description, image } = newAcademy;
@@ -137,8 +150,8 @@ const AdminAcademies = () => {
         description,
         image, // this is a File object now
       }).unwrap();
-      
-      console.log("update",currentAcademy)
+
+      console.log("update", currentAcademy);
 
       Swal.fire({
         icon: "success",
@@ -161,43 +174,6 @@ const AdminAcademies = () => {
     }
   };
 
-  // const handleEdit = async () => {
-  //   try {
-  //     const { academyId, name, location, description, image } = currentAcademy;
-  
-  //     const payload = {
-  //       academyId,
-  //       name,
-  //       location,
-  //       description,
-  //       image, // ✅ keep it — it's either File or string (URL)
-  //     };
-  
-  //     await updateAcademy(payload).unwrap();
-  
-  //     Swal.fire({
-  //       icon: "success",
-  //       title: "Academy updated!",
-  //       toast: true,
-  //       position: "top-end",
-  //       showConfirmButton: false,
-  //       timer: 2000,
-  //     });
-  
-  //     setShowEditModal(false);
-  //     refetch();
-  //   } catch (err) {
-  //     console.error("Update failed:", err);
-  //     Swal.fire({
-  //       icon: "error",
-  //       title: "Failed to update academy",
-  //       text: err?.data?.message || err?.error || "Something went wrong.",
-  //     });
-  //   }
-  // };
-  
-
-
   const handleDelete = (id) => {
     if (!id) {
       console.error("No ID provided for deletion");
@@ -210,9 +186,11 @@ const AdminAcademies = () => {
       title: "Are you sure?",
       text: "Do you want to delete this Academy?",
       icon: "warning",
+      background: "#f5f3ef",
+      color: "#305845",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       confirmButtonText: "Yes, delete it!",
       cancelButtonText: "Cancel",
     }).then(async (result) => {
@@ -221,13 +199,13 @@ const AdminAcademies = () => {
           await deleteAcademy(id).unwrap(); // Use id directly
           refetch();
           Swal.fire({
-                    icon: "success",
-                    title: "Academy deleted successfully.",
-                    toast: true,
-                    position: "top-end",
-                    showConfirmButton: false,
-                    timer: 2000,
-                  });
+            icon: "success",
+            title: "Academy deleted successfully.",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 2000,
+          });
         } catch (err) {
           Swal.fire({
             icon: "error",
@@ -248,9 +226,7 @@ const AdminAcademies = () => {
       </div>
 
       <div className="AdminA-bento-grid">
-        {isLoading ? (
-          <p>Loading academies...</p>
-        ) : error ? (
+        {error ? (
           <p style={{ color: "red" }}>Error fetching academies</p>
         ) : (
           academies?.map((academy, index) => (
@@ -370,7 +346,9 @@ const AdminAcademies = () => {
                 ) : (
                   <>
                     <RiImageAddLine className="AdminA-profile-upload-icon" />
-                    <p style={{fontSize:"14px", fontWeight:"500"}}>Upload Image</p>
+                    <p style={{ fontSize: "14px", fontWeight: "500" }}>
+                      Upload Image
+                    </p>
                   </>
                 )}
               </div>
@@ -446,7 +424,7 @@ const AdminAcademies = () => {
                   alt="Current"
                   className="AdminA-profile-image"
                 />
-              
+
                 <RiImageAddLine />
               </div>
             </label>

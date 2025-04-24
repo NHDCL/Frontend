@@ -52,6 +52,7 @@ const AdminAccount = () => {
         ...prevProfile,
         name: data.user.name,
         email: data.user.email,
+        employeeId: data.user.employeeId,
         image: data.user.image || img,
       }));
       originalImageRef.current = data.user.image || img;
@@ -151,7 +152,12 @@ const AdminAccount = () => {
       }
 
       if (!madeChanges) {
-        Swal.fire("Info", "No changes detected to update.", "info");
+        Swal.fire({
+          title: "Info",
+          text: "No changes detected to update.",
+          icon: "info",
+          confirmButtonColor: "#305845",
+        });
       }
     } else {
       Swal.fire(
@@ -169,9 +175,14 @@ const AdminAccount = () => {
           email: profile.email,
           image: profile.imageFile,
         }).unwrap();
-        Swal.fire("Success", "Profile Image Updated Successfully!", "success");
+        Swal.fire({
+          title: "Success",
+          text: "Profile Image Updated Successfully!",
+          icon: "success",
+          confirmButtonColor: "#305845",
+        });
         originalImageRef.current = profile.imageFile;
-        setIsNewImageSelected(false); // 👈 hide update button
+        setIsNewImageSelected(false); // hide update button
         // Refetch the profile data to update the image
         refetch();
       } catch (error) {
@@ -226,6 +237,7 @@ const AdminAccount = () => {
             value={profile.name}
             onChange={handleChange}
             placeholder="Name"
+            readOnly
           />
           {errors.name && <p className="error-text">{errors.name}</p>}
 
@@ -236,8 +248,20 @@ const AdminAccount = () => {
             value={profile.email}
             onChange={handleChange}
             placeholder="Email"
+            readOnly
           />
           {errors.email && <p className="error-text">{errors.email}</p>}
+
+          <input
+            className="profile-input"
+            type="text"
+            name="employeeId"
+            value={profile.employeeId}
+            onChange={handleChange}
+            placeholder="Employee Id"
+            readOnly
+          />
+          {errors.name && <p className="error-text">{errors.employeeId}</p>}
 
           {["oldPassword", "newPassword", "confirmPassword"].map((field) => (
             <div className="password-container" key={field}>
