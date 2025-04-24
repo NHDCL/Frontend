@@ -23,7 +23,6 @@ import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice";
 import {
   useGetUserByEmailQuery,
   useGetUsersQuery,
-  useGetDepartmentQuery,
 } from "../../slices/userApiSlice";
 import { createSelector } from "reselect";
 import Swal from "sweetalert2";
@@ -196,7 +195,6 @@ const SupervisorHome = () => {
       console.error("Schedule error:", error);
     }
     refetch()
-
   };
 
   console.log("Technician Email:", selectedTechnicianId);

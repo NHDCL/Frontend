@@ -10,8 +10,9 @@ import {
   useGetAcademyQuery,
   useCreateUserMutation,
   useGetDepartmentQuery,
+  useCreateDepartmentMutation,
   useGetUsersQuery,
-  useSoftDeleteUserMutation,
+  useGetRolesQuery,
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 
@@ -23,33 +24,41 @@ const SAdminUser = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [employeeId, setEmployeeID] = useState("");
-  const [image] = useState(null);
+  const [employeeId, setEmployeeId] = useState("");
+  const [image, setImage] = useState(img);
 
-  const [selectedAcademy] = useState("");
-  const [selectedDepartment] = useState(null);
+  const [selectedAcademy, setSelectedAcademy] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [formError, setFormError] = useState(null);
 
   const { data: academies } = useGetAcademyQuery();
   const { data: department } = useGetDepartmentQuery();
-  const { data: users, refetch: refetchUsers } = useGetUsersQuery();
-  const [createUser] = useCreateUserMutation();
-
-  const [softDeleteUser] = useSoftDeleteUserMutation();
+  const { data: users, refetch } = useGetUsersQuery();
+  const { data: roles } = useGetRolesQuery();
+  const [createUser, { isLoading }] = useCreateUserMutation();
+  const [data, setData] = useState([]);
+  console.log("data", data);
 
   const [adminRoleId, setAdminRoleId] = useState(null);
-  console.log("users: ", users);
+  console.log("users: ", roles);
+  console.log("adminRole: ", adminRoleId);
 
   useEffect(() => {
-    if (users && Array.isArray(users)) {
-      users.forEach((user) => {
-        const roleName = user?.role?.name?.toLowerCase();
-        const roleId = user?.role?.roleId;
+    if (roles && Array.isArray(roles)) {
+      roles.forEach((role) => {
+        const roleName = role?.name?.toLowerCase();
+        const roleId = role?.roleId;
 
         if (roleName === "admin") {
           setAdminRoleId(roleId);
         }
       });
+    }
+  }, [roles]);
+
+  useEffect(() => {
+    if (users) {
+      setData(users);
     }
   }, [users]);
 
@@ -74,14 +83,15 @@ const SAdminUser = () => {
 
     const newUser = {
       name,
+      employeeId,
       email,
       password,
-      employeeId,
-      academyId: selectedAcademy,
-      departmentId: activeTab !== "Manager" ? selectedDepartment : null,
+      academyId: "null",
+      departmentId: activeTab !== "Manager" ? selectedDepartment : "null",
       roleId: roleId,
       image: imageFile,
     };
+    console.log(newUser);
 
     try {
       const res = await createUser(newUser).unwrap();
@@ -91,10 +101,9 @@ const SAdminUser = () => {
       Swal.fire("Success", "User created successfully", "success");
       setName("");
       setEmail("");
+      setEmployeeId("");
       setPassword("");
-      setEmployeeID("");
-      setShowModal(false);
-      refetchUsers();
+      refetch();
     } catch (err) {
       let errorMessage = "Something went wrong. Please try again.";
 
@@ -293,7 +302,7 @@ const SAdminUser = () => {
                 type="text"
                 placeholder="EmployeeID"
                 value={employeeId}
-                onChange={(e) => setEmployeeID(e.target.value)}
+                onChange={(e) => setEmployeeId(e.target.value)}
                 required
                 autoComplete="off"
               />

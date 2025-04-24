@@ -11,6 +11,11 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    getRoles: builder.query({
+      query: () => `${USERS_URL}/roles`,
+      providesTags: ['Roles'],
+    }),
+
     forgotPassword: builder.mutation({
       query: (email) => ({
         url: USERS_URL + "/users/forgot-password",
@@ -233,6 +238,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
 });
 
 export const {
+  useGetRolesQuery,
   useLoginMutation,
   useForgotPasswordMutation,
   useVerifyOtpMutation,

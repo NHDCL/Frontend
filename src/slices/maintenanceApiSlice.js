@@ -184,6 +184,30 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["RepairReport"],
     }),
+
+    getSchedulesByTechnicianEmail: builder.query({
+      query: (email) => `${MAINTENANCE_URL}/schedules/technician/${email}`,
+      providesTags: ["Schedules"], // Optional: helpful for cache invalidation
+    }),
+
+    // technician status update
+    updateRepairById: builder.mutation({
+      query: ({ repairID, updateFields }) => ({
+        url: `${MAINTENANCE_URL}/repairs/update/${repairID}`,
+        method: "PUT",
+        body: updateFields,
+      }),
+      invalidatesTags: ["Repairs"],
+    }),
+
+    createRepairReport: builder.mutation({
+      query: (formData) => ({
+        url: `${MAINTENANCE_URL}/repair-reports`,
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["RepairReport"],
+    }),
   }),
 });
 

@@ -14,7 +14,7 @@ import {
   useGetDepartmentQuery,
   useCreateDepartmentMutation,
   useGetUsersQuery,
-  useSoftDeleteUserMutation,
+  useGetRolesQuery,
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 
@@ -29,6 +29,8 @@ const AdminUser = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
+  const [image, setImage] = useState(img);
   const [selectedAcademy, setSelectedAcademy] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState(null);
 
@@ -37,11 +39,8 @@ const AdminUser = () => {
 
   const { data: academies } = useGetAcademyQuery();
   const { data: department, refetch } = useGetDepartmentQuery();
-  const {
-    data: users,
-    refetch: refetchUsers,
-    isLoading: isLoadingUsers,
-  } = useGetUsersQuery();
+  const { data: users, refetch: refetchUsers } = useGetUsersQuery();
+  const { data: roles } = useGetRolesQuery();
   const [createDepartment] = useCreateDepartmentMutation();
   const [createUser, { isLoading }] = useCreateUserMutation();
   const [formError, setFormError] = useState(null);
@@ -57,24 +56,10 @@ const AdminUser = () => {
   const [supervisorRoleId, setSupervisorRoleId] = useState(null);
 
   useEffect(() => {
-    if (isLoadingUsers) {
-      Swal.fire({
-        title: "Loading users...",
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
-      });
-    } else {
-      Swal.close();
-    }
-  }, [isLoadingUsers]);
-
-  useEffect(() => {
-    if (users && Array.isArray(users)) {
-      users.forEach((user) => {
-        const roleName = user?.role?.name?.toLowerCase();
-        const roleId = user?.role?.roleId;
+    if (roles && Array.isArray(roles)) {
+      roles.forEach((role) => {
+        const roleName = role?.name?.toLowerCase();
+        const roleId = role?.roleId;
 
         if (roleName === "manager") {
           setManagerRoleId(roleId);
@@ -85,7 +70,7 @@ const AdminUser = () => {
         }
       });
     }
-  }, [users]);
+  }, [roles]);
 
   console.log("AAA", academies);
 
@@ -114,6 +99,8 @@ const AdminUser = () => {
     }
   };
 
+  console.log("AAA", academies);
+
   const handleAddUserClick = () => {
     setShowModal(true);
   };
@@ -127,11 +114,20 @@ const AdminUser = () => {
       !name ||
       !email ||
       !password ||
+      !employeeId ||
       !selectedAcademy ||
       (activeTab !== "Manager" && !selectedDepartment)
     ) {
       alert("Please fill all fields");
       return;
+    }
+
+    let imageFile = image; // your image input (e.g., from file input)
+
+    if (!imageFile) {
+      const response = await fetch("/default-user.jpg");
+      const blob = await response.blob();
+      imageFile = new File([blob], "default-user.jpg", { type: "image/jpeg" });
     }
 
     // If activeTab is "Manager", use the managerRoleId
@@ -148,11 +144,13 @@ const AdminUser = () => {
 
     const newUser = {
       name,
+      employeeId,
       email,
       password,
       academyId: selectedAcademy.value,
       departmentId: activeTab !== "Manager" ? selectedDepartment.value : null,
       roleId: roleId,
+      image: imageFile,
     };
 
     try {
@@ -163,6 +161,7 @@ const AdminUser = () => {
       Swal.fire("Success", "User created successfully", "success");
       setName("");
       setEmail("");
+      setEmployeeId("");
       setPassword("");
       setSelectedAcademy(null);
       setSelectedDepartment(null);
@@ -406,6 +405,14 @@ const AdminUser = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+              />
+              <input
+                type="text"
+                placeholder="EmployeeID"
+                value={employeeId}
+                onChange={(e) => setEmployeeId(e.target.value)}
+                required
+                autoComplete="off"
               />
               <input
                 type="email"
