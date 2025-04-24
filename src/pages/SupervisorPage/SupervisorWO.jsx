@@ -7,7 +7,8 @@ import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
-import { useGetMaintenanceRequestQuery, useGetPreventiveSchedulesByUserIDQuery, useGetMaintenanceByAssetCodeQuery } from "../../slices/maintenanceApiSlice";
+import { useGetMaintenanceRequestQuery,   useGetSchedulesByUserIDQuery, useUpdatePreventiveMaintenanceMutation,
+  useGetPreventiveSchedulesByUserIDQuery, useGetMaintenanceByAssetCodeQuery } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { createSelector } from "reselect";
@@ -19,6 +20,8 @@ import {
   useGetUsersQuery,
   useGetDepartmentQuery,
 } from "../../slices/userApiSlice";
+import Swal from "sweetalert2";
+
 
 import Select from "react-select";
 
@@ -27,16 +30,22 @@ const SupervisorWO = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [modalData, setModalData] = useState(null);
-  const [selectedPriority, setSelectedPriority] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
+    const [rescheduleModalData, setRescheduleModalData] = useState(null);
+  
 
-  const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
-  const rowsPerPage = 10;
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  const [teamMembers, setTeamMembers] = useState([]);
-  const [newMember, setNewMember] = useState("");
+  const [selectedTechnicianId, setSelectedTechnicianId] = useState(null);
+  const [selectedTechnicianUpdate, setSelectedTechnicianUpdate] =
+      useState(null);
+  const rowsPerPage = 10;
+  console.log(
+    "start supervisor........................................................................."
+  );
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
@@ -48,28 +57,55 @@ const SupervisorWO = () => {
   const { data: userByEmial } = useGetUserByEmailQuery(email);
 
   const userID = userByEmial?.user?.userId;
-
   console.log("userID", userID)
+
+  const academyId = userByEmial?.user?.academyId;
+  console.log("academyId", academyId);
+
+  const departmentId = userByEmial?.user?.departmentId;
+  console.log("departmentId", departmentId);
+
+  const { data: users, isLoading: usersLoading } = useGetUsersQuery();
+
+  const filteredUsers = users?.filter(
+    (user) =>
+      user.academyId === academyId &&
+      user.departmentId === departmentId &&
+      typeof user.role?.name === "string" &&
+      user.role.name.toLowerCase() === "technician"
+  );
+  console.log("filteredUsers:", filteredUsers);
+
+  const workerOptions = filteredUsers?.map((user) => ({
+    label: user.email,
+    value: user.email,
+  }));
+  console.log("workerOptions:", workerOptions);
+
+  const updatedOption = workerOptions?.find(
+    (w) => w.label === selectedTechnicianUpdate
+  );
 
   const {
     data: userSchedules,
     isLoading: userSchedulesLoading,
     error: userSchedulesError,
+    refetch
   } = useGetPreventiveSchedulesByUserIDQuery(userID, {
     skip: !userID,
   })
-  console.log("sdf", userSchedules)
-  const assetCode = userSchedules?.[0]?.assetCode;
+  console.log("sdf", modalData)
+  const assetCode = userSchedules?.assetCode;
   console.log("rid", assetCode);
   console.log("userSchedule", userSchedules);
 
   const {
     data: scheduleData,
-    isLoading,
-    error,
+   
   } = useGetAssetByAssetCodeQuery(assetCode, {
     skip: !assetCode,
   })
+
 
 
   const [data, setData] = useState([]);
@@ -107,40 +143,107 @@ const SupervisorWO = () => {
 
   console.log("data", data)
 
-  const handleAddMember = () => {
-    if (newMember.trim() && !teamMembers.includes(newMember)) {
-      setTeamMembers([...teamMembers, newMember]);
-      setNewMember(""); // Reset input field
-    }
-  };
-
-  const handleRemoveMember = (index) => {
-    setTeamMembers(teamMembers.filter((_, i) => i !== index));
-  };
-
   const today = new Date().toISOString().split("T")[0];
 
+  const [updateSchedule] = useUpdatePreventiveMaintenanceMutation();
 
-  // Sample workers list
-  const workersList = [
-    { value: "Worker A", label: "Worker A" },
-    { value: "Worker B", label: "Worker B" },
-    { value: "Worker C", label: "Worker C" },
-  ];
+const handleSchedule = async () => {
+   const maintenanceID = modalData.maintenanceID;  // Ensure the correct way to access repairID
+   
+       if (!maintenanceID) {
+         Swal.fire("Error", "Repair ID not found.", "error");
+         return;
+       }
+       const matchingSchedule = userSchedules.find(schedule => schedule.maintenanceID === maintenanceID);
+     
+       if (!matchingSchedule) {
+         Swal.fire("Error", "No schedule found for the given maintenanceID.", "error");
+         return;
+       }
+     
+       const id = matchingSchedule.maintenanceID;
+       console.log("scheduleId", id);
+     
+       if (!selectedTechnicianId) {
+         Swal.fire("Error", "Technician email is missing.", "error");
+         return;
+       }
+     
+       // Prepare the updated data for the schedule
+       const maintenance = {
+         technicianEmail: selectedTechnicianId,
+         repairID: matchingSchedule.maintenanceID,  // Use repairID from the matching schedule
+       };
 
-  const handleAssignRequest = () => {
-    if (!assignedWorker || !assignTime || !assignDate) {
-      alert("Please fill in all fields before assigning.");
-      return;
+    try {
+      await updateSchedule({ id, maintenance }).unwrap();
+      Swal.fire({
+        icon: "success",
+        title: "Schedule updated successfully!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      // refetchRepairRequest();
+      handleCloseModal();
+    } catch (error) {
+      Swal.fire("Error", error?.data?.message || "Update failed", "error");
+      console.error("Update schedule error:", error);
     }
+    refetch()
 
-    alert(
-      `Assigned ${modalData.rid} to ${assignedWorker} at ${assignTime} on ${assignDate}`
-    );
-
-    // Close the modal after assigning
-    handleCloseModal();
   };
+
+
+ const handleReschedule = async () => {
+
+  const maintenanceID = rescheduleModalData.maintenanceID;  // Ensure the correct way to access repairID
+   
+  if (!maintenanceID) {
+    Swal.fire("Error", "Repair ID not found.", "error");
+    return;
+  }
+  const matchingSchedule = userSchedules.find(schedule => schedule.maintenanceID === maintenanceID);
+
+  if (!matchingSchedule) {
+    Swal.fire("Error", "No Reschedule found for the given maintenanceID.", "error");
+    return;
+  }
+
+  const id = matchingSchedule.maintenanceID;
+  console.log("scheduleId", id);
+
+  if (!selectedTechnicianUpdate) {
+    Swal.fire("Error", "Technician email is missing.", "error");
+    return;
+  }
+
+  // Prepare the updated data for the schedule
+  const maintenance = {
+    technicianEmail: selectedTechnicianUpdate,
+    repairID: matchingSchedule.maintenanceID,  // Use repairID from the matching schedule
+  };
+
+    try {
+      await updateSchedule({ id, maintenance }).unwrap();
+      Swal.fire({
+        icon: "success",
+        title: "Schedule updated successfully!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      // refetchRepairRequest();
+      handleCloseModal2();
+    } catch (error) {
+      Swal.fire("Error", error?.data?.message || "Update failed", "error");
+      console.error("Update schedule error:", error);
+    }
+    refetch()
+  };
+
 
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {
@@ -203,24 +306,34 @@ const SupervisorWO = () => {
     );
   };
 
-  const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.assetCode));
-    // Update the data with the filtered result after deletion
-    setData(updatedData);
-    setSelectedRows([]); // Reset selected rows after deletion
-  };
-  const handleDeleteRow = (assetCode) => {
-    const updatedData = data.filter((item) => item.assetCode !== assetCode);
-    setData(updatedData);
-  };
 
   const handleScheduleView = (item) => {
     setModalData(item);
-    setAssignedWorker(null); // Reset worker selection when opening modal
-  };
+    setStartDate(item?.startDate);
+    setEndDate(item?.endDate);
+    setAssignTime(item?.timeStart);
 
+  };
   const handleCloseModal = () => {
     setModalData(null);
+    setSelectedTechnicianId(null);
+    setStartDate(null);
+    setEndDate(null);    
+    setAssignTime(null);
+  };
+  const handleCloseModal2 = () => {
+    setRescheduleModalData(null);
+    setSelectedTechnicianUpdate(null);
+    setStartDate(null);
+    setEndDate(null);     
+    setAssignTime(null);
+  };
+  const handleRescheduleView = (item) => {
+    setRescheduleModalData(item);
+    setSelectedTechnicianUpdate(item?.technicianEmail || "");
+    setStartDate(item?.startDate);
+    setEndDate(item?.endDate);    
+    setAssignTime(item?.timeStart);
   };
 
   return (
@@ -292,21 +405,23 @@ const SupervisorWO = () => {
                   </td>
                   <td className="description">{item.description}</td>
 
-                  <td className="actions">
-                    <button
-                      className="schedule-btn"
-                      onClick={() => handleScheduleView(item)}
-                    >
-                      Schedule
-                    </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDeleteRow(item.rid)}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px" }}
-                      />
-                    </button>
+                   <td className="actions">
+                    {item.technicianEmail === null ? (
+                      <button
+                        className="schedule-btn"
+                        onClick={() => handleScheduleView(item)}
+                      >
+                        Schedule
+                      </button>
+                    ) : (
+                      <button
+                        className="schedule-btn"
+                        style={{ backgroundColor: "#315845" }}
+                        onClick={() => handleRescheduleView(item)}
+                      >
+                        Reschedule
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -341,7 +456,9 @@ const SupervisorWO = () => {
           <div className="modal-content">
             {/* Close Button */}
             <div className="modal-header">
-              <h2 className="form-h">Schedule Form</h2>
+              <h2 style={{ fontSize: "18px" }} className="form-h">
+                Schedule Form
+              </h2>
               <button className="close-btn" onClick={handleCloseModal}>
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
@@ -356,84 +473,109 @@ const SupervisorWO = () => {
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
-                  options={workersList}
+                  options={workerOptions}
                   value={
-                    workersList.find((w) => w.value === assignedWorker) || null
-                  } // Ensure default value is handled
+                    workerOptions?.find(
+                      (w) => w.value === selectedTechnicianId
+                    ) || null
+                  }
                   onChange={(selectedOption) => {
-                    setAssignedWorker(selectedOption?.value || ""); // Ensure it's updated
-                    console.log("Selected Worker:", selectedOption); // Debugging
+                    setSelectedTechnicianId(selectedOption?.label || "");
+                    console.log("Selected Worker:", selectedOption);
+                  }}
+                  isClearable
+                />
+              </div>
+                 {/* Assign Date */}
+                 <div className="modal-content-field">
+                <label>Start Date:</label>
+                <input type="text" value={startDate} readOnly />
+              </div>
+               {/* Assign Date */}
+               <div className="modal-content-field">
+                <label>End Date:</label>
+                <input type="text" value={endDate} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                {/* Assign Time */}
+                <label>Assign Time:</label>
+                <input type="text" value={assignTime} readOnly />
+              </div>
+
+              <div className="modal-buttons">
+                <button
+                  className="accept-btn"
+                  style={{ width: "80px" }}
+                  onClick={handleSchedule}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal for schedule Request */}
+      {rescheduleModalData && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 style={{ fontSize: "18px" }} className="form-h">
+                Reschedule Form
+              </h2>
+              <button className="close-btn" onClick={handleCloseModal2}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+
+            {/* Assign Dropdown */}
+            <div className="schedule-form">
+              <div className="modal-content-field">
+                <label>Assign Technician:</label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={workerOptions}
+                  value={
+                    workerOptions?.find(
+                      (w) => w.value === selectedTechnicianUpdate
+                    ) ||
+                    updatedOption ||
+                    null
+                  }
+                  onChange={(selectedOption) => {
+                    setSelectedTechnicianUpdate(selectedOption?.value || "");
+                    console.log("Selected Worker:", selectedOption);
                   }}
                   isClearable
                 />
               </div>
               {/* Assign Date */}
               <div className="modal-content-field">
-                <label>Assign Date:</label>
-                <input
-                  type="date"
-                  value={assignDate}
-                  min={today}
-                  onChange={(e) => setAssignDate(e.target.value)}
-                />
+                <label>Start Date:</label>
+                <input type="text" value={startDate} readOnly />
+              </div>
+               {/* Assign Date */}
+               <div className="modal-content-field">
+                <label>End Date:</label>
+                <input type="text" value={endDate} readOnly />
               </div>
 
               <div className="modal-content-field">
                 {/* Assign Time */}
                 <label>Assign Time:</label>
-                <input
-                  type="time"
-                  value={assignTime}
-                  onChange={(e) => setAssignTime(e.target.value)}
-                />
+                <input type="text" value={assignTime} readOnly />
               </div>
 
-              <div className="modal-content-field">
-                <label>Team Members:</label>
-                <div className="TModal-outer-team">
-                  <div className="TModal-team-members">
-                    <input
-                      type="text"
-                      placeholder="Enter email"
-                      value={newMember}
-                      onChange={(e) => setNewMember(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="TModal-add-btn"
-                      onClick={handleAddMember}
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal-content-field">
-                <label></label>
-                <div className="TModal-outer-team">
-                  {/* Render only if team members exist */}
-                  {teamMembers.length > 0 && (
-                    <div className="TModal-team-list">
-                      {teamMembers.map((member, index) => (
-                        <div key={index} className="TModal-team-member">
-                          {member}{" "}
-                          <IoMdCloseCircle
-                            onClick={() => handleRemoveMember(index)}
-                            style={{ color: "black" }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                  )}
-                </div>
-              </div>
               <div className="modal-buttons">
                 <button
                   className="accept-btn"
                   style={{ width: "80px" }}
-                  onClick={handleAssignRequest}
+                  onClick={handleReschedule}
                 >
                   Done
                 </button>
