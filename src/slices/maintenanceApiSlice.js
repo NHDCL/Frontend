@@ -109,14 +109,7 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ["RepairRequest"],
     }),
 
-    updatePreventiveMaintenance: builder.mutation({
-      query: ({ id, maintenance }) => ({
-        url: `${MAINTENANCE_URL}/maintenance/${id}`,
-        method: "PUT",
-        body: maintenance,
-      }),
-      invalidatesTags: ["maintenance"], // optional: useful for refetch
-    }),
+
 
     updateSchedule: builder.mutation({
       query: ({ scheduleID, updatedSchedule }) => ({
@@ -165,6 +158,20 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       query: (email) => `${MAINTENANCE_URL}/schedules/technician/${email}`,
       providesTags: ["Schedules"], // Optional: helpful for cache invalidation
     }),
+
+    getMaintenanceByTechnicianEmail: builder.query({
+      query: (email) => `${MAINTENANCE_URL}/maintenance/technician/${email}`,
+      providesTags: ['Maintenance'],
+    }),
+
+    updatePreventiveMaintenance: builder.mutation({
+      query: ({ id, maintenance }) => ({
+        url: `${MAINTENANCE_URL}/maintenance/${id}`,
+        method: "PUT",
+        body: maintenance,
+      }),
+      invalidatesTags: ["maintenance"], // optional: useful for refetch
+    }),
     
     // technician status update
     updateRepairById: builder.mutation({
@@ -183,6 +190,15 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
         body: formData,
       }),
       invalidatesTags: ['RepairReport'],
+    }),
+
+    getPreventiveMaintenanceReports: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/maintenance-reports", // matches your backend @GetMapping
+        method: "GET",
+      }),
+      transformResponse: (response) => response,
+      providesTags: ["PreventiveMaintenanceReports"], // Optional tag for cache invalidation
     }),
 
   }),
@@ -210,7 +226,8 @@ export const {
   useGetMaintenanceByAssetCodeQuery,
   useGetMaintenanceByIdQuery,
   useGetSchedulesByTechnicianEmailQuery,
+  useGetMaintenanceByTechnicianEmailQuery,
   useUpdateRepairByIdMutation,
   useCreateRepairReportMutation,
-
+  useGetPreventiveMaintenanceReportsQuery,
 } = maintenanceApiSlice;

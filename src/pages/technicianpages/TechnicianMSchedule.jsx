@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import WorkOrderCard from "./TWorkOrderCard";
+import React, { useState, useEffect } from "react";
+import MaintenanceCard from "./TMaintenanceCard";
 import "./css/Thome.css";
 import "./css/TModalOverlay.css";
 import "./../managerPage/css/dropdown.css";
@@ -8,13 +8,25 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import { RiImageAddLine } from "react-icons/ri";
 
+import {useGetMaintenanceByTechnicianEmailQuery, useCreateRepairReportMutation, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { assetApiSlice } from "../../slices/assetApiSlice";
+import {
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+} from "../../slices/userApiSlice";
+import { createSelector } from "reselect";
+import Swal from "sweetalert2";
 
 const WorkOrderModal = ({ order, onClose, data = [] }) => {
   const [teamMembers, setTeamMembers] = useState(order.teamMembers || []);
   const [newMember, setNewMember] = useState("");
-  const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
+  const [selectedWorkStatus, setSelectedWorkStatus] = useState(order.status || "");
   const [images, setImages] = useState([]); // Allow multiple images
   const [imageError, setImageError] = useState("");
+
+  const [updateMaintenanceById, { isLoading, error }] = useUpdatePreventiveMaintenanceMutation();
 
   const handleAddMember = () => {
     if (newMember.trim() && !teamMembers.includes(newMember)) {
@@ -47,16 +59,12 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   };
 
   // Extract unique work statuses from data
-  const uniqueWorkStatuses = [
-    { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map((item) => item.workstatus))).map(
-      (status) => ({
-        value: status,
-        label: status,
-      })
-    ),
+  const WorkOrder = [
+    { value: "pending", label: "Pending" },
+    { value: "In progress", label: "In progress" },
+    { value: "completed", label: "Completed" }
+
   ];
-  console.log(uniqueWorkStatuses); // Log the array to verify
 
   return (
     <div className="TModal-modal-overlay">
@@ -72,45 +80,45 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
         <form className="TModal-repair-form">
           <div className="TModal-content-field">
             <label>Asset Name:</label>
-            <input type="text" value={order.title} readOnly />
+            <input type="text" value={order.asset_Details.title} readOnly />
           </div>
 
           <div className="TModal-content-field">
-            <label>Time:</label>
+            <label>Date:</label>
             <div className="TModal-time-inputs">
               <input
                 className="TModal-WorkOTime"
                 type="text"
-                value={order.time.start}
+                value={order.startDate}
                 readOnly
               />
               <input
                 className="TModal-WorkOTime"
                 type="text"
-                value={order.time.end}
+                value={order.endDate}
                 readOnly
               />
             </div>
           </div>
 
           <div className="TModal-content-field">
-            <label>Date:</label>
-            <input type="text" value={order.dueDate} readOnly />
+            <label>Time:</label>
+            <input type="text" value={order.timeStart} readOnly />
           </div>
 
           <div className="TModal-content-field">
             <label>Area:</label>
-            <input type="text" value={order.location} readOnly />
-          </div>
-
-          <div className="TModal-content-field">
-            <label>Parts Used:</label>
-            <input type="text" value={order.partsUsed.join(", ")} readOnly />
+            <input type="text" value={order.asset_Details.assetArea} readOnly />
           </div>
 
           <div className="TModal-content-field">
             <label>Description:</label>
             <textarea value={order.description} readOnly />
+          </div>
+          
+          <div className="TModal-content-field">
+            <label>Parts Used:</label>
+            <input type="text" />
           </div>
 
           <div className="TModal-content-field">
@@ -119,44 +127,43 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
           </div>
 
           <div className="TModal-content-field">
-            <label>Asset Images:</label>
-            <div className="TModal-profile-img">
-              {Array.isArray(order.imageUrl) && order.imageUrl.length > 0 ? (
-                order.imageUrl.map((imgSrc, index) => (
-                  <img
-                    key={index}
-                    src={imgSrc}
-                    alt={`Work Order ${index + 1}`}
-                    className="TModal-modal-image"
-                  />
-                ))
-              ) : order.imageUrl ? (
-                // If `imageUrl` is a string, display it as a single image
-                <img
-                  src={order.imageUrl}
-                  alt="Work Order"
-                  className="TModal-modal-image"
-                />
-              ) : (
-                <p>No image available</p>
-              )}
-            </div>
-          </div>
-
-          <div className="TModal-content-field">
             <label>Work Status:</label>
             {/* Work Status Dropdown */}
             <Select
               classNamePrefix="customm-select-workstatus"
-              className="workstatus-dropdown"
-              options={uniqueWorkStatuses}
-              value={uniqueWorkStatuses.find(
-                (option) => option.value === selectedWorkStatus
-              )}
-              onChange={(selectedOption) => {
-                setSelectedWorkStatus(
-                  selectedOption ? selectedOption.value : ""
-                );
+              className="Wworkstatus-dropdown"
+              options={WorkOrder}
+              value={WorkOrder.find((option) => option.value === selectedWorkStatus)}
+              onChange={async (selectedOption) => {
+                const newStatus = selectedOption ? selectedOption.value : "";
+                setSelectedWorkStatus(newStatus);
+                console.log("🟡 Selected Status:", newStatus); // ✅ Log selected value
+                console.log("🛠 Repair ID:", order.maintenanceID);
+
+                // ⚡ Update status inside repairInfo
+                try {
+                  const response = await updateMaintenanceById({
+                    id: order.maintenanceID, // use correct repairID from `order`
+                    maintenance: { status: newStatus }, // this updates repairInfo.status
+                  }).unwrap();
+
+                  console.log("✅ Status updated in repairInfo:", response);
+
+                  Swal.fire({
+                    icon: "success",
+                    title: "Work Status Updated",
+                    text: `Status is now "${newStatus}"`,
+                    timer: 1500,
+                    showConfirmButton: false,
+                  });
+                } catch (err) {
+                  console.error("❌ Failed to update work status:", err);
+                  Swal.fire({
+                    icon: "error",
+                    title: "Error Updating Status",
+                    text: "Could not update status. Try again later.",
+                  });
+                }
               }}
               isClearable
               isSearchable={false}
@@ -265,275 +272,53 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
 
 const TechnicianMSchedule = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPriority, setSelectedPriority] = useState(null);
+  const [selectedWorkStatus, setSelectedWorkStatus] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [data] = useState([
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",    
-      location: "Block-k-203",
-      priority: "Immediate",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl: [
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      ],
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Minor",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Minor",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-  ]);
 
-  const uniquePriorities = [
-    { value: null, label: "All Priorities" },
-    ...Array.from(new Set(data.map((item) => item.priority))).map(
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+  const [data, setData] = useState([]);
+
+  const email = useSelector(getUserEmail);
+  const { data: technicianSchedules } = useGetMaintenanceByTechnicianEmailQuery(email);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchRepairDetails = async () => {
+      if (technicianSchedules && technicianSchedules.length) {
+        const assetPromises = technicianSchedules.map(async (schedule) => {
+          try {
+            const Asset = await dispatch(
+              assetApiSlice.endpoints.getAssetByAssetCode.initiate(schedule?.assetCode)
+            ).unwrap();
+
+            return {
+              ...schedule,
+              asset_Details: Asset, // attach the repair detail here
+            };
+          } catch (err) {
+            console.error(`❌ Error fetching repair for ID ${schedule?.assetCode}:`, err);
+            return null; // return null to filter out later
+          }
+        });
+
+        const results = await Promise.all(assetPromises);
+        const validMergedData = results.filter(Boolean); // filter out failed ones
+        setData(validMergedData); // ⬅️ final combined array
+      }
+    };
+
+    fetchRepairDetails();
+  }, [technicianSchedules, dispatch]);
+
+  console.log("Dataaa", data)
+
+  const uniqueWorkStatuses = [
+    { value: null, label: "All Workstatus" },
+    ...Array.from(new Set(data.map((item) => item.status))).map(
       (priority) => ({
         value: priority,
         label: priority,
@@ -546,9 +331,9 @@ const TechnicianMSchedule = () => {
       .map((value) => value.toString().toLowerCase())
       .some((text) => text.includes(searchTerm.toLowerCase()));
 
-    const matchesPriority =
-      !selectedPriority || item.priority === selectedPriority;
-    return matchesSearch && matchesPriority;
+    const matchesWorkStatus =
+      !selectedWorkStatus || item.status === selectedWorkStatus;
+    return matchesSearch && matchesWorkStatus;
   });
 
   return (
@@ -557,12 +342,12 @@ const TechnicianMSchedule = () => {
         <Select
           classNamePrefix="custom-select"
           className="priority-dropdown"
-          options={uniquePriorities}
-          value={uniquePriorities.find(
-            (option) => option.value === selectedPriority
+          options={uniqueWorkStatuses}
+          value={uniqueWorkStatuses.find(
+            (option) => option.value === selectedWorkStatus
           )}
           onChange={(selectedOption) =>
-            setSelectedPriority(selectedOption ? selectedOption.value : null)
+            setSelectedWorkStatus(selectedOption ? selectedOption.value : null)
           }
           isClearable
           isSearchable={false}
@@ -571,8 +356,8 @@ const TechnicianMSchedule = () => {
 
       <div className="work-orders-grid">
         {filteredData.map((order) => (
-          <WorkOrderCard
-            key={order.id}
+          <MaintenanceCard
+            key={order.assetCode}
             {...order}
             onView={() => setSelectedOrder(order)}
           />
