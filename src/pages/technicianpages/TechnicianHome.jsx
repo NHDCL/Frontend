@@ -482,7 +482,9 @@ const TechnicianHome = () => {
           try {
             const repair = await dispatch(
               maintenanceApiSlice.endpoints.getRepairById.initiate(
-                schedule?.repairID
+                schedule?.repairID, {
+                  forceRefetch:true,
+                }
               )
             ).unwrap();
 

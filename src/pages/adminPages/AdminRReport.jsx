@@ -274,7 +274,7 @@ const AdminRReport = () => {
                 <th>
                   {selectedRows.length > 0 ? (
                     <button
-                      className="download-all-btn"
+                      className="download-btn"
                       onClick={handleDownloadSelected}
                     >
                       <LuDownload

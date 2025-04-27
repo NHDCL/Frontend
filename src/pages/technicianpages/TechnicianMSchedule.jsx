@@ -8,7 +8,7 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import { RiImageAddLine } from "react-icons/ri";
 
-import {useGetMaintenanceByTechnicianEmailQuery, useCreateRepairReportMutation, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
+import { useGetMaintenanceByTechnicianEmailQuery, useCreateRepairReportMutation, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { assetApiSlice } from "../../slices/assetApiSlice";
@@ -25,6 +25,8 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   const [selectedWorkStatus, setSelectedWorkStatus] = useState(order.status || "");
   const [images, setImages] = useState([]); // Allow multiple images
   const [imageError, setImageError] = useState("");
+  const [loading, setLoading] = useState(true);
+
 
   const [updateMaintenanceById, { isLoading, error }] = useUpdatePreventiveMaintenanceMutation();
 
@@ -115,7 +117,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <label>Description:</label>
             <textarea value={order.description} readOnly />
           </div>
-          
+
           <div className="TModal-content-field">
             <label>Parts Used:</label>
             <input type="text" />
@@ -287,32 +289,43 @@ const TechnicianMSchedule = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    let isMounted = true;
+  
     const fetchRepairDetails = async () => {
-      if (technicianSchedules && technicianSchedules.length) {
+      if (technicianSchedules?.length) {
         const assetPromises = technicianSchedules.map(async (schedule) => {
           try {
             const Asset = await dispatch(
-              assetApiSlice.endpoints.getAssetByAssetCode.initiate(schedule?.assetCode)
+              assetApiSlice.endpoints.getAssetByAssetCode.initiate(schedule.assetCode, {
+                forceRefetch: true,
+              })
             ).unwrap();
-
+  
             return {
               ...schedule,
-              asset_Details: Asset, // attach the repair detail here
+              asset_Details: Asset,
             };
           } catch (err) {
             console.error(`❌ Error fetching repair for ID ${schedule?.assetCode}:`, err);
-            return null; // return null to filter out later
+            return null;
           }
         });
-
+  
         const results = await Promise.all(assetPromises);
-        const validMergedData = results.filter(Boolean); // filter out failed ones
-        setData(validMergedData); // ⬅️ final combined array
+        if (isMounted) {
+          const validMergedData = results.filter(Boolean);
+          setData(validMergedData);
+        }
       }
     };
-
+  
     fetchRepairDetails();
+  
+    return () => {
+      isMounted = false;
+    };
   }, [technicianSchedules, dispatch]);
+  
 
   console.log("Dataaa", data)
 
@@ -328,14 +341,18 @@ const TechnicianMSchedule = () => {
 
   const filteredData = data.filter((item) => {
     const matchesSearch = Object.values(item)
-      .map((value) => value.toString().toLowerCase())
+      .map((value) =>
+        value !== null && value !== undefined
+          ? value.toString().toLowerCase()
+          : ""
+      )
       .some((text) => text.includes(searchTerm.toLowerCase()));
 
     const matchesWorkStatus =
       !selectedWorkStatus || item.status === selectedWorkStatus;
+
     return matchesSearch && matchesWorkStatus;
   });
-
   return (
     <div className="work-orders-container">
       <div className="WorkOrder-filter-section">

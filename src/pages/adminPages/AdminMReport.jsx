@@ -274,7 +274,7 @@ const AdminMReport = () => {
                 <th>
                   {selectedRows.length > 0 ? (
                     <button
-                      className="download-all-btn"
+                      className="download-btn"
                       onClick={handleDownloadSelected}
                     >
                       <LuDownload
@@ -401,7 +401,7 @@ const AdminMReport = () => {
                     readOnly
                   />
                 </div>
-                
+
                 <div className="modal-content-field">
                   <label>Time</label>
                   <div className="time-input">
