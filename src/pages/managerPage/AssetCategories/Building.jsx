@@ -13,7 +13,12 @@ import {
   useUploadExcelMutation,
   useRequestDisposeMutation,
 } from "../../../slices/assetApiSlice";
-import { useGetUserByEmailQuery } from "../../../slices/userApiSlice";
+import { useCreateMaintenanceMutation, useSendEmailMutation } from "../../../slices/maintenanceApiSlice";
+import {
+  useGetDepartmentQuery,
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+} from "../../../slices/userApiSlice";
 import Swal from "sweetalert2";
 import { useSelector } from "react-redux";
 import { createSelector } from "reselect";
@@ -69,6 +74,29 @@ const Building = ({ category }) => {
   const [uploadExcel, { isLoading: upLoading }] = useUploadExcelMutation();
   const [requestDispose, { isLoading: isDeleting }] =
     useRequestDisposeMutation();
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const { data: departments, isLoading: departmentsLoading } =
+    useGetDepartmentQuery();
+  const { data: users } = useGetUsersQuery();
+  const [assignedWorker, setAssignedWorker] = useState(null);
+  const [createMaintenance] =
+    useCreateMaintenanceMutation();
+    const [repeatFrequency, setRepeatFrequency] = useState(null);
+    const [sendEmail] = useSendEmailMutation();
+    const [isCreating, setIsCreating] = useState(false);
+
+
+  const supervisorsFromSameAcademy =
+    users?.filter(
+      (user) =>
+        user.academyId === academyId &&
+        typeof user.role?.name === "string" &&
+        user.role.name.toLowerCase() === "supervisor"
+    ) || [];
+
+  const uniqueSupervisorDepartmentIds = [
+    ...new Set(supervisorsFromSameAcademy.map((s) => s.departmentId)),
+  ];
 
   useEffect(() => {
     if (manager?.user?.academyId) {
@@ -108,6 +136,14 @@ const Building = ({ category }) => {
       setRoomInput(""); // Clear room input
     }
   };
+
+  const repeatOptions = [
+    { value: "none", label: "None" },
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+    { value: "monthly", label: "Monthly" },
+    { value: "yearly", label: "Yearly" },
+  ];
 
   const downloadDummyExcel = () => {
     const data = [
@@ -230,25 +266,6 @@ const Building = ({ category }) => {
     setModalData(item); // This will set the selected asset data for the modal
   };
 
-  const handleCreateSchedule = () => {
-    if (
-      !scheduleModalData.Schedule ||
-      !scheduleModalData.Lastworkorder ||
-      !scheduleModalData.Nextworkorder ||
-      !scheduleModalData.Assign
-    ) {
-      alert("Please fill out all fields before submitting.");
-      return;
-    }
-
-    // If all fields are filled, process the schedule
-    console.log("Creating schedule:", scheduleModalData);
-
-    // Only close the modal AFTER schedule creation
-    // setIsScheduleModalOpen(false); // Removed from here
-    setScheduleModalData(null);
-  };
-
   // Function to get the class based on workstatus
   const getStatusClass = (status) => {
     switch (status) {
@@ -291,31 +308,97 @@ const Building = ({ category }) => {
   };
 
   const handleBulk = async () => {
-    if (file) {
-      try {
+    if (!file) {
+      return Swal.fire({
+        icon: "warning",
+        title: "No File",
+        text: "Please select an Excel file first.",
+      });
+    }
+
+    try {
+      const reader = new FileReader();
+
+      reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+        // 1. Check for duplicate assetCodes in the uploaded file
+        const uploadedAssetCodes = jsonData.map((item) => item.assetCode);
+        const uniqueUploadedCodes = new Set(uploadedAssetCodes);
+
+        if (uniqueUploadedCodes.size !== uploadedAssetCodes.length) {
+          return Swal.fire({
+            icon: "error",
+            title: "Duplicate Asset Code",
+            text: "Each assetCode must be unique within the Excel file.",
+          });
+        }
+
+        // 2. Check if any uploaded assetCode already exists in fetched assets
+        const existingAssetCodes = new Set(assets.map((a) => a.assetCode));
+        const duplicatesWithDatabase = uploadedAssetCodes.filter((code) =>
+          existingAssetCodes.has(code)
+        );
+
+        if (duplicatesWithDatabase.length > 0) {
+          return Swal.fire({
+            icon: "error",
+            title: "Duplicate in Database",
+            html: `The following assetCodes already exist: <br/><strong>${duplicatesWithDatabase.join(
+              ", "
+            )}</strong>`,
+          });
+        }
+
+        // 3. Check if all rows match the current academyId and categoryId
+        const invalidRow = jsonData.find(
+          (item) =>
+            item.academyID !== academyId || item.assetCategoryID !== CategoryId
+        );
+
+        if (invalidRow) {
+          return Swal.fire({
+            icon: "error",
+            title: "Invalid Data",
+            html: `
+                <p>academyID or assetCategoryID in one or more rows does not match the selected values.</p>
+                <p><strong>Row Values:</strong></p>
+                <ul>
+                  <li><strong>academyID:</strong> ${invalidRow.academyID}</li>
+                  <li><strong>assetCategoryID:</strong> ${invalidRow.assetCategoryID}</li>
+                </ul>
+                <p><strong>Expected:</strong></p>
+                <ul>
+                  <li>academyID: ${academyId}</li>
+                  <li>assetCategoryID: ${CategoryId}</li>
+                </ul>
+              `,
+          });
+        }
+
+        // ✅ All checks passed — Upload
         const res = await uploadExcel(file).unwrap();
         refetch();
         setSelectedFile(null);
         setShowBulkModal(false);
-        console.log(res);
         Swal.fire({
           icon: "success",
           title: "Success",
           text: "Excel file uploaded successfully!",
         });
-      } catch (err) {
-        console.log(err);
-        Swal.fire({
-          icon: "error",
-          title: "Upload Failed",
-          text: err?.data?.message || "Something went wrong while uploading.",
-        });
-      }
-    } else {
+      };
+
+      reader.readAsArrayBuffer(file);
+    } catch (err) {
+      console.error(err);
       Swal.fire({
-        icon: "warning",
-        title: "No File",
-        text: "Please select an Excel file first.",
+        icon: "error",
+        title: "Upload Failed",
+        text: err?.data?.message || "Something went wrong while uploading.",
       });
     }
   };
@@ -455,7 +538,11 @@ const Building = ({ category }) => {
       Lastworkorder: modalData.Lastworkorder || "",
       Schedule: modalData.Schedule || "",
       Nextworkorder: modalData.Nextworkorder || "",
+      assetCode: modalData.assetCode || "",
     });
+    setIsScheduleModalOpen(true);
+    setModalData(null);
+    setFloorAndRooms({});
   };
 
   const handleFileSelection = (e) => {
@@ -604,6 +691,63 @@ const Building = ({ category }) => {
         });
       }
     }
+  };
+
+  // preventive manintenance
+  const departmentOptions =
+    departments
+      ?.filter((dep) =>
+        uniqueSupervisorDepartmentIds.includes(dep.departmentId)
+      )
+      .map((dep) => ({
+        value: dep.departmentId,
+        label: dep.name,
+      })) || [];
+
+  const workerOptions = supervisorsFromSameAcademy
+    .filter((user) => user.departmentId === selectedDepartment)
+    .map((user) => ({
+      value: user.userId,
+      label: user.email,
+    }));
+
+  const handleCreateSchedule = async () => {
+    setIsCreating(true)
+    try {
+      await createMaintenance({
+        timeStart: scheduleModalData.Schedule,
+        startDate: scheduleModalData.Lastworkorder,
+        endDate: scheduleModalData.Nextworkorder,
+        description: scheduleModalData.Description,
+        status: "Pending",
+        repeat: repeatFrequency?.value || "none",
+        userID: assignedWorker?.value || "",
+        assetCode: scheduleModalData.assetCode,
+      }).unwrap();
+      
+      // Send email to the assigned worker
+      if (assignedWorker?.label) {
+        await sendEmail({
+          to: assignedWorker.label,
+        }).unwrap();
+        Swal.fire({
+          icon: "success",
+          title: "Schedule Created",
+          text: "Preventive maintenance has been scheduled successfully",
+        });
+      }
+
+      // Optionally close modal
+      setIsScheduleModalOpen(false);
+      setScheduleModalData(null);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Schedule",
+        text: error?.data?.message || "Something went wrong. Please try again.",
+      });
+    }
+    setIsCreating(false)
   };
 
   return (
@@ -1039,16 +1183,14 @@ const Building = ({ category }) => {
                 ) : (
                   Object.entries(floorAndRooms).map(([floor, rooms]) => (
                     <div key={floor} style={styles.floorBlock}>
-                      <p style={styles.floorTitle}>Floor: {floor}:</p>
-                      {rooms.length > 0 ? (
-                        rooms.map((room, index) => (
-                          <p key={index} style={styles.roomText}>
-                            Room: {room}
-                          </p>
-                        ))
-                      ) : (
-                        <p style={styles.noRoomText}>No rooms added</p>
-                      )}
+                      <p style={styles.floorTitle}>
+                        {floor.charAt(0).toUpperCase() + floor.slice(1)}:
+                      </p>
+                      <p style={styles.roomText}>
+                        {rooms.length > 0
+                          ? `Rooms: ${rooms.join(", ")}`
+                          : "No rooms added"}
+                      </p>
                     </div>
                   ))
                 )}
@@ -1259,7 +1401,10 @@ const Building = ({ category }) => {
               <h2 className="form-h">Preventive maintenance schedule form</h2>
               <button
                 className="close-btn"
-                onClick={() => setScheduleModalData(null)}
+                onClick={() => {
+                  setScheduleModalData(null);
+                  setIsScheduleModalOpen(false);
+                }}
               >
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
@@ -1269,6 +1414,34 @@ const Building = ({ category }) => {
 
             <div className="schedule-form">
               <p className="sub-title">Maintenance Detail</p>
+              <div className="modal-content-field">
+                <label>Department:</label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={departmentOptions}
+                  value={
+                    departmentOptions.find(
+                      (opt) => opt.value === selectedDepartment
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setSelectedDepartment(option?.value || "")
+                  }
+                  isClearable
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Assign Supervisor:</label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={workerOptions}
+                  value={assignedWorker}
+                  onChange={setAssignedWorker}
+                  isClearable
+                />
+              </div>
               <div className="modal-content-field">
                 <label>Description: </label>
                 <input
@@ -1282,30 +1455,20 @@ const Building = ({ category }) => {
                   }
                 />
               </div>
-              <div className="modal-content-field">
-                <label>Assign: </label>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workersList}
-                  value={
-                    workersList.find(
-                      (worker) => worker.value === scheduleModalData.Assign
-                    ) || null
-                  }
-                  onChange={(selectedOption) =>
-                    setScheduleModalData({
-                      ...scheduleModalData,
-                      Assign: selectedOption?.value || "",
-                    })
-                  }
-                  isClearable
-                  isSearchable
-                />
-              </div>
 
               {/* Schedule fields */}
               <p className="sub-title">Schedule</p>
+              <div className="modal-content-field">
+                <label>Repeat:</label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={repeatOptions}
+                  value={repeatFrequency}
+                  onChange={setRepeatFrequency}
+                  isClearable
+                />
+              </div>
               <div className="modal-content-field">
                 <label>Starts on: </label>
                 <input
@@ -1359,8 +1522,13 @@ const Building = ({ category }) => {
               </div>
 
               <div className="modal-buttons">
-                <button className="accept-btn" style={{ width: "150px" }}>
-                  Create Schedule
+                <button
+                  className="accept-btn"
+                  style={{ width: "150px" }}
+                  onClick={handleCreateSchedule}
+                  disabled={isCreating}
+                >
+                  {isCreating ? "Creating..." : "Create Schedule"}
                 </button>
               </div>
             </div>

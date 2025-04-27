@@ -11,7 +11,7 @@ import Select from "react-select";
 import Swal from 'sweetalert2';
 import { createSelector } from "reselect";
 import { useSelector } from "react-redux";
-import { useGetMaintenanceRequestQuery, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
+import { useGetMaintenanceRequestQuery, useSendEmailMutation, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
 import { useGetAssetQuery } from "../../slices/assetApiSlice";
 import { useGetUserByEmailQuery, useGetUsersQuery, useGetDepartmentQuery } from "../../slices/userApiSlice";
 
@@ -24,6 +24,7 @@ const PMaintenance = () => {
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [editModalData, setEditModalData] = useState(null);
   const [userID, setUserID] = useState(null);
+  const [supervisor, setEmail] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const [assignedWorker, setAssignedWorker] = useState("");
@@ -34,6 +35,7 @@ const PMaintenance = () => {
   const { data: assetData, refetch: refetchAssetData } = useGetAssetQuery();
   const { data: allUsers } = useGetUsersQuery(); // hypothetical slice
   const { data: allDepartment } = useGetDepartmentQuery(); // hypothetical slice
+  const [sendEmail] = useSendEmailMutation();
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
@@ -207,9 +209,9 @@ const PMaintenance = () => {
 
   const handleSaveEdit = async () => {
     if (!editModalData) return;
-
+  
     setIsSaving(true);
-
+  
     try {
       const payload = {
         id: editModalData.maintenanceID,
@@ -223,26 +225,32 @@ const PMaintenance = () => {
           userID: userID,
         },
       };
-
+  
       const response = await updatePreventiveMaintenance(payload).unwrap();
       console.log("✅ Maintenance updated:", response);
-
+  
+      if (supervisor) {
+        await sendEmail({ to: supervisor }).unwrap(); // Send email after successful update
+        console.log("📧 Email sent to:", supervisor);
+      }
+  
       setUserID(null);
-
+      setEmail(null)
+  
       setData((prevData) =>
         prevData.map((item) =>
           item.maintenanceID === payload.id ? { ...item, ...payload.maintenance } : item
         )
       );
-
+  
       Swal.fire({
         icon: "success",
         title: "Saved!",
-        text: "The maintenance record has been updated successfully.",
+        text: "The maintenance record has been updated and email sent.",
         timer: 2000,
         showConfirmButton: false,
       });
-
+  
       setEditModalData(null);
     } catch (err) {
       console.error("❌ Failed to update maintenance:", err);
@@ -255,7 +263,6 @@ const PMaintenance = () => {
       setIsSaving(false);
     }
   };
-
 
   const handleAssignRequest = () => {
     if (!assignedWorker || !assignTime || !assignDate) {
@@ -459,7 +466,8 @@ const PMaintenance = () => {
                         userID: selectedOption.value,      // Set the userID
                         userEmail: selectedOption.label,   // Optionally keep email for display
                       });
-                      setUserID(selectedOption.value);     // Keep in sync
+                      setUserID(selectedOption.value); 
+                      setEmail(selectedOption.label);
                     } else {
                       setEditModalData({ ...editModalData, userID: "", userEmail: "" });
                       setUserID(null);

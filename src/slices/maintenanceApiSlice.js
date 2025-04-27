@@ -126,6 +126,21 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["maintenance"], // optional: useful for refetch
     }),
+    createMaintenance: builder.mutation({
+      query: (newMaintenance) => ({
+        url: MAINTENANCE_URL + "/maintenance", // POST to /api/maintenance
+        method: 'POST',
+        body: newMaintenance,
+      }),
+      invalidatesTags: ['Maintenance'],
+    }),
+    sendEmail: builder.mutation({
+      query: (emailData) => ({
+        url:  MAINTENANCE_URL + "/maintenance/send-email",  // This corresponds to the @PostMapping("/send-email") route
+        method: 'POST',
+        body: emailData,
+      }),
+    }),
 
   }),
 });
@@ -143,4 +158,6 @@ export const {
   useUpdatePreventiveMaintenanceMutation,
   useGetRepairReportsQuery,
   useGetMaintenanceReportsQuery,
+  useCreateMaintenanceMutation,
+  useSendEmailMutation
 } = maintenanceApiSlice;

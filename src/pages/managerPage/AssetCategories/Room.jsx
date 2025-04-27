@@ -4,11 +4,17 @@ import Select from "react-select";
 import { FaDownload } from "react-icons/fa";
 import { QRCodeCanvas } from "qrcode.react";
 import jsPDF from "jspdf";
-import { useGetAssetByAcademyQuery } from "../../../slices/assetApiSlice";
+import {
+  useGetAssetByAcademyQuery,
+  useUpdateFloorAndRoomsMutation,
+} from "../../../slices/assetApiSlice";
 import { useGetUserByEmailQuery } from "../../../slices/userApiSlice";
 import Swal from "sweetalert2";
 import { useSelector } from "react-redux";
 import { createSelector } from "reselect";
+import { IoMdAdd } from "react-icons/io";
+import { IoIosCloseCircle } from "react-icons/io";
+import swal from "sweetalert2";
 
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
@@ -19,6 +25,7 @@ const getUserEmail = createSelector(
 const RoomQR = () => {
   const email = useSelector(getUserEmail);
   const { data: manager } = useGetUserByEmailQuery(email);
+  const [updateFloorAndRooms, { isLoading }] = useUpdateFloorAndRoomsMutation();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -26,9 +33,17 @@ const RoomQR = () => {
   const [selectedFloor, setSelectedFloor] = useState("");
   const [selectedRoom, setSelectedRoom] = useState("");
   const [academyId, setAcademyId] = useState(null);
-  const { data: assets } = useGetAssetByAcademyQuery(academyId);
+  const { data: assets, refetch } = useGetAssetByAcademyQuery(academyId);
+  const [showForm, setShowForm] = useState(false);
+  const [newFloor, setNewFloor] = useState("");
+  const [newRooms, setNewRooms] = useState("");
   const [data, setData] = useState([]);
-  console.log(data);
+  const [dataRoom, setDataRoom] = useState([]);
+  const [roomInput, setRoomInput] = useState("");
+  const [floorAndRooms, setFloorAndRooms] = useState({});
+  const [floorInput, setFloorInput] = useState("");
+  const [selectedAssetTitle, setSelectedAssetTitle] = useState("");
+  const [selectedAssetCode, setSelectedAssetCode] = useState("");
 
   const rowsPerPage = 9; // 3x3 grid for QR codes per page
   const qrSize = 40; // Size of each QR code (adjust as needed)
@@ -50,6 +65,56 @@ const RoomQR = () => {
       setData(filteredAssets);
     }
   }, [assets]);
+
+  useEffect(() => {
+    if (assets) {
+      const filteredAssets = assets.filter((asset) => {
+        const isBuilding = asset.categoryDetails?.name === "Building";
+        const isInUsage = asset.status === "In Usage";
+
+        // Check if it does NOT have an attribute named "Floor and rooms"
+        const hasNoFloorAndRooms = !asset.attributes?.some(
+          (attr) => attr.name === "Floor and rooms"
+        );
+
+        return isBuilding && isInUsage && hasNoFloorAndRooms;
+      });
+
+      setDataRoom(filteredAssets);
+    }
+  }, [assets]);
+
+  const styles = {
+    textArea: {
+      width: "100%",
+      height: "120px",
+      padding: "10px",
+      fontSize: "14px",
+      background: "#f8f8f8",
+      border: "1px solid #ddd",
+      borderRadius: "4px",
+      resize: "none",
+      overflowY: "auto",
+    },
+    floorBlock: {
+      marginBottom: "10px",
+    },
+    floorText: {
+      fontSize: "14px",
+      marginBottom: "4px",
+    },
+    noRoomText: {
+      fontSize: "13px",
+      color: "#888",
+      fontStyle: "italic",
+      marginLeft: "10px",
+    },
+    emptyMessage: {
+      fontStyle: "italic",
+      color: "#888",
+      textAlign: "center",
+    },
+  };
 
   // Sorting and filtering logic
   const sortedData = [...data].sort((a, b) => b.assetID - a.assetID);
@@ -142,6 +207,27 @@ const RoomQR = () => {
     })),
   ];
 
+  const assetOptions = dataRoom.map((asset) => ({
+    value: asset.title,
+    label: asset.title,
+    assetCode: asset.assetCode,
+  }));
+
+  const addRoom = () => {
+    if (floorInput.trim() && roomInput.trim()) {
+      setFloorAndRooms((prev) => {
+        const updatedRooms = { ...prev };
+        if (!updatedRooms[floorInput]) {
+          updatedRooms[floorInput] = [];
+        }
+        updatedRooms[floorInput].push(roomInput);
+        JSON.stringify(updatedRooms, null, 2); // Update the jsonData
+        return updatedRooms;
+      });
+      setRoomInput(""); // Clear room input
+    }
+  };
+
   const handleDownloadPDF = async () => {
     if (!Array.isArray(selectedRows) || selectedRows.length === 0) {
       console.error("No rows selected or selectedRows is not an array.");
@@ -223,6 +309,49 @@ const RoomQR = () => {
     );
   };
 
+  const handleAddFloorRooms = async () => {
+    if (!selectedAssetCode) {
+      Swal.fire("Warning", "Please select a building first!", "warning");
+      return;
+    }
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: `You are about to add floors/rooms to: ${selectedAssetTitle}`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Add",
+      cancelButtonText: "Cancel",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const payload = {
+          assetCode: selectedAssetCode,
+          name: "Floor and rooms",
+          value: JSON.stringify(floorAndRooms),
+        };
+        console.log(payload);
+
+        try {
+          const res = await updateFloorAndRooms(payload);
+          console.log(res);
+          Swal.fire(
+            "Success",
+            "Floor and rooms added successfully!",
+            "success"
+          );
+          refetch();
+          setFloorAndRooms({});
+          setFloorInput("");
+          setSelectedAssetCode("");
+          setShowForm(false);
+        } catch (error) {
+          console.error("Error adding floor and rooms:", error);
+          Swal.fire("Error", "Failed to add floor and rooms.", "error");
+        }
+      }
+    });
+  };
+
   return (
     <div className="managerDashboard">
       {/* Search and filter inputs */}
@@ -235,6 +364,12 @@ const RoomQR = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </div>
+        <div className="create-category-btn">
+          <IoMdAdd style={{ color: "#ffffff", marginLeft: "12px" }} />
+          <button className="category-btn" onClick={() => setShowForm(true)}>
+            Add Floor and Rooms
+          </button>
         </div>
       </div>
 
@@ -409,6 +544,103 @@ const RoomQR = () => {
           </tbody>
         </table>
       </div>
+      {showForm && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="form-h">Add Floor and Rooms</h2>
+              <button className="close-btn" onClick={() => setShowForm(false)}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <form className="repair-form">
+              <div className="modal-content-field">
+                <label>Select Building:</label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  placeholder="Select Building"
+                  isSearchable={false} // 🔒 disables typing/filtering
+                  value={
+                    assetOptions.find(
+                      (opt) => opt.value === selectedAssetTitle
+                    ) || null
+                  }
+                  onChange={(selectedOption) => {
+                    setSelectedAssetTitle(selectedOption?.value || "");
+                    setSelectedAssetCode(selectedOption?.assetCode || "");
+                  }}
+                  options={assetOptions}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Floor Name:</label>
+                <input
+                  type="text"
+                  value={floorInput}
+                  onChange={(e) => setFloorInput(e.target.value)}
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Room Name:</label>
+                <div
+                  style={{ display: "flex", width: "100%", maxWidth: "350px" }}
+                >
+                  <input
+                    type="text"
+                    // value={newBuilding.addRoo}
+                    onChange={(e) => setRoomInput(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={addRoom}
+                    style={{
+                      backgroundColor: "#897463",
+                      color: "white",
+                      border: "1px, solid",
+                      borderRadius: "10px",
+                      marginLeft: "10px",
+                    }}
+                  >
+                    Add Room
+                  </button>
+                </div>
+              </div>
+
+              <h4 style={{ color: "#305845", fontSize: "14px" }}>
+                Current Floor and Room:
+              </h4>
+              <div style={styles.textArea}>
+                {Object.entries(floorAndRooms).length === 0 ? (
+                  <p style={styles.emptyMessage}>
+                    No floors or rooms added yet.
+                  </p>
+                ) : (
+                  Object.entries(floorAndRooms).map(([floor, rooms]) => (
+                    <div key={floor} style={styles.floorBlock}>
+                      <p style={styles.floorText}>
+                        {`${floor}: ${rooms.join(", ")}`}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="modal-buttons">
+                <button
+                  type="button" // Prevents form submission
+                  className="accept-btn"
+                  onClick={handleAddFloorRooms}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Submitting..." : "Submit"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="pagination">

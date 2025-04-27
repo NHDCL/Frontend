@@ -20,8 +20,8 @@ const AppRoutes = () => {
       <Route path="/forgotpassword" element={<Forgotpassword />} />
       <Route path="/otp" element={<Otppages />} />
       <Route path="/newpassword" element={<Newpasswordpage />} />
-      <Route path="/qrdetail" element={<QRDetail />} />
-      <Route path="/roomqrdetail" element={<RoomQRDetail />} />
+      <Route path="/qrdetail/:assetCode" element={<QRDetail />} />
+      <Route path="/roomqrdetail/:assetCode" element={<RoomQRDetail />} />
 
       {/* Define separate base paths for manager and technician */}
       <Route path="/manager/*" element={<ManagerRoutes />} />
