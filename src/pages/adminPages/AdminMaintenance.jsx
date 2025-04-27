@@ -8,6 +8,7 @@ import Select from "react-select";
 import { useGetMaintenanceRequestQuery } from "../../slices/maintenanceApiSlice";
 import { useGetAssetQuery } from "../../slices/assetApiSlice";
 import { useGetAcademyQuery } from "../../slices/userApiSlice";
+import Tippy from "@tippyjs/react";
 
 const AdminMaintenance = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -192,12 +193,46 @@ const AdminMaintenance = () => {
               {displayedData.map((item, index) => (
                 <tr key={index}>
                   <td>{item.assetCode}</td>
-                  <td>{item.assetName}</td>
-                  <td>{item.description}</td>
+                  <td className="description">
+                    <Tippy content={item.assetName || ""} placement="top">
+                      <span>
+                        {item.assetName
+                          ? item.assetName.length > 20
+                            ? item.assetName.substring(0, 20) + "..."
+                            : item.assetName
+                          : ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  
+                  <td className="description">
+                    <Tippy content={item.description || ""} placement="top">
+                      <span>
+                        {item.description
+                          ? item.description.length > 20
+                            ? item.description.substring(0, 20) + "..."
+                            : item.description
+                          : ""}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td>{item.repeat}</td>
                   <td>{item.startDate}</td>
                   <td>{item.endDate}</td>
-                  <td>{item.assignedSupervisors}</td>
+                  <td className="description">
+                    <Tippy
+                      content={item.assignedSupervisors || ""}
+                      placement="top"
+                    >
+                      <span>
+                        {item.assignedSupervisors
+                          ? item.assignedSupervisors.length > 20
+                            ? item.assignedSupervisors.substring(0, 20) + "..."
+                            : item.assignedSupervisors
+                          : ""}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td>
                     <div
                       className={getWorkOrderStatusClass(

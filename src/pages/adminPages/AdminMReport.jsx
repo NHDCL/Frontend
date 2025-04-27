@@ -307,22 +307,62 @@ const AdminMReport = () => {
                     <td>{item.startTime}</td>
                     <td>{item.endTime}</td>
                     <td>{item.Date}</td>
-                    <td>{item.Total_cost}</td>
-                    <td>{item.part_used}</td>
-                    <td>{item.Assigned_Technician}</td>
                     <td className="description">
-                      <Tippy
-                        content={item.Additional_information}
-                        placement="top"
-                      >
+                      <Tippy content={item.Total_cost || ""} placement="top">
                         <span>
-                          {item.Additional_information.length > 20
-                            ? item.Additional_information.substring(0, 20) +
-                              "..."
-                            : item.Additional_information}
+                          {item.Total_cost
+                            ? item.Total_cost.length > 20
+                              ? item.Total_cost.substring(0, 20) + "..."
+                              : item.Total_cost
+                            : ""}
                         </span>
                       </Tippy>
                     </td>
+
+                    <td className="description">
+                      <Tippy content={item.part_used || ""} placement="top">
+                        <span>
+                          {item.part_used
+                            ? item.part_used.length > 20
+                              ? item.part_used.substring(0, 20) + "..."
+                              : item.part_used
+                            : ""}
+                        </span>
+                      </Tippy>
+                    </td>
+
+                    <td className="description">
+                      <Tippy
+                        content={item.Assigned_Technician || ""}
+                        placement="top"
+                      >
+                        <span>
+                          {item.Assigned_Technician
+                            ? item.Assigned_Technician.length > 20
+                              ? item.Assigned_Technician.substring(0, 20) +
+                                "..."
+                              : item.Assigned_Technician
+                            : ""}
+                        </span>
+                      </Tippy>
+                    </td>
+
+                    <td className="description">
+                      <Tippy
+                        content={item.Additional_information || ""}
+                        placement="top"
+                      >
+                        <span>
+                          {item.Additional_information
+                            ? item.Additional_information.length > 20
+                              ? item.Additional_information.substring(0, 20) +
+                                "..."
+                              : item.Additional_information
+                            : ""}
+                        </span>
+                      </Tippy>
+                    </td>
+
                     <td className="actions">
                       <button
                         style={{ marginLeft: "10px" }}

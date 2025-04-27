@@ -16,6 +16,7 @@ import {
   useSoftDeleteUserMutation,
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
+import Tippy from "@tippyjs/react";
 
 const SAdminUser = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -266,14 +267,56 @@ const SAdminUser = () => {
                       }
                     />
                   </td>
-                  <td>{item.name}</td>
-                  <td>{item.email}</td>
+                  <td className="description">
+                    <Tippy content={item.name || ""} placement="top">
+                      <span>
+                        {item.name?.length > 20
+                          ? item.name.substring(0, 20) + "..."
+                          : item.name || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="description">
+                    <Tippy content={item.email || ""} placement="top">
+                      <span>
+                        {item.email?.length > 20
+                          ? item.email.substring(0, 20) + "..."
+                          : item.email || ""}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td>{item.employeeId}</td>
                   {activeTab !== "Admin" && (
-                    <td>{getAcademyName(item.academyId)}</td>
+                    <td className="description">
+                      <Tippy
+                        content={getAcademyName(item.academyId) || ""}
+                        placement="top"
+                      >
+                        <span>
+                          {getAcademyName(item.academyId)?.length > 20
+                            ? getAcademyName(item.academyId).substring(0, 20) +
+                              "..."
+                            : getAcademyName(item.academyId) || ""}
+                        </span>
+                      </Tippy>
+                    </td>
                   )}
                   {activeTab !== "Admin" && activeTab !== "Manager" && (
-                    <td>{getDepartmentName(item.departmentId)}</td>
+                    <td className="description">
+                      <Tippy
+                        content={getDepartmentName(item.departmentId) || ""}
+                        placement="top"
+                      >
+                        <span>
+                          {getDepartmentName(item.departmentId)?.length > 20
+                            ? getDepartmentName(item.departmentId).substring(
+                                0,
+                                20
+                              ) + "..."
+                            : getDepartmentName(item.departmentId) || ""}
+                        </span>
+                      </Tippy>
+                    </td>
                   )}
                   <td>{item.role ? item.role.name : "No Role"}</td>
                   {activeTab === "Admin" && (

@@ -307,19 +307,44 @@ const SAdminRReport = () => {
                     <td>{item.startTime}</td>
                     <td>{item.endTime}</td>
                     <td>{item.Date}</td>
-                    <td>{item.Total_cost}</td>
-                    <td>{item.part_used}</td>
-                    <td>{item.Assigned_Technician}</td>
+                    <td className="description">
+                      <Tippy content={item.Total_cost || ""} placement="top">
+                        <span>
+                          {item.Total_cost?.length > 20
+                            ? item.Total_cost.substring(0, 20) + "..."
+                            : item.Total_cost || ""}
+                        </span>
+                      </Tippy>
+                    </td>
+                    <td className="description">
+                      <Tippy content={item.part_used || ""} placement="top">
+                        <span>
+                          {item.part_used?.length > 20
+                            ? item.part_used.substring(0, 20) + "..."
+                            : item.part_used || ""}
+                        </span>
+                      </Tippy>
+                    </td>
+                    <td className="description">
+                      <Tippy content={item.part_used || ""} placement="top">
+                        <span>
+                          {item.part_used?.length > 20
+                            ? item.part_used.substring(0, 20) + "..."
+                            : item.part_used || ""}
+                        </span>
+                      </Tippy>
+                    </td>
+                   
                     <td className="description">
                       <Tippy
-                        content={item.Additional_information}
+                        content={item.Additional_information || ""}
                         placement="top"
                       >
                         <span>
-                          {item.Additional_information.length > 20
+                          {item.Additional_information?.length > 20
                             ? item.Additional_information.substring(0, 20) +
                               "..."
-                            : item.Additional_information}
+                            : item.Additional_information || ""}
                         </span>
                       </Tippy>
                     </td>

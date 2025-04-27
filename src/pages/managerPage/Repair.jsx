@@ -25,6 +25,7 @@ import {
 } from "../../slices/userApiSlice";
 import { createSelector } from "reselect";
 import Swal from "sweetalert2";
+import Tippy from "@tippyjs/react";
 
 const Repair = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -275,30 +276,30 @@ const Repair = () => {
 
   const handleUpdateSchedule = async () => {
     console.log("Schedule Data1:", scheduleData);
-  
+
     if (!scheduleData?.[0]?.scheduleID) {
       Swal.fire("Error", "Schedule data not found.", "error");
       return;
     }
-  
+
     const scheduleId = scheduleData[0].scheduleID;
-  
+
     // ensure time is in HH:mm:ss format
     let formattedTime = assignTimeU;
     if (assignTimeU.length === 5) {
       // if it's HH:mm, add seconds
       formattedTime = `${assignTimeU}:00`;
     }
-  
+
     const updatedData = {
       startTime: formattedTime,
       reportingDate: assignDateU,
       userID: selectedSupervisorId || supervisorOption.value,
       repairID: scheduleData[0].repairID,
     };
-  
+
     console.log("Updated Data:", updatedData);
-  
+
     try {
       await updateSchedule({ scheduleId, updatedData }).unwrap();
       Swal.fire({
@@ -317,9 +318,6 @@ const Repair = () => {
     }
   };
   console.log("aw", selectedSupervisorId);
-
-  
-  
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -433,7 +431,6 @@ const Repair = () => {
     setAssignTime(null);
     setSelectedDepartment(null);
     refetchRepairRequest();
-
   };
   const handleCloseModal2 = () => {
     setRescheduleModalData(null);
@@ -441,9 +438,8 @@ const Repair = () => {
     setAssignDate(null);
     setAssignTime(null);
     setSelectedDepartment(null);
-    setSelectedSupervisorId(null)
+    setSelectedSupervisorId(null);
     refetchRepairRequest();
-
   };
 
   const [sortOrder, setSortOrder] = useState({
@@ -622,10 +618,35 @@ const Repair = () => {
                       }}
                     />
                   </td>
-                  <td>{item.name}</td>
-                  <td>{item.email}</td>
-                  <td>{item.phoneNumber}</td>
-                  <td>{item.area}</td>
+                  <td className="description">
+                    <Tippy content={item.name || ""} placement="top">
+                      <span>
+                        {item.name?.length > 20
+                          ? item.name.substring(0, 20) + "..."
+                          : item.name || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="description">
+                    <Tippy content={item.email || ""} placement="top">
+                      <span>
+                        {item.email?.length > 20
+                          ? item.email.substring(0, 20) + "..."
+                          : item.email || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td>{item.phoneNumber || ""}</td>
+                  <td className="description">
+                    <Tippy content={item.area || ""} placement="top">
+                      <span>
+                        {item.area?.length > 20
+                          ? item.area.substring(0, 20) + "..."
+                          : item.area || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
                   <td>{item.priority}</td>
                   <td>
                     <div
@@ -695,7 +716,9 @@ const Repair = () => {
           <div className="modal-content">
             {/* Close Button */}
             <div className="modal-header">
-              <h2 style={{fontSize:"18px"}} className="form-h">Schedule Form</h2>
+              <h2 style={{ fontSize: "18px" }} className="form-h">
+                Schedule Form
+              </h2>
               <button className="close-btn" onClick={handleCloseModal}>
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
@@ -783,7 +806,9 @@ const Repair = () => {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h2 style={{fontSize:"18px"}} className="form-h">Reschedule Form</h2>
+              <h2 style={{ fontSize: "18px" }} className="form-h">
+                Reschedule Form
+              </h2>
               <button className="close-btn" onClick={handleCloseModal2}>
                 <IoIosCloseCircle />
               </button>
@@ -792,7 +817,7 @@ const Repair = () => {
               <div className="modal-content-field">
                 <label>Department:</label>
                 <Select
-                classNamePrefix="custom-select-department"
+                  classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
                   options={departmentOptionsU}
                   value={
@@ -815,7 +840,9 @@ const Repair = () => {
                   value={
                     finalOptions.find(
                       (opt) => opt.value === selectedSupervisorId
-                    ) ||supervisorOption|| null
+                    ) ||
+                    supervisorOption ||
+                    null
                   }
                   options={finalOptions}
                   isClearable
@@ -832,9 +859,11 @@ const Repair = () => {
                 <label>Assign Date:</label>
                 <input
                   type="date"
-                  value={assignDateU!== ""
-                    ? assignDateU
-                    : rescheduleModalData?.reportingDate || ""}
+                  value={
+                    assignDateU !== ""
+                      ? assignDateU
+                      : rescheduleModalData?.reportingDate || ""
+                  }
                   min={today}
                   onChange={(e) => setAssignDateU(e.target.value)}
                 />
@@ -844,18 +873,17 @@ const Repair = () => {
                 <label>Assign Time:</label>
                 <input
                   type="time"
-                  value={assignTimeU!== ""
-                    ? assignTimeU
-                    : rescheduleModalData?.startTime?.slice(0, 5) || ""}
+                  value={
+                    assignTimeU !== ""
+                      ? assignTimeU
+                      : rescheduleModalData?.startTime?.slice(0, 5) || ""
+                  }
                   onChange={(e) => setAssignTimeU(e.target.value)}
                 />
               </div>
 
               <div>
-                <button
-                  className="accept-btn"
-                  onClick={handleUpdateSchedule}
-                  >
+                <button className="accept-btn" onClick={handleUpdateSchedule}>
                   Done
                 </button>
               </div>

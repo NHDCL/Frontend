@@ -19,6 +19,7 @@ import {
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice";
+import Tippy from "@tippyjs/react";
 
 import {
   useGetUserByEmailQuery,
@@ -58,7 +59,7 @@ const SupervisorHome = () => {
   console.log("selectedTechnicianUpdate", selectedTechnicianUpdate);
 
   const email = useSelector(getUserEmail);
-  const { data: userByEmial} = useGetUserByEmailQuery(email);
+  const { data: userByEmial } = useGetUserByEmailQuery(email);
 
   const userID = userByEmial?.user?.userId;
   console.log("userID", userID);
@@ -94,7 +95,7 @@ const SupervisorHome = () => {
     data: userSchedules,
     isLoading: userSchedulesLoading,
     error: userSchedulesError,
-    refetch
+    refetch,
   } = useGetSchedulesByUserIDQuery(userID, {
     skip: !userID, // skip until userID is available
   });
@@ -102,8 +103,6 @@ const SupervisorHome = () => {
   const repairID = userSchedules?.repairID;
   console.log("rid", repairID);
   console.log("userSchedule", userSchedules);
- 
-
 
   const [data, setData] = useState([]);
   const [repairs, setRepairs] = useState([]);
@@ -148,35 +147,36 @@ const SupervisorHome = () => {
   const [updateSchedule] = useUpdateRepairScheduleMutation();
 
   const handleSchedule = async () => {
-    const repairID = modalData.repairID;  // Ensure the correct way to access repairID
+    const repairID = modalData.repairID; // Ensure the correct way to access repairID
 
     if (!repairID) {
       Swal.fire("Error", "Repair ID not found.", "error");
       return;
     }
-    const matchingSchedule = userSchedules.find(schedule => schedule.repairID === repairID);
-  
+    const matchingSchedule = userSchedules.find(
+      (schedule) => schedule.repairID === repairID
+    );
+
     if (!matchingSchedule) {
       Swal.fire("Error", "No schedule found for the given repairID.", "error");
       return;
     }
-  
+
     const scheduleId = matchingSchedule.scheduleID;
     console.log("scheduleId", scheduleId);
-  
+
     if (!selectedTechnicianId) {
       Swal.fire("Error", "Technician email is missing.", "error");
       return;
     }
-  
+
     // Prepare the updated data for the schedule
     const updatedData = {
       technicianEmail: selectedTechnicianId,
-      repairID: matchingSchedule.repairID,  // Use repairID from the matching schedule
+      repairID: matchingSchedule.repairID, // Use repairID from the matching schedule
     };
-  
-    console.log("Updated Data:", updatedData);
 
+    console.log("Updated Data:", updatedData);
 
     try {
       await updateSchedule({ scheduleId, updatedData }).unwrap();
@@ -194,7 +194,7 @@ const SupervisorHome = () => {
       Swal.fire("Error", error?.data?.message || "Schedule failed", "error");
       console.error("Schedule error:", error);
     }
-    refetch()
+    refetch();
   };
 
   console.log("Technician Email:", selectedTechnicianId);
@@ -202,40 +202,42 @@ const SupervisorHome = () => {
   const handleReschedule = async () => {
     // Assuming userSchedules is an array and repairID is available within the schedules.
     // We need to find the matching schedule using repairID
-    const repairID = rescheduleModalData.repairID;  // Ensure the correct way to access repairID
+    const repairID = rescheduleModalData.repairID; // Ensure the correct way to access repairID
 
     if (!repairID) {
       Swal.fire("Error", "Repair ID not found.", "error");
       return;
     }
-  
+
     // Find the schedule that matches the repairID
-    const matchingSchedule = userSchedules.find(schedule => schedule.repairID === repairID);
-  
+    const matchingSchedule = userSchedules.find(
+      (schedule) => schedule.repairID === repairID
+    );
+
     // If no matching schedule is found, show an error
     if (!matchingSchedule) {
       Swal.fire("Error", "No schedule found for the given repairID.", "error");
       return;
     }
-  
+
     // Get the scheduleId from the matching schedule
     const scheduleId = matchingSchedule.scheduleID;
     console.log("scheduleId", scheduleId);
-  
+
     // Ensure that the selectedTechnicianUpdate exists before proceeding
     if (!selectedTechnicianUpdate) {
       Swal.fire("Error", "Technician email is missing.", "error");
       return;
     }
-  
+
     // Prepare the updated data for the schedule
     const updatedData = {
       technicianEmail: selectedTechnicianUpdate,
-      repairID: matchingSchedule.repairID,  // Use repairID from the matching schedule
+      repairID: matchingSchedule.repairID, // Use repairID from the matching schedule
     };
-  
+
     console.log("Updated Data:", updatedData);
-  
+
     // Try updating the schedule with the new data
     try {
       await updateSchedule({ scheduleId, updatedData }).unwrap();
@@ -247,55 +249,57 @@ const SupervisorHome = () => {
         showConfirmButton: false,
         timer: 2000,
       });
-      
-      handleCloseModal2();  // Close modal on succes
+
+      handleCloseModal2(); // Close modal on succes
     } catch (error) {
       Swal.fire("Error", error?.data?.message || "Update failed", "error");
       console.error("Update schedule error:", error);
     }
-    refetch()
+    refetch();
   };
   console.log("rescheduleModalData:", rescheduleModalData);
 
-
-
   const userIDD = userByEmial?.user?.userId;
-    const [maintenanceData, setMaintenanceData] = useState([]);
-    const {
-        data: userSchedulesM,
-        isLoading: userSchedulesLoadingM,
-        error: userSchedulesErrorM,
-      } = useGetPreventiveSchedulesByUserIDQuery(userIDD, {
-        skip: !userIDD,
-      })
+  const [maintenanceData, setMaintenanceData] = useState([]);
+  const {
+    data: userSchedulesM,
+    isLoading: userSchedulesLoadingM,
+    error: userSchedulesErrorM,
+  } = useGetPreventiveSchedulesByUserIDQuery(userIDD, {
+    skip: !userIDD,
+  });
   useEffect(() => {
-      const fetchRepairDetails = async () => {
-        if (userSchedulesM && userSchedulesM.length) {
-          const repairPromises = userSchedulesM.map(async (schedule) => {
-            try {
-              const asset = await dispatch(
-                maintenanceApiSlice.endpoints.getAssetByAssetCode.initiate(schedule?.assetCode)
-              ).unwrap();
-  
-              return {
-                ...schedule,
-                asset,
-              };
-            } catch (err) {
-              console.error(`Error fetching asset for ${schedule?.assetCode}:`, err);
-              return null;
-            }
-          });
-  
-          const combinedResults = await Promise.all(repairPromises);
-          const validResults = combinedResults.filter(Boolean); // filter out failed ones
-          setMaintenanceData(validResults); // ✅ Now includes both schedule + asset
-        }
-      };
-  
-      fetchRepairDetails();
-    }, [userSchedules, dispatch]);
+    const fetchRepairDetails = async () => {
+      if (userSchedulesM && userSchedulesM.length) {
+        const repairPromises = userSchedulesM.map(async (schedule) => {
+          try {
+            const asset = await dispatch(
+              maintenanceApiSlice.endpoints.getAssetByAssetCode.initiate(
+                schedule?.assetCode
+              )
+            ).unwrap();
 
+            return {
+              ...schedule,
+              asset,
+            };
+          } catch (err) {
+            console.error(
+              `Error fetching asset for ${schedule?.assetCode}:`,
+              err
+            );
+            return null;
+          }
+        });
+
+        const combinedResults = await Promise.all(repairPromises);
+        const validResults = combinedResults.filter(Boolean); // filter out failed ones
+        setMaintenanceData(validResults); // ✅ Now includes both schedule + asset
+      }
+    };
+
+    fetchRepairDetails();
+  }, [userSchedules, dispatch]);
 
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {
@@ -600,11 +604,36 @@ const SupervisorHome = () => {
               {displayedData.map((item, index) => (
                 <tr key={index}>
                   <td>{index + 1}</td>
-                  <td>{item.repairInfo.assetName}</td>
-                  {/* <td>{item.email}</td> */}
+                  <td className="description">
+                    <Tippy
+                      content={item.repairInfo?.assetName || ""}
+                      placement="top"
+                    >
+                      <span>
+                        {item.repairInfo?.assetName &&
+                        item.repairInfo.assetName.length > 20
+                          ? item.repairInfo.assetName.substring(0, 20) + "..."
+                          : item.repairInfo?.assetName || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
                   <td>{item.reportingDate}</td>
                   <td>{item.repairInfo.phoneNumber}</td>
-                  <td>{item.repairInfo.area}</td>
+                  <td className="description">
+                    <Tippy
+                      content={item.repairInfo?.area || ""}
+                      placement="top"
+                    >
+                      <span>
+                        {item.repairInfo?.area &&
+                        item.repairInfo.area.length > 20
+                          ? item.repairInfo.area.substring(0, 20) + "..."
+                          : item.repairInfo?.area || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
                   <td>{item.repairInfo.priority}</td>
                   <td>
                     <div
@@ -617,7 +646,20 @@ const SupervisorHome = () => {
                       {item.repairInfo.status}
                     </div>
                   </td>
-                  <td className="description">{item.repairInfo.description}</td>
+                  <td className="description">
+                    <Tippy
+                      content={item.repairInfo?.description || ""}
+                      placement="top"
+                    >
+                      <span>
+                        {item.repairInfo?.description &&
+                        item.repairInfo.description.length > 20
+                          ? item.repairInfo.description.substring(0, 20) + "..."
+                          : item.repairInfo?.description || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
                   <td className="actions">
                     {item.technicianEmail === null ? (
                       <button
@@ -699,16 +741,20 @@ const SupervisorHome = () => {
                   isClearable
                 /> */}
                 <Select
-  classNamePrefix="custom-select-department"
-  className="workstatus-dropdown"
-  options={workerOptions}
-  value={workerOptions?.find((w) => w.value === selectedTechnicianId) || null}
-  onChange={(selectedOption) => {
-    setSelectedTechnicianId(selectedOption?.value || "");
-    console.log("Selected Worker:", selectedOption);
-  }}
-  isClearable
-/>
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={workerOptions}
+                  value={
+                    workerOptions?.find(
+                      (w) => w.value === selectedTechnicianId
+                    ) || null
+                  }
+                  onChange={(selectedOption) => {
+                    setSelectedTechnicianId(selectedOption?.value || "");
+                    console.log("Selected Worker:", selectedOption);
+                  }}
+                  isClearable
+                />
               </div>
               {/* Assign Date */}
               <div className="modal-content-field">

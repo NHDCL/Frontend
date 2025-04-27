@@ -9,6 +9,7 @@ import img from "../../assets/images/person_four.jpg";
 import Select from "react-select";
 import { useGetRepairRequestQuery } from "../../slices/maintenanceApiSlice";
 import { useGetAcademyQuery } from "../../slices/userApiSlice";
+import Tippy from "@tippyjs/react";
 
 const AdminRepair = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,12 +20,13 @@ const AdminRepair = () => {
   const [selectedLocation, setSelectedLocation] = useState("");
 
   const rowsPerPage = 10;
-  const { data: repairRequest, refetch: refetchRepairRequest } = useGetRepairRequestQuery();
-  const { data: academy, } = useGetAcademyQuery()
+  const { data: repairRequest, refetch: refetchRepairRequest } =
+    useGetRepairRequestQuery();
+  const { data: academy } = useGetAcademyQuery();
 
   const [data, setData] = useState([]);
-  console.log('data: ', data)
-  console.log('academy: ', academy)
+  console.log("data: ", data);
+  console.log("academy: ", academy);
 
   useEffect(() => {
     if (!repairRequest) return;
@@ -35,11 +37,11 @@ const AdminRepair = () => {
   const getWorkOrderStatusClass = (status) => {
     switch (status) {
       case "pending":
-        return "pending-status";  // Gray color
+        return "pending-status"; // Gray color
       case "inprogress":
-        return "in-progress-status";  // Yellow color
+        return "in-progress-status"; // Yellow color
       case "completed":
-        return "completed-status";  // Green color
+        return "completed-status"; // Green color
       default:
         return "";
     }
@@ -49,32 +51,37 @@ const AdminRepair = () => {
     const match = academy?.find((a) => a.academyId === academyID);
     return match ? match.name : "Unknown";
   };
-  
 
   // Extract unique priorities from data
   const uniquePriorities = [
     { value: "", label: "All Priorities" },
-    ...Array.from(new Set(data.map(item => item.priority?.toLowerCase()).filter(Boolean))).map(priority => ({
+    ...Array.from(
+      new Set(data.map((item) => item.priority?.toLowerCase()).filter(Boolean))
+    ).map((priority) => ({
       value: priority,
-      label: priority.charAt(0).toUpperCase() + priority.slice(1)
-    }))
+      label: priority.charAt(0).toUpperCase() + priority.slice(1),
+    })),
   ];
 
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map(item => item.status?.toLowerCase()))).map(status => ({
-      value: status,
-      label: status.charAt(0).toUpperCase() + status.slice(1)
-    }))
+    ...Array.from(new Set(data.map((item) => item.status?.toLowerCase()))).map(
+      (status) => ({
+        value: status,
+        label: status.charAt(0).toUpperCase() + status.slice(1),
+      })
+    ),
   ];
 
   const uniqueLocation = [
     { value: "", label: "All Location" },
-    ...Array.from(new Set(data.map(item => getAcademyName(item.academyId)?.toLowerCase()))).map(location => ({
+    ...Array.from(
+      new Set(data.map((item) => getAcademyName(item.academyId)?.toLowerCase()))
+    ).map((location) => ({
       value: location,
-      label: location.charAt(0).toUpperCase() + location.slice(1)
-    }))
+      label: location.charAt(0).toUpperCase() + location.slice(1),
+    })),
   ];
 
   // Filtering data based on search and priority selection and work status
@@ -85,13 +92,19 @@ const AdminRepair = () => {
     );
 
     const matchesPriority =
-      selectedPriority === "" || item.priority?.toLowerCase() === selectedPriority.toLowerCase();
+      selectedPriority === "" ||
+      item.priority?.toLowerCase() === selectedPriority.toLowerCase();
     const matchesWorkStatus =
-      selectedWorkStatus === "" || item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
+      selectedWorkStatus === "" ||
+      item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
     const matchesLocation =
-      selectedLocation === "" || getAcademyName(item.academyId)?.toLowerCase() === selectedLocation.toLowerCase();
+      selectedLocation === "" ||
+      getAcademyName(item.academyId)?.toLowerCase() ===
+        selectedLocation.toLowerCase();
 
-    return matchesSearch && matchesPriority && matchesWorkStatus && matchesLocation;
+    return (
+      matchesSearch && matchesPriority && matchesWorkStatus && matchesLocation
+    );
   });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -109,7 +122,9 @@ const AdminRepair = () => {
   };
 
   const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.repairID));
+    const updatedData = data.filter(
+      (item) => !selectedRows.includes(item.repairID)
+    );
     // Update the data with the filtered result after deletion
     setData(updatedData);
     setSelectedRows([]); // Reset selected rows after deletion
@@ -134,7 +149,9 @@ const AdminRepair = () => {
               classNamePrefix="custom-select"
               className="priority-dropdown"
               options={uniquePriorities}
-              value={uniquePriorities.find(option => option.value === selectedPriority)} // Ensure selected value is an object
+              value={uniquePriorities.find(
+                (option) => option.value === selectedPriority
+              )} // Ensure selected value is an object
               onChange={(selectedOption) => {
                 if (selectedOption) {
                   setSelectedPriority(selectedOption.value);
@@ -151,9 +168,13 @@ const AdminRepair = () => {
               classNamePrefix="custom-select-workstatus"
               className="workstatus-dropdown"
               options={uniqueWorkStatuses}
-              value={uniqueWorkStatuses.find(option => option.value === selectedWorkStatus)}
+              value={uniqueWorkStatuses.find(
+                (option) => option.value === selectedWorkStatus
+              )}
               onChange={(selectedOption) => {
-                setSelectedWorkStatus(selectedOption ? selectedOption.value : "");
+                setSelectedWorkStatus(
+                  selectedOption ? selectedOption.value : ""
+                );
               }}
               isClearable
               isSearchable={false}
@@ -164,17 +185,16 @@ const AdminRepair = () => {
               classNamePrefix="custom-select-workstatus"
               className="workstatus-dropdown"
               options={uniqueLocation}
-              value={uniqueLocation.find(option => option.value === selectedLocation)}
+              value={uniqueLocation.find(
+                (option) => option.value === selectedLocation
+              )}
               onChange={(selectedOption) => {
                 setSelectedLocation(selectedOption ? selectedOption.value : "");
               }}
               isClearable
               isSearchable={false}
             />
-
           </div>
-
-
         </div>
 
         <div className="table-container">
@@ -190,17 +210,16 @@ const AdminRepair = () => {
                   "Area",
                   "Location",
                   "Priority",
-                  "Workstatus"
+                  "Workstatus",
                 ].map((header, index) => (
                   <th key={index}>{header}</th>
                 ))}
-
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  <td>{index+1}</td>
+                  <td>{index + 1}</td>
                   <td>
                     <img
                       className="User-profile"
@@ -212,14 +231,67 @@ const AdminRepair = () => {
                       }}
                     />
                   </td>
-                  <td>{item.name}</td>
-                  <td>{item.email}</td>
-                  <td>{item.phoneNumber}</td>
-                  <td>{item.area}</td>
-                  <td>{getAcademyName(item.academyId)}</td>
+                  <td className="description">
+                    <Tippy content={item.name || ""} placement="top">
+                      <span>
+                        {item.name
+                          ? item.name.length > 20
+                            ? item.name.substring(0, 20) + "..."
+                            : item.name
+                          : ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
+                  <td className="description">
+                    <Tippy content={item.email || ""} placement="top">
+                      <span>
+                        {item.email
+                          ? item.email.length > 20
+                            ? item.email.substring(0, 20) + "..."
+                            : item.email
+                          : ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
+                  <td>{item.phoneNumber || ""}</td>
+
+                  <td className="description">
+                    <Tippy content={item.area || ""} placement="top">
+                      <span>
+                        {item.area
+                          ? item.area.length > 20
+                            ? item.area.substring(0, 20) + "..."
+                            : item.area
+                          : ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
+                  <td className="description">
+                    <Tippy
+                      content={getAcademyName(item.academyId) || ""}
+                      placement="top"
+                    >
+                      <span>
+                        {getAcademyName(item.academyId)
+                          ? getAcademyName(item.academyId).length > 20
+                            ? getAcademyName(item.academyId).substring(0, 20) +
+                              "..."
+                            : getAcademyName(item.academyId)
+                          : ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
                   <td>{item.priority}</td>
                   <td>
-                    <div className={getWorkOrderStatusClass(item.status.toLowerCase().replace(/\s+/g, ""))}>
+                    <div
+                      className={getWorkOrderStatusClass(
+                        item.status.toLowerCase().replace(/\s+/g, "")
+                      )}
+                    >
                       {item.status}
                     </div>
                   </td>
@@ -260,13 +332,8 @@ const AdminRepair = () => {
           </div>
         </div>
       </div>
-
-
-
     </div>
   );
 };
 
 export default AdminRepair;
-
-

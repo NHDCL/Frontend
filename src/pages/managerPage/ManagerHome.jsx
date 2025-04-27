@@ -7,13 +7,17 @@ import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
-import Select from "react-select"
+import Select from "react-select";
 import { TiArrowSortedUp } from "react-icons/ti";
 import { createSelector } from "reselect";
 import { useSelector } from "react-redux";
 import Swal from "sweetalert2";
-import { useGetRepairRequestQuery, useAcceptOrRejectRepairRequestMutation } from "../../slices/maintenanceApiSlice";
+import {
+  useGetRepairRequestQuery,
+  useAcceptOrRejectRepairRequestMutation,
+} from "../../slices/maintenanceApiSlice";
 import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
+import Tippy from "@tippyjs/react";
 
 const ManagerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,8 +27,10 @@ const ManagerDashboard = () => {
   const [selectedPriority, setSelectedPriority] = useState("");
   const rowsPerPage = 10;
 
-  const { data: repairRequest, refetch: refetchRepairRequest } = useGetRepairRequestQuery();
-  const [acceptOrRejectRepairRequest, { isLoading, error, isSuccess }] = useAcceptOrRejectRepairRequestMutation();
+  const { data: repairRequest, refetch: refetchRepairRequest } =
+    useGetRepairRequestQuery();
+  const [acceptOrRejectRepairRequest, { isLoading, error, isSuccess }] =
+    useAcceptOrRejectRepairRequestMutation();
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
 
@@ -36,7 +42,7 @@ const ManagerDashboard = () => {
   const { data: userByEmial } = useGetUserByEmailQuery(email);
 
   const [data, setData] = useState([]);
-  console.log('data: ', data)
+  console.log("data: ", data);
 
   useEffect(() => {
     if (!repairRequest || !userByEmial) return;
@@ -53,9 +59,10 @@ const ManagerDashboard = () => {
     });
 
     console.log("Filtered Length:", filtered.length);
-    setData(filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    setData(
+      filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    );
   }, [repairRequest, userByEmial]);
-
 
   // Sorting
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
@@ -79,16 +86,16 @@ const ManagerDashboard = () => {
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, accept it!",
     });
-  
+
     if (confirm.isConfirmed) {
       try {
         const response = await acceptOrRejectRepairRequest({
           repairId,
           accept: acceptValue,
         }).unwrap();
-  
+
         console.log("Server response:", response);
-  
+
         await Swal.fire({
           title: "Accepted!",
           text: "Successed mail successfully sent to user.",
@@ -98,7 +105,6 @@ const ManagerDashboard = () => {
         });
         handleCloseModal();
         refetchRepairRequest();
-
       } catch (err) {
         console.error("Error:", err);
         Swal.fire("Error", "Failed to update repair request.", "error");
@@ -116,16 +122,16 @@ const ManagerDashboard = () => {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Yes, reject it!",
     });
-  
+
     if (confirm.isConfirmed) {
       try {
         const response = await acceptOrRejectRepairRequest({
           repairId,
           accept: false, // Set accept to false to reject
         }).unwrap();
-  
+
         console.log("Server response:", response);
-  
+
         await Swal.fire({
           title: "Rejected!",
           text: "Repair request has been rejected successfully.",
@@ -133,10 +139,10 @@ const ManagerDashboard = () => {
           timer: 2000,
           showConfirmButton: false,
         });
-  
+
         // Close the modal after success
-        handleCloseModal();  // Add this line to close the modal
-  
+        handleCloseModal(); // Add this line to close the modal
+
         refetchRepairRequest();
       } catch (err) {
         console.error("Error:", err);
@@ -147,11 +153,12 @@ const ManagerDashboard = () => {
       handleCloseModal();
     }
   };
-  
+
   const handleSort = (column) => {
-    const newSortOrder = column === sortOrder.column
-      ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
-      : true; // Start with ascending for a new column
+    const newSortOrder =
+      column === sortOrder.column
+        ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
+        : true; // Start with ascending for a new column
 
     setSortOrder({
       column,
@@ -165,27 +172,26 @@ const ManagerDashboard = () => {
     { value: "", label: "All Priorities" },
     ...Array.from(
       new Set(
-        data.map(item => item.priority?.toLowerCase()).filter(Boolean) // remove undefined/null
+        data.map((item) => item.priority?.toLowerCase()).filter(Boolean) // remove undefined/null
       )
-    ).map(priority => ({
+    ).map((priority) => ({
       value: priority,
-      label: priority.charAt(0).toUpperCase() + priority.slice(1) // Capitalize first letter
-    }))
+      label: priority.charAt(0).toUpperCase() + priority.slice(1), // Capitalize first letter
+    })),
   ];
 
   // const sortedData = [...data].sort((a, b) => b.rid - a.rid);
 
-  const filteredData = data
-  .filter((item) => {
+  const filteredData = data.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
       value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
     const matchesPriority =
-      selectedPriority === "" || item.priority?.toLowerCase() === selectedPriority.toLowerCase();
+      selectedPriority === "" ||
+      item.priority?.toLowerCase() === selectedPriority.toLowerCase();
 
     return matchesSearch && matchesPriority;
   });
-
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -202,7 +208,9 @@ const ManagerDashboard = () => {
   };
 
   const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.repairID));
+    const updatedData = data.filter(
+      (item) => !selectedRows.includes(item.repairID)
+    );
     // Update the data with the filtered result after deletion
     setData(updatedData);
     setSelectedRows([]); // Reset selected rows after deletion
@@ -268,7 +276,9 @@ const ManagerDashboard = () => {
             classNamePrefix="custom-select"
             className="priority-dropdown"
             options={uniquePriorities}
-            value={uniquePriorities.find(option => option.value === selectedPriority)} // Ensure selected value is an object
+            value={uniquePriorities.find(
+              (option) => option.value === selectedPriority
+            )} // Ensure selected value is an object
             onChange={(selectedOption) => {
               if (selectedOption) {
                 setSelectedPriority(selectedOption.value);
@@ -281,7 +291,10 @@ const ManagerDashboard = () => {
           />
         </div>
         <div className="table-container">
-          <table className="RequestTable" style={{ width: "100% ", minWidth: "800px" }}>
+          <table
+            className="RequestTable"
+            style={{ width: "100% ", minWidth: "800px" }}
+          >
             <thead className="table-header">
               <tr>
                 {[
@@ -291,7 +304,6 @@ const ManagerDashboard = () => {
                   "Phone Number",
                   "Area",
                   "Description",
-                  
                 ].map((header, index) => (
                   <th key={index}>
                     {header === "Asset Name" || header === "Location" ? (
@@ -300,14 +312,19 @@ const ManagerDashboard = () => {
                         <div className="sort-icons">
                           <button
                             className="sort-btn"
-                            onClick={() => handleSort("assetName" || "Location")}
+                            onClick={() =>
+                              handleSort("assetName" || "Location")
+                            }
                           >
                             <TiArrowSortedUp
                               style={{
                                 color: "#305845",
-                                transform: (sortOrder.column === "assetName" || sortOrder.column === "Location") && sortOrder.ascending
-                                  ? "rotate(0deg)"
-                                  : "rotate(180deg)",
+                                transform:
+                                  (sortOrder.column === "assetName" ||
+                                    sortOrder.column === "Location") &&
+                                  sortOrder.ascending
+                                    ? "rotate(0deg)"
+                                    : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
                               }}
                             />
@@ -319,8 +336,7 @@ const ManagerDashboard = () => {
                     )}
                   </th>
                 ))}
-                <th>
-                </th>
+                <th></th>
               </tr>
             </thead>
 
@@ -328,13 +344,49 @@ const ManagerDashboard = () => {
               {displayedData.map((item, index) => (
                 <tr key={index}>
                   <td>{index + 1}</td>
-                  <td>{item.assetName}</td>
-                  <td>{item.name}</td>
-                  <td>{item.phoneNumber}</td>
-                  <td>{item.area}</td>
-                  <td className="description">{item.description}</td>
+                  <td className="description">
+                    <Tippy content={item.assetName || ""} placement="top">
+                      <span>
+                        {item.assetName?.length > 20
+                          ? item.assetName.substring(0, 20) + "..."
+                          : item.assetName || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="description">
+                    <Tippy content={item.name || ""} placement="top">
+                      <span>
+                        {item.name?.length > 20
+                          ? item.name.substring(0, 20) + "..."
+                          : item.name || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td>{item.phoneNumber || ""}</td>
+                  <td className="description">
+                    <Tippy content={item.area || ""} placement="top">
+                      <span>
+                        {item.area?.length > 20
+                          ? item.area.substring(0, 20) + "..."
+                          : item.area || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="description">
+                    <Tippy content={item.description || ""} placement="top">
+                      <span>
+                        {item.description?.length > 20
+                          ? item.description.substring(0, 20) + "..."
+                          : item.description || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
                   <td className="actions">
-                    <button className="view-btn" onClick={() => handleView(item)}>
+                    <button
+                      className="view-btn"
+                      onClick={() => handleView(item)}
+                    >
                       View
                     </button>
                   </td>
@@ -439,7 +491,8 @@ const ManagerDashboard = () => {
               <div className="modal-content-field">
                 <label>Repaired Images:</label>
                 <div className="TModal-profile-img">
-                  {Array.isArray(modalData.images) && modalData.images.length > 0 ? (
+                  {Array.isArray(modalData.images) &&
+                  modalData.images.length > 0 ? (
                     modalData.images.map((imgSrc, index) => (
                       <img
                         key={index}
@@ -469,11 +522,9 @@ const ManagerDashboard = () => {
                     handleAccept(modalData.repairID, true);
                   }}
                   disabled={isLoading}
-
                 >
                   {/* Accept */}
                   {isLoading ? "Accepting.." : "Accept   "}{" "}
-
                 </button>
 
                 <button
@@ -486,9 +537,7 @@ const ManagerDashboard = () => {
                 >
                   {/* Reject */}
                   {isLoading ? "Rejecting.." : "Reject"}{" "}
-
                 </button>
-
               </div>
             </form>
           </div>

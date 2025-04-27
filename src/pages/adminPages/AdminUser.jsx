@@ -18,6 +18,7 @@ import {
   useSoftDeleteUserMutation,
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
+import Tippy from "@tippyjs/react";
 
 const AdminUser = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -363,10 +364,48 @@ const AdminUser = () => {
                       }
                     />
                   </td>
-                  <td>{item.name}</td>
-                  <td>{item.email}</td>
-                  <td>{item.employeeId}</td>
-                  <td>{getAcademyName(item.academyId)}</td>
+                  <td className="description">
+                    <Tippy content={item.name || ""} placement="top">
+                      <span>
+                        {item.name
+                          ? item.name.length > 20
+                            ? item.name.substring(0, 20) + "..."
+                            : item.name
+                          : ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
+                  <td className="description">
+                    <Tippy content={item.email || ""} placement="top">
+                      <span>
+                        {item.email
+                          ? item.email.length > 20
+                            ? item.email.substring(0, 20) + "..."
+                            : item.email
+                          : ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
+                  <td>{item.employeeId || ""}</td>
+
+                  <td className="description">
+                    <Tippy
+                      content={getAcademyName(item.academyId) || ""}
+                      placement="top"
+                    >
+                      <span>
+                        {getAcademyName(item.academyId)
+                          ? getAcademyName(item.academyId).length > 20
+                            ? getAcademyName(item.academyId).substring(0, 20) +
+                              "..."
+                            : getAcademyName(item.academyId)
+                          : ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
                   {activeTab !== "Manager" && (
                     <td>{getDepartmentName(item.departmentId)}</td>
                   )}

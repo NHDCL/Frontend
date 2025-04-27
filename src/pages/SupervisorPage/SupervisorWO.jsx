@@ -8,14 +8,18 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import {
-  useGetMaintenanceRequestQuery, useGetSchedulesByUserIDQuery, useUpdatePreventiveMaintenanceMutation,
-  useGetPreventiveSchedulesByUserIDQuery, useGetMaintenanceByAssetCodeQuery
+  useGetMaintenanceRequestQuery,
+  useGetSchedulesByUserIDQuery,
+  useUpdatePreventiveMaintenanceMutation,
+  useGetPreventiveSchedulesByUserIDQuery,
+  useGetMaintenanceByAssetCodeQuery,
 } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { createSelector } from "reselect";
-import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice"
+import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice";
 import { useGetAssetByAssetCodeQuery } from "../../slices/assetApiSlice";
+import Tippy from "@tippyjs/react";
 
 import {
   useGetUserByEmailQuery,
@@ -23,7 +27,6 @@ import {
   useGetDepartmentQuery,
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
-
 
 import Select from "react-select";
 
@@ -34,7 +37,6 @@ const SupervisorWO = () => {
   const [modalData, setModalData] = useState(null);
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [rescheduleModalData, setRescheduleModalData] = useState(null);
-
 
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
@@ -59,7 +61,7 @@ const SupervisorWO = () => {
   const { data: userByEmial } = useGetUserByEmailQuery(email);
 
   const userID = userByEmial?.user?.userId;
-  console.log("userID", userID)
+  console.log("userID", userID);
 
   const academyId = userByEmial?.user?.academyId;
   console.log("academyId", academyId);
@@ -92,21 +94,18 @@ const SupervisorWO = () => {
     data: userSchedules,
     isLoading: userSchedulesLoading,
     error: userSchedulesError,
-    refetch
+    refetch,
   } = useGetPreventiveSchedulesByUserIDQuery(userID, {
     skip: !userID,
-  })
-  console.log("sdf", modalData)
+  });
+  console.log("sdf", modalData);
   const assetCode = userSchedules?.assetCode;
   console.log("rid", assetCode);
   console.log("userSchedule", userSchedules);
 
-  const {
-    data: scheduleData,
-
-  } = useGetAssetByAssetCodeQuery(assetCode, {
+  const { data: scheduleData } = useGetAssetByAssetCodeQuery(assetCode, {
     skip: !assetCode,
-  })
+  });
 
   const [data, setData] = useState([]);
   const [repairs, setRepairs] = useState([]);
@@ -118,7 +117,9 @@ const SupervisorWO = () => {
         const repairPromises = userSchedules.map(async (schedule) => {
           try {
             const asset = await dispatch(
-              maintenanceApiSlice.endpoints.getAssetByAssetCode.initiate(schedule?.assetCode)
+              maintenanceApiSlice.endpoints.getAssetByAssetCode.initiate(
+                schedule?.assetCode
+              )
             ).unwrap();
 
             return {
@@ -126,7 +127,10 @@ const SupervisorWO = () => {
               asset,
             };
           } catch (err) {
-            console.error(`Error fetching asset for ${schedule?.assetCode}:`, err);
+            console.error(
+              `Error fetching asset for ${schedule?.assetCode}:`,
+              err
+            );
             return null;
           }
         });
@@ -140,24 +144,29 @@ const SupervisorWO = () => {
     fetchRepairDetails();
   }, [userSchedules, dispatch]);
 
-
-  console.log("data", data)
+  console.log("data", data);
 
   const today = new Date().toISOString().split("T")[0];
 
   const [updateSchedule] = useUpdatePreventiveMaintenanceMutation();
 
   const handleSchedule = async () => {
-    const maintenanceID = modalData.maintenanceID;  // Ensure the correct way to access repairID
+    const maintenanceID = modalData.maintenanceID; // Ensure the correct way to access repairID
 
     if (!maintenanceID) {
       Swal.fire("Error", "Repair ID not found.", "error");
       return;
     }
-    const matchingSchedule = userSchedules.find(schedule => schedule.maintenanceID === maintenanceID);
+    const matchingSchedule = userSchedules.find(
+      (schedule) => schedule.maintenanceID === maintenanceID
+    );
 
     if (!matchingSchedule) {
-      Swal.fire("Error", "No schedule found for the given maintenanceID.", "error");
+      Swal.fire(
+        "Error",
+        "No schedule found for the given maintenanceID.",
+        "error"
+      );
       return;
     }
 
@@ -172,7 +181,7 @@ const SupervisorWO = () => {
     // Prepare the updated data for the schedule
     const maintenance = {
       technicianEmail: selectedTechnicianId,
-      repairID: matchingSchedule.maintenanceID,  // Use repairID from the matching schedule
+      repairID: matchingSchedule.maintenanceID, // Use repairID from the matching schedule
     };
 
     try {
@@ -191,23 +200,26 @@ const SupervisorWO = () => {
       Swal.fire("Error", error?.data?.message || "Update failed", "error");
       console.error("Update schedule error:", error);
     }
-    refetch()
-
+    refetch();
   };
 
-
   const handleReschedule = async () => {
-
-    const maintenanceID = rescheduleModalData.maintenanceID;  // Ensure the correct way to access repairID
+    const maintenanceID = rescheduleModalData.maintenanceID; // Ensure the correct way to access repairID
 
     if (!maintenanceID) {
       Swal.fire("Error", "Repair ID not found.", "error");
       return;
     }
-    const matchingSchedule = userSchedules.find(schedule => schedule.maintenanceID === maintenanceID);
+    const matchingSchedule = userSchedules.find(
+      (schedule) => schedule.maintenanceID === maintenanceID
+    );
 
     if (!matchingSchedule) {
-      Swal.fire("Error", "No Reschedule found for the given maintenanceID.", "error");
+      Swal.fire(
+        "Error",
+        "No Reschedule found for the given maintenanceID.",
+        "error"
+      );
       return;
     }
 
@@ -222,7 +234,7 @@ const SupervisorWO = () => {
     // Prepare the updated data for the schedule
     const maintenance = {
       technicianEmail: selectedTechnicianUpdate,
-      repairID: matchingSchedule.maintenanceID,  // Use repairID from the matching schedule
+      repairID: matchingSchedule.maintenanceID, // Use repairID from the matching schedule
     };
 
     try {
@@ -241,9 +253,8 @@ const SupervisorWO = () => {
       Swal.fire("Error", error?.data?.message || "Update failed", "error");
       console.error("Update schedule error:", error);
     }
-    refetch()
+    refetch();
   };
-
 
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {
@@ -259,7 +270,6 @@ const SupervisorWO = () => {
     }
   };
 
-
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
@@ -273,24 +283,34 @@ const SupervisorWO = () => {
 
   // Filtering data based on search and priority selection and work status
   const searchRecursively = (obj, searchTerm) => {
-    if (typeof obj !== 'object' || obj === null) {
-      return obj && obj.toString().toLowerCase().includes(searchTerm?.toLowerCase() || '');
+    if (typeof obj !== "object" || obj === null) {
+      return (
+        obj &&
+        obj
+          .toString()
+          .toLowerCase()
+          .includes(searchTerm?.toLowerCase() || "")
+      );
     }
 
     // Check all values in the object (including nested objects)
-    return Object.values(obj).some((value) => searchRecursively(value, searchTerm));
+    return Object.values(obj).some((value) =>
+      searchRecursively(value, searchTerm)
+    );
   };
-  const filteredData = (data && data.length) ? data.filter((item) => {
-    // Match search term with any field at any level in the object
-    const matchesSearch = searchRecursively(item, searchTerm);
+  const filteredData =
+    data && data.length
+      ? data.filter((item) => {
+          // Match search term with any field at any level in the object
+          const matchesSearch = searchRecursively(item, searchTerm);
 
-    const matchesWorkStatus =
-      selectedWorkStatus === "" ||
-      item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
+          const matchesWorkStatus =
+            selectedWorkStatus === "" ||
+            item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
 
-    return matchesSearch && matchesWorkStatus;
-  }) : [];
-
+          return matchesSearch && matchesWorkStatus;
+        })
+      : [];
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -306,13 +326,11 @@ const SupervisorWO = () => {
     );
   };
 
-
   const handleScheduleView = (item) => {
     setModalData(item);
     setStartDate(item?.startDate);
     setEndDate(item?.endDate);
     setAssignTime(item?.timeStart);
-
   };
   const handleCloseModal = () => {
     setModalData(null);
@@ -350,7 +368,6 @@ const SupervisorWO = () => {
             />
           </div>
           <div className="dropdown-ls">
-
             {/* Work Status Dropdown */}
             <Select
               classNamePrefix="custom-select-workstatus"
@@ -393,17 +410,51 @@ const SupervisorWO = () => {
               {displayedData.map((item, index) => (
                 <tr key={index}>
                   <td>{item.assetCode}</td>
-                  <td>{item.asset.title}</td>
+                  <td className="description">
+                    <Tippy content={item.asset?.title || ""} placement="top">
+                      <span>
+                        {item.asset?.title && item.asset.title.length > 20
+                          ? item.asset.title.substring(0, 20) + "..."
+                          : item.asset?.title || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
                   <td>{item.timeStart}</td>
                   <td>{item.startDate}</td>
                   <td>{item.asset.assetID}</td>
-                  <td>{item.asset.assetArea}</td>
+                  <td className="description">
+                    <Tippy
+                      content={item.asset?.assetArea || ""}
+                      placement="top"
+                    >
+                      <span>
+                        {item.asset?.assetArea &&
+                        item.asset.assetArea.length > 20
+                          ? item.asset.assetArea.substring(0, 20) + "..."
+                          : item.asset?.assetArea || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
                   <td>
-                    <div className={getWorkOrderStatusClass(item.status.toLowerCase().replace(/\s+/g, "") || "")}>
+                    <div
+                      className={getWorkOrderStatusClass(
+                        item.status.toLowerCase().replace(/\s+/g, "") || ""
+                      )}
+                    >
                       {item.status}
                     </div>
                   </td>
-                  <td className="description">{item.description}</td>
+                  <td className="description">
+                    <Tippy content={item.description || ""} placement="top">
+                      <span>
+                        {item.description?.length > 20
+                          ? item.description.substring(0, 20) + "..."
+                          : item.description || ""}
+                      </span>
+                    </Tippy>
+                  </td>
 
                   <td className="actions">
                     {item.technicianEmail === null ? (

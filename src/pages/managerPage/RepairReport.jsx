@@ -426,21 +426,54 @@ const Repairreport = () => {
                     />
                   </td>
                   <td>{index + 1}</td>
-                  <td>{item.assetName}</td>
-                  <td>{[item.startTime, item.endTime].join(" - ")}</td>
-                  <td>{item.finishedDate}</td>
-                  <td>{item.area}</td>
-                  <td>{item.totalCost}</td>
-                  <td>{item.partsUsed}</td>
                   <td className="description">
-                    <Tippy content={item.description} placement="top">
+                    <Tippy content={item.assetName || ""} placement="top">
                       <span>
-                        {item.description.length > 20
-                          ? item.description.substring(0, 20) + "..."
-                          : item.description}
+                        {item.assetName?.length > 20
+                          ? item.assetName.substring(0, 20) + "..."
+                          : item.assetName || ""}
                       </span>
                     </Tippy>
                   </td>
+                  <td>{[item.startTime, item.endTime].join(" - ")}</td>
+                  <td>{item.finishedDate || ""}</td>
+                  <td className="description">
+                    <Tippy content={item.area || ""} placement="top">
+                      <span>
+                        {item.area?.length > 20
+                          ? item.area.substring(0, 20) + "..."
+                          : item.area || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="description">
+                    <Tippy content={item.totalCost || ""} placement="top">
+                      <span>
+                        {item.totalCost?.length > 20
+                          ? item.totalCost.substring(0, 20) + "..."
+                          : item.totalCost || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="description">
+                    <Tippy content={item.partsUsed || ""} placement="top">
+                      <span>
+                        {item.partsUsed?.length > 20
+                          ? item.partsUsed.substring(0, 20) + "..."
+                          : item.partsUsed || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="description">
+                    <Tippy content={item.description || ""} placement="top">
+                      <span>
+                        {item.description?.length > 20
+                          ? item.description.substring(0, 20) + "..."
+                          : item.description || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
                   <td className="actions">
                     <button
                       className="view-btn"
