@@ -20,6 +20,7 @@ export const assetApiSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
+    
     getAssetByAssetCode: builder.query({
       query: (assetCode) => ({
         url: `${ASSETS_URL}/assets/${assetCode}`,
@@ -103,6 +104,13 @@ export const assetApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Asset'],
     }),
+    updateFloorAndRooms: builder.mutation({
+      query: (payload) => ({
+        url: ASSETS_URL + '/assets/update-floor-rooms',
+        method: 'POST',
+        body: payload,
+      }),
+    }),
   }),
 });
 
@@ -120,5 +128,6 @@ export const {
   useUpdateAssetStatusMutation,
   useRequestDisposeMutation,
   useHandleAssetDeletionMutation,
-  useUpdateAssetMutation
+  useUpdateAssetMutation,
+  useUpdateFloorAndRoomsMutation
 } = assetApiSlice;

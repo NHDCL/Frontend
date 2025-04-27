@@ -4,7 +4,11 @@ import LandingFooter from "../components/LandingComponents/LandingFooter";
 import "./css/QRDetail.css";
 import { RiImageAddLine } from "react-icons/ri";
 import Select from "react-select"; // Make sure to install this with: npm install react-select
-
+import { useParams } from "react-router-dom";
+import { useGetAssetByAssetCodeQuery } from "../slices/assetApiSlice";
+import { useGetAcademyByIdQuery } from "../slices/userApiSlice";
+import { usePostRepairRequestMutation } from "../slices/maintenanceApiSlice";
+import Swal from "sweetalert2";
 const priorities = [
   { value: "Immediate", label: "Immediate (Within 24 hours)" },
   { value: "High", label: "High (Within 1-2 days)" },
@@ -13,13 +17,26 @@ const priorities = [
 ];
 
 const QRDetail = () => {
+  const { assetCode } = useParams();
+  const {
+    data: asset,
+    isLoading,
+    error,
+  } = useGetAssetByAssetCodeQuery(assetCode);
+  const { data: academy } = useGetAcademyByIdQuery(asset?.academyID, {
+    skip: !asset?.academyID, // Skip this query until asset is loaded and academyID is available
+  });
+  const [postRepairRequest, { isLoading: requesting }] =
+    usePostRepairRequestMutation();
   const [images, setImages] = useState([]);
   const [imageError, setImageError] = useState("");
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     priority: "",
     description: "",
+    email: "",
   });
 
   const handleImageUpload = (e) => {
@@ -29,8 +46,19 @@ const QRDetail = () => {
       return;
     }
     setImageError("");
-    const imageUrls = files.map((file) => URL.createObjectURL(file));
-    setImages((prevImages) => [...prevImages, ...imageUrls]);
+    setImages((prevImages) => [...prevImages, ...files]); // Store the files themselves, not URLs
+  };
+
+  const validateForm = () => {
+    let newErrors = {};
+    if (!formData.name.trim()) newErrors.name = "Name is required.";
+    if (!formData.phone.trim()) newErrors.phone = "Phone number is required.";
+    if (!formData.email.trim()) newErrors.email = "Email is required.";
+    if (!formData.priority) newErrors.priority = "Please select a priority.";
+    if (!formData.description.trim())
+      newErrors.description = "Description is required.";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const removeImage = (index) => {
@@ -46,24 +74,120 @@ const QRDetail = () => {
     setFormData((prev) => ({ ...prev, priority: selectedOption?.value || "" }));
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    const { name, phone, email, priority, description } = formData;
+
+    const requestData = new FormData();
+    requestData.append("name", name.trim());
+    requestData.append("phoneNumber", phone.trim());
+    requestData.append("email", email.trim());
+    requestData.append("priority", priority.trim());
+    requestData.append("status", "Pending");
+    requestData.append("area", asset?.assetArea || ""); // Use fallback value if assetArea is missing
+    requestData.append("description", description.trim());
+    requestData.append("assetName", asset?.title || ""); // Ensure assetName is not undefined
+    requestData.append("scheduled", "false");
+    requestData.append("assetCode", asset?.assetCode || ""); // Handle assetCode as fallback too
+
+    images.forEach((imageFile) => {
+      requestData.append("images", imageFile); // imageFile is the actual file
+    });
+
+    requestData.append("academyId", asset?.academyID || "");
+
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to send this repair request?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, send it!",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await postRepairRequest(requestData).unwrap();
+      console.log(res);
+      Swal.fire({
+        icon: "success",
+        title: "Repair Request Sent!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+
+      setFormData({
+        name: "",
+        phone: "",
+        email: "",
+        priority: null,
+        description: "",
+      });
+      setErrors({});
+      setImages([]);
+    } catch (err) {
+      console.error("Error sending request", err);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to send Repair Request",
+        text: err?.data?.message || "Something went wrong.",
+      });
+    }
+  };
+
   return (
     <div>
       <Header />
       <div className="qrcontainer">
         <div className="card report-form">
           <div className="asset-info">
-            <h3 className="section-title" style={{ textAlign: "start" }}>Asset Information</h3>
-            <div className="asset_detail">
-              <div className="pp"><p className="p1">Asset Name:</p><p className="p2">Table</p></div>
-              <div className="pp"><p className="p1">Asset Code:</p><p className="p2">NHDCL-22-2003</p></div>
-              <div className="pp"><p className="p1">Area:</p><p className="p2">Ground</p></div>
-              <div className="pp"><p className="p1">Location:</p><p className="p2">Gyalpozhig</p></div>
-              <div className="pp"><p className="p1">Category:</p><p className="p2">Furniture & Fixture</p></div>
-            </div>
+            <h3 className="section-title" style={{ textAlign: "start" }}>
+              Asset Information
+            </h3>
+            {isLoading ? (
+              <p>Loading asset...</p>
+            ) : error ? (
+              <p>
+                Error loading asset:{" "}
+                {error?.data?.message || error?.error || "Unknown error"}
+              </p>
+            ) : (
+              <div className="asset_detail">
+                <div className="pp">
+                  <p className="p1">Asset Name:</p>
+                  <p className="p2">{asset?.title}</p>
+                </div>
+                <div className="pp">
+                  <p className="p1">Asset Code:</p>
+                  <p className="p2">{asset?.assetCode}</p>
+                </div>
+                <div className="pp">
+                  <p className="p1">Area:</p>
+                  <p className="p2">{asset?.assetArea}</p>
+                </div>
+                <div className="pp">
+                  <p className="p1">Location:</p>
+                  <p className="p2">{academy?.name || "Not specified"}</p>
+                </div>
+                <div className="pp">
+                  <p className="p1">Category:</p>
+                  <p className="p2">{asset?.categoryDetails?.name}</p>
+                </div>
+              </div>
+            )}
           </div>
 
-          <h4 className="form-title">Report an asset only if an asset is found damaged</h4>
-          <form>
+          <h4 className="form-title">
+            Report an asset only if an asset is found damaged
+          </h4>
+          <form onSubmit={handleSubmit}>
             <input
               type="text"
               name="name"
@@ -71,6 +195,8 @@ const QRDetail = () => {
               onChange={handleChange}
               placeholder="Your Name"
             />
+            {errors.name && <div className="error-text">{errors.name}</div>}
+
             <input
               type="tel"
               name="phone"
@@ -78,6 +204,8 @@ const QRDetail = () => {
               onChange={handleChange}
               placeholder="Phone Number"
             />
+            {errors.phone && <div className="error-text">{errors.phone}</div>}
+
             <input
               type="email"
               name="email"
@@ -85,6 +213,8 @@ const QRDetail = () => {
               onChange={handleChange}
               placeholder="Email Address"
             />
+            {errors.email && <div className="error-text">{errors.email}</div>}
+
             <Select
               classNamePrefix="customm-select-department"
               name="priority"
@@ -94,12 +224,19 @@ const QRDetail = () => {
               placeholder="Select Priority"
               isClearable
             />
+            {errors.priority && (
+              <div className="error-text">{errors.priority}</div>
+            )}
+
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               placeholder="Description"
-            ></textarea>
+            />
+            {errors.description && (
+              <div className="error-text">{errors.description}</div>
+            )}
 
             <input
               type="file"
@@ -109,8 +246,9 @@ const QRDetail = () => {
               onChange={handleImageUpload}
               style={{ display: "none" }}
             />
+            {imageError && <div className="error-text">{imageError}</div>}
+
             <div className="mr-upload-box-img">
-              {imageError && <p className="error-text">{imageError}</p>}
               {images.map((imgSrc, index) => (
                 <div key={index} className="mr-image-wrapper">
                   <img
@@ -138,7 +276,9 @@ const QRDetail = () => {
               )}
             </div>
 
-            <button className="button" type="submit">Report</button>
+            <button className="button" type="submit" disabled={requesting}>
+              {requesting ? "Sending..." : "Report"}
+            </button>
           </form>
         </div>
       </div>

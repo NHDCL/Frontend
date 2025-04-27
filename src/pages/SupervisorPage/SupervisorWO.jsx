@@ -7,8 +7,10 @@ import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
-import { useGetMaintenanceRequestQuery,   useGetSchedulesByUserIDQuery, useUpdatePreventiveMaintenanceMutation,
-  useGetPreventiveSchedulesByUserIDQuery, useGetMaintenanceByAssetCodeQuery } from "../../slices/maintenanceApiSlice";
+import {
+  useGetMaintenanceRequestQuery, useGetSchedulesByUserIDQuery, useUpdatePreventiveMaintenanceMutation,
+  useGetPreventiveSchedulesByUserIDQuery, useGetMaintenanceByAssetCodeQuery
+} from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { createSelector } from "reselect";
@@ -31,8 +33,8 @@ const SupervisorWO = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [modalData, setModalData] = useState(null);
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
-    const [rescheduleModalData, setRescheduleModalData] = useState(null);
-  
+  const [rescheduleModalData, setRescheduleModalData] = useState(null);
+
 
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
@@ -41,7 +43,7 @@ const SupervisorWO = () => {
 
   const [selectedTechnicianId, setSelectedTechnicianId] = useState(null);
   const [selectedTechnicianUpdate, setSelectedTechnicianUpdate] =
-      useState(null);
+    useState(null);
   const rowsPerPage = 10;
   console.log(
     "start supervisor........................................................................."
@@ -101,12 +103,10 @@ const SupervisorWO = () => {
 
   const {
     data: scheduleData,
-   
+
   } = useGetAssetByAssetCodeQuery(assetCode, {
     skip: !assetCode,
   })
-
-
 
   const [data, setData] = useState([]);
   const [repairs, setRepairs] = useState([]);
@@ -147,33 +147,33 @@ const SupervisorWO = () => {
 
   const [updateSchedule] = useUpdatePreventiveMaintenanceMutation();
 
-const handleSchedule = async () => {
-   const maintenanceID = modalData.maintenanceID;  // Ensure the correct way to access repairID
-   
-       if (!maintenanceID) {
-         Swal.fire("Error", "Repair ID not found.", "error");
-         return;
-       }
-       const matchingSchedule = userSchedules.find(schedule => schedule.maintenanceID === maintenanceID);
-     
-       if (!matchingSchedule) {
-         Swal.fire("Error", "No schedule found for the given maintenanceID.", "error");
-         return;
-       }
-     
-       const id = matchingSchedule.maintenanceID;
-       console.log("scheduleId", id);
-     
-       if (!selectedTechnicianId) {
-         Swal.fire("Error", "Technician email is missing.", "error");
-         return;
-       }
-     
-       // Prepare the updated data for the schedule
-       const maintenance = {
-         technicianEmail: selectedTechnicianId,
-         repairID: matchingSchedule.maintenanceID,  // Use repairID from the matching schedule
-       };
+  const handleSchedule = async () => {
+    const maintenanceID = modalData.maintenanceID;  // Ensure the correct way to access repairID
+
+    if (!maintenanceID) {
+      Swal.fire("Error", "Repair ID not found.", "error");
+      return;
+    }
+    const matchingSchedule = userSchedules.find(schedule => schedule.maintenanceID === maintenanceID);
+
+    if (!matchingSchedule) {
+      Swal.fire("Error", "No schedule found for the given maintenanceID.", "error");
+      return;
+    }
+
+    const id = matchingSchedule.maintenanceID;
+    console.log("scheduleId", id);
+
+    if (!selectedTechnicianId) {
+      Swal.fire("Error", "Technician email is missing.", "error");
+      return;
+    }
+
+    // Prepare the updated data for the schedule
+    const maintenance = {
+      technicianEmail: selectedTechnicianId,
+      repairID: matchingSchedule.maintenanceID,  // Use repairID from the matching schedule
+    };
 
     try {
       await updateSchedule({ id, maintenance }).unwrap();
@@ -196,34 +196,34 @@ const handleSchedule = async () => {
   };
 
 
- const handleReschedule = async () => {
+  const handleReschedule = async () => {
 
-  const maintenanceID = rescheduleModalData.maintenanceID;  // Ensure the correct way to access repairID
-   
-  if (!maintenanceID) {
-    Swal.fire("Error", "Repair ID not found.", "error");
-    return;
-  }
-  const matchingSchedule = userSchedules.find(schedule => schedule.maintenanceID === maintenanceID);
+    const maintenanceID = rescheduleModalData.maintenanceID;  // Ensure the correct way to access repairID
 
-  if (!matchingSchedule) {
-    Swal.fire("Error", "No Reschedule found for the given maintenanceID.", "error");
-    return;
-  }
+    if (!maintenanceID) {
+      Swal.fire("Error", "Repair ID not found.", "error");
+      return;
+    }
+    const matchingSchedule = userSchedules.find(schedule => schedule.maintenanceID === maintenanceID);
 
-  const id = matchingSchedule.maintenanceID;
-  console.log("scheduleId", id);
+    if (!matchingSchedule) {
+      Swal.fire("Error", "No Reschedule found for the given maintenanceID.", "error");
+      return;
+    }
 
-  if (!selectedTechnicianUpdate) {
-    Swal.fire("Error", "Technician email is missing.", "error");
-    return;
-  }
+    const id = matchingSchedule.maintenanceID;
+    console.log("scheduleId", id);
 
-  // Prepare the updated data for the schedule
-  const maintenance = {
-    technicianEmail: selectedTechnicianUpdate,
-    repairID: matchingSchedule.maintenanceID,  // Use repairID from the matching schedule
-  };
+    if (!selectedTechnicianUpdate) {
+      Swal.fire("Error", "Technician email is missing.", "error");
+      return;
+    }
+
+    // Prepare the updated data for the schedule
+    const maintenance = {
+      technicianEmail: selectedTechnicianUpdate,
+      repairID: matchingSchedule.maintenanceID,  // Use repairID from the matching schedule
+    };
 
     try {
       await updateSchedule({ id, maintenance }).unwrap();
@@ -318,21 +318,21 @@ const handleSchedule = async () => {
     setModalData(null);
     setSelectedTechnicianId(null);
     setStartDate(null);
-    setEndDate(null);    
+    setEndDate(null);
     setAssignTime(null);
   };
   const handleCloseModal2 = () => {
     setRescheduleModalData(null);
     setSelectedTechnicianUpdate(null);
     setStartDate(null);
-    setEndDate(null);     
+    setEndDate(null);
     setAssignTime(null);
   };
   const handleRescheduleView = (item) => {
     setRescheduleModalData(item);
     setSelectedTechnicianUpdate(item?.technicianEmail || "");
     setStartDate(item?.startDate);
-    setEndDate(item?.endDate);    
+    setEndDate(item?.endDate);
     setAssignTime(item?.timeStart);
   };
 
@@ -405,7 +405,7 @@ const handleSchedule = async () => {
                   </td>
                   <td className="description">{item.description}</td>
 
-                   <td className="actions">
+                  <td className="actions">
                     {item.technicianEmail === null ? (
                       <button
                         className="schedule-btn"
@@ -486,13 +486,13 @@ const handleSchedule = async () => {
                   isClearable
                 />
               </div>
-                 {/* Assign Date */}
-                 <div className="modal-content-field">
+              {/* Assign Date */}
+              <div className="modal-content-field">
                 <label>Start Date:</label>
                 <input type="text" value={startDate} readOnly />
               </div>
-               {/* Assign Date */}
-               <div className="modal-content-field">
+              {/* Assign Date */}
+              <div className="modal-content-field">
                 <label>End Date:</label>
                 <input type="text" value={endDate} readOnly />
               </div>
@@ -559,8 +559,8 @@ const handleSchedule = async () => {
                 <label>Start Date:</label>
                 <input type="text" value={startDate} readOnly />
               </div>
-               {/* Assign Date */}
-               <div className="modal-content-field">
+              {/* Assign Date */}
+              <div className="modal-content-field">
                 <label>End Date:</label>
                 <input type="text" value={endDate} readOnly />
               </div>

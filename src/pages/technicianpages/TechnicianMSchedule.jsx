@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import WorkOrderCard from "./TWorkOrderCard";
+import React, { useState, useEffect, useRef } from "react";
+import MaintenanceCard from "./TMaintenanceCard";
 import "./css/Thome.css";
 import "./css/TModalOverlay.css";
 import "./../managerPage/css/dropdown.css";
@@ -8,13 +8,88 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import { RiImageAddLine } from "react-icons/ri";
 
+import {useGetMaintenanceByTechnicianEmailQuery, useCreateMaintenanceReportMutation,useGetMaintenanceReportByIDQuery, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { assetApiSlice } from "../../slices/assetApiSlice";
+import {
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+} from "../../slices/userApiSlice";
+import { createSelector } from "reselect";
+import Swal from "sweetalert2";
 
 const WorkOrderModal = ({ order, onClose, data = [] }) => {
   const [teamMembers, setTeamMembers] = useState(order.teamMembers || []);
   const [newMember, setNewMember] = useState("");
-  const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
+  const [selectedWorkStatus, setSelectedWorkStatus] = useState(
+    order.status || ""
+  );
   const [images, setImages] = useState([]); // Allow multiple images
   const [imageError, setImageError] = useState("");
+  const fileInputRef = useRef(null)
+
+  const [updateMaintenanceById, { isLoading, error }] =
+    useUpdatePreventiveMaintenanceMutation();
+  const maintenanceID = order.maintenanceID;
+  console.log("maintenanceID", maintenanceID);
+
+  const [formData, setFormData] = useState({
+    startTime: "",
+    endTime: "",
+    finishedDate: "",
+    totalCost: "",
+    information: "",
+    partsUsed: "",
+    preventiveMaintenanceID: maintenanceID,
+    images: [],
+  });
+  console.log("formdata", formData);
+
+  const [createMaintenanceReport, { isLoading: posting }] =
+    useCreateMaintenanceReportMutation();
+
+  const {
+    data: maintenanceReport,
+    isLoading: maintenanceReportLoading,
+    error: maintenanceReportError,
+    refetch,
+  } = useGetMaintenanceReportByIDQuery(maintenanceID, {
+    skip: !maintenanceID, // skip until userID is available
+  });
+  console.log("maintenanceReport", maintenanceReport);
+  const reportExists =
+    Array.isArray(maintenanceReport) && maintenanceReport.length > 0;
+
+  useEffect(() => {
+    console.log("reportExists", reportExists);
+
+    if (reportExists) {
+      const report = maintenanceReport[0];
+      console.log(report); // Check the structure of the report
+
+      setFormData({
+        startTime: report.startTime ?? "",
+        endTime: report.endTime ?? "",
+        finishedDate: report.finishedDate ?? "",
+        totalCost: report.totalCost ?? "",
+        information: report.information ?? "",
+        partsUsed: Array.isArray(report.partsUsed)
+          ? report.partsUsed.join(", ")
+          : "",
+        preventiveMaintenanceID: report.maintenanceID ?? "",
+        images: report.images ?? [],
+      });
+    }
+  }, [maintenanceReport, reportExists]);
+
+  const handleInputChange = (e, field) => {
+    const value = e.target.value;
+    setFormData((prevData) => ({
+      ...prevData,
+      [field]: value,
+    }));
+  };
 
   const handleAddMember = () => {
     if (newMember.trim() && !teamMembers.includes(newMember)) {
@@ -37,8 +112,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
       return;
     }
     setImageError("");
-    const imageUrls = files.map((file) => URL.createObjectURL(file));
-    setImages((prevImages) => [...prevImages, ...imageUrls]);
+    setImages((prevImages) => [...prevImages, ...files]);
   };
 
   // Remove uploaded image
@@ -46,17 +120,108 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
     setImages(images.filter((_, i) => i !== index));
   };
 
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    // Combine teamMembers into a comma-separated string
+    const {
+      startTime,
+      endTime,
+      finishedDate,
+      totalCost,
+      information,
+      partsUsed,
+    } = formData;
+
+    if (
+      !startTime.trim() ||
+      !endTime.trim() ||
+      !finishedDate.trim() ||
+      !totalCost.trim() ||
+      !information.trim() ||
+      !partsUsed.trim() ||
+      teamMembers.length === 0
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Please fill in all fields",
+        text: "StartTime, EndTime, FinishedDate, TotalCost, Information, PartsUsed, Technicians and Images",
+      });
+      return;
+    }
+
+    const sendData = new FormData();
+    sendData.append("startTime", startTime.trim());
+    sendData.append("endTime", endTime.trim());
+    sendData.append("finishedDate", finishedDate.trim());
+    sendData.append("totalCost", totalCost.trim());
+    sendData.append("information", information.trim());
+    sendData.append("preventiveMaintenanceID", maintenanceID);
+
+    partsUsed
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .forEach((part) => sendData.append("partsUsed", part));
+
+    teamMembers
+      .map((tech) => tech.trim())
+      .filter(Boolean)
+      .forEach((tech) => sendData.append("technicians", tech));
+
+    images.forEach((img) => sendData.append("images", img));
+
+    // Optional: Debug formData
+    for (let pair of sendData.entries()) {
+      console.log(pair[0] + ": " + pair[1]);
+    }
+
+    try {
+      await createMaintenanceReport(sendData).unwrap();
+
+      Swal.fire({
+        icon: "success",
+        title: "Maintenance Report added!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+
+      // setShowModal(false);
+      setFormData({
+        startTime: "",
+        endTime: "",
+        finishedDate: "",
+        totalCost: "",
+        information: "",
+        partsUsed: "",
+        technicians: "",
+        preventiveMaintenanceID: "",
+        images: [],
+      });
+      setTeamMembers([]);
+      setImages([]);
+
+      // refetch();
+    } catch (err) {
+      console.error("Error in adding maintenance report:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to add maintenance report",
+        text: err?.data?.message || "Something went wrong.",
+      });
+    }
+    refetch();
+  };
+
   // Extract unique work statuses from data
-  const uniqueWorkStatuses = [
-    { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map((item) => item.workstatus))).map(
-      (status) => ({
-        value: status,
-        label: status,
-      })
-    ),
+  const WorkOrder = [
+    { value: "pending", label: "Pending" },
+    { value: "In progress", label: "In progress" },
+    { value: "completed", label: "Completed" },
   ];
-  console.log(uniqueWorkStatuses); // Log the array to verify
+
+  const today = new Date().toISOString().split("T")[0];
 
   return (
     <div className="TModal-modal-overlay">
@@ -69,43 +234,38 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             />
           </button>
         </div>
-        <form className="TModal-repair-form">
+        <form className="TModal-repair-form" onSubmit={handleAdd}>
           <div className="TModal-content-field">
             <label>Asset Name:</label>
-            <input type="text" value={order.title} readOnly />
+            <input type="text" value={order.asset_Details.title} readOnly />
           </div>
 
           <div className="TModal-content-field">
-            <label>Time:</label>
+            <label>Date:</label>
             <div className="TModal-time-inputs">
               <input
                 className="TModal-WorkOTime"
                 type="text"
-                value={order.time.start}
+                value={order.startDate}
                 readOnly
               />
               <input
                 className="TModal-WorkOTime"
                 type="text"
-                value={order.time.end}
+                value={order.endDate}
                 readOnly
               />
             </div>
           </div>
 
           <div className="TModal-content-field">
-            <label>Date:</label>
-            <input type="text" value={order.dueDate} readOnly />
+            <label>Time:</label>
+            <input type="text" value={order.timeStart} readOnly />
           </div>
 
           <div className="TModal-content-field">
             <label>Area:</label>
-            <input type="text" value={order.location} readOnly />
-          </div>
-
-          <div className="TModal-content-field">
-            <label>Parts Used:</label>
-            <input type="text" value={order.partsUsed.join(", ")} readOnly />
+            <input type="text" value={order.asset_Details.assetArea} readOnly />
           </div>
 
           <div className="TModal-content-field">
@@ -114,33 +274,13 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
           </div>
 
           <div className="TModal-content-field">
-            <label>Total Cost:</label>
-            <input type="text" value={`$${order.totalCost}`} readOnly />
+            <label>Parts Used:</label>
+            <input type="text" />
           </div>
 
           <div className="TModal-content-field">
-            <label>Asset Images:</label>
-            <div className="TModal-profile-img">
-              {Array.isArray(order.imageUrl) && order.imageUrl.length > 0 ? (
-                order.imageUrl.map((imgSrc, index) => (
-                  <img
-                    key={index}
-                    src={imgSrc}
-                    alt={`Work Order ${index + 1}`}
-                    className="TModal-modal-image"
-                  />
-                ))
-              ) : order.imageUrl ? (
-                // If `imageUrl` is a string, display it as a single image
-                <img
-                  src={order.imageUrl}
-                  alt="Work Order"
-                  className="TModal-modal-image"
-                />
-              ) : (
-                <p>No image available</p>
-              )}
-            </div>
+            <label>Total Cost:</label>
+            <input type="text" value={`$${order.totalCost}`} readOnly />
           </div>
 
           <div className="TModal-content-field">
@@ -148,15 +288,41 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             {/* Work Status Dropdown */}
             <Select
               classNamePrefix="customm-select-workstatus"
-              className="workstatus-dropdown"
-              options={uniqueWorkStatuses}
-              value={uniqueWorkStatuses.find(
+              className="Wworkstatus-dropdown"
+              options={WorkOrder}
+              value={WorkOrder.find(
                 (option) => option.value === selectedWorkStatus
               )}
-              onChange={(selectedOption) => {
-                setSelectedWorkStatus(
-                  selectedOption ? selectedOption.value : ""
-                );
+              onChange={async (selectedOption) => {
+                const newStatus = selectedOption ? selectedOption.value : "";
+                setSelectedWorkStatus(newStatus);
+                console.log("🟡 Selected Status:", newStatus); // ✅ Log selected value
+                console.log("🛠 Repair ID:", order.maintenanceID);
+
+                // ⚡ Update status inside repairInfo
+                try {
+                  const response = await updateMaintenanceById({
+                    id: order.maintenanceID, // use correct repairID from order
+                    maintenance: { status: newStatus }, // this updates repairInfo.status
+                  }).unwrap();
+
+                  console.log("✅ Status updated in repairInfo:", response);
+
+                  Swal.fire({
+                    icon: "success",
+                    title: "Work Status Updated",
+                    text: `Status is now "${newStatus}"`,
+                    timer: 1500,
+                    showConfirmButton: false,
+                  });
+                } catch (err) {
+                  console.error("❌ Failed to update work status:", err);
+                  Swal.fire({
+                    icon: "error",
+                    title: "Error Updating Status",
+                    text: "Could not update status. Try again later.",
+                  });
+                }
               }}
               isClearable
               isSearchable={false}
@@ -164,99 +330,231 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
           </div>
 
           <div className="TModal-content-field">
-            <label>Repaired Images:</label>
-            <div className="TModal-profile-img">
+            <label>Time:</label>
+            <div className="TModal-time-inputs">
               <input
-                type="file"
-                accept="image/*"
-                multiple
-                id="imageUpload"
-                onChange={handleImageUpload}
-                style={{ display: "none" }}
+                className="TModal-WorkOTime"
+                type="time"
+                value={
+                  reportExists && maintenanceReport?.startTime
+                    ? maintenanceReport.startTime
+                    : formData.startTime
+                }
+                onChange={(e) => handleInputChange(e, "startTime")}
+                readOnly={reportExists}
               />
-              {imageError && <p className="error-text">{imageError}</p>}
-              <div className="TModel-multiupload">
-                {images.map((imgSrc, index) => (
-                  <div key={index} className="mr-image-wrapper">
-                    <img
-                      src={imgSrc}
-                      alt={`Uploaded Preview ${index}`}
-                      className="mr-upload-preview"
+              <input
+                className="TModal-WorkOTime"
+                type="time"
+                // value={formData.endTime}
+                value={
+                  reportExists && maintenanceReport?.endTime
+                    ? maintenanceReport.endTime
+                    : formData.endTime
+                }
+                onChange={(e) => handleInputChange(e, "endTime")}
+                readOnly={reportExists}
+              />
+            </div>
+          </div>
+
+          <div className="TModal-content-field">
+            <label>Finished Date:</label>
+            <input
+              type="date"
+              // value={formData.finishedDate}
+              value={
+                reportExists && maintenanceReport?.finishedDate
+                  ? maintenanceReport.finishedDate
+                  : formData.finishedDate
+              }
+              min={today}
+              onChange={(e) => handleInputChange(e, "finishedDate")}
+              readOnly={reportExists}
+            />
+          </div>
+
+          <div className="TModal-content-field">
+            <label>Total Cost:</label>
+            <input
+              type="text"
+              // value={formData.totalCost}
+              value={
+                reportExists && maintenanceReport?.totalCost
+                  ? maintenanceReport.totalCost
+                  : formData.totalCost
+              }
+              onChange={(e) => handleInputChange(e, "totalCost")}
+              placeholder="Enter Total Cost"
+              readOnly={reportExists}
+            />
+          </div>
+
+          <div className="TModal-content-field">
+            <label>Parts Used:</label>
+            <input
+              type="text"
+              value={
+                reportExists && maintenanceReport?.[0]?.partsUsed
+                  ? maintenanceReport[0].partsUsed
+                  : formData.partsUsed
+              }
+              onChange={(e) =>
+                setFormData({ ...formData, partsUsed: e.target.value })
+              }
+              placeholder="Enter parts used (e.g., wood, metal, screws)"
+              readOnly={reportExists}
+            />
+          </div>
+
+          {reportExists && maintenanceReport[0]?.images ? (
+            <div className="TModal-content-field">
+              <label>Repaired Images:</label>
+
+              <div className="TModal-profile-img">
+                {maintenanceReport[0].images.map((imgSrc, index) => (
+                  <img
+                    key={index}
+                    src={imgSrc}
+                    alt={`Work Order ${index + 1}`}
+                    className="TModal-modal-image"
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="TModal-content-field">
+                <label>Upload Images:</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  multiple
+                  onChange={handleImageUpload}
+                  style={{ display: "none" }}
+                />
+                {imageError && <p className="error-text">{imageError}</p>}
+                <div className="TModal-profile-img">
+                  {images.map((img, idx) => (
+                    <div key={idx} className="mr-preview-wrapper">
+                      <img
+                        src={
+                          typeof img === "string"
+                            ? img
+                            : URL.createObjectURL(img)
+                        }
+                        alt={`Preview ${idx}`}
+                        className="TModal-modal-image"
+                      />
+                      <button
+                        type="button"
+                        className="mr-remove-btn"
+                        onClick={() => removeImage(idx)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {images.length < 5 && (
+                    <div
+                      className="mr-upload-box"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <RiImageAddLine className="mr-upload-icon" />
+                      <p className="mr-pimg">Upload Images</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {reportExists && maintenanceReport[0]?.technicians ? (
+            <div className="TModal-content-field">
+              <label>Team Members:</label>
+
+              <div className="TModal-outer-team">
+                <div className="TModal-team-list">
+                  {maintenanceReport[0].technicians
+                    .split(",")
+                    .map((member, index) => (
+                      <span key={index} className="TModal-team-member">
+                        {member}
+                      </span>
+                    ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="TModal-content-field">
+                <label>Team Members:</label>
+                <div className="TModal-outer-team">
+                  <div className="TModal-team-members">
+                    <input
+                      type="text"
+                      placeholder="Enter email"
+                      value={newMember}
+                      onChange={(e) => setNewMember(e.target.value)}
                     />
                     <button
                       type="button"
-                      className="mr-remove-btn"
-                      onClick={() => removeImage(index)}
+                      className="TModal-add-btn"
+                      onClick={handleAddMember}
                     >
-                      ×
+                      Add
                     </button>
                   </div>
-                ))}
-                {images.length < 5 && (
-                  <div
-                    className="mr-upload-box"
-                    onClick={() =>
-                      document.getElementById("imageUpload").click()
-                    }
-                  >
-                    <RiImageAddLine className="mr-upload-icon" />
-                    <p className="mr-pimg">Upload Images</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="TModal-content-field">
-            <label>Team Members:</label>
-            <div className="TModal-outer-team">
-              <div className="TModal-team-members">
-                <input
-                  type="text"
-                  placeholder="Enter email"
-                  value={newMember}
-                  onChange={(e) => setNewMember(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="TModal-add-btn"
-                  onClick={handleAddMember}
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="TModal-content-field">
-            <label></label>
-            <div className="TModal-outer-team">
-              {teamMembers.length > 0 && (
-                <div className="TModal-team-list">
-                  {teamMembers.map((member, index) => (
-                    <div key={index} className="TModal-team-member">
-                      {member}{" "}
-                      <IoMdCloseCircle
-                        onClick={() => handleRemoveMember(index)}
-                        style={{ color: "black" }}
-                      />
-                    </div>
-                  ))}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+              <div className="TModal-content-field">
+                <label></label>
+                <div className="TModal-outer-team">
+                  {teamMembers.length > 0 && (
+                    <div className="TModal-team-list">
+                      {teamMembers.map((member, index) => (
+                        <span key={index} className="TModal-team-member">
+                          {member}
+                          <IoMdCloseCircle
+                            onClick={() => handleRemoveMember(index)}
+                            style={{
+                              color: "black",
+                              marginLeft: "4px",
+                              cursor: "pointer",
+                            }}
+                          />
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="TModal-content-field">
             <label>Additional Information:</label>
-            <textarea placeholder="Enter any additional information"></textarea>
+            <textarea
+              // value={formData.information}
+              value={
+                reportExists && maintenanceReport?.information
+                  ? maintenanceReport.information
+                  : formData.information
+              }
+              onChange={(e) => handleInputChange(e, "information")}
+              placeholder="Enter any additional information"
+              readOnly={reportExists}
+            ></textarea>
           </div>
 
-          <div className="TModal-modal-buttons">
-            <button type="submit" className="TModal-accept-btn">
-              Done
-            </button>
-          </div>
+          {!reportExists && (
+            <div disabled={posting} className="TModal-modal-buttons">
+              <button type="submit" className="TModal-accept-btn">
+                {posting ? "Posting..." : "Done"}
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>
@@ -265,304 +563,94 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
 
 const TechnicianMSchedule = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPriority, setSelectedPriority] = useState(null);
+  const [selectedWorkStatus, setSelectedWorkStatus] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [data] = useState([
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",    
-      location: "Block-k-203",
-      priority: "Immediate",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl: [
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      ],
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Minor",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Major",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-    {
-      id: 1,
-      title: "Chair Repair",
-      dueDate: "Apr 23, 2025",
-      location: "Block-k-203",
-      priority: "Minor",
-      time: { start: "07:00 AM", end: "09:00 AM" },
-      partsUsed: ["Milwaukee", "Ingersoll Rand", "Ryobi"],
-      description: "The chair leg is broken and needs replacement.",
-      totalCost: 400,
-      imageUrl:
-        "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
-      status: "Pending",
-      teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      additionalInfo: "",
-    },
-  ]);
 
-  const uniquePriorities = [
-    { value: null, label: "All Priorities" },
-    ...Array.from(new Set(data.map((item) => item.priority))).map(
-      (priority) => ({
-        value: priority,
-        label: priority,
-      })
-    ),
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
+  const [data, setData] = useState([]);
+
+  const email = useSelector(getUserEmail);
+  const { data: technicianSchedules } =
+    useGetMaintenanceByTechnicianEmailQuery(email);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchRepairDetails = async () => {
+      if (technicianSchedules?.length) {
+        const assetPromises = technicianSchedules.map(async (schedule) => {
+          try {
+            const Asset = await dispatch(
+              assetApiSlice.endpoints.getAssetByAssetCode.initiate(schedule?.assetCode)
+            ).unwrap();
+
+            return {
+              ...schedule,
+              asset_Details: Asset,
+            };
+          } catch (err) {
+            console.error(`❌ Error fetching repair for ID ${schedule?.assetCode}:`, err);
+            return null; // return null to filter out later
+          }
+        });
+
+        const results = await Promise.all(assetPromises);
+        if (isMounted) {
+          const validMergedData = results.filter(Boolean);
+          setData(validMergedData);
+        }
+      }
+    };
+
+    fetchRepairDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [technicianSchedules, dispatch]);
+
+
+  console.log("Dataaa", data);
+
+  const uniqueWorkStatuses = [
+    { value: null, label: "All Workstatus" },
+    ...Array.from(new Set(data.map((item) => item.status))).map((priority) => ({
+      value: priority,
+      label: priority,
+    })),
   ];
 
   const filteredData = data.filter((item) => {
     const matchesSearch = Object.values(item)
-      .map((value) => value.toString().toLowerCase())
+      .map((value) =>
+        value !== null && value !== undefined
+          ? value.toString().toLowerCase()
+          : ""
+      )
       .some((text) => text.includes(searchTerm.toLowerCase()));
 
-    const matchesPriority =
-      !selectedPriority || item.priority === selectedPriority;
-    return matchesSearch && matchesPriority;
-  });
+    const matchesWorkStatus =
+      !selectedWorkStatus || item.status === selectedWorkStatus;
 
+    return matchesSearch && matchesWorkStatus;
+  });
   return (
     <div className="work-orders-container">
       <div className="WorkOrder-filter-section">
         <Select
           classNamePrefix="custom-select"
           className="priority-dropdown"
-          options={uniquePriorities}
-          value={uniquePriorities.find(
-            (option) => option.value === selectedPriority
+          options={uniqueWorkStatuses}
+          value={uniqueWorkStatuses.find(
+            (option) => option.value === selectedWorkStatus
           )}
           onChange={(selectedOption) =>
-            setSelectedPriority(selectedOption ? selectedOption.value : null)
+            setSelectedWorkStatus(selectedOption ? selectedOption.value : null)
           }
           isClearable
           isSearchable={false}
@@ -571,8 +659,8 @@ const TechnicianMSchedule = () => {
 
       <div className="work-orders-grid">
         {filteredData.map((order) => (
-          <WorkOrderCard
-            key={order.id}
+          <MaintenanceCard
+            key={order.assetCode}
             {...order}
             onView={() => setSelectedOrder(order)}
           />

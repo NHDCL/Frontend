@@ -274,7 +274,7 @@ const AdminRReport = () => {
                 <th>
                   {selectedRows.length > 0 ? (
                     <button
-                      className="download-all-btn"
+                      className="download-btn"
                       onClick={handleDownloadSelected}
                     >
                       <LuDownload
@@ -480,7 +480,7 @@ const AdminRReport = () => {
                         />
                       ))
                     ) : modalData.imageUrl ? (
-                      // If `imageUrl` is a string, display it as a single image
+                      // If imageUrl is a string, display it as a single image
                       <img
                         src={modalData.imageUrl}
                         alt="Work Order"

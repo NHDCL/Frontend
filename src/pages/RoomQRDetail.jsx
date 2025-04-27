@@ -4,9 +4,11 @@ import LandingFooter from "../components/LandingComponents/LandingFooter";
 import "./css/QRDetail.css";
 import { RiImageAddLine } from "react-icons/ri";
 import Select from "react-select";
-import { useGetAcademyQuery } from "../slices/userApiSlice";
-import { useGetAssetQuery } from "../slices/assetApiSlice";
+import { useGetAcademyByIdQuery } from "../slices/userApiSlice";
+import { useGetAssetByAssetCodeQuery } from "../slices/assetApiSlice";
+import { usePostRepairRequestMutation } from "../slices/maintenanceApiSlice";
 import Swal from "sweetalert2";
+import { useParams, useLocation } from "react-router-dom";
 
 const priorities = [
   { value: "Immediate", label: "Immediate (Within 24 hours)" },
@@ -16,29 +18,44 @@ const priorities = [
 ];
 
 const RoomQRDetail = () => {
+  const { assetCode } = useParams();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const floor = queryParams.get("floor"); // Get the 'floor' parameter
+  const room = queryParams.get("room");
+  const {
+    data: asset,
+    isLoading,
+    error,
+  } = useGetAssetByAssetCodeQuery(assetCode);
+  const [postRepairRequest, { isLoading: requesting }] =
+    usePostRepairRequestMutation();
   const [formData, setFormData] = useState({
+    assetName: "",
     name: "",
     phoneNumber: "",
     email: "",
     priority: "",
-    academyId: "",
     assetCode: "",
-    assetName: "",
     description: "",
   });
   const [images, setImages] = useState([]);
   const [imageError, setImageError] = useState("");
   const [errors, setErrors] = useState({});
 
-  const { data: academies = [] } = useGetAcademyQuery();
-  const { data: assets = [] } = useGetAssetQuery();
-
-  const handleInputChange = (e, field) => {
-    if (field) {
-      setFormData({ ...formData, [field]: e.value });
-    } else {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
-    }
+  const validateForm = () => {
+    let newErrors = {};
+    if (!formData.assetName.trim())
+      newErrors.assetName = "Name of the asset is required.";
+    if (!formData.name.trim()) newErrors.name = "Name is required.";
+    if (!formData.phoneNumber.trim())
+      newErrors.phoneNumber = "Phone number is required.";
+    if (!formData.email.trim()) newErrors.email = "Email is required.";
+    if (!formData.priority) newErrors.priority = "Please select a priority.";
+    if (!formData.description.trim())
+      newErrors.description = "Description is required.";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleImageUpload = (e) => {
@@ -48,34 +65,94 @@ const RoomQRDetail = () => {
       return;
     }
     setImageError("");
-    const fileUrls = files.map((file) => URL.createObjectURL(file));
-    setImages((prev) => [...prev, ...fileUrls]);
+    setImages((prevImages) => [...prevImages, ...files]); // Store the files themselves, not URLs
   };
 
   const removeImage = (index) => {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Add validation and post logic here
-    Swal.fire({
-      icon: "success",
-      title: "Report Submitted!",
-      toast: true,
-      position: "top-end",
-      showConfirmButton: false,
-      timer: 2000,
-    });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const assetCodeOptions = [...new Set(assets.map((a) => a.assetCode))].map(
-    (code) => ({ value: code, label: code })
-  );
+  const handlePriorityChange = (selectedOption) => {
+    setFormData((prev) => ({ ...prev, priority: selectedOption?.value || "" }));
+  };
 
-  const assetNameOptions = [...new Set(assets.map((a) => a.assetName))].map(
-    (name) => ({ value: name, label: name })
-  );
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    const { assetName, name, phoneNumber, email, priority, description } =
+      formData;
+
+    const requestData = new FormData();
+    requestData.append("name", name.trim());
+    requestData.append("phoneNumber", phoneNumber.trim());
+    requestData.append("email", email.trim());
+    requestData.append("priority", priority.trim());
+    requestData.append("status", "Pending");
+    requestData.append(
+      "area",
+      `${asset?.title || ""} - ${floor || ""} - ${room || ""}`
+    );
+    requestData.append("description", description.trim());
+    requestData.append("assetName", assetName.trim()); // Ensure assetName is not undefined
+    requestData.append("scheduled", "false");
+
+    images.forEach((imageFile) => {
+      requestData.append("images", imageFile); // imageFile is the actual file
+    });
+
+    requestData.append("academyId", asset?.academyID || "");
+
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to send this repair request?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, send it!",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      console.log(requestData)
+      const res = await postRepairRequest(requestData).unwrap();
+      console.log(res);
+      Swal.fire({
+        icon: "success",
+        title: "Repair Request Sent!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+
+      setFormData({
+        assetName: "",
+        name: "",
+        phoneNumber: "",
+        email: "",
+        priority: null,
+        description: "",
+      });
+      setErrors({});
+      setImages([]);
+    } catch (err) {
+      console.error("Error sending request", err);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to send Repair Request",
+        text: err?.data?.message || "Something went wrong.",
+      });
+    }
+  };
 
   return (
     <div>
@@ -85,77 +162,91 @@ const RoomQRDetail = () => {
           <div className="asset-info">
             <h3 className="section-title">Room Information</h3>
             <div className="asset_detail">
-              <div className="pp"><p className="p1">Block:</p><p className="p2">Block A</p></div>
-              <div className="pp"><p className="p1">Floor:</p><p className="p2">Second Floor</p></div>
-              <div className="pp"><p className="p1">Room:</p><p className="p2">301</p></div>
-              <div className="pp"><p className="p1">Location:</p><p className="p2">Gyalpozhig</p></div>
+              <div className="pp">
+                <p className="p1">Block:</p>
+                <p className="p2">{asset?.title}</p>
+              </div>
+              <div className="pp">
+                <p className="p1">Floor:</p>
+                <p className="p2">{floor}</p>
+              </div>
+              <div className="pp">
+                <p className="p1">Room:</p>
+                <p className="p2">{room}</p>
+              </div>
+              <div className="pp">
+                <p className="p1">Location:</p>
+                <p className="p2">Gyalpozhig</p>
+              </div>
             </div>
           </div>
 
-          <h4 className="form-title">Report a room only if an asset is found damaged</h4>
+          <h4 className="form-title">
+            Report a room only if an asset is found damaged
+          </h4>
           <form onSubmit={handleSubmit}>
-            <Select
-              classNamePrefix="customm-select-department"
-              name="academyId"
-              onChange={(option) => handleInputChange(option, "academyId")}
-              options={academies.map((a) => ({
-                value: a.academyId,
-                label: a.name,
-              }))}
-              placeholder="Select Academy"
-              isClearable
-            />
-            <Select
-              classNamePrefix="customm-select-department"
-              name="assetCode"
-              onChange={(option) => handleInputChange(option, "assetCode")}
-              options={assetCodeOptions}
-              placeholder="Select Asset Code"
-              isClearable
-            />
-            <Select
-              classNamePrefix="customm-select-department"
+            <input
+              type="text"
               name="assetName"
-              onChange={(option) => handleInputChange(option, "assetName")}
-              options={assetNameOptions}
-              placeholder="Select Asset Name"
-              isClearable
+              value={formData.assetName}
+              onChange={handleChange}
+              placeholder="Name of the asset"
             />
+            {errors.assetName && (
+              <div className="error-text">{errors.assetName}</div>
+            )}
+
             <input
               type="text"
               name="name"
               value={formData.name}
-              onChange={handleInputChange}
+              onChange={handleChange}
               placeholder="Your Name"
             />
+            {errors.name && <div className="error-text">{errors.name}</div>}
+
             <input
               type="tel"
               name="phoneNumber"
               value={formData.phoneNumber}
-              onChange={handleInputChange}
+              onChange={handleChange}
               placeholder="Phone Number"
             />
+            {errors.phoneNumber && (
+              <div className="error-text">{errors.phoneNumber}</div>
+            )}
+
             <input
               type="email"
               name="email"
               value={formData.email}
-              onChange={handleInputChange}
+              onChange={handleChange}
               placeholder="Email Address"
             />
+            {errors.email && <div className="error-text">{errors.email}</div>}
+
             <Select
               classNamePrefix="customm-select-department"
               name="priority"
-              onChange={(option) => handleInputChange(option, "priority")}
               options={priorities}
+              value={priorities.find((p) => p.value === formData.priority)}
+              onChange={handlePriorityChange}
               placeholder="Select Priority"
               isClearable
             />
+            {errors.priority && (
+              <div className="error-text">{errors.priority}</div>
+            )}
+
             <textarea
               name="description"
               value={formData.description}
-              onChange={handleInputChange}
+              onChange={handleChange}
               placeholder="Description"
-            ></textarea>
+            />
+            {errors.description && (
+              <div className="error-text">{errors.description}</div>
+            )}
 
             <input
               type="file"
@@ -165,11 +256,16 @@ const RoomQRDetail = () => {
               onChange={handleImageUpload}
               style={{ display: "none" }}
             />
+            {imageError && <div className="error-text">{imageError}</div>}
+
             <div className="mr-upload-box-img">
-              {imageError && <p className="error-text">{imageError}</p>}
               {images.map((imgSrc, index) => (
                 <div key={index} className="mr-image-wrapper">
-                  <img src={imgSrc} alt={`Preview ${index}`} className="mr-upload-preview" />
+                  <img
+                    src={imgSrc}
+                    alt={`Preview ${index}`}
+                    className="mr-upload-preview"
+                  />
                   <div
                     type="button"
                     className="mr-remove-btn"
@@ -189,8 +285,9 @@ const RoomQRDetail = () => {
                 </div>
               )}
             </div>
-            <button className="button" type="submit">
-              Report
+
+            <button className="button" type="submit" disabled={requesting}>
+              {requesting ? "Sending..." : "Report"}
             </button>
           </form>
         </div>

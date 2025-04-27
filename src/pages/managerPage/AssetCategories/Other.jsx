@@ -18,9 +18,17 @@ import Swal from "sweetalert2";
 import CreatableSelect from "react-select/creatable";
 import { useSelector } from "react-redux";
 import { createSelector } from "reselect";
-import { useGetUserByEmailQuery } from "../../../slices/userApiSlice";
+import {
+  useGetDepartmentQuery,
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+} from "../../../slices/userApiSlice";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import {
+  useCreateMaintenanceMutation,
+  useSendEmailMutation,
+} from "../../../slices/maintenanceApiSlice";
 
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
@@ -62,6 +70,30 @@ const Other = ({ category }) => {
 
   const rowsPerPage = 9; // 3x3 grid for QR codes per page
   const qrSize = 40; // Size of each QR code (adjust as needed)
+
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const { data: departments, isLoading: departmentsLoading } =
+    useGetDepartmentQuery();
+  const { data: users } = useGetUsersQuery();
+  const [assignedWorker, setAssignedWorker] = useState(null);
+  const [createMaintenance] = useCreateMaintenanceMutation();
+  const [repeatFrequency, setRepeatFrequency] = useState(null);
+  const [sendEmail] = useSendEmailMutation();
+  const [isCreating, setIsCreating] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [scheduleModalData, setScheduleModalData] = useState(null);
+
+  const supervisorsFromSameAcademy =
+    users?.filter(
+      (user) =>
+        user.academyId === academyId &&
+        typeof user.role?.name === "string" &&
+        user.role.name.toLowerCase() === "supervisor"
+    ) || [];
+
+  const uniqueSupervisorDepartmentIds = [
+    ...new Set(supervisorsFromSameAcademy.map((s) => s.departmentId)),
+  ];
 
   useEffect(() => {
     if (manager?.user?.academyId) {
@@ -529,6 +561,85 @@ const Other = ({ category }) => {
         });
       }
     }
+  };
+
+  const repeatOptions = [
+    { value: "none", label: "None" },
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+    { value: "monthly", label: "Monthly" },
+    { value: "yearly", label: "Yearly" },
+  ];
+
+  const handleScheduleMaintenance = () => {
+    if (!modalData) return; // Optional: prevent errors if modalData is undefined
+
+    setScheduleModalData({
+      Description: modalData.Description || "",
+      Assign: modalData.Assign || "",
+      Lastworkorder: modalData.Lastworkorder || "",
+      Schedule: modalData.Schedule || "",
+      Nextworkorder: modalData.Nextworkorder || "",
+      assetCode: modalData.assetCode || "",
+    });
+    setIsScheduleModalOpen(true);
+    setModalData(null);
+  };
+  // preventive manintenance
+  const departmentOptions =
+    departments
+      ?.filter((dep) =>
+        uniqueSupervisorDepartmentIds.includes(dep.departmentId)
+      )
+      .map((dep) => ({
+        value: dep.departmentId,
+        label: dep.name,
+      })) || [];
+
+  const workerOptions = supervisorsFromSameAcademy
+    .filter((user) => user.departmentId === selectedDepartment)
+    .map((user) => ({
+      value: user.userId,
+      label: user.email,
+    }));
+
+  const handleCreateSchedule = async () => {
+    setIsCreating(true);
+    try {
+      await createMaintenance({
+        timeStart: scheduleModalData.Schedule,
+        startDate: scheduleModalData.Lastworkorder,
+        endDate: scheduleModalData.Nextworkorder,
+        description: scheduleModalData.Description,
+        status: "Pending",
+        repeat: repeatFrequency?.value || "none",
+        userID: assignedWorker?.value || "",
+        assetCode: scheduleModalData.assetCode,
+      }).unwrap();
+
+      // Send email to the assigned worker
+      if (assignedWorker?.label) {
+        await sendEmail({
+          to: assignedWorker.label,
+        }).unwrap();
+        Swal.fire({
+          icon: "success",
+          title: "Schedule Created",
+          text: "Preventive maintenance has been scheduled successfully",
+        });
+      }
+
+      // Optionally close modal
+      setIsScheduleModalOpen(false);
+      setScheduleModalData(null);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Schedule",
+        text: error?.data?.message || "Something went wrong. Please try again.",
+      });
+    }
+    setIsCreating(false);
   };
 
   return (
@@ -1000,10 +1111,157 @@ const Other = ({ category }) => {
                 >
                   {isDeleting ? "Deleting..." : <RiDeleteBin6Line />}
                 </button>
-
-                <button className="accept-btn">Schedule Maintenance</button>
+                <button
+                  type="button" // Prevents form submission
+                  className="accept-btn"
+                  onClick={handleScheduleMaintenance}
+                >
+                  Schedule Maintenance
+                </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* scheduleModel */}
+      {isScheduleModalOpen && scheduleModalData && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="form-h">Preventive maintenance schedule form</h2>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setScheduleModalData(null);
+                  setIsScheduleModalOpen(false);
+                }}
+              >
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+
+            <div className="schedule-form">
+              <p className="sub-title">Maintenance Detail</p>
+              <div className="modal-content-field">
+                <label>Department:</label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={departmentOptions}
+                  value={
+                    departmentOptions.find(
+                      (opt) => opt.value === selectedDepartment
+                    ) || null
+                  }
+                  onChange={(option) =>
+                    setSelectedDepartment(option?.value || "")
+                  }
+                  isClearable
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Assign Supervisor:</label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={workerOptions}
+                  value={assignedWorker}
+                  onChange={setAssignedWorker}
+                  isClearable
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Description: </label>
+                <input
+                  type="text"
+                  value={scheduleModalData.Description}
+                  onChange={(e) =>
+                    setScheduleModalData({
+                      ...scheduleModalData,
+                      Description: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              {/* Schedule fields */}
+              <p className="sub-title">Schedule</p>
+              <div className="modal-content-field">
+                <label>Repeat:</label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={repeatOptions}
+                  value={repeatFrequency}
+                  onChange={setRepeatFrequency}
+                  isClearable
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Starts on: </label>
+                <input
+                  type="date"
+                  value={
+                    scheduleModalData.Lastworkorder
+                      ? new Date(scheduleModalData.Lastworkorder)
+                          .toISOString()
+                          .split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setScheduleModalData({
+                      ...scheduleModalData,
+                      Lastworkorder: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Schedule time: </label>
+                <input
+                  type="time"
+                  value={scheduleModalData.Schedule}
+                  onChange={(e) =>
+                    setScheduleModalData({
+                      ...scheduleModalData,
+                      Schedule: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Ends on: </label>
+                <input
+                  type="date"
+                  value={
+                    scheduleModalData.Nextworkorder
+                      ? new Date(scheduleModalData.Nextworkorder)
+                          .toISOString()
+                          .split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setScheduleModalData({
+                      ...scheduleModalData,
+                      Nextworkorder: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="modal-buttons">
+                <button
+                  className="accept-btn"
+                  style={{ width: "150px" }}
+                  onClick={handleCreateSchedule}
+                  disabled={isCreating}
+                >
+                  {isCreating ? "Creating..." : "Create Schedule"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
