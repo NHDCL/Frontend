@@ -259,12 +259,12 @@ export const {
   useGetMaintenanceByIdQuery,
   useGetSchedulesByTechnicianEmailQuery,
   useGetMaintenanceByTechnicianEmailQuery,
+  useCreateMaintenanceMutation,
+  useSendEmailMutation,
   useUpdateRepairByIdMutation,
   useCreateRepairReportMutation,
   useGetPreventiveMaintenanceReportsQuery,
   useGetRepairReportByIDQuery,
   useCreateMaintenanceReportMutation,
-  useGetMaintenanceReportByIDQuery,
-  useCreateMaintenanceMutation,
-  useSendEmailMutation
+  useGetMaintenanceReportByIDQuery
 } = maintenanceApiSlice;
