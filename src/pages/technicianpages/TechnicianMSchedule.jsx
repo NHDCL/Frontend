@@ -8,7 +8,7 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import { RiImageAddLine } from "react-icons/ri";
 
-import {useGetMaintenanceByTechnicianEmailQuery, useCreateRepairReportMutation, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
+import { useGetMaintenanceByTechnicianEmailQuery, useGetMaintenanceReportByIDQuery, useCreateMaintenanceReportMutation, useCreateRepairReportMutation, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { assetApiSlice } from "../../slices/assetApiSlice";
@@ -27,6 +27,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   );
   const [images, setImages] = useState([]); // Allow multiple images
   const [imageError, setImageError] = useState("");
+  const fileInputRef = useRef(null);
 
   const [updateMaintenanceById, { isLoading, error }] =
     useUpdatePreventiveMaintenanceMutation();
@@ -271,7 +272,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <label>Description:</label>
             <textarea value={order.description} readOnly />
           </div>
-          
+
           <div className="TModal-content-field">
             <label>Parts Used:</label>
             <input type="text" />
@@ -579,7 +580,7 @@ const TechnicianMSchedule = () => {
 
   useEffect(() => {
     let isMounted = true;
-  
+
     const fetchRepairDetails = async () => {
       if (technicianSchedules?.length) {
         const assetPromises = technicianSchedules.map(async (schedule) => {
@@ -587,7 +588,7 @@ const TechnicianMSchedule = () => {
             const Asset = await dispatch(
               assetApiSlice.endpoints.getAssetByAssetCode.initiate(schedule?.assetCode)
             ).unwrap();
-  
+
             return {
               ...schedule,
               asset_Details: Asset,
@@ -597,7 +598,7 @@ const TechnicianMSchedule = () => {
             return null; // return null to filter out later
           }
         });
-  
+
         const results = await Promise.all(assetPromises);
         if (isMounted) {
           const validMergedData = results.filter(Boolean);
@@ -605,14 +606,14 @@ const TechnicianMSchedule = () => {
         }
       }
     };
-  
+
     fetchRepairDetails();
-  
+
     return () => {
       isMounted = false;
     };
   }, [technicianSchedules, dispatch]);
-  
+
 
   console.log("Dataaa", data);
 
