@@ -208,6 +208,15 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["RepairReport"],
     }),
+
+    getPreventiveMaintenanceReports: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/maintenance-reports", // matches your backend @GetMapping
+        method: "GET",
+      }),
+      transformResponse: (response) => response,
+      providesTags: ["PreventiveMaintenanceReports"], // Optional tag for cache invalidation
+    }),
   }),
 });
 
@@ -235,4 +244,5 @@ export const {
   useGetSchedulesByTechnicianEmailQuery,
   useUpdateRepairByIdMutation,
   useCreateRepairReportMutation,
+  useGetPreventiveMaintenanceReportsQuery,
 } = maintenanceApiSlice;

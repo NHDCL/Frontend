@@ -22,7 +22,9 @@ const AdminAssets = () => {
   const { data: categories, error, isLoading } = useGetCategoryQuery(); // Fetch categories from API
 
   // Filter out categories where 'deleted' is true
-  const activeCategories = categories ? categories.filter(category => !category.deleted) : [];
+  const activeCategories = categories
+    ? categories.filter((category) => !category.deleted)
+    : [];
 
   // Ensure categories exist before setting defaultTab
   const defaultTab =
@@ -44,10 +46,7 @@ const AdminAssets = () => {
     normalizedTab === "roomqr"
       ? RoomQrComponent
       : lazy(
-          () =>
-            import(`./tab/${componentFile}`).catch(
-              () => DefaultCategory
-            ) // If not found, load 'Other.js'
+          () => import(`./tab/${componentFile}`).catch(() => DefaultCategory) // If not found, load 'Other.js'
         );
 
   return (

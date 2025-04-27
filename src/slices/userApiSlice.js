@@ -13,7 +13,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
 
     getRoles: builder.query({
       query: () => `${USERS_URL}/roles`,
-      providesTags: ['Roles'],
+      providesTags: ["Roles"],
     }),
 
     forgotPassword: builder.mutation({

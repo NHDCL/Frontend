@@ -14,27 +14,29 @@ const AdminMaintenance = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
-  const { data: maintenanceRequest, refetch: refetchMaintenanceRequest } = useGetMaintenanceRequestQuery();
+  const { data: maintenanceRequest, refetch: refetchMaintenanceRequest } =
+    useGetMaintenanceRequestQuery();
   const { data: assetData, refetch: refetchAssetData } = useGetAssetQuery();
-  const { data: academy, } = useGetAcademyQuery()
+  const { data: academy } = useGetAcademyQuery();
 
   const rowsPerPage = 10;
   const [data, setData] = useState([]);
-  console.log('data: ', data)
-  console.log('a: ', assetData)
+  console.log("data: ", data);
+  console.log("a: ", assetData);
 
   useEffect(() => {
     if (maintenanceRequest && assetData) {
-
       const filtered = maintenanceRequest
         .map((request) => {
           const matchedAsset = assetData.find(
-            (a) =>
-              a.assetCode === request.assetCode
+            (a) => a.assetCode === request.assetCode
           );
 
           if (matchedAsset) {
-            console.log(`Match found for assetCode ${request.assetCode}:`, matchedAsset.title);
+            console.log(
+              `Match found for assetCode ${request.assetCode}:`,
+              matchedAsset.title
+            );
             return {
               ...request,
               assetName: matchedAsset.title, // Attach the asset name
@@ -63,16 +65,15 @@ const AdminMaintenance = () => {
     return match ? match.name : "Unknown";
   };
 
-
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {
     switch (status) {
       case "pending":
-        return "pending-status";  // Gray color
+        return "pending-status"; // Gray color
       case "inprogress":
-        return "in-progress-status";  // Yellow color
+        return "in-progress-status"; // Yellow color
       case "completed":
-        return "completed-status";  // Green color
+        return "completed-status"; // Green color
       default:
         return "";
     }
@@ -81,19 +82,22 @@ const AdminMaintenance = () => {
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map(item => item.status?.toLowerCase()))).map(status => ({
-      value: status,
-      label: status.charAt(0).toUpperCase() + status.slice(1)
-    }))
+    ...Array.from(new Set(data.map((item) => item.status?.toLowerCase()))).map(
+      (status) => ({
+        value: status,
+        label: status.charAt(0).toUpperCase() + status.slice(1),
+      })
+    ),
   ];
-
 
   const uniqueLocation = [
     { value: "", label: "All Location" },
-    ...Array.from(new Set(data.map(item => getAcademyName(item.academyID)?.toLowerCase()))).map(location => ({
+    ...Array.from(
+      new Set(data.map((item) => getAcademyName(item.academyID)?.toLowerCase()))
+    ).map((location) => ({
       value: location,
-      label: location.charAt(0).toUpperCase() + location.slice(1)
-    }))
+      label: location.charAt(0).toUpperCase() + location.slice(1),
+    })),
   ];
 
   // Filtering data based on search and priority selection and work status
@@ -103,10 +107,13 @@ const AdminMaintenance = () => {
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
     const matchesWorkStatus =
-      selectedWorkStatus === "" || item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
+      selectedWorkStatus === "" ||
+      item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
 
     const matchesLocation =
-      selectedLocation === "" || getAcademyName(item.academyID)?.toLowerCase() === selectedLocation.toLowerCase();
+      selectedLocation === "" ||
+      getAcademyName(item.academyID)?.toLowerCase() ===
+        selectedLocation.toLowerCase();
 
     return matchesSearch && matchesWorkStatus && matchesLocation;
   });
@@ -131,15 +138,18 @@ const AdminMaintenance = () => {
             />
           </div>
           <div className="dropdown-ls">
-
             {/* Work Status Dropdown */}
             <Select
               classNamePrefix="custom-select-workstatus"
               className="workstatus-dropdown"
               options={uniqueWorkStatuses}
-              value={uniqueWorkStatuses.find(option => option.value === selectedWorkStatus)}
+              value={uniqueWorkStatuses.find(
+                (option) => option.value === selectedWorkStatus
+              )}
               onChange={(selectedOption) => {
-                setSelectedWorkStatus(selectedOption ? selectedOption.value : "");
+                setSelectedWorkStatus(
+                  selectedOption ? selectedOption.value : ""
+                );
               }}
               isClearable
               isSearchable={false}
@@ -148,7 +158,9 @@ const AdminMaintenance = () => {
               classNamePrefix="custom-select-workstatus"
               className="workstatus-dropdown"
               options={uniqueLocation}
-              value={uniqueLocation.find(option => option.value === selectedLocation)}
+              value={uniqueLocation.find(
+                (option) => option.value === selectedLocation
+              )}
               onChange={(selectedOption) => {
                 setSelectedLocation(selectedOption ? selectedOption.value : "");
               }}
@@ -156,14 +168,12 @@ const AdminMaintenance = () => {
               isSearchable={false}
             />
           </div>
-
         </div>
 
         <div className="table-container">
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-
                 {[
                   "Asset Code",
                   "Asset Name",
@@ -172,17 +182,15 @@ const AdminMaintenance = () => {
                   "Start Date",
                   "End Date",
                   "Assign to",
-                  "Workstatus"
+                  "Workstatus",
                 ].map((header, index) => (
                   <th key={index}>{header}</th>
                 ))}
-
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-
                   <td>{item.assetCode}</td>
                   <td>{item.assetName}</td>
                   <td>{item.description}</td>
@@ -191,11 +199,14 @@ const AdminMaintenance = () => {
                   <td>{item.endDate}</td>
                   <td>{item.assignedSupervisors}</td>
                   <td>
-                    <div className={getWorkOrderStatusClass(item.status.toLowerCase().replace(/\s+/g, ""))}>
+                    <div
+                      className={getWorkOrderStatusClass(
+                        item.status.toLowerCase().replace(/\s+/g, "")
+                      )}
+                    >
                       {item.status}
                     </div>
                   </td>
-
                 </tr>
               ))}
             </tbody>
@@ -222,9 +233,6 @@ const AdminMaintenance = () => {
           </div>
         </div>
       </div>
-
-
-
     </div>
   );
 };

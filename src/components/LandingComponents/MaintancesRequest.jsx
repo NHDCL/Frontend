@@ -30,9 +30,10 @@ const MaintenanceRequest = () => {
     status: "Pending",
     // academyId:"",
   });
-  console.log("formdata", formData)
+  console.log("formdata", formData);
 
-  const [postRepairRequest, { isLoading: requesting }] = usePostRepairRequestMutation();
+  const [postRepairRequest, { isLoading: requesting }] =
+    usePostRepairRequestMutation();
   const { data: academies = [], isLoading, error } = useGetAcademyQuery();
   const { data: assets = [], error1 } = useGetAssetQuery();
 
@@ -77,13 +78,67 @@ const MaintenanceRequest = () => {
     }
   }, [formData.academy, assets]);
 
-  // console.log("dt", formData);
+  // Field validation functions
+  const validatePhoneNumber = (phoneNumber) => {
+    const phoneRegex = /^(17|77)\d{6}$/;
+    if (!phoneNumber.trim()) return "Phone number is required.";
+    if (!phoneRegex.test(phoneNumber))
+      return "Phone must start with 17 or 77 and be 8 digits.";
+    return "";
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) return "Email is required.";
+    if (!emailRegex.test(email)) return "Enter a valid email address.";
+    return "";
+  };
+
+  const validateName = (name) => {
+    if (!name.trim()) return "Name is required.";
+    return "";
+  };
+
+  const validateAssetName = (assetName) => {
+    if (!assetName.trim()) return "Asset name is required.";
+    return "";
+  };
+
+  const validateDescription = (description) => {
+    if (!description.trim()) return "Description is required.";
+    return "";
+  };
 
   const handleInputChange = (e, field) => {
+    const { name, value } = e.target || {};
+
     if (field) {
       setFormData({ ...formData, [field]: e.value });
+
+      // Validate field after selection
+      if (field === "priority") {
+        setErrors({
+          ...errors,
+          priority: e.value ? "" : "Please select a priority.",
+        });
+      } else if (field === "area") {
+        setErrors({ ...errors, area: e.value ? "" : "Please select an area." });
+      }
     } else {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
+      setFormData({ ...formData, [name]: value });
+
+      // Validate in real-time as user types
+      if (name === "phoneNumber") {
+        setErrors({ ...errors, phoneNumber: validatePhoneNumber(value) });
+      } else if (name === "email") {
+        setErrors({ ...errors, email: validateEmail(value) });
+      } else if (name === "name") {
+        setErrors({ ...errors, name: validateName(value) });
+      } else if (name === "assetName") {
+        setErrors({ ...errors, assetName: validateAssetName(value) });
+      } else if (name === "description") {
+        setErrors({ ...errors, description: validateDescription(value) });
+      }
     }
   };
 
@@ -103,19 +158,38 @@ const MaintenanceRequest = () => {
 
   const validateForm = () => {
     let newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required.";
-    if (!formData.phoneNumber.trim())
-      newErrors.phoneNumber = "Phone number is required.";
-    if (!formData.assetName.trim())
-      newErrors.assetName = "Asset name is required.";
-    if (!formData.academy) newErrors.academy = "Please select an academy.";
-    if (!formData.area) newErrors.area = "Please select an area.";
-    if (!formData.priority) newErrors.priority = "Please select a priority.";
-    if (!formData.description.trim())
-      newErrors.description = "Description is required.";
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    newErrors.name = validateName(formData.name);
+    newErrors.phoneNumber = validatePhoneNumber(formData.phoneNumber);
+    newErrors.email = validateEmail(formData.email);
+    newErrors.assetName = validateAssetName(formData.assetName);
+    newErrors.academy = formData.academy ? "" : "Please select an academy.";
+    newErrors.area = formData.area ? "" : "Please select an area.";
+    newErrors.priority = formData.priority ? "" : "Please select a priority.";
+    newErrors.description = validateDescription(formData.description);
+
+    // Filter out empty error messages
+    const filteredErrors = Object.fromEntries(
+      Object.entries(newErrors).filter(([_, value]) => value !== "")
+    );
+
+    setErrors(filteredErrors);
+    return Object.keys(filteredErrors).length === 0;
+  };
+
+  // Handle academy selection
+  const handleAcademyChange = (selectedOption) => {
+    setFormData({
+      ...formData,
+      academy: selectedOption ? selectedOption.value : "",
+      academyId: selectedOption ? selectedOption.value : "",
+      area: "",
+    });
+
+    setErrors({
+      ...errors,
+      academy: selectedOption ? "" : "Please select an academy.",
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -155,11 +229,12 @@ const MaintenanceRequest = () => {
       title: "Are you sure?",
       text: "Do you want to send this repair request?",
       icon: "question",
+      color: "#305845",
       showCancelButton: true,
       confirmButtonText: "Yes, send it!",
       cancelButtonText: "Cancel",
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
     });
 
     if (!result.isConfirmed) return;
@@ -190,9 +265,9 @@ const MaintenanceRequest = () => {
         assetCode: "",
         images: [],
         academyId: "",
-
       });
       setImages([]);
+      setErrors({});
     } catch (err) {
       console.error("Error sending request", err);
       Swal.fire({
@@ -202,7 +277,6 @@ const MaintenanceRequest = () => {
       });
     }
   };
-
 
   return (
     <div className="mr-container">
@@ -230,6 +304,9 @@ const MaintenanceRequest = () => {
               onChange={handleInputChange}
               className="mr-input"
               placeholder="Enter your name"
+              onBlur={() =>
+                setErrors({ ...errors, name: validateName(formData.name) })
+              }
             />
             {errors.name && <p className="error-text">{errors.name}</p>}
 
@@ -253,6 +330,7 @@ const MaintenanceRequest = () => {
               className="mr-input"
               placeholder="Enter your email"
             />
+            {errors.email && <p className="error-text">{errors.email}</p>}
 
             <input
               type="text"
@@ -261,6 +339,12 @@ const MaintenanceRequest = () => {
               onChange={handleInputChange}
               className="mr-input"
               placeholder="Enter asset name"
+              onBlur={() =>
+                setErrors({
+                  ...errors,
+                  assetName: validateAssetName(formData.assetName),
+                })
+              }
             />
             {errors.assetName && (
               <p className="error-text">{errors.assetName}</p>
@@ -269,14 +353,7 @@ const MaintenanceRequest = () => {
             <Select
               classNamePrefix="customm-select-department"
               name="academy"
-              onChange={(selectedOption) =>
-                setFormData({
-                  ...formData,
-                  academy: selectedOption ? selectedOption.value : "",
-                  academyId: selectedOption ? selectedOption.value : "",
-                  area: "",
-                })
-              }
+              onChange={handleAcademyChange}
               options={academies.map((a) => ({
                 value: a.academyId,
                 label: a.name,
@@ -333,6 +410,12 @@ const MaintenanceRequest = () => {
               onChange={handleInputChange}
               className="mr-input"
               placeholder="Enter a brief description"
+              onBlur={() =>
+                setErrors({
+                  ...errors,
+                  description: validateDescription(formData.description),
+                })
+              }
             />
             {errors.description && (
               <p className="error-text">{errors.description}</p>
@@ -376,8 +459,12 @@ const MaintenanceRequest = () => {
               )}
             </div>
 
-            <button disabled={requesting}
-              style={{ backgroundColor: "#897463" }} type="submit" className="mr-submit-btn">
+            <button
+              disabled={requesting}
+              style={{ backgroundColor: "#897463" }}
+              type="submit"
+              className="mr-submit-btn"
+            >
               {requesting ? "Requesting..." : "Request"}{" "}
             </button>
           </form>

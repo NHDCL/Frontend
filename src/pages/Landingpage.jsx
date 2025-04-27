@@ -49,9 +49,9 @@ const Landingpage = () => {
             Streamline facility maintenance, requests, and tracking
             effortlessly.
           </h3>
-          <button onClick={handleGetStarted} className="lgetstart">
+          <Link to="/login" className="lgetstart">
             <p className="lp">Get Started</p>
-          </button>
+          </Link>
         </div>
       </div>
       <div className="llowercontainer">

@@ -15,12 +15,24 @@ const SAdminAcademies = () => {
     }
   }, [error]);
 
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading academies...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
+
   return (
     <div className="AdminA-container">
       <div className="AdminA-bento-grid">
-        {isLoading ? (
-          <p>Loading academies...</p>
-        ) : error ? (
+        {error ? (
           <p style={{ color: "red" }}>Error fetching academies</p>
         ) : (
           academies?.map((academy, index) => (

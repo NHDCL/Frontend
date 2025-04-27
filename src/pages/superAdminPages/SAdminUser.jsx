@@ -13,6 +13,7 @@ import {
   useCreateDepartmentMutation,
   useGetUsersQuery,
   useGetRolesQuery,
+  useSoftDeleteUserMutation,
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 
@@ -33,15 +34,32 @@ const SAdminUser = () => {
 
   const { data: academies } = useGetAcademyQuery();
   const { data: department } = useGetDepartmentQuery();
-  const { data: users, refetch } = useGetUsersQuery();
+  const { data: users, refetch: refetchUsers } = useGetUsersQuery();
   const { data: roles } = useGetRolesQuery();
   const [createUser, { isLoading }] = useCreateUserMutation();
   const [data, setData] = useState([]);
-  console.log("data", data);
+  const [softDeleteUser] = useSoftDeleteUserMutation();
+  // console.log("data", data);
 
   const [adminRoleId, setAdminRoleId] = useState(null);
-  console.log("users: ", roles);
-  console.log("adminRole: ", adminRoleId);
+  const [emailError, setEmailError] = useState("");
+
+  // console.log("users: ", roles);
+  // console.log("adminRole: ", adminRoleId);
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading users...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   useEffect(() => {
     if (roles && Array.isArray(roles)) {
@@ -103,7 +121,6 @@ const SAdminUser = () => {
       setEmail("");
       setEmployeeId("");
       setPassword("");
-      refetch();
     } catch (err) {
       let errorMessage = "Something went wrong. Please try again.";
 
@@ -166,6 +183,12 @@ const SAdminUser = () => {
     return depart ? depart.name : "Unknown department";
   };
 
+  const isValidEmail = (email) => {
+    // Simple email regex pattern
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
   return (
     <div className="user-dashboard">
       <div className="user-tab-outer">
@@ -207,6 +230,7 @@ const SAdminUser = () => {
                   "Image",
                   "Name",
                   "Email",
+                  "EmployeeId",
                   activeTab !== "Admin" ? "Location" : "",
                   activeTab !== "Admin" && activeTab !== "Manager"
                     ? "Department"
@@ -244,6 +268,7 @@ const SAdminUser = () => {
                   </td>
                   <td>{item.name}</td>
                   <td>{item.email}</td>
+                  <td>{item.employeeId}</td>
                   {activeTab !== "Admin" && (
                     <td>{getAcademyName(item.academyId)}</td>
                   )}
@@ -310,10 +335,22 @@ const SAdminUser = () => {
                 type="email"
                 placeholder="Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEmail(value);
+                  if (!isValidEmail(value)) {
+                    setEmailError("Invalid email format");
+                  } else {
+                    setEmailError("");
+                  }
+                }}
                 required
                 autoComplete="off"
               />
+              {emailError && (
+                <p style={{ color: "red", fontSize: "0.8rem" }}>{emailError}</p>
+              )}
+
               <input
                 type="password"
                 placeholder="Password"

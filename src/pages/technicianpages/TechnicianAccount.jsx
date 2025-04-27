@@ -35,6 +35,11 @@ const TechnicianAccount = () => {
     imageFile: null,
   });
 
+  const [passwordStrength, setPasswordStrength] = useState({
+    label: "",
+    color: "",
+  });
+
   const [isNewImageSelected, setIsNewImageSelected] = useState(false);
   const originalImageRef = useRef(img);
   const email = useSelector(getUserEmail);
@@ -131,9 +136,26 @@ const TechnicianAccount = () => {
     }
   };
 
+  const getPasswordStrength = (password) => {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    if (/[@$!%*?&#^]/.test(password)) strength++;
+
+    if (strength <= 2) return { label: "Weak", color: "red" };
+    if (strength === 3 || strength === 4)
+      return { label: "Medium", color: "orange" };
+    if (strength === 5) return { label: "Strong", color: "green" };
+    return { label: "", color: "" };
+  };
+
   const validateForm = () => {
     let newErrors = {};
     const { name, email, oldPassword, newPassword, confirmPassword } = profile;
+    const strongPasswordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^])[A-Za-z\d@$!%*?&#^]{8,}$/;
 
     if (!name.trim()) newErrors.name = "Name is required";
     if (!email.trim()) {
@@ -146,8 +168,10 @@ const TechnicianAccount = () => {
       newErrors.department = "Department is required";
     if (oldPassword || newPassword || confirmPassword) {
       if (!oldPassword) newErrors.oldPassword = "Old password is required";
-      if (newPassword.length < 6)
-        newErrors.newPassword = "Password must be at least 6 characters";
+      if (!strongPasswordRegex.test(newPassword)) {
+        newErrors.newPassword =
+          "Password must be 8+ characters and include uppercase, lowercase, number, and special character";
+      }
       if (newPassword !== confirmPassword)
         newErrors.confirmPassword = "Passwords do not match";
     }
@@ -321,7 +345,13 @@ const TechnicianAccount = () => {
                     ? "New Password"
                     : "Re-enter New Password"
                 }
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  if (field === "newPassword") {
+                    const strength = getPasswordStrength(e.target.value);
+                    setPasswordStrength(strength);
+                  }
+                }}
               />
               <span
                 className="profile-password-toggle"
@@ -329,7 +359,23 @@ const TechnicianAccount = () => {
               >
                 {showPassword[field] ? <AiFillEye /> : <AiFillEyeInvisible />}
               </span>
+
+              {/* Show error if any */}
               {errors[field] && <p className="error-text">{errors[field]}</p>}
+
+              {/* Show strength only for newPassword */}
+              {field === "newPassword" && profile.newPassword && (
+                <p
+                  style={{
+                    color: passwordStrength.color,
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                    marginBottom: "4px",
+                  }}
+                >
+                  Strength: {passwordStrength.label}
+                </p>
+              )}
             </div>
           ))}
 

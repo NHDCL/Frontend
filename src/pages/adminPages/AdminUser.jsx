@@ -15,6 +15,7 @@ import {
   useCreateDepartmentMutation,
   useGetUsersQuery,
   useGetRolesQuery,
+  useSoftDeleteUserMutation,
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 
@@ -41,11 +42,14 @@ const AdminUser = () => {
   const { data: department, refetch } = useGetDepartmentQuery();
   const { data: users, refetch: refetchUsers } = useGetUsersQuery();
   const { data: roles } = useGetRolesQuery();
+
   const [createDepartment] = useCreateDepartmentMutation();
   const [createUser, { isLoading }] = useCreateUserMutation();
-  const [formError, setFormError] = useState(null);
 
+  const [formError, setFormError] = useState(null);
   const [softDeleteUser] = useSoftDeleteUserMutation();
+
+  const [emailError, setEmailError] = useState("");
 
   // console.log("SA: ", selectedAcademy.value)
   console.log("dep: ", department);
@@ -72,32 +76,8 @@ const AdminUser = () => {
     }
   }, [roles]);
 
-  console.log("AAA", academies);
-
-  const handleDelete = async (userId) => {
-    console.log("Deleting user with ID:", userId);
-    const result = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you want to delete this User?",
-      icon: "warning",
-      color: "#305845", // deep green for text
-      showCancelButton: true,
-      confirmButtonColor: "#305845", // deep green
-      cancelButtonColor: "#897462", // warm brown
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "Cancel",
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await softDeleteUser(userId).unwrap();
-        Swal.fire("Deleted!", "User has been deleted.", "success");
-        refetchUsers();
-      } catch (error) {
-        Swal.fire("Error", "Failed to delete user", "error");
-      }
-    }
-  };
+  // console.log("Mausers: ", managerUser.role.name)
+  // console.log("MRoleausers: ", managerRoleId)
 
   console.log("AAA", academies);
 
@@ -118,7 +98,12 @@ const AdminUser = () => {
       !selectedAcademy ||
       (activeTab !== "Manager" && !selectedDepartment)
     ) {
-      alert("Please fill all fields");
+      Swal.fire({
+        icon: "error",
+        title: "Incomplete Form",
+        text: "Please fill in all required fields",
+        confirmButtonColor: "#897463",
+      });
       return;
     }
 
@@ -186,9 +171,24 @@ const AdminUser = () => {
     }
   };
 
+  const resetForm = () => {
+    setName("");
+    setEmployeeId("");
+    setEmail("");
+    setPassword("");
+    setSelectedAcademy(null);
+    setSelectedDepartment(null);
+    setEmailError("");
+  };
+
   const handleCreateDepartment = async () => {
     if (!departments || !description) {
-      alert("Please fill in all fields");
+      Swal.fire({
+        icon: "error",
+        title: "Incomplete Form",
+        text: "Please fill in department name and description",
+        confirmButtonColor: "#897463",
+      });
       return;
     }
     const departmentData = {
@@ -232,6 +232,27 @@ const AdminUser = () => {
 
   console.log("FD", filteredData);
 
+  const handleDelete = async (userId) => {
+    console.log("Deleting user with ID:", userId);
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to delete this user?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await softDeleteUser(userId).unwrap();
+        Swal.fire("Deleted!", "User has been deleted.", "success");
+        refetchUsers();
+      } catch (error) {
+        Swal.fire("Error", "Failed to delete user", "error");
+      }
+    }
+  };
+
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
     (currentPage - 1) * rowsPerPage,
@@ -249,6 +270,12 @@ const AdminUser = () => {
   };
 
   console.log("GAN", getAcademyName);
+
+  const isValidEmail = (email) => {
+    // Simple email regex pattern
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
 
   return (
     <div className="user-dashboard">
@@ -303,6 +330,7 @@ const AdminUser = () => {
                   "Image",
                   "Name",
                   "Email",
+                  "EmployeeId",
                   "Academy",
                   activeTab !== "Manager" ? "Department" : "",
                   "Role",
@@ -337,6 +365,7 @@ const AdminUser = () => {
                   </td>
                   <td>{item.name}</td>
                   <td>{item.email}</td>
+                  <td>{item.employeeId}</td>
                   <td>{getAcademyName(item.academyId)}</td>
                   {activeTab !== "Manager" && (
                     <td>{getDepartmentName(item.departmentId)}</td>
@@ -345,12 +374,7 @@ const AdminUser = () => {
                   <td>
                     <RiDeleteBin6Line
                       onClick={() => handleDelete(item.userId)}
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        color: "red",
-                        cursor: "pointer",
-                      }}
+                      style={{ width: "20px", height: "20px", color: "red" }}
                     />
                   </td>
                 </tr>
@@ -386,7 +410,10 @@ const AdminUser = () => {
               <h2>Add {activeTab}</h2>
               <button
                 className="AdminUser-close-btn"
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  resetForm();
+                }}
               >
                 <IoIosCloseCircle
                   style={{
@@ -418,9 +445,21 @@ const AdminUser = () => {
                 type="email"
                 placeholder="Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEmail(value);
+                  if (!isValidEmail(value)) {
+                    setEmailError("Invalid email format");
+                  } else {
+                    setEmailError("");
+                  }
+                }}
                 required
+                autoComplete="off"
               />
+              {emailError && (
+                <p style={{ color: "red", fontSize: "0.8rem" }}>{emailError}</p>
+              )}
               <input
                 type="password"
                 placeholder="Password"
