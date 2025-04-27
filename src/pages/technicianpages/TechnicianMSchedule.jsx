@@ -8,7 +8,7 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import { RiImageAddLine } from "react-icons/ri";
 
-import { useGetMaintenanceByTechnicianEmailQuery, useGetMaintenanceReportByIDQuery, useCreateMaintenanceReportMutation, useCreateRepairReportMutation, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
+import {useGetMaintenanceByTechnicianEmailQuery, useCreateMaintenanceReportMutation,useGetMaintenanceReportByIDQuery, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { assetApiSlice } from "../../slices/assetApiSlice";
@@ -27,7 +27,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   );
   const [images, setImages] = useState([]); // Allow multiple images
   const [imageError, setImageError] = useState("");
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef(null)
 
   const [updateMaintenanceById, { isLoading, error }] =
     useUpdatePreventiveMaintenanceMutation();
