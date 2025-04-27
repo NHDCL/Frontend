@@ -20,6 +20,7 @@ export const assetApiSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
+    
     getAssetByAssetCode: builder.query({
       query: (assetCode) => ({
         url: `${ASSETS_URL}/assets/${assetCode}`,

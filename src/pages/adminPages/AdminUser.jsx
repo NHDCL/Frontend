@@ -8,7 +8,7 @@ import { AiOutlineUsergroupAdd } from "react-icons/ai";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
 import { RiApps2AddFill } from "react-icons/ri";
-import { useGetAcademyQuery, useCreateUserMutation, useGetDepartmentQuery, useCreateDepartmentMutation, useGetUsersQuery } from "../../slices/userApiSlice";
+import { useGetAcademyQuery, useCreateUserMutation, useGetDepartmentQuery, useCreateDepartmentMutation, useGetUsersQuery, useGetRolesQuery } from "../../slices/userApiSlice";
 import Swal from 'sweetalert2';
 
 const AdminUser = () => {
@@ -22,6 +22,8 @@ const AdminUser = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
+  const [image, setImage] = useState(img);
   const [selectedAcademy, setSelectedAcademy] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState(null);
 
@@ -30,7 +32,8 @@ const AdminUser = () => {
 
   const { data: academies } = useGetAcademyQuery();
   const { data: department, refetch } = useGetDepartmentQuery();
-  const { data: users, refetch:refetchUsers } = useGetUsersQuery();
+  const { data: users, refetch: refetchUsers } = useGetUsersQuery();
+  const { data: roles } = useGetRolesQuery();
   const [createDepartment,] = useCreateDepartmentMutation();
   const [createUser, { isLoading }] = useCreateUserMutation();
   const [formError, setFormError] = useState(null);
@@ -44,10 +47,10 @@ const AdminUser = () => {
   const [supervisorRoleId, setSupervisorRoleId] = useState(null);
 
   useEffect(() => {
-    if (users && Array.isArray(users)) {
-      users.forEach(user => {
-        const roleName = user?.role?.name?.toLowerCase();
-        const roleId = user?.role?.roleId;
+    if (roles && Array.isArray(roles)) {
+      roles.forEach(role => {
+        const roleName = role?.name?.toLowerCase();
+        const roleId = role?.roleId;
 
         if (roleName === 'manager') {
           setManagerRoleId(roleId);
@@ -58,13 +61,13 @@ const AdminUser = () => {
         }
       });
     }
-  }, [users]);
+  }, [roles]);
 
   // console.log("Mausers: ", managerUser.role.name)
   // console.log("MRoleausers: ", managerRoleId)
 
   console.log("AAA", academies)
-  
+
   const handleAddUserClick = () => {
     setShowModal(true);
   };
@@ -74,9 +77,17 @@ const AdminUser = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!name || !email || !password || !selectedAcademy || (activeTab !== "Manager" && !selectedDepartment)) {
+    if (!name || !email || !password || !employeeId || !selectedAcademy || (activeTab !== "Manager" && !selectedDepartment)) {
       alert("Please fill all fields");
       return;
+    }
+
+    let imageFile = image; // your image input (e.g., from file input)
+
+    if (!imageFile) {
+      const response = await fetch("/default-user.jpg");
+      const blob = await response.blob();
+      imageFile = new File([blob], "default-user.jpg", { type: "image/jpeg" });
     }
 
     // If activeTab is "Manager", use the managerRoleId
@@ -93,11 +104,13 @@ const AdminUser = () => {
 
     const newUser = {
       name,
+      employeeId,
       email,
       password,
       academyId: selectedAcademy.value,
       departmentId: activeTab !== "Manager" ? selectedDepartment.value : null,
       roleId: roleId,
+      image: imageFile,
     };
 
     try {
@@ -108,12 +121,13 @@ const AdminUser = () => {
       Swal.fire("Success", "User created successfully", "success");
       setName("");
       setEmail("");
+      setEmployeeId("");
       setPassword("");
       setSelectedAcademy(null);
       setSelectedDepartment(null);
 
       await refetchUsers();
-      
+
     } catch (err) {
       let errorMessage = "Something went wrong. Please try again.";
 
@@ -202,7 +216,7 @@ const AdminUser = () => {
     return depart ? depart.name : "Unknown department";
   };
 
-  console.log("GAN",getAcademyName)
+  console.log("GAN", getAcademyName)
 
   return (
     <div className="user-dashboard">
@@ -347,6 +361,7 @@ const AdminUser = () => {
             </div>
             <div className="AdminUser-modal-content">
               <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
+              <input type="text" placeholder="EmployeeID" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required autoComplete="off" />
               <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               <Select

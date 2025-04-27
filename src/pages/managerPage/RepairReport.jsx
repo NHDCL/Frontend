@@ -13,10 +13,12 @@ import jsPDF from "jspdf";
 import "tippy.js/dist/tippy.css";
 import Tippy from "@tippyjs/react";
 import autoTable from "jspdf-autotable";
-import { useGetRepairReportsQuery, useGetRepairRequestQuery, } from "../../slices/maintenanceApiSlice";
+import { useGetRepairReportsQuery, useGetRepairRequestQuery, useUpdateScheduleMutation, useLazyGetScheduleByRepairIDQuery } from "../../slices/maintenanceApiSlice";
 import Select from "react-select"
 import { createSelector } from "reselect";
 import { useSelector } from "react-redux";
+import Swal from 'sweetalert2';
+
 
 import {
   useGetUserByEmailQuery,
@@ -42,8 +44,8 @@ const Repairreport = () => {
   const { data: repairRequest, refetch: refetchRepairRequest } = useGetRepairRequestQuery();
   const { data: repairReport } = useGetRepairReportsQuery();
   const { data: academy } = useGetAcademyQuery();
-
-
+  const [updateSchedule] = useUpdateScheduleMutation();
+  const [fetchSchedulesByRepairID] = useLazyGetScheduleByRepairIDQuery();
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
     selectUserInfo,
@@ -59,7 +61,7 @@ const Repairreport = () => {
 
   const { data: users } = useGetUsersQuery();
   const [data, setData] = useState([]);
-
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (repairReport && repairRequest && academy && users && userByEmial) {
@@ -67,23 +69,23 @@ const Repairreport = () => {
       console.log("📋 Repair Requests:", repairRequest);
       console.log("🎓 Academies:", academy);
       console.log("👤 Users:", users);
-  
+
       const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
-  
+
       const mergedData = repairReport
         .map((report) => {
           const matchingRequest = repairRequest.find(
             (request) => request.repairID === report.repairID
           );
-  
+
           // Skip if no matching request
           if (!matchingRequest) return null;
-  
+
           const requestAcademyId = matchingRequest.academyId?.trim().toLowerCase();
-  
+
           // ✅ Only keep records matching the login user's academy
           if (requestAcademyId !== loginAcademyId) return null;
-  
+
           // 🔍 Count technicians
           let total = 0;
           if (report.technicians) {
@@ -93,12 +95,12 @@ const Repairreport = () => {
             total = technicianList.length;
             console.log("👷‍♂️ Technicians for Report ID", report.repairID, ":", total);
           }
-  
+
           // 🏫 Match academyId to academyName
           const matchingAcademy = academy.find(
             (a) => a.academyId?.trim().toLowerCase() === requestAcademyId
           );
-  
+
           const merged = {
             ...report,
             academyId: matchingRequest.academyId || null,
@@ -108,19 +110,77 @@ const Repairreport = () => {
             description: matchingRequest.description || "N/A",
             totalTechnicians: total,
           };
-  
+
           console.log("🧩 Merged Item:", merged);
           return merged;
         })
         .filter(Boolean); // 🔥 Remove any nulls (non-matching academy or request)
-  
+
       console.log("📦 Final Merged Data:", mergedData);
       setData(mergedData);
     }
   }, [repairReport, repairRequest, academy, users, userByEmial]);
-  
-  
-  
+
+
+  const handleUpdate = async () => {
+    const repairID = modalData?.repairID;
+
+    if (!repairID) {
+      console.error("Repair ID is missing.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Missing ID',
+        text: 'Repair ID is missing. Please try again.',
+      });
+      return;
+    }
+
+    setIsUpdating(true); // 👈 start loading
+    try {
+      const scheduleRes = await fetchSchedulesByRepairID(repairID).unwrap();
+      console.log("Schedule response:", scheduleRes);
+    
+      // handle different structures
+      const scheduleID = Array.isArray(scheduleRes)
+        ? scheduleRes[0]?.scheduleID
+        : scheduleRes?.scheduleID;
+    
+      if (!scheduleID) {
+        console.error("Schedule ID not found in response.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Schedule Not Found',
+          text: 'Unable to fetch a schedule for this repair ID.',
+        });
+        return;
+      }
+    
+      const updatedSchedule = {
+        addcost: editableData.Additional_cost,
+        addHours: editableData.Additional_Hour,
+        remark: editableData.Remarks,
+      };
+    
+      const response = await updateSchedule({ scheduleID, updatedSchedule }).unwrap();
+      console.log('Update response:', response);
+    
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Schedule updated successfully.',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error('Update failed:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Something went wrong while updating the schedule.',
+      });
+    }
+    setIsUpdating(false);    
+  };
 
   console.log("dataa", data)
 
@@ -463,10 +523,10 @@ const Repairreport = () => {
                           className="TModal-modal-image"
                         />
                       ))
-                    ) : modalData.imageUrl ? (
+                    ) : modalData.images ? (
                       // If `imageUrl` is a string, display it as a single image
                       <img
-                        src={modalData.imageUrl}
+                        src={modalData.images}
                         alt="Work Order"
                         className="TModal-modal-image"
                       />
@@ -505,7 +565,13 @@ const Repairreport = () => {
                     Download
                     <LuDownload style={{ marginLeft: "12px" }} />
                   </button>
-                  <button className="reject-btn">Done</button>
+                  <button
+                    className="reject-btn"
+                    onClick={handleUpdate}
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? "Updating..." : "Done"}
+                  </button>
                 </div>
               </form>
             </div>

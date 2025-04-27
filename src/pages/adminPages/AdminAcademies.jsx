@@ -161,43 +161,6 @@ const AdminAcademies = () => {
     }
   };
 
-  // const handleEdit = async () => {
-  //   try {
-  //     const { academyId, name, location, description, image } = currentAcademy;
-  
-  //     const payload = {
-  //       academyId,
-  //       name,
-  //       location,
-  //       description,
-  //       image, // ✅ keep it — it's either File or string (URL)
-  //     };
-  
-  //     await updateAcademy(payload).unwrap();
-  
-  //     Swal.fire({
-  //       icon: "success",
-  //       title: "Academy updated!",
-  //       toast: true,
-  //       position: "top-end",
-  //       showConfirmButton: false,
-  //       timer: 2000,
-  //     });
-  
-  //     setShowEditModal(false);
-  //     refetch();
-  //   } catch (err) {
-  //     console.error("Update failed:", err);
-  //     Swal.fire({
-  //       icon: "error",
-  //       title: "Failed to update academy",
-  //       text: err?.data?.message || err?.error || "Something went wrong.",
-  //     });
-  //   }
-  // };
-  
-
-
   const handleDelete = (id) => {
     if (!id) {
       console.error("No ID provided for deletion");

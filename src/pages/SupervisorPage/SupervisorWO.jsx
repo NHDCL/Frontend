@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./../managerPage/css/card.css";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/form.css";
@@ -7,6 +7,23 @@ import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
+import {
+  useGetMaintenanceRequestQuery, useGetSchedulesByUserIDQuery, useUpdatePreventiveMaintenanceMutation,
+  useGetPreventiveSchedulesByUserIDQuery, useGetMaintenanceByAssetCodeQuery
+} from "../../slices/maintenanceApiSlice";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { createSelector } from "reselect";
+import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice"
+import { useGetAssetByAssetCodeQuery } from "../../slices/assetApiSlice";
+
+import {
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+  useGetDepartmentQuery,
+} from "../../slices/userApiSlice";
+import Swal from "sweetalert2";
+
 
 import Select from "react-select";
 
@@ -15,284 +32,265 @@ const SupervisorWO = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [modalData, setModalData] = useState(null);
-  const [selectedPriority, setSelectedPriority] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
+  const [rescheduleModalData, setRescheduleModalData] = useState(null);
 
-  const [assignedWorker, setAssignedWorker] = useState("");
+
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const [selectedTechnicianId, setSelectedTechnicianId] = useState(null);
+  const [selectedTechnicianUpdate, setSelectedTechnicianUpdate] =
+    useState(null);
   const rowsPerPage = 10;
+  console.log(
+    "start supervisor........................................................................."
+  );
 
-  const [teamMembers, setTeamMembers] = useState([]);
-  const [newMember, setNewMember] = useState("");
+  const selectUserInfo = (state) => state.auth.userInfo || {};
+  const getUserEmail = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.user?.username || ""
+  );
 
-  const handleAddMember = () => {
-    if (newMember.trim() && !teamMembers.includes(newMember)) {
-      setTeamMembers([...teamMembers, newMember]);
-      setNewMember(""); // Reset input field
-    }
-  };
+  const email = useSelector(getUserEmail);
+  const { data: userByEmial } = useGetUserByEmailQuery(email);
 
-  const handleRemoveMember = (index) => {
-    setTeamMembers(teamMembers.filter((_, i) => i !== index));
-  };
+  const userID = userByEmial?.user?.userId;
+  console.log("userID", userID)
+
+  const academyId = userByEmial?.user?.academyId;
+  console.log("academyId", academyId);
+
+  const departmentId = userByEmial?.user?.departmentId;
+  console.log("departmentId", departmentId);
+
+  const { data: users, isLoading: usersLoading } = useGetUsersQuery();
+
+  const filteredUsers = users?.filter(
+    (user) =>
+      user.academyId === academyId &&
+      user.departmentId === departmentId &&
+      typeof user.role?.name === "string" &&
+      user.role.name.toLowerCase() === "technician"
+  );
+  console.log("filteredUsers:", filteredUsers);
+
+  const workerOptions = filteredUsers?.map((user) => ({
+    label: user.email,
+    value: user.email,
+  }));
+  console.log("workerOptions:", workerOptions);
+
+  const updatedOption = workerOptions?.find(
+    (w) => w.label === selectedTechnicianUpdate
+  );
+
+  const {
+    data: userSchedules,
+    isLoading: userSchedulesLoading,
+    error: userSchedulesError,
+    refetch
+  } = useGetPreventiveSchedulesByUserIDQuery(userID, {
+    skip: !userID,
+  })
+  console.log("sdf", modalData)
+  const assetCode = userSchedules?.assetCode;
+  console.log("rid", assetCode);
+  console.log("userSchedule", userSchedules);
+
+  const {
+    data: scheduleData,
+
+  } = useGetAssetByAssetCodeQuery(assetCode, {
+    skip: !assetCode,
+  })
+
+  const [data, setData] = useState([]);
+  const [repairs, setRepairs] = useState([]);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchRepairDetails = async () => {
+      if (userSchedules && userSchedules.length) {
+        const repairPromises = userSchedules.map(async (schedule) => {
+          try {
+            const asset = await dispatch(
+              maintenanceApiSlice.endpoints.getAssetByAssetCode.initiate(schedule?.assetCode)
+            ).unwrap();
+
+            return {
+              ...schedule,
+              asset,
+            };
+          } catch (err) {
+            console.error(`Error fetching asset for ${schedule?.assetCode}:`, err);
+            return null;
+          }
+        });
+
+        const combinedResults = await Promise.all(repairPromises);
+        const validResults = combinedResults.filter(Boolean); // filter out failed ones
+        setData(validResults); // ✅ Now includes both schedule + asset
+      }
+    };
+
+    fetchRepairDetails();
+  }, [userSchedules, dispatch]);
+
+
+  console.log("data", data)
 
   const today = new Date().toISOString().split("T")[0];
 
-  const [data, setData] = useState([
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Minor",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "John Doe",
-        time: "10:00 AM",
-        assignDate: "25/4/2025",
-        teamMembers: ["12210010.gcit@rub.edu.bt", "12210011.gcit@rub.edu.bt"],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "Jane Smith",
-        time: "02:00 PM",
-        assignDate: "26/4/2025",
-        teamMembers: ["12210015.gcit@rub.edu.bt"],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "Mike Lee",
-        time: "11:30 AM",
-        assignDate: "27/4/2025",
-        teamMembers: ["12210012.gcit@rub.edu.bt", "12210013.gcit@rub.edu.bt"],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "In progress",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "Completed",
-      description: "Broken geyser",
-      action: "Schedule",
-      scheduleDetails: {
-        technician: "",
-        time: "",
-        assignDate: "",
-        teamMembers: [],
-      },
-    },
-    {
-      MID: "#12512B",
-      assetName: "Single comfy",
-      reportingTime: "07:00 AM",
-      date: "23/4/2025",
-      assetID: "356",
-      area: "Gyalpozhing",
-      priority: "Major",
-      workstatus: "pending",
-      description: "Broken geyser",
-      action: "Reschedule",
-      scheduleDetails: {
-        technician: "Emily Davis",
-        time: "09:45 AM",
-        assignDate: "28/4/2025",
-        teamMembers: ["12210017.gcit@rub.edu.bt", "12210018.gcit@rub.edu.bt"],
-      },
-    },
-  ]);
+  const [updateSchedule] = useUpdatePreventiveMaintenanceMutation();
 
-  // Sample workers list
-  const workersList = [
-    { value: "Worker A", label: "Worker A" },
-    { value: "Worker B", label: "Worker B" },
-    { value: "Worker C", label: "Worker C" },
-  ];
+  const handleSchedule = async () => {
+    const maintenanceID = modalData.maintenanceID;  // Ensure the correct way to access repairID
 
-  const handleAssignRequest = () => {
-    if (!assignedWorker || !assignTime || !assignDate) {
-      alert("Please fill in all fields before assigning.");
+    if (!maintenanceID) {
+      Swal.fire("Error", "Repair ID not found.", "error");
+      return;
+    }
+    const matchingSchedule = userSchedules.find(schedule => schedule.maintenanceID === maintenanceID);
+
+    if (!matchingSchedule) {
+      Swal.fire("Error", "No schedule found for the given maintenanceID.", "error");
       return;
     }
 
-    alert(
-      `Assigned ${modalData.rid} to ${assignedWorker} at ${assignTime} on ${assignDate}`
-    );
+    const id = matchingSchedule.maintenanceID;
+    console.log("scheduleId", id);
 
-    // Close the modal after assigning
-    handleCloseModal();
+    if (!selectedTechnicianId) {
+      Swal.fire("Error", "Technician email is missing.", "error");
+      return;
+    }
+
+    // Prepare the updated data for the schedule
+    const maintenance = {
+      technicianEmail: selectedTechnicianId,
+      repairID: matchingSchedule.maintenanceID,  // Use repairID from the matching schedule
+    };
+
+    try {
+      await updateSchedule({ id, maintenance }).unwrap();
+      Swal.fire({
+        icon: "success",
+        title: "Schedule updated successfully!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      // refetchRepairRequest();
+      handleCloseModal();
+    } catch (error) {
+      Swal.fire("Error", error?.data?.message || "Update failed", "error");
+      console.error("Update schedule error:", error);
+    }
+    refetch()
+
   };
+
+
+  const handleReschedule = async () => {
+
+    const maintenanceID = rescheduleModalData.maintenanceID;  // Ensure the correct way to access repairID
+
+    if (!maintenanceID) {
+      Swal.fire("Error", "Repair ID not found.", "error");
+      return;
+    }
+    const matchingSchedule = userSchedules.find(schedule => schedule.maintenanceID === maintenanceID);
+
+    if (!matchingSchedule) {
+      Swal.fire("Error", "No Reschedule found for the given maintenanceID.", "error");
+      return;
+    }
+
+    const id = matchingSchedule.maintenanceID;
+    console.log("scheduleId", id);
+
+    if (!selectedTechnicianUpdate) {
+      Swal.fire("Error", "Technician email is missing.", "error");
+      return;
+    }
+
+    // Prepare the updated data for the schedule
+    const maintenance = {
+      technicianEmail: selectedTechnicianUpdate,
+      repairID: matchingSchedule.maintenanceID,  // Use repairID from the matching schedule
+    };
+
+    try {
+      await updateSchedule({ id, maintenance }).unwrap();
+      Swal.fire({
+        icon: "success",
+        title: "Schedule updated successfully!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      // refetchRepairRequest();
+      handleCloseModal2();
+    } catch (error) {
+      Swal.fire("Error", error?.data?.message || "Update failed", "error");
+      console.error("Update schedule error:", error);
+    }
+    refetch()
+  };
+
 
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {
     switch (status) {
       case "pending":
-        return "pending-status"; // Gray color
-      case "In progress":
-        return "in-progress-status"; // Yellow color
-      case "Completed":
-        return "completed-status"; // Green color
+        return "pending-status";
+      case "inusage":
+        return "in-progress-status";
+      case "completed":
+        return "completed-status";
       default:
         return "";
     }
   };
 
-  // Extract unique priorities from data
-  const uniquePriorities = [
-    { value: "", label: "All Priorities" },
-    ...Array.from(new Set(data.map((item) => item.priority))).map(
-      (priority) => ({
-        value: priority,
-        label: priority,
-      })
-    ),
-  ];
 
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
-    ...Array.from(new Set(data.map((item) => item.workstatus))).map(
+    ...Array.from(new Set(data.map((item) => item.status?.toLowerCase()))).map(
       (status) => ({
         value: status,
-        label: status,
+        label: status ? status.charAt(0).toUpperCase() + status.slice(1) : "",
       })
     ),
   ];
 
   // Filtering data based on search and priority selection and work status
-  const sortedData = [...data].sort((a, b) => b.MID - a.MID);
-  const filteredData = sortedData.filter((item) => {
-    const matchesSearch = Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const searchRecursively = (obj, searchTerm) => {
+    if (typeof obj !== 'object' || obj === null) {
+      return obj && obj.toString().toLowerCase().includes(searchTerm?.toLowerCase() || '');
+    }
 
-    const matchesPriority =
-      selectedPriority === "" || item.priority === selectedPriority;
+    // Check all values in the object (including nested objects)
+    return Object.values(obj).some((value) => searchRecursively(value, searchTerm));
+  };
+  const filteredData = (data && data.length) ? data.filter((item) => {
+    // Match search term with any field at any level in the object
+    const matchesSearch = searchRecursively(item, searchTerm);
+
     const matchesWorkStatus =
-      selectedWorkStatus === "" || item.workstatus === selectedWorkStatus;
+      selectedWorkStatus === "" ||
+      item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
 
-    return matchesSearch && matchesPriority && matchesWorkStatus;
-  });
+    return matchesSearch && matchesWorkStatus;
+  }) : [];
+
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -300,32 +298,42 @@ const SupervisorWO = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (MID) => {
+  const handleSelectRow = (assetCode) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(MID)
-        ? prevSelectedRows.filter((item) => item !== MID)
-        : [...prevSelectedRows, MID]
+      prevSelectedRows.includes(assetCode)
+        ? prevSelectedRows.filter((item) => item !== assetCode)
+        : [...prevSelectedRows, assetCode]
     );
   };
 
-  const handleDeleteSelected = () => {
-    const updatedData = data.filter((item) => !selectedRows.includes(item.MID));
-    // Update the data with the filtered result after deletion
-    setData(updatedData);
-    setSelectedRows([]); // Reset selected rows after deletion
-  };
-  const handleDeleteRow = (MID) => {
-    const updatedData = data.filter((item) => item.MID !== MID);
-    setData(updatedData);
-  };
 
   const handleScheduleView = (item) => {
     setModalData(item);
-    setAssignedWorker(null); // Reset worker selection when opening modal
-  };
+    setStartDate(item?.startDate);
+    setEndDate(item?.endDate);
+    setAssignTime(item?.timeStart);
 
+  };
   const handleCloseModal = () => {
     setModalData(null);
+    setSelectedTechnicianId(null);
+    setStartDate(null);
+    setEndDate(null);
+    setAssignTime(null);
+  };
+  const handleCloseModal2 = () => {
+    setRescheduleModalData(null);
+    setSelectedTechnicianUpdate(null);
+    setStartDate(null);
+    setEndDate(null);
+    setAssignTime(null);
+  };
+  const handleRescheduleView = (item) => {
+    setRescheduleModalData(item);
+    setSelectedTechnicianUpdate(item?.technicianEmail || "");
+    setStartDate(item?.startDate);
+    setEndDate(item?.endDate);
+    setAssignTime(item?.timeStart);
   };
 
   return (
@@ -342,24 +350,6 @@ const SupervisorWO = () => {
             />
           </div>
           <div className="dropdown-ls">
-            {/* Priority Dropdown */}
-            <Select
-              classNamePrefix="custom-select"
-              className="priority-dropdown"
-              options={uniquePriorities}
-              value={uniquePriorities.find(
-                (option) => option.value === selectedPriority
-              )} // Ensure selected value is an object
-              onChange={(selectedOption) => {
-                if (selectedOption) {
-                  setSelectedPriority(selectedOption.value);
-                } else {
-                  setSelectedPriority(""); // Clear the selected priority when null
-                }
-              }}
-              isClearable
-              isSearchable={false}
-            />
 
             {/* Work Status Dropdown */}
             <Select
@@ -385,13 +375,12 @@ const SupervisorWO = () => {
             <thead className="table-header">
               <tr>
                 {[
-                  "MID",
+                  "Asset Code",
                   "Asset Name",
                   "Report Time",
                   "Date",
                   "Asset ID",
                   "Area",
-                  "Priority",
                   "Workstatus",
                   "Description",
                   "",
@@ -403,35 +392,36 @@ const SupervisorWO = () => {
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  <td>{item.MID}</td>
-                  <td>{item.assetName}</td>
-                  <td>{item.reportingTime}</td>
-                  <td>{item.date}</td>
-                  <td>{item.assetID}</td>
-                  <td>{item.area}</td>
-                  <td>{item.priority}</td>
+                  <td>{item.assetCode}</td>
+                  <td>{item.asset.title}</td>
+                  <td>{item.timeStart}</td>
+                  <td>{item.startDate}</td>
+                  <td>{item.asset.assetID}</td>
+                  <td>{item.asset.assetArea}</td>
                   <td>
-                    <div className={getWorkOrderStatusClass(item.workstatus)}>
-                      {item.workstatus}
+                    <div className={getWorkOrderStatusClass(item.status.toLowerCase().replace(/\s+/g, "") || "")}>
+                      {item.status}
                     </div>
                   </td>
                   <td className="description">{item.description}</td>
 
                   <td className="actions">
-                    <button
-                      className="schedule-btn"
-                      onClick={() => handleScheduleView(item)}
-                    >
-                      Schedule
-                    </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDeleteRow(item.rid)}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px" }}
-                      />
-                    </button>
+                    {item.technicianEmail === null ? (
+                      <button
+                        className="schedule-btn"
+                        onClick={() => handleScheduleView(item)}
+                      >
+                        Schedule
+                      </button>
+                    ) : (
+                      <button
+                        className="schedule-btn"
+                        style={{ backgroundColor: "#315845" }}
+                        onClick={() => handleRescheduleView(item)}
+                      >
+                        Reschedule
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -466,7 +456,9 @@ const SupervisorWO = () => {
           <div className="modal-content">
             {/* Close Button */}
             <div className="modal-header">
-              <h2 className="form-h">Schedule Form</h2>
+              <h2 style={{ fontSize: "18px" }} className="form-h">
+                Schedule Form
+              </h2>
               <button className="close-btn" onClick={handleCloseModal}>
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
@@ -481,84 +473,109 @@ const SupervisorWO = () => {
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
-                  options={workersList}
+                  options={workerOptions}
                   value={
-                    workersList.find((w) => w.value === assignedWorker) || null
-                  } // Ensure default value is handled
+                    workerOptions?.find(
+                      (w) => w.value === selectedTechnicianId
+                    ) || null
+                  }
                   onChange={(selectedOption) => {
-                    setAssignedWorker(selectedOption?.value || ""); // Ensure it's updated
-                    console.log("Selected Worker:", selectedOption); // Debugging
+                    setSelectedTechnicianId(selectedOption?.label || "");
+                    console.log("Selected Worker:", selectedOption);
                   }}
                   isClearable
                 />
               </div>
               {/* Assign Date */}
               <div className="modal-content-field">
-                <label>Assign Date:</label>
-                <input
-                  type="date"
-                  value={assignDate}
-                  min={today}
-                  onChange={(e) => setAssignDate(e.target.value)}
-                />
+                <label>Start Date:</label>
+                <input type="text" value={startDate} readOnly />
+              </div>
+              {/* Assign Date */}
+              <div className="modal-content-field">
+                <label>End Date:</label>
+                <input type="text" value={endDate} readOnly />
               </div>
 
               <div className="modal-content-field">
                 {/* Assign Time */}
                 <label>Assign Time:</label>
-                <input
-                  type="time"
-                  value={assignTime}
-                  onChange={(e) => setAssignTime(e.target.value)}
-                />
+                <input type="text" value={assignTime} readOnly />
               </div>
 
-              <div className="modal-content-field">
-                <label>Team Members:</label>
-                <div className="TModal-outer-team">
-                  <div className="TModal-team-members">
-                    <input
-                      type="text"
-                      placeholder="Enter email"
-                      value={newMember}
-                      onChange={(e) => setNewMember(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="TModal-add-btn"
-                      onClick={handleAddMember}
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal-content-field">
-                <label></label>
-                <div className="TModal-outer-team">
-                  {/* Render only if team members exist */}
-                  {teamMembers.length > 0 && (
-                    <div className="TModal-team-list">
-                      {teamMembers.map((member, index) => (
-                        <div key={index} className="TModal-team-member">
-                          {member}{" "}
-                          <IoMdCloseCircle
-                            onClick={() => handleRemoveMember(index)}
-                            style={{ color: "black" }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                  )}
-                </div>
-              </div>
               <div className="modal-buttons">
                 <button
                   className="accept-btn"
                   style={{ width: "80px" }}
-                  onClick={handleAssignRequest}
+                  onClick={handleSchedule}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal for schedule Request */}
+      {rescheduleModalData && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 style={{ fontSize: "18px" }} className="form-h">
+                Reschedule Form
+              </h2>
+              <button className="close-btn" onClick={handleCloseModal2}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+
+            {/* Assign Dropdown */}
+            <div className="schedule-form">
+              <div className="modal-content-field">
+                <label>Assign Technician:</label>
+                <Select
+                  classNamePrefix="custom-select-department"
+                  className="workstatus-dropdown"
+                  options={workerOptions}
+                  value={
+                    workerOptions?.find(
+                      (w) => w.value === selectedTechnicianUpdate
+                    ) ||
+                    updatedOption ||
+                    null
+                  }
+                  onChange={(selectedOption) => {
+                    setSelectedTechnicianUpdate(selectedOption?.value || "");
+                    console.log("Selected Worker:", selectedOption);
+                  }}
+                  isClearable
+                />
+              </div>
+              {/* Assign Date */}
+              <div className="modal-content-field">
+                <label>Start Date:</label>
+                <input type="text" value={startDate} readOnly />
+              </div>
+              {/* Assign Date */}
+              <div className="modal-content-field">
+                <label>End Date:</label>
+                <input type="text" value={endDate} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                {/* Assign Time */}
+                <label>Assign Time:</label>
+                <input type="text" value={assignTime} readOnly />
+              </div>
+
+              <div className="modal-buttons">
+                <button
+                  className="accept-btn"
+                  style={{ width: "80px" }}
+                  onClick={handleReschedule}
                 >
                   Done
                 </button>

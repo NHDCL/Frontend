@@ -43,20 +43,11 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
         // },
       }),
       invalidatesTags: ["MaintenanceRequest"],
-
     }),
 
     getSchedulesByRepairID: builder.query({
       query: (repairID) => `${MAINTENANCE_URL}/schedules/repair/${repairID}`,
     }),
-    // get repair schedule
-    // getRepairRequestSchedule: builder.query({
-    //   query: () => ({
-    //     url: MAINTENANCE_URL + "/schedules",
-    //     method: 'GET',
-    //   }),
-    //   providesTags: ["repairRequestSchedule"]
-    // }),
 
     getRepairRequestSchedule: builder.query({
       query: () => ({
@@ -118,6 +109,61 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ["RepairRequest"],
     }),
 
+
+
+    updateSchedule: builder.mutation({
+      query: ({ scheduleID, updatedSchedule }) => ({
+        url: `${MAINTENANCE_URL}/schedules/${scheduleID}`,
+        method: 'PUT',
+        body: updatedSchedule,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }),
+      invalidatesTags: ['Schedule'], // Optional: to refetch data after mutation
+    }),
+
+    getScheduleByRepairID: builder.query({
+      query: (repairID) => `${MAINTENANCE_URL}/schedules/repair/${repairID}`,
+    }),
+
+    getRepairById: builder.query({
+      query: (repairID) => `${MAINTENANCE_URL}/repairs/${repairID}`,
+    }),
+
+    // Fetch preventive maintenance by ID
+    getMaintenanceById: builder.query({
+      query: (id) => `${MAINTENANCE_URL}/maintenance/${id}`, // Using the /{id} endpoint
+    }),
+
+    getSchedulesByUserID: builder.query({
+      query: (userID) => `${MAINTENANCE_URL}/schedules/user/${userID}`,
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ id }) => ({ type: 'Schedule', id })), { type: 'Schedule', id: 'LIST' }]
+          : [{ type: 'Schedule', id: 'LIST' }],
+    }),
+
+    // Endpoint to fetch schedules by user ID
+    getPreventiveSchedulesByUserID: builder.query({
+      query: (userID) => `${MAINTENANCE_URL}/maintenance/user/${userID}`,
+    }),
+
+    // Fetch maintenance records by asset code
+    getMaintenanceByAssetCode: builder.query({
+      query: (assetCode) => `${MAINTENANCE_URL}/maintenance/asset/${assetCode}`,  // Using the /asset/{assetCode} endpoint
+    }),
+
+    getSchedulesByTechnicianEmail: builder.query({
+      query: (email) => `${MAINTENANCE_URL}/schedules/technician/${email}`,
+      providesTags: ["Schedules"], // Optional: helpful for cache invalidation
+    }),
+
+    getMaintenanceByTechnicianEmail: builder.query({
+      query: (email) => `${MAINTENANCE_URL}/maintenance/technician/${email}`,
+      providesTags: ['Maintenance'],
+    }),
+
     updatePreventiveMaintenance: builder.mutation({
       query: ({ id, maintenance }) => ({
         url: `${MAINTENANCE_URL}/maintenance/${id}`,
@@ -141,6 +187,51 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
         body: emailData,
       }),
     }),
+    
+    // technician status update
+    updateRepairById: builder.mutation({
+      query: ({ repairID, updateFields }) => ({
+        url: `${MAINTENANCE_URL}/repairs/update/${repairID}`,
+        method: "PUT",
+        body: updateFields,
+      }),
+      invalidatesTags: ["Repairs"],
+    }),
+
+    createRepairReport: builder.mutation({
+      query: (formData) => ({
+        url: `${MAINTENANCE_URL}/repair-reports`,
+        method: 'POST',
+        body: formData,
+      }),
+      invalidatesTags: ['RepairReport'],
+    }),
+
+    getPreventiveMaintenanceReports: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/maintenance-reports", // matches your backend @GetMapping
+        method: "GET",
+      }),
+      transformResponse: (response) => response,
+      providesTags: ["PreventiveMaintenanceReports"], // Optional tag for cache invalidation
+    }),
+
+    getRepairReportByID: builder.query({
+      query: (repairID) => `${MAINTENANCE_URL}/repair-reports/repair/${repairID}`,
+    }),
+
+    createMaintenanceReport: builder.mutation({
+      query: (formData) => ({
+        url: `${MAINTENANCE_URL}/maintenance-reports`,
+        method: 'POST',
+        body: formData,
+      }),
+      invalidatesTags: ['MaintenanceReport'],
+    }),
+
+    getMaintenanceReportByID: builder.query({
+      query: (id) => `${MAINTENANCE_URL}/maintenance-reports//by-maintenance-id/${id}`,
+    }),
 
   }),
 });
@@ -158,6 +249,22 @@ export const {
   useUpdatePreventiveMaintenanceMutation,
   useGetRepairReportsQuery,
   useGetMaintenanceReportsQuery,
+  useUpdateScheduleMutation,
+  useLazyGetScheduleByRepairIDQuery,
+  useGetScheduleByRepairIDQuery,
+  useGetSchedulesByUserIDQuery,
+  useGetRepairByIdQuery,
+  useGetPreventiveSchedulesByUserIDQuery,
+  useGetMaintenanceByAssetCodeQuery,
+  useGetMaintenanceByIdQuery,
+  useGetSchedulesByTechnicianEmailQuery,
+  useGetMaintenanceByTechnicianEmailQuery,
+  useUpdateRepairByIdMutation,
+  useCreateRepairReportMutation,
+  useGetPreventiveMaintenanceReportsQuery,
+  useGetRepairReportByIDQuery,
+  useCreateMaintenanceReportMutation,
+  useGetMaintenanceReportByIDQuery,
   useCreateMaintenanceMutation,
   useSendEmailMutation
 } = maintenanceApiSlice;

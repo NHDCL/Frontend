@@ -34,8 +34,9 @@
   .TModal-repair-form label {
     text-align: right;
     font-size: 13px;
-    width: 150px;
+    width: 150px !important;
     padding-right: 13px;
+    /* background-color: aqua; */
   }
   
   .TModal-form-h {
@@ -108,6 +109,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    /* background-color: bisque; */
   }
   
   .TModal-close-btn {
@@ -178,61 +180,53 @@
     font-size: 14px;
 }
 
-/* .workstatus-dropdown{
-  width: 100%;
-  max-width: 350px;
-
-}
-
-.TModel-multiupload{
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  padding: 15px;
-  border-radius: 6px;
-  height: 120px;
-  /* width: 90%; */
-  /* background-color: #5A607F; */
-
-@media screen and (max-width: 1000px) {
-  .TModal-modal-content {
-    width: 50%;
-    max-width: 1000px;
-    
-  }
-}
-@media screen and (max-width: 900px) {
-  .TModal-modal-content {
-    width: 55%;
-    max-width: 1000px;
-    
-  }
-}
-@media screen and (max-width: 800px) {
+@media screen and (max-width: 1200px) {
   .TModal-modal-content {
     width: 60%;
     max-width: 1000px;
     
   }
 }
-@media screen and (max-width: 700px) {
+
+
+@media screen and (max-width: 1000px) {
+  .TModal-modal-content {
+    width: 60%;
+    max-width: 1000px;
+    
+  }
+}
+@media screen and (max-width: 900px) {
+  .TModal-modal-content {
+    width: 65%;
+    max-width: 1000px;
+    
+  }
+}
+@media screen and (max-width: 800px) {
   .TModal-modal-content {
     width: 70%;
     max-width: 1000px;
     
   }
 }
+@media screen and (max-width: 700px) {
+  .TModal-modal-content {
+    width: 85%;
+    max-width: 1000px;
+    
+  }
+}
 @media screen and (max-width: 600px) {
   .TModal-modal-content {
-    width: 75%;
+    width: 87%;
     max-width: 1000px;
     
   }
 }
 @media screen and (max-width: 500px) {
   .TModal-modal-content {
-    width: 80%;
+    width: 90%;
     max-width: 1000px;
     
   }
