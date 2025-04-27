@@ -15,6 +15,7 @@ import {
   useUpdateRepairByIdMutation,
   useGetSchedulesByTechnicianEmailQuery,
   useCreateRepairReportMutation,
+  useGetRepairReportByIDQuery,
 } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -47,7 +48,39 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   console.log("rip", repairID);
   const tm = teamMembers.join(", ");
 
-  console.log("teamMembers", tm);
+  const {
+    data: repairReport,
+    isLoading: repairReportLoading,
+    error: repairReportError,
+    refetch,
+  } = useGetRepairReportByIDQuery(repairID, {
+    skip: !repairID, // skip until userID is available
+  });
+  console.log("repairReport", repairReport);
+
+  const reportExists = Array.isArray(repairReport) && repairReport.length > 0;
+
+  useEffect(() => {
+    console.log("reportExists", reportExists);
+
+    if (reportExists) {
+      const report = repairReport[0];
+      console.log(report); // Check the structure of the report
+
+      setFormData({
+        startTime: report.startTime ?? "",
+        endTime: report.endTime ?? "",
+        finishedDate: report.finishedDate ?? "",
+        totalCost: report.totalCost ?? "",
+        information: report.information ?? "",
+        partsUsed: Array.isArray(report.partsUsed)
+          ? report.partsUsed.join(", ")
+          : "",
+        repairID: report.repairID ?? "",
+        images: report.images ?? [],
+      });
+    }
+  }, [repairReport, reportExists]);
 
   const [formData, setFormData] = useState({
     startTime: "",
@@ -186,6 +219,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
         text: err?.data?.message || "Something went wrong.",
       });
     }
+    refetch();
   };
 
   const WorkOrder = [
@@ -261,6 +295,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
               )}
             </div>
           </div>
+
           <div className="TModal-content-field">
             <label>Work Status:</label>
             <Select
@@ -311,14 +346,25 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
               <input
                 className="TModal-WorkOTime"
                 type="time"
-                value={formData.startTime}
+                value={
+                  reportExists && repairReport?.startTime
+                    ? repairReport.startTime
+                    : formData.startTime
+                }
                 onChange={(e) => handleInputChange(e, "startTime")}
+                readOnly={reportExists}
               />
               <input
                 className="TModal-WorkOTime"
                 type="time"
-                value={formData.endTime}
+                // value={formData.endTime}
+                value={
+                  reportExists && repairReport?.endTime
+                    ? repairReport.endTime
+                    : formData.endTime
+                }
                 onChange={(e) => handleInputChange(e, "endTime")}
+                readOnly={reportExists}
               />
             </div>
           </div>
@@ -327,9 +373,15 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <label>Finished Date:</label>
             <input
               type="date"
-              value={formData.finishedDate}
+              // value={formData.finishedDate}
+              value={
+                reportExists && repairReport?.finishedDate
+                  ? repairReport.finishedDate
+                  : formData.finishedDate
+              }
               min={today}
               onChange={(e) => handleInputChange(e, "finishedDate")}
+              readOnly={reportExists}
             />
           </div>
 
@@ -337,8 +389,15 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <label>Total Cost:</label>
             <input
               type="text"
-              value={formData.totalCost}
+              // value={formData.totalCost}
+              value={
+                reportExists && repairReport?.totalCost
+                  ? repairReport.totalCost
+                  : formData.totalCost
+              }
               onChange={(e) => handleInputChange(e, "totalCost")}
+              placeholder="Enter Total Cost"
+              readOnly={reportExists}
             />
           </div>
 
@@ -346,112 +405,167 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <label>Parts Used:</label>
             <input
               type="text"
-              value={formData.partsUsed}
+              value={
+                reportExists && repairReport?.[0]?.partsUsed
+                  ? repairReport[0].partsUsed
+                  : formData.partsUsed
+              }
               onChange={(e) =>
                 setFormData({ ...formData, partsUsed: e.target.value })
               }
               placeholder="Enter parts used (e.g., wood, metal, screws)"
+              readOnly={reportExists}
             />
-          </div>
-          <div className="TModal-content-field">
-            <label>Upload Images:</label>
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              multiple
-              onChange={handleImageUpload}
-              style={{ display: "none" }}
-            />
-            {imageError && <p className="error-text">{imageError}</p>}
-            <div className="TModal-profile-img">
-              {images.map((img, idx) => (
-                <div key={idx} className="mr-preview-wrapper">
-                  <img
-                    src={
-                      typeof img === "string" ? img : URL.createObjectURL(img)
-                    }
-                    alt={`Preview ${idx}`}
-                    className="TModal-modal-image"
-                  />
-                  <button
-                    type="button"
-                    className="mr-remove-btn"
-                    onClick={() => removeImage(idx)}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              {images.length < 5 && (
-                <div
-                  className="mr-upload-box"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <RiImageAddLine className="mr-upload-icon" />
-                  <p className="mr-pimg">Upload Images</p>
-                </div>
-              )}
-            </div>
           </div>
 
-          <div className="TModal-content-field">
-            <label>Team Members:</label>
-            <div className="TModal-outer-team">
-              <div className="TModal-team-members">
-                <input
-                  type="text"
-                  placeholder="Enter email"
-                  value={newMember}
-                  onChange={(e) => setNewMember(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="TModal-add-btn"
-                  onClick={handleAddMember}
-                >
-                  Add
-                </button>
+          {reportExists && repairReport[0]?.images ? (
+            <div className="TModal-content-field">
+              <label>Repaired Images:</label>
+
+              <div className="TModal-profile-img">
+                {repairReport[0].images.map((imgSrc, index) => (
+                  <img
+                    key={index}
+                    src={imgSrc}
+                    alt={`Work Order ${index + 1}`}
+                    className="TModal-modal-image"
+                  />
+                ))}
               </div>
             </div>
-          </div>
-          <div className="TModal-content-field">
-            <label></label>
-            <div className="TModal-outer-team">
-              {teamMembers.length > 0 && (
-                <div className="TModal-team-list">
-                  {teamMembers.map((member, index) => (
-                    <span key={index} className="TModal-team-member">
-                      {member}
-                      <IoMdCloseCircle
-                        onClick={() => handleRemoveMember(index)}
-                        style={{
-                          color: "black",
-                          marginLeft: "4px",
-                          cursor: "pointer",
-                        }}
+          ) : (
+            <>
+              <div className="TModal-content-field">
+                <label>Upload Images:</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  multiple
+                  onChange={handleImageUpload}
+                  style={{ display: "none" }}
+                />
+                {imageError && <p className="error-text">{imageError}</p>}
+                <div className="TModal-profile-img">
+                  {images.map((img, idx) => (
+                    <div key={idx} className="mr-preview-wrapper">
+                      <img
+                        src={
+                          typeof img === "string"
+                            ? img
+                            : URL.createObjectURL(img)
+                        }
+                        alt={`Preview ${idx}`}
+                        className="TModal-modal-image"
                       />
-                    </span>
+                      <button
+                        type="button"
+                        className="mr-remove-btn"
+                        onClick={() => removeImage(idx)}
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
+                  {images.length < 5 && (
+                    <div
+                      className="mr-upload-box"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <RiImageAddLine className="mr-upload-icon" />
+                      <p className="mr-pimg">Upload Images</p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+            </>
+          )}
+
+          {reportExists && repairReport[0]?.technicians ? (
+            <div className="TModal-content-field">
+              <label>Team Members:</label>
+
+              <div className="TModal-outer-team">
+                <div className="TModal-team-list">
+                  {repairReport[0].technicians
+                    .split(",")
+                    .map((member, index) => (
+                      <span key={index} className="TModal-team-member">
+                        {member}
+                      </span>
+                    ))}
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="TModal-content-field">
+                <label>Team Members:</label>
+                <div className="TModal-outer-team">
+                  <div className="TModal-team-members">
+                    <input
+                      type="text"
+                      placeholder="Enter email"
+                      value={newMember}
+                      onChange={(e) => setNewMember(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="TModal-add-btn"
+                      onClick={handleAddMember}
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="TModal-content-field">
+                <label></label>
+                <div className="TModal-outer-team">
+                  {teamMembers.length > 0 && (
+                    <div className="TModal-team-list">
+                      {teamMembers.map((member, index) => (
+                        <span key={index} className="TModal-team-member">
+                          {member}
+                          <IoMdCloseCircle
+                            onClick={() => handleRemoveMember(index)}
+                            style={{
+                              color: "black",
+                              marginLeft: "4px",
+                              cursor: "pointer",
+                            }}
+                          />
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="TModal-content-field">
             <label>Additional Information:</label>
             <textarea
-              value={formData.information}
+              // value={formData.information}
+              value={
+                reportExists && repairReport?.information
+                  ? repairReport.information
+                  : formData.information
+              }
               onChange={(e) => handleInputChange(e, "information")}
               placeholder="Enter any additional information"
+              readOnly={reportExists}
             ></textarea>
           </div>
 
-          <div disabled={posting} className="TModal-modal-buttons">
-            <button type="submit" className="TModal-accept-btn">
-              {posting ? "Posting..." : "Done"}{" "}
-            </button>
-          </div>
+          {!reportExists && (
+            <div disabled={posting} className="TModal-modal-buttons">
+              <button type="submit" className="TModal-accept-btn">
+                {posting ? "Posting..." : "Done"}
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

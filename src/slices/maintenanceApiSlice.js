@@ -201,6 +201,23 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       providesTags: ["PreventiveMaintenanceReports"], // Optional tag for cache invalidation
     }),
 
+    getRepairReportByID: builder.query({
+      query: (repairID) => `${MAINTENANCE_URL}/repair-reports/repair/${repairID}`,
+    }),
+
+    createMaintenanceReport: builder.mutation({
+      query: (formData) => ({
+        url: `${MAINTENANCE_URL}/maintenance-reports`,
+        method: 'POST',
+        body: formData,
+      }),
+      invalidatesTags: ['MaintenanceReport'],
+    }),
+
+    getMaintenanceReportByID: builder.query({
+      query: (id) => `${MAINTENANCE_URL}/maintenance-reports//by-maintenance-id/${id}`,
+    }),
+
   }),
 });
 
@@ -230,4 +247,7 @@ export const {
   useUpdateRepairByIdMutation,
   useCreateRepairReportMutation,
   useGetPreventiveMaintenanceReportsQuery,
+  useGetRepairReportByIDQuery,
+  useCreateMaintenanceReportMutation,
+  useGetMaintenanceReportByIDQuery,
 } = maintenanceApiSlice;
