@@ -3,10 +3,11 @@ import { FaCalendarAlt, FaMapMarkerAlt, FaClipboardList, FaExclamationTriangle }
 import "./css/WorkOrders.css";
 
 const TWorkOrderCard = ({ repairInfo, reportingDate, onView }) => {
-  // Check if the status is "Pending"
-  if (repairInfo?.status?.toLowerCase() !== "pending") {
-    return null; 
-  }
+
+    if (repairInfo?.status?.toLowerCase() !== "in progress" && repairInfo?.status?.toLowerCase() !== "completed") {
+        return null; // Otherwise, don't render
+      }
+      
 
   const assetName = repairInfo?.assetName;
   const area = repairInfo?.area;

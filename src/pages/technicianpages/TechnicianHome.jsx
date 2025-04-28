@@ -8,10 +8,7 @@ import Select from "react-select";
 import { MdWorkHistory } from "react-icons/md";
 import { IoIosCloseCircle, IoMdCloseCircle } from "react-icons/io";
 import { RiImageAddLine } from "react-icons/ri";
-
 import {
-  useGetSchedulesByUserIDQuery,
-  useGetRepairByIdQuery,
   useUpdateRepairByIdMutation,
   useGetSchedulesByTechnicianEmailQuery,
   useCreateRepairReportMutation,
