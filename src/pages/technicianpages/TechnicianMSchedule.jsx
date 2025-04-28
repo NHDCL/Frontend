@@ -274,16 +274,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
           </div>
 
           <div className="TModal-content-field">
-            <label>Parts Used:</label>
-            <input type="text" />
-          </div>
-
-          <div className="TModal-content-field">
-            <label>Total Cost:</label>
-            <input type="text" value={`$${order.totalCost}`} readOnly />
-          </div>
-
-          <div className="TModal-content-field">
             <label>Work Status:</label>
             {/* Work Status Dropdown */}
             <Select

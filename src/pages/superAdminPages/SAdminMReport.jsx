@@ -307,7 +307,6 @@ const SAdminMReport = () => {
                     <td>{item.startTime}</td>
                     <td>{item.endTime}</td>
                     <td>{item.Date}</td>
-                    {/* <td>{item.Total_cost}</td> */}
                     <td className="description">
                       <Tippy content={item.Total_cost || ""} placement="top">
                         <span>
@@ -317,7 +316,6 @@ const SAdminMReport = () => {
                         </span>
                       </Tippy>
                     </td>
-                    {/* <td>{item.part_used}</td> */}
                     <td className="description">
                       <Tippy content={item.part_used || ""} placement="top">
                         <span>
@@ -327,7 +325,6 @@ const SAdminMReport = () => {
                         </span>
                       </Tippy>
                     </td>
-                    {/* <td>{item.Assigned_Technician}</td> */}
                     <td className="description">
                       <Tippy content={item.Assigned_Technician || ""} placement="top">
                         <span>
@@ -337,19 +334,6 @@ const SAdminMReport = () => {
                         </span>
                       </Tippy>
                     </td>
-                    {/* <td className="description">
-                      <Tippy
-                        content={item.Additional_information}
-                        placement="top"
-                      >
-                        <span>
-                          {item.Additional_information.length > 20
-                            ? item.Additional_information.substring(0, 20) +
-                              "..."
-                            : item.Additional_information}
-                        </span>
-                      </Tippy>
-                    </td> */}
                     <td className="description">
                       <Tippy content={item.Additional_information || ""} placement="top">
                         <span>

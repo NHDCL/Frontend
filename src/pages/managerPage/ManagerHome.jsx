@@ -16,7 +16,8 @@ import {
   useGetRepairRequestQuery,
   useAcceptOrRejectRepairRequestMutation,
 } from "../../slices/maintenanceApiSlice";
-import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
+import { useGetUserByEmailQuery, useGetUsersQuery } from "../../slices/userApiSlice";
+import { useGetAssetQuery } from "../../slices/assetApiSlice";
 import Tippy from "@tippyjs/react";
 
 const ManagerDashboard = () => {
@@ -40,6 +41,47 @@ const ManagerDashboard = () => {
   );
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);
+
+  const userID = userByEmial?.user?.userId;
+  console.log("userID", userID);
+
+  const academyId = userByEmial?.user?.academyId;
+  console.log("academyId", academyId);
+
+   const { data: users, isLoading: usersLoading } = useGetUsersQuery();
+   const { data: asset,} = useGetAssetQuery();
+
+  
+    const filteredUsers = users?.filter(
+      (user) =>
+        user.academyId === academyId &&
+        typeof user.role?.name === "string" &&
+        user.role.name.toLowerCase() === "technician"
+    );
+    console.log("filteredUsers:", filteredUsers);
+
+    const totalRepair = repairRequest?.filter(
+      (req) =>
+        req.academyId === academyId &&
+        req.accept === true
+    );
+    console.log("totalRepair:", totalRepair);
+
+    const SupervisorsUsers = users?.filter(
+      (user) =>
+        user.academyId === academyId &&
+        typeof user.role?.name === "string" &&
+        user.role.name.toLowerCase() === "supervisor"
+    );
+    console.log("SupervisorsUsers:", SupervisorsUsers);
+
+    const assets = asset?.filter(
+      (ass) =>
+        ass.academyID === academyId 
+    );  
+    console.log("assets:", assets);
+    
+
 
   const [data, setData] = useState([]);
   console.log("data: ", data);
@@ -234,25 +276,25 @@ const ManagerDashboard = () => {
         <div className="cardCount cardCount1">
           <div className="CardContent">
             <h3 className="cardTitle">Total Technician Count</h3>
-            <p className="count">45</p>
+            <p className="count">{filteredUsers?.length || 0}</p>
           </div>
         </div>
         <div className="cardCount">
           <div className="CardContent">
             <h3 className="cardTitle">Total Supervisor Count</h3>
-            <p className="count">45</p>
+            <p className="count">{SupervisorsUsers?.length || 0}</p>
           </div>
         </div>
         <div className="cardCount cardCount1">
           <div className="CardContent">
             <h3 className="cardTitle">Total Asset Count</h3>
-            <p className="count">56</p>
+            <p className="count">{assets?.length || 0}</p>
           </div>
         </div>
         <div className="cardCount">
           <div className="CardContent">
             <h3 className="cardTitle">Total Repair Request</h3>
-            <p className="count">78</p>
+            <p className="count">{totalRepair?.length || 0}</p>
           </div>
         </div>
       </div>
