@@ -11,6 +11,7 @@ import { LuDownload } from "react-icons/lu";
 import jsPDF from "jspdf";
 import "tippy.js/dist/tippy.css";
 import Tippy from "@tippyjs/react";
+import { TiArrowSortedUp } from "react-icons/ti";
 import autoTable from "jspdf-autotable";
 import { createSelector } from "reselect";
 import { useSelector } from "react-redux";
@@ -131,7 +132,9 @@ const Maintenancereport = () => {
         .filter(Boolean); // ✅ Remove nulls
 
       console.log("📦 Final Merged Data:", mergedData);
-      setData(mergedData);
+      const sortedFiltered = mergedData.sort((a, b) => b.maintenanceReportID.localeCompare(a.maintenanceReportID));
+
+      setData(sortedFiltered);
     }
   }, [
     maintenanceReport,
@@ -289,6 +292,30 @@ const Maintenancereport = () => {
     doc.save(`Repair_Report_${modalData.maintenanceReportID}.pdf`);
   };
 
+  
+    const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+    const sortData = (column, ascending) => {
+      const sortedData = [...data].sort((a, b) => {
+        if (a[column] < b[column]) return ascending ? -1 : 1;
+        if (a[column] > b[column]) return ascending ? 1 : -1;
+        return 0;
+      });
+      setData(sortedData);
+    };
+  
+  
+    const handleSort = (column) => {
+      const newSortOrder =
+        column === sortOrder.column
+          ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
+          : true; // Start with ascending for a new column
+  
+      setSortOrder({
+        column,
+        ascending: newSortOrder,
+      });
+      sortData(column, newSortOrder);
+    };
   return (
     <div className="ManagerDashboard">
       {/* Home table */}
@@ -324,23 +351,48 @@ const Maintenancereport = () => {
                         selectedRows.length === displayedData.length
                           ? []
                           : displayedData.map(
-                              (item) => item.maintenanceReportID
-                            )
+                            (item) => item.maintenanceReportID
+                          )
                       )
                     }
                   />
                 </th>
                 {[
-                  "RRID",
-                  "Asset Name",
-                  "Time",
-                  "Date",
-                  "Area",
-                  "Total Cost",
-                  "Parts_used",
-                  "Description",
+                  { label: "RRID", field: null },
+                  { label: "Asset Name", field: "assetName" },
+                  { label: "Time", field: null },
+                  { label: "Date", field: "finishedDate" },
+                  { label: "Area", field: "area" },
+                  { label: "Total Cost", field: "startTime" },
+                  { label: "parts_used", field: "partsUsed" },
+                  { label: "Description", field: null },
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header.field ? (
+                      <div className="header-title">
+                        {header.label}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() => handleSort(header.field)}
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform:
+                                  sortOrder.column === header.field && sortOrder.ascending
+                                    ? "rotate(0deg)"
+                                    : "rotate(180deg)",
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header.label
+                    )}
+                  </th>
                 ))}
                 <th>
                   {selectedRows.length > 0 ? (
@@ -535,7 +587,7 @@ const Maintenancereport = () => {
                   <label>Repaired Images:</label>
                   <div className="TModal-profile-img">
                     {Array.isArray(modalData.images) &&
-                    modalData.images.length > 0 ? (
+                      modalData.images.length > 0 ? (
                       modalData.images.map((imgSrc, index) => (
                         <img
                           key={index}
