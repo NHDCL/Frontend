@@ -13,6 +13,7 @@ import jsPDF from "jspdf";
 import "tippy.js/dist/tippy.css";
 import Tippy from "@tippyjs/react";
 import autoTable from "jspdf-autotable";
+import { TiArrowSortedUp } from "react-icons/ti";
 import {
   useGetRepairReportsQuery,
   useGetRepairRequestQuery,
@@ -128,7 +129,9 @@ const Repairreport = () => {
         .filter(Boolean); // 🔥 Remove any nulls (non-matching academy or request)
 
       console.log("📦 Final Merged Data:", mergedData);
-      setData(mergedData);
+      const sortedFiltered = mergedData.sort((a, b) => b.repairReportID.localeCompare(a.repairReportID));
+
+      setData(sortedFiltered);
     }
   }, [repairReport, repairRequest, academy, users, userByEmial]);
 
@@ -343,6 +346,49 @@ const Repairreport = () => {
     document.body.removeChild(a);
   };
 
+    const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+    const sortData = (column, ascending) => {
+      const sortedData = [...data].sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+    
+        // Normalize: Handle undefined, null, numbers, strings consistently
+        if (valA === undefined || valA === null) valA = "";
+        if (valB === undefined || valB === null) valB = "";
+    
+        // If both are numbers, compare numerically
+        if (!isNaN(valA) && !isNaN(valB)) {
+          valA = Number(valA);
+          valB = Number(valB);
+        } else {
+          // Otherwise, compare as lowercase strings (for emails, names, etc.)
+          valA = valA.toString().toLowerCase();
+          valB = valB.toString().toLowerCase();
+        }
+    
+        if (valA < valB) return ascending ? -1 : 1;
+        if (valA > valB) return ascending ? 1 : -1;
+        return 0;
+      });
+    
+      setData(sortedData);
+    };
+    
+    const handleSort = (column) => {
+      const newSortOrder =
+        column === sortOrder.column
+          ? !sortOrder.ascending
+          : true;
+    
+      setSortOrder({
+        column,
+        ascending: newSortOrder,
+      });
+    
+      sortData(column, newSortOrder);
+    };
+    
+
   return (
     <div className="ManagerDashboard">
       {/* Home table */}
@@ -383,16 +429,41 @@ const Repairreport = () => {
                   />
                 </th>
                 {[
-                  "RRID",
-                  "Asset Name",
-                  "Time",
-                  "Date",
-                  "Area",
-                  "Total Cost",
-                  "Parts_used",
-                  "Description",
+                  { label: "RRID", field: null },
+                  { label: "Asset Name", field: "assetName" },
+                  { label: "Time", field: null },
+                  { label: "Date", field: "finishedDate" },
+                  { label: "Area", field: "area" },
+                  { label: "Total Cost", field: "totalCost" },
+                  { label: "Parts_used", field: null },
+                  { label: "Description", field: null}
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header.field ? (
+                      <div className="header-title">
+                        {header.label}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() => handleSort(header.field)}
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform:
+                                  sortOrder.column === header.field && sortOrder.ascending
+                                    ? "rotate(0deg)"
+                                    : "rotate(180deg)",
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header.label
+                    )}
+                  </th>
                 ))}
                 <th>
                   {selectedRows.length > 0 ? (
@@ -591,7 +662,7 @@ const Repairreport = () => {
                   <label>Repaired Images:</label>
                   <div className="TModal-profile-img">
                     {Array.isArray(modalData.images) &&
-                    modalData.images.length > 0 ? (
+                      modalData.images.length > 0 ? (
                       modalData.images.map((imgSrc, index) => (
                         <img
                           key={index}

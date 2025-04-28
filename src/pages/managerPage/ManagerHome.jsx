@@ -89,22 +89,21 @@ const ManagerDashboard = () => {
   useEffect(() => {
     if (!repairRequest || !userByEmial) return;
 
-    // console.log("User Email:", email);
-    // console.log("User Academy ID:", userByEmial?.user.academyId);
-
-    const userAcademy = userByEmial?.user.academyId?.trim().toLowerCase();
+    const userAcademy = userByEmial.user.academyId?.trim().toLowerCase();
 
     const filtered = repairRequest.filter((req) => {
-      console.log("Request Academy ID:", req.academyId); // Log each one
       const requestAcademy = req.academyId?.trim().toLowerCase();
       return requestAcademy === userAcademy && req.accept === null;
     });
 
-    console.log("Filtered Length:", filtered.length);
-    setData(
-      filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    );
+    const sortedFiltered = filtered.sort((a, b) => b.repairID.localeCompare(a.repairID));
+
+    console.log("Sorted Repair IDs:", sortedFiltered.map(f => f.repairID));
+
+    setData(sortedFiltered);
+
   }, [repairRequest, userByEmial]);
+
 
   // Sorting
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
@@ -348,14 +347,14 @@ const ManagerDashboard = () => {
                   "Description",
                 ].map((header, index) => (
                   <th key={index}>
-                    {header === "Asset Name" || header === "Location" ? (
+                    {header === "Asset Name" || header === "Name" ? (
                       <div className="header-title">
                         {header}
                         <div className="sort-icons">
                           <button
                             className="sort-btn"
                             onClick={() =>
-                              handleSort("assetName" || "Location")
+                              handleSort("assetName" || "Name")
                             }
                           >
                             <TiArrowSortedUp
@@ -363,8 +362,8 @@ const ManagerDashboard = () => {
                                 color: "#305845",
                                 transform:
                                   (sortOrder.column === "assetName" ||
-                                    sortOrder.column === "Location") &&
-                                  sortOrder.ascending
+                                    sortOrder.column === "Name") &&
+                                    sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -534,7 +533,7 @@ const ManagerDashboard = () => {
                 <label>Repaired Images:</label>
                 <div className="TModal-profile-img">
                   {Array.isArray(modalData.images) &&
-                  modalData.images.length > 0 ? (
+                    modalData.images.length > 0 ? (
                     modalData.images.map((imgSrc, index) => (
                       <img
                         key={index}
