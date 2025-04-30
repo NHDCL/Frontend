@@ -29,12 +29,15 @@ const Category = () => {
   const [postCategory] = usePostCategoryMutation();
   const [updateCategory, { isLoading: isUpdating }] =
     useUpdateCategoryMutation();
-  const [softDeleteCategory] = useSoftDeleteCategoryMutation();
+  const [softDeleteCategory, { isLoading: isDeleting }] =
+    useSoftDeleteCategoryMutation();
 
   const rowsPerPage = 10;
 
   // Filter out categories where deleted is false
-  const filteredCategories = categories?.filter((category) => category.deleted === false);
+  const filteredCategories = categories?.filter(
+    (category) => category.deleted === false
+  );
 
   // Sorting and filtering data
   const filteredData = [...(filteredCategories || [])]
@@ -79,6 +82,10 @@ const Category = () => {
   const handleAddCategory = () => {
     setShowAddModal(true);
     setNewCategory({ category: "", DepreciatedValue: "" });
+  };
+
+  const handleView = (item) => {
+    setModalData(item);
   };
 
   const handleSaveNewCategory = async () => {
@@ -178,7 +185,8 @@ const Category = () => {
                     <th>SI.No</th>
                     <th>Category</th>
                     <th>Depreciated Value (%)</th>
-                    <th>Actions</th>
+                    <th>Edit</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -194,13 +202,20 @@ const Category = () => {
                         >
                           <FaEdit style={{ width: "20px", height: "20px" }} />
                         </button>
+                      </td>
+                      <td
+                        className="actions"
+                        style={{
+                          display: "flex",
+                          gap: "0.5rem",
+                          maxWidth: "150px",
+                        }}
+                      >
                         <button
-                          className="delete-btn"
-                          onClick={() => handleDeleteRow(item.id)}
+                          className="view-btn"
+                          onClick={() => handleView(item)}
                         >
-                          <RiDeleteBin6Line
-                            style={{ width: "20px", height: "20px" }}
-                          />
+                          View
                         </button>
                       </td>
                     </tr>
@@ -237,6 +252,41 @@ const Category = () => {
           </>
         )}
       </div>
+
+      {modalData && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="form-h">Asset Category Details</h2>
+              <button className="close-btn" onClick={() => setModalData(null)}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <div className="schedule-form">
+              <div className="modal-content-field">
+                <label>Category Name:</label>
+                <input type="text" value={modalData.name} />
+              </div>
+              <div className="modal-content-field">
+                <label>Depreciated Value (%):</label>
+                <input type="number" value={modalData.depreciatedValue} />
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="accept-btn"
+                  style={{ width: "80px", backgroundColor: "#E72B2B" }}
+                  onClick={() => handleDeleteRow(modalData.id)}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Category Modal */}
       {showAddModal && (

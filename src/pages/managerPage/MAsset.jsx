@@ -31,7 +31,11 @@ const MAsset = () => {
   const [activeTab, setActiveTab] = useState(defaultTab);
 
   // Adding RoomQr manually to categories to display in the AssetTap
-  const categoryList = [...activeCategories, { name: "Room QR" }];
+  const categoryList = [
+    ...activeCategories.slice(0, 1),
+    { name: "Room QR" },
+    ...activeCategories.slice(1)
+  ];  
 
   if (isLoading) return <div>Loading categories...</div>;
   if (error) return <div>Error fetching categories</div>;

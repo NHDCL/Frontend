@@ -232,6 +232,20 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       query: (id) =>
         `${MAINTENANCE_URL}/maintenance-reports//by-maintenance-id/${id}`,
     }),
+    getAllCombinedMaintenanceCost: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/cost", // matches your backend @GetMapping
+        method: "GET",
+      }),
+      transformResponse: (response) => response,
+    }),
+    getAverageResponseTime: builder.query({
+      query: () => ({
+        url: MAINTENANCE_URL + "/analytics", // matches your backend @GetMapping
+        method: "GET",
+      }),
+      transformResponse: (response) => response,
+    }),
   }),
 });
 
@@ -266,4 +280,6 @@ export const {
   useGetRepairReportByIDQuery,
   useCreateMaintenanceReportMutation,
   useGetMaintenanceReportByIDQuery,
+  useGetAllCombinedMaintenanceCostQuery,
+  useGetAverageResponseTimeQuery
 } = maintenanceApiSlice;
