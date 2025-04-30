@@ -47,8 +47,9 @@ const Repairreport = () => {
 
   const { data: repairRequest, refetch: refetchRepairRequest } =
     useGetRepairRequestQuery();
-  const { data: repairReport } = useGetRepairReportsQuery();
+  const { data: repairReport, isLoading } = useGetRepairReportsQuery();
   const { data: academy } = useGetAcademyQuery();
+
   const [updateSchedule] = useUpdateScheduleMutation();
   const [fetchSchedulesByRepairID] = useLazyGetScheduleByRepairIDQuery();
   const selectUserInfo = (state) => state.auth.userInfo || {};
@@ -131,6 +132,20 @@ const Repairreport = () => {
       setData(mergedData);
     }
   }, [repairReport, repairRequest, academy, users, userByEmial]);
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading repair reports...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   const handleUpdate = async () => {
     const repairID = modalData?.repairID;

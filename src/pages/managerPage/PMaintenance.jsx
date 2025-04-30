@@ -38,10 +38,15 @@ const PMaintenance = () => {
   const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
-  const { data: maintenanceRequest, refetch: refetchMaintenanceRequest } =
-    useGetMaintenanceRequestQuery();
-  const [updatePreventiveMaintenance, { isLoading, error }] =
+
+  const {
+    data: maintenanceRequest,
+    isLoading,
+    refetch: refetchMaintenanceRequest,
+  } = useGetMaintenanceRequestQuery();
+  const [updatePreventiveMaintenance] =
     useUpdatePreventiveMaintenanceMutation();
+
   const { data: assetData, refetch: refetchAssetData } = useGetAssetQuery();
   const { data: allUsers } = useGetUsersQuery(); // hypothetical slice
   const { data: allDepartment } = useGetDepartmentQuery(); // hypothetical slice
@@ -128,6 +133,20 @@ const PMaintenance = () => {
   }, [maintenanceRequest, assetData, userByEmial, allUsers, allDepartment]);
 
   const rowsPerPage = 10;
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading maintenance...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {

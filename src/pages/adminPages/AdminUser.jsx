@@ -39,17 +39,25 @@ const AdminUser = () => {
   const [departments, setDepartment] = useState("");
   const [description, setDescription] = useState("");
 
-  const { data: academies } = useGetAcademyQuery();
-  const { data: department, refetch } = useGetDepartmentQuery();
-  const { data: users, refetch: refetchUsers } = useGetUsersQuery();
-  const { data: roles } = useGetRolesQuery();
+  const { data: academies, isLoading: isLoadingAcademies } =
+    useGetAcademyQuery();
+  const {
+    data: department,
+    refetch,
+    isLoading: isLoadingDepartments,
+  } = useGetDepartmentQuery();
+  const {
+    data: users,
+    isLoading: isLoadingUsers,
+    refetch: refetchUsers,
+  } = useGetUsersQuery();
+  const { data: roles, isLoading: isLoadingRoles } = useGetRolesQuery();
 
   const [createDepartment] = useCreateDepartmentMutation();
   const [createUser, { isLoading }] = useCreateUserMutation();
 
-  const [formError, setFormError] = useState(null);
   const [softDeleteUser] = useSoftDeleteUserMutation();
-
+  const [formError, setFormError] = useState(null);
   const [emailError, setEmailError] = useState("");
 
   // console.log("SA: ", selectedAcademy.value)
@@ -59,6 +67,34 @@ const AdminUser = () => {
   const [managerRoleId, setManagerRoleId] = useState(null);
   const [technicianRoleId, setTechnicianRoleId] = useState(null);
   const [supervisorRoleId, setSupervisorRoleId] = useState(null);
+
+  useEffect(() => {
+    if (
+      isLoadingUsers ||
+      isLoadingAcademies ||
+      isLoadingDepartments ||
+      isLoadingRoles
+    ) {
+      Swal.fire({
+        title: "Loading data...",
+        text: "Please wait while we fetch the latest information",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      // Only close if the Sweet Alert is currently open
+      if (Swal.isVisible()) {
+        Swal.close();
+      }
+    }
+  }, [
+    isLoadingUsers,
+    isLoadingAcademies,
+    isLoadingDepartments,
+    isLoadingRoles,
+  ]);
 
   useEffect(() => {
     if (roles && Array.isArray(roles)) {
@@ -355,6 +391,7 @@ const AdminUser = () => {
                         width: "50px",
                         height: "50px",
                         borderRadius: "50%",
+                        objectFit: "cover",
                       }}
                       onMouseOver={(e) =>
                         (e.target.style.transform = "scale(1.3)")

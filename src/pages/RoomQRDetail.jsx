@@ -58,6 +58,20 @@ const RoomQRDetail = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading room details...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
+
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length > 5) {
@@ -111,18 +125,19 @@ const RoomQRDetail = () => {
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "Do you want to send this repair request?",
-      icon: "question",
+      icon: "warning",
+      color: "#305845",
       showCancelButton: true,
       confirmButtonText: "Yes, send it!",
       cancelButtonText: "Cancel",
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
     });
 
     if (!result.isConfirmed) return;
 
     try {
-      console.log(requestData)
+      console.log(requestData);
       const res = await postRepairRequest(requestData).unwrap();
       console.log(res);
       Swal.fire({
@@ -193,7 +208,7 @@ const RoomQRDetail = () => {
               placeholder="Name of the asset"
             />
             {errors.assetName && (
-              <div className="error-text">{errors.assetName}</div>
+              <div className="qr-error-text">{errors.assetName}</div>
             )}
 
             <input
@@ -203,7 +218,7 @@ const RoomQRDetail = () => {
               onChange={handleChange}
               placeholder="Your Name"
             />
-            {errors.name && <div className="error-text">{errors.name}</div>}
+            {errors.name && <div className="qr-error-text">{errors.name}</div>}
 
             <input
               type="tel"
@@ -213,7 +228,7 @@ const RoomQRDetail = () => {
               placeholder="Phone Number"
             />
             {errors.phoneNumber && (
-              <div className="error-text">{errors.phoneNumber}</div>
+              <div className="qr-error-text">{errors.phoneNumber}</div>
             )}
 
             <input
@@ -223,7 +238,9 @@ const RoomQRDetail = () => {
               onChange={handleChange}
               placeholder="Email Address"
             />
-            {errors.email && <div className="error-text">{errors.email}</div>}
+            {errors.email && (
+              <div className="qr-error-text">{errors.email}</div>
+            )}
 
             <Select
               classNamePrefix="customm-select-department"
@@ -235,7 +252,7 @@ const RoomQRDetail = () => {
               isClearable
             />
             {errors.priority && (
-              <div className="error-text">{errors.priority}</div>
+              <div className="qr-error-text">{errors.priority}</div>
             )}
 
             <textarea
@@ -245,7 +262,7 @@ const RoomQRDetail = () => {
               placeholder="Description"
             />
             {errors.description && (
-              <div className="error-text">{errors.description}</div>
+              <div className="qr-error-text">{errors.description}</div>
             )}
 
             <input
@@ -256,13 +273,14 @@ const RoomQRDetail = () => {
               onChange={handleImageUpload}
               style={{ display: "none" }}
             />
-            {imageError && <div className="error-text">{imageError}</div>}
+            {imageError && <div className="qr-error-text">{imageError}</div>}
 
             <div className="mr-upload-box-img">
-              {images.map((imgSrc, index) => (
+              {imageError && <p className="error-text">{imageError}</p>}
+              {images.map((imgFile, index) => (
                 <div key={index} className="mr-image-wrapper">
                   <img
-                    src={imgSrc}
+                    src={URL.createObjectURL(imgFile)}
                     alt={`Preview ${index}`}
                     className="mr-upload-preview"
                   />
@@ -270,6 +288,7 @@ const RoomQRDetail = () => {
                     type="button"
                     className="mr-remove-btn"
                     onClick={() => removeImage(index)}
+                    style={{ alignSelf: "center" }}
                   >
                     ×
                   </div>

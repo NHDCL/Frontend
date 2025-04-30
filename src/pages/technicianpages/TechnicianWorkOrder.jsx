@@ -93,7 +93,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   });
   console.log("formdata", formData);
 
-
   const handleInputChange = (e, field) => {
     const value = e.target.value;
     setFormData((prevData) => ({
@@ -585,9 +584,23 @@ const TechnicianHome = () => {
   );
   const [data, setData] = useState([]);
   const email = useSelector(getUserEmail);
-  const { data: technicianSchedules } =
+  const { data: technicianSchedules, isLoading } =
     useGetSchedulesByTechnicianEmailQuery(email);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading work order...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   useEffect(() => {
     const fetchRepairDetails = async () => {
@@ -596,8 +609,9 @@ const TechnicianHome = () => {
           try {
             const repair = await dispatch(
               maintenanceApiSlice.endpoints.getRepairById.initiate(
-                schedule?.repairID, {
-                  forceRefetch:true,
+                schedule?.repairID,
+                {
+                  forceRefetch: true,
                 }
               )
             ).unwrap();

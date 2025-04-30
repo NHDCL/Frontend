@@ -10,6 +10,7 @@ import Select from "react-select";
 import { useGetRepairRequestQuery } from "../../slices/maintenanceApiSlice";
 import { useGetAcademyQuery } from "../../slices/userApiSlice";
 import Tippy from "@tippyjs/react";
+import Swal from "sweetalert2";
 
 const AdminRepair = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,8 +21,11 @@ const AdminRepair = () => {
   const [selectedLocation, setSelectedLocation] = useState("");
 
   const rowsPerPage = 10;
-  const { data: repairRequest, refetch: refetchRepairRequest } =
-    useGetRepairRequestQuery();
+  const {
+    data: repairRequest,
+    isLoading,
+    refetch: refetchRepairRequest,
+  } = useGetRepairRequestQuery();
   const { data: academy } = useGetAcademyQuery();
 
   const [data, setData] = useState([]);
@@ -32,6 +36,20 @@ const AdminRepair = () => {
     if (!repairRequest) return;
     setData(repairRequest);
   }, [repairRequest]);
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading repairs...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {

@@ -47,18 +47,34 @@ const Repair = () => {
 
   const rowsPerPage = 10;
 
-  const { data: repairRequest, refetch: refetchRepairRequest } =
-    useGetRepairRequestQuery();
+  const {
+    data: repairRequest,
+    isLoading,
+    refetch: refetchRepairRequest,
+  } = useGetRepairRequestQuery();
 
   const repairID = rescheduleModalData?.repairID;
 
-  const {
-    data: scheduleData,
-    isLoading,
-    error,
-  } = useGetSchedulesByRepairIDQuery(repairID, {
-    skip: !repairID,
-  });
+  const { data: scheduleData, error } = useGetSchedulesByRepairIDQuery(
+    repairID,
+    {
+      skip: !repairID,
+    }
+  );
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading repairs...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   const [updateSchedule] = useUpdateRepairScheduleMutation();
 

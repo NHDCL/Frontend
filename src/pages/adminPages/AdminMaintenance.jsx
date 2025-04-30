@@ -9,14 +9,18 @@ import { useGetMaintenanceRequestQuery } from "../../slices/maintenanceApiSlice"
 import { useGetAssetQuery } from "../../slices/assetApiSlice";
 import { useGetAcademyQuery } from "../../slices/userApiSlice";
 import Tippy from "@tippyjs/react";
+import Swal from "sweetalert2";
 
 const AdminMaintenance = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
-  const { data: maintenanceRequest, refetch: refetchMaintenanceRequest } =
-    useGetMaintenanceRequestQuery();
+  const {
+    data: maintenanceRequest,
+    isLoading,
+    refetch: refetchMaintenanceRequest,
+  } = useGetMaintenanceRequestQuery();
   const { data: assetData, refetch: refetchAssetData } = useGetAssetQuery();
   const { data: academy } = useGetAcademyQuery();
 
@@ -24,6 +28,20 @@ const AdminMaintenance = () => {
   const [data, setData] = useState([]);
   console.log("data: ", data);
   console.log("a: ", assetData);
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading maintenance...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   useEffect(() => {
     if (maintenanceRequest && assetData) {
@@ -204,7 +222,7 @@ const AdminMaintenance = () => {
                       </span>
                     </Tippy>
                   </td>
-                  
+
                   <td className="description">
                     <Tippy content={item.description || ""} placement="top">
                       <span>

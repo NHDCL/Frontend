@@ -25,6 +25,7 @@ import {
 } from "../../slices/maintenanceApiSlice";
 import { useGetAssetQuery } from "../../slices/assetApiSlice";
 import Select from "react-select";
+import Swal from "sweetalert2";
 
 const Maintenancereport = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,8 +40,11 @@ const Maintenancereport = () => {
 
   const rowsPerPage = 10;
 
-  const { data: maintenanceRequest, refetch: refetchRepairRequest } =
-    useGetMaintenanceRequestQuery();
+  const {
+    data: maintenanceRequest,
+    isLoading,
+    refetch: refetchRepairRequest,
+  } = useGetMaintenanceRequestQuery();
   const { data: maintenanceReport } = useGetMaintenanceReportsQuery();
   const { data: academy } = useGetAcademyQuery();
   const { data: users } = useGetUsersQuery();
@@ -141,6 +145,20 @@ const Maintenancereport = () => {
     users,
     assets,
   ]);
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading repair reports...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   console.log("dataa", data);
 

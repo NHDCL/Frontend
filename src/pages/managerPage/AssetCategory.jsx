@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./css/card.css";
 import "./css/table.css";
 import "./css/form.css";
@@ -15,6 +15,7 @@ import {
   useSoftDeleteCategoryMutation,
 } from "../../slices/assetApiSlice";
 import Swal from "sweetalert2";
+
 const Category = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,7 +35,9 @@ const Category = () => {
   const rowsPerPage = 10;
 
   // Filter out categories where deleted is false
-  const filteredCategories = categories?.filter((category) => category.deleted === false);
+  const filteredCategories = categories?.filter(
+    (category) => category.deleted === false
+  );
 
   // Sorting and filtering data
   const filteredData = [...(filteredCategories || [])]
@@ -50,6 +53,20 @@ const Category = () => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading asset category...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   const handleDeleteRow = async (id) => {
     const { value: confirmed } = await Swal.fire({
@@ -162,80 +179,73 @@ const Category = () => {
             </button>
           </div>
         </div>
-
         {/* Table */}
-        {isLoading ? (
-          <p>Loading...</p>
-        ) : error ? (
-          <p>Error fetching categories.</p>
-        ) : (
-          <>
-            {/* Table */}
-            <div className="table-container">
-              <table className="RequestTable">
-                <thead className="table-header">
-                  <tr>
-                    <th>SI.No</th>
-                    <th>Category</th>
-                    <th>Depreciated Value (%)</th>
-                    <th>Actions</th>
+        <>
+          {/* Table */}
+          <div className="table-container">
+            <table className="RequestTable">
+              <thead className="table-header">
+                <tr>
+                  <th>SI.No</th>
+                  <th>Category</th>
+                  <th>Depreciated Value (%)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedData.map((item, index) => (
+                  <tr key={item.id}>
+                    <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
+                    <td>{item.name}</td>
+                    <td>{item.depreciatedValue}</td>
+                    <td className="actions">
+                      <button
+                        className="edit-btn"
+                        onClick={() => handleEditRow(item)}
+                      >
+                        <FaEdit style={{ width: "20px", height: "20px" }} />
+                      </button>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDeleteRow(item.id)}
+                      >
+                        <RiDeleteBin6Line
+                          style={{ width: "20px", height: "20px" }}
+                        />
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {displayedData.map((item, index) => (
-                    <tr key={item.id}>
-                      <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
-                      <td>{item.name}</td>
-                      <td>{item.depreciatedValue}</td>
-                      <td className="actions">
-                        <button
-                          className="edit-btn"
-                          onClick={() => handleEditRow(item)}
-                        >
-                          <FaEdit style={{ width: "20px", height: "20px" }} />
-                        </button>
-                        <button
-                          className="delete-btn"
-                          onClick={() => handleDeleteRow(item.id)}
-                        >
-                          <RiDeleteBin6Line
-                            style={{ width: "20px", height: "20px" }}
-                          />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-            {/* Pagination */}
-            <div className="pagination">
-              <span>{filteredData.length} Results</span>
-              <div>
-                {[...Array(totalPages).keys()]
-                  .slice(0, totalPages < 5 ? totalPages : 5)
-                  .map((num) => (
-                    <button
-                      key={num}
-                      className={currentPage === num + 1 ? "active" : ""}
-                      onClick={() => setCurrentPage(num + 1)}
-                    >
-                      {num + 1}
-                    </button>
-                  ))}
-                {totalPages > 5 && (
-                  <>
-                    <span>...</span>
-                    <button onClick={() => setCurrentPage(totalPages)}>
-                      {totalPages}
-                    </button>
-                  </>
-                )}
-              </div>
+          {/* Pagination */}
+          <div className="pagination">
+            <span>{filteredData.length} Results</span>
+            <div>
+              {[...Array(totalPages).keys()]
+                .slice(0, totalPages < 5 ? totalPages : 5)
+                .map((num) => (
+                  <button
+                    key={num}
+                    className={currentPage === num + 1 ? "active" : ""}
+                    onClick={() => setCurrentPage(num + 1)}
+                  >
+                    {num + 1}
+                  </button>
+                ))}
+              {totalPages > 5 && (
+                <>
+                  <span>...</span>
+                  <button onClick={() => setCurrentPage(totalPages)}>
+                    {totalPages}
+                  </button>
+                </>
+              )}
             </div>
-          </>
-        )}
+          </div>
+        </>
       </div>
 
       {/* Add Category Modal */}

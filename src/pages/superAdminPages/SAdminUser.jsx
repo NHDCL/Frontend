@@ -33,10 +33,19 @@ const SAdminUser = () => {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [formError, setFormError] = useState(null);
 
-  const { data: academies } = useGetAcademyQuery();
-  const { data: department } = useGetDepartmentQuery();
-  const { data: users, refetch: refetchUsers } = useGetUsersQuery();
-  const { data: roles } = useGetRolesQuery();
+  const { data: academies, isLoading: isLoadingAcademies } =
+    useGetAcademyQuery();
+  const {
+    data: department,
+    refetch,
+    isLoading: isLoadingDepartments,
+  } = useGetDepartmentQuery();
+  const {
+    data: users,
+    isLoading: isLoadingUsers,
+    refetch: refetchUsers,
+  } = useGetUsersQuery();
+  const { data: roles, isLoading: isLoadingRoles } = useGetRolesQuery();
   const [createUser, { isLoading }] = useCreateUserMutation();
   const [data, setData] = useState([]);
   const [softDeleteUser] = useSoftDeleteUserMutation();
@@ -49,18 +58,32 @@ const SAdminUser = () => {
   // console.log("adminRole: ", adminRoleId);
 
   useEffect(() => {
-    if (isLoading) {
+    if (
+      isLoadingUsers ||
+      isLoadingAcademies ||
+      isLoadingDepartments ||
+      isLoadingRoles
+    ) {
       Swal.fire({
-        title: "Loading users...",
+        title: "Loading data...",
+        text: "Please wait while we fetch the latest information",
         allowOutsideClick: false,
         didOpen: () => {
           Swal.showLoading();
         },
       });
     } else {
-      Swal.close();
+      // Only close if the Sweet Alert is currently open
+      if (Swal.isVisible()) {
+        Swal.close();
+      }
     }
-  }, [isLoading]);
+  }, [
+    isLoadingUsers,
+    isLoadingAcademies,
+    isLoadingDepartments,
+    isLoadingRoles,
+  ]);
 
   useEffect(() => {
     if (roles && Array.isArray(roles)) {

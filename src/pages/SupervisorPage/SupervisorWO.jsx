@@ -20,14 +20,12 @@ import { createSelector } from "reselect";
 import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice";
 import { useGetAssetByAssetCodeQuery } from "../../slices/assetApiSlice";
 import Tippy from "@tippyjs/react";
-
 import {
   useGetUserByEmailQuery,
   useGetUsersQuery,
   useGetDepartmentQuery,
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
-
 import Select from "react-select";
 
 const SupervisorWO = () => {
@@ -69,7 +67,7 @@ const SupervisorWO = () => {
   const departmentId = userByEmial?.user?.departmentId;
   console.log("departmentId", departmentId);
 
-  const { data: users, isLoading: usersLoading } = useGetUsersQuery();
+  const { data: users, isLoading } = useGetUsersQuery();
 
   const filteredUsers = users?.filter(
     (user) =>
@@ -110,6 +108,20 @@ const SupervisorWO = () => {
   const [data, setData] = useState([]);
   const [repairs, setRepairs] = useState([]);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading work order...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   useEffect(() => {
     const fetchRepairDetails = async () => {
