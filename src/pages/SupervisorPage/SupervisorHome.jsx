@@ -9,12 +9,9 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import { TiArrowSortedUp } from "react-icons/ti";
 import {
-  useAssignRepairMutation,
-  useGetSchedulesByRepairIDQuery,
   useUpdateRepairScheduleMutation,
   useGetSchedulesByUserIDQuery,
-  useGetPreventiveSchedulesByUserIDQuery,
-  useGetRepairByIdQuery,
+  useGetPreventiveSchedulesByUserIDQuery
 } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -27,7 +24,6 @@ import {
 } from "../../slices/userApiSlice";
 import { createSelector } from "reselect";
 import Swal from "sweetalert2";
-
 import Select from "react-select";
 
 const SupervisorHome = () => {
@@ -364,21 +360,21 @@ const SupervisorHome = () => {
   const filteredData =
     data && data.length
       ? data.filter((item) => {
-          // Match search term with any field at any level in the object
-          const matchesSearch = searchRecursively(item, searchTerm);
+        // Match search term with any field at any level in the object
+        const matchesSearch = searchRecursively(item, searchTerm);
 
-          const matchesPriority =
-            selectedPriority === "" ||
-            item.repairInfo.priority?.toLowerCase() ===
-              selectedPriority.toLowerCase();
+        const matchesPriority =
+          selectedPriority === "" ||
+          item.repairInfo.priority?.toLowerCase() ===
+          selectedPriority.toLowerCase();
 
-          const matchesWorkStatus =
-            selectedWorkStatus === "" ||
-            item.repairInfo.status?.toLowerCase() ===
-              selectedWorkStatus.toLowerCase();
+        const matchesWorkStatus =
+          selectedWorkStatus === "" ||
+          item.repairInfo.status?.toLowerCase() ===
+          selectedWorkStatus.toLowerCase();
 
-          return matchesSearch && matchesPriority && matchesWorkStatus;
-        })
+        return matchesSearch && matchesPriority && matchesWorkStatus;
+      })
       : [];
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -433,30 +429,38 @@ const SupervisorHome = () => {
     setAssignDate(item?.reportingDate);
     setAssignTime(item?.startTime);
   };
-
-  const [sortOrder, setSortOrder] = useState({
-    column: null,
-    direction: "asc",
-  });
-
-  const handleSort = (column) => {
-    setSortOrder((prev) => ({
-      column,
-      direction:
-        prev.column === column && prev.direction === "asc" ? "desc" : "asc",
-    }));
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      if (a[column] < b[column]) return ascending ? -1 : 1;
+      if (a[column] > b[column]) return ascending ? 1 : -1;
+      return 0;
+    });
+    setData(sortedData);
   };
 
-  const sortedData = [...data].sort((a, b) => {
-    if (!sortOrder.column) return b.repairID - a.repairID;
+  const handleSort = (field) => {
+    const ascending = sortOrder.column === field ? !sortOrder.ascending : true;
+  
+    const sorted = [...data].sort((a, b) => {
+      const aValue = getNestedValue(a, field);
+      const bValue = getNestedValue(b, field);
+  
+      if (aValue < bValue) return ascending ? -1 : 1;
+      if (aValue > bValue) return ascending ? 1 : -1;
+      return 0;
+    });
+  
+    setData(sorted);
+    setSortOrder({ column: field, ascending });
+  };
+  
+  const getNestedValue = (obj, path) => {
+    return path?.split('.').reduce((acc, part) => acc && acc[part], obj) ?? "";
+  };
 
-    const valA = a[sortOrder.column];
-    const valB = b[sortOrder.column];
 
-    if (valA < valB) return sortOrder.direction === "asc" ? -1 : 1;
-    if (valA > valB) return sortOrder.direction === "asc" ? 1 : -1;
-    return 0;
-  });
+
 
   return (
     <div className="ManagerDashboard">
@@ -534,45 +538,34 @@ const SupervisorHome = () => {
             <thead className="table-header">
               <tr>
                 {[
-                  "MID",
-                  "Asset Name",
-                  // "Email",
-                  "Date",
-                  "Phone No. ",
-                  "Area",
-                  "Priority",
-                  "Workstatus",
-                  "Description",
-                  "",
+                  { label: "MID", field: null },
+                  { label: "Asset Name", field: "repairInfo.assetName" },
+                  // { label: "Email", field: "email" }, // Uncomment if needed
+                  { label: "Date", field: "reportingDate" },
+                  { label: "Phone No.", field: "repairInfo.phoneNumber" },
+                  { label: "Area", field: "repairInfo.area" },
+                  { label: "Priority", field: "repairInfo.priority" },
+                  { label: "Workstatus", field: "repairInfo.status" },
+                  { label: "Description", field: null },
+                  { label: "Action", field: null }, // Action buttons
                 ].map((header, index) => (
                   <th key={index}>
-                    {header === "Area" || header === "Name" ? (
+                    {header.field ? (
                       <div className="header-title">
-                        {header}
+                        {header.label}
                         <div className="sort-icons">
                           <button
                             className="sort-btn"
-                            onClick={() =>
-                              handleSort(
-                                header === "Area"
-                                  ? "Area"
-                                  : header.toLowerCase().replace(" ", "")
-                              )
-                            }
+                            onClick={() => handleSort(header.field)}
+                            title={`Sort by ${header.label}`}
                           >
                             <TiArrowSortedUp
                               style={{
                                 color: "#305845",
                                 transform:
-                                  sortOrder.column ===
-                                    header.toLowerCase().replace(" ", "") &&
-                                  sortOrder.ascending
-                                    ? "rotate(0deg)" // Ascending
-                                    : sortOrder.column ===
-                                        header.toLowerCase().replace(" ", "") &&
-                                      !sortOrder.ascending
-                                    ? "rotate(180deg)" // Descending
-                                    : "rotate(0deg)", // Default
+                                  sortOrder.column === header.field && sortOrder.ascending
+                                    ? "rotate(0deg)"
+                                    : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
                               }}
                             />
@@ -580,25 +573,12 @@ const SupervisorHome = () => {
                         </div>
                       </div>
                     ) : (
-                      header
+                      header.label // Non-sortable label like "Action"
                     )}
                   </th>
                 ))}
-                <th>
-                  {selectedRows.length > 0 ? (
-                    <button
-                      className="delete-all-btn"
-                      onClick={handleDeleteSelected}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px", color: "red" }}
-                      />
-                    </button>
-                  ) : (
-                    " "
-                  )}
-                </th>
               </tr>
+
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
@@ -611,7 +591,7 @@ const SupervisorHome = () => {
                     >
                       <span>
                         {item.repairInfo?.assetName &&
-                        item.repairInfo.assetName.length > 20
+                          item.repairInfo.assetName.length > 20
                           ? item.repairInfo.assetName.substring(0, 20) + "..."
                           : item.repairInfo?.assetName || ""}
                       </span>
@@ -627,7 +607,7 @@ const SupervisorHome = () => {
                     >
                       <span>
                         {item.repairInfo?.area &&
-                        item.repairInfo.area.length > 20
+                          item.repairInfo.area.length > 20
                           ? item.repairInfo.area.substring(0, 20) + "..."
                           : item.repairInfo?.area || ""}
                       </span>
@@ -653,7 +633,7 @@ const SupervisorHome = () => {
                     >
                       <span>
                         {item.repairInfo?.description &&
-                        item.repairInfo.description.length > 20
+                          item.repairInfo.description.length > 20
                           ? item.repairInfo.description.substring(0, 20) + "..."
                           : item.repairInfo?.description || ""}
                       </span>

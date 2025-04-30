@@ -10,6 +10,7 @@ import Select from "react-select";
 import { useGetRepairRequestQuery } from "../../slices/maintenanceApiSlice";
 import { useGetAcademyQuery } from "../../slices/userApiSlice";
 import Tippy from "@tippyjs/react";
+import { TiArrowSortedUp } from "react-icons/ti";
 
 const AdminRepair = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -100,7 +101,7 @@ const AdminRepair = () => {
     const matchesLocation =
       selectedLocation === "" ||
       getAcademyName(item.academyId)?.toLowerCase() ===
-        selectedLocation.toLowerCase();
+      selectedLocation.toLowerCase();
 
     return (
       matchesSearch && matchesPriority && matchesWorkStatus && matchesLocation
@@ -129,6 +130,35 @@ const AdminRepair = () => {
     setData(updatedData);
     setSelectedRows([]); // Reset selected rows after deletion
   };
+
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+    const sortData = (column, ascending) => {
+      const sortedData = [...data].sort((a, b) => {
+        if (a[column] < b[column]) return ascending ? -1 : 1;
+        if (a[column] > b[column]) return ascending ? 1 : -1;
+        return 0;
+      });
+      setData(sortedData);
+    };
+  
+    const handleSort = (field) => {
+      const ascending = sortOrder.column === field ? !sortOrder.ascending : true;
+  
+      const sorted = [...data].sort((a, b) => {
+        const aValue = getNestedValue(a, field);
+        const bValue = getNestedValue(b, field);
+  
+        if (aValue < bValue) return ascending ? -1 : 1;
+        if (aValue > bValue) return ascending ? 1 : -1;
+        return 0;
+      });
+  
+      setData(sorted);
+      setSortOrder({ column: field, ascending });
+    };
+    const getNestedValue = (obj, path) => {
+      return path?.split('.').reduce((acc, part) => acc && acc[part], obj) ?? "";
+    };
 
   return (
     <div className="ManagerDashboard">
@@ -202,17 +232,43 @@ const AdminRepair = () => {
             <thead className="table-header">
               <tr>
                 {[
-                  "RID",
-                  "Image",
-                  "Name",
-                  "Email",
-                  "phone",
-                  "Area",
-                  "Location",
-                  "Priority",
-                  "Workstatus",
+                  { label: "RID", field: null },
+                  { label: "Image", field:null }, // first image if multiple
+                  { label: "Name", field: "name" },
+                  { label: "Email", field: "email" },
+                  { label: "Phone", field: "phoneNumber" },
+                  { label: "Area", field: "area" },
+                  { label: "Location", field: null },
+                  { label: "Priority", field: "priority" },
+                  { label: "Workstatus", field: "status" }
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header.field ? (
+                      <div className="header-title">
+                        {header.label}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() => handleSort(header.field)}
+                            title={`Sort by ${header.label}`}
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform:
+                                  sortOrder.column === header.field && sortOrder.ascending
+                                    ? "rotate(0deg)"
+                                    : "rotate(180deg)",
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header.label // Non-sortable label like "Action"
+                    )}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -278,7 +334,7 @@ const AdminRepair = () => {
                         {getAcademyName(item.academyId)
                           ? getAcademyName(item.academyId).length > 20
                             ? getAcademyName(item.academyId).substring(0, 20) +
-                              "..."
+                            "..."
                             : getAcademyName(item.academyId)
                           : ""}
                       </span>

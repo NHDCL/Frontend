@@ -8,6 +8,7 @@ import { AiOutlineUsergroupAdd } from "react-icons/ai";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
 import { RiApps2AddFill } from "react-icons/ri";
+import { TiArrowSortedUp } from "react-icons/ti";
 import {
   useGetAcademyQuery,
   useCreateUserMutation,
@@ -121,10 +122,10 @@ const AdminUser = () => {
       activeTab === "Manager"
         ? managerRoleId
         : activeTab === "Supervisor"
-        ? supervisorRoleId
-        : activeTab === "Technician"
-        ? technicianRoleId
-        : null;
+          ? supervisorRoleId
+          : activeTab === "Technician"
+            ? technicianRoleId
+            : null;
 
     // console.log("roleid: ", roleId)
 
@@ -222,14 +223,21 @@ const AdminUser = () => {
 
   const [data, setData] = useState(users);
   console.log("data", data);
+  useEffect(() => {
+    if (users) {
+      setData(users);
+    }
+  }, [users]);
 
-  const filteredData = (users || []).filter(
+  const filteredData = (data || []).filter(
     (item) =>
       item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
       Object.values(item).some((value) =>
         value.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
   );
+
+  
 
   console.log("FD", filteredData);
 
@@ -277,6 +285,48 @@ const AdminUser = () => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
+
+    const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+    const sortData = (column, ascending) => {
+      const sortedData = [...data].sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+    
+        // Normalize: Handle undefined, null, numbers, strings consistently
+        if (valA === undefined || valA === null) valA = "";
+        if (valB === undefined || valB === null) valB = "";
+    
+        // If both are numbers, compare numerically
+        if (!isNaN(valA) && !isNaN(valB)) {
+          valA = Number(valA);
+          valB = Number(valB);
+        } else {
+          // Otherwise, compare as lowercase strings (for emails, names, etc.)
+          valA = valA.toString().toLowerCase();
+          valB = valB.toString().toLowerCase();
+        }
+    
+        if (valA < valB) return ascending ? -1 : 1;
+        if (valA > valB) return ascending ? 1 : -1;
+        return 0;
+      });
+    
+      setData(sortedData);
+    };
+    
+    const handleSort = (column) => {
+      const newSortOrder =
+        column === sortOrder.column
+          ? !sortOrder.ascending
+          : true;
+    
+      setSortOrder({
+        column,
+        ascending: newSortOrder,
+      });
+    
+      sortData(column, newSortOrder);
+    };
 
   return (
     <div className="user-dashboard">
@@ -328,18 +378,46 @@ const AdminUser = () => {
             <thead>
               <tr>
                 {[
-                  "Image",
-                  "Name",
-                  "Email",
-                  "EmployeeId",
-                  "Academy",
-                  activeTab !== "Manager" ? "Department" : "",
-                  "Role",
-                  " ",
+                  { label: "Image", field: null },
+                  { label: "Name", field: "name"},
+                  { label: "Email", field: "email"},
+                  { label: "EmployeeId", field: "employeeId"},
+                  { label: "Academy", field: null },
+                  ...(activeTab !== "Manager"
+                    ? [{ label: "Department", field: "departmentId" }]
+                    : []),
+                  // { label: "Role", field: "role" },
+                  { label: " ", field: null }, // for actions like view/edit
                 ]
                   .filter(Boolean)
                   .map((header, index) => (
-                    <th key={index}>{header}</th>
+                    <th key={index}>
+                      {header.field ? (
+                        <div className="header-title">
+                          {header.label}
+                          <div className="sort-icons">
+                            <button
+                              className="sort-btn"
+                              onClick={() => handleSort(header.field)}
+                              title={`Sort by ${header.label}`}
+                            >
+                              <TiArrowSortedUp
+                                style={{
+                                  color: "#305845",
+                                  transform:
+                                    sortOrder.column === header.field && sortOrder.ascending
+                                      ? "rotate(0deg)"
+                                      : "rotate(180deg)",
+                                  transition: "transform 0.3s ease",
+                                }}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        header.label // Non-sortable label like "Action"
+                      )}
+                    </th>
                   ))}
               </tr>
             </thead>
@@ -399,7 +477,7 @@ const AdminUser = () => {
                         {getAcademyName(item.academyId)
                           ? getAcademyName(item.academyId).length > 20
                             ? getAcademyName(item.academyId).substring(0, 20) +
-                              "..."
+                            "..."
                             : getAcademyName(item.academyId)
                           : ""}
                       </span>
@@ -409,7 +487,7 @@ const AdminUser = () => {
                   {activeTab !== "Manager" && (
                     <td>{getDepartmentName(item.departmentId)}</td>
                   )}
-                  <td>{item.role ? item.role.name : "No Role"}</td>
+                  {/* <td>{item.role ? item.role.name : "No Role"}</td> */}
                   <td>
                     <RiDeleteBin6Line
                       onClick={() => handleDelete(item.userId)}
