@@ -12,6 +12,7 @@ import {
   useHandleAssetDeletionMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
+import Tippy from "@tippyjs/react";
 
 const DeletionApproval = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -215,9 +216,34 @@ const DeletionApproval = () => {
                 <tr key={index}>
                   <td>{index + 1}</td>
                   <td>{item.assetCode}</td>
-                  <td>{item.title}</td>
-                  <td>{item.assetArea}</td>
-                  <td>{item.deletedBy}</td>
+                 
+                  <td className="description">
+                    <Tippy content={item.title || ""} placement="top">
+                      <span>
+                        {item.title?.length > 20
+                          ? item.title.substring(0, 20) + "..."
+                          : item.title || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="description">
+                    <Tippy content={item.assetArea || ""} placement="top">
+                      <span>
+                        {item.assetArea?.length > 20
+                          ? item.assetArea.substring(0, 20) + "..."
+                          : item.assetArea || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="description">
+                    <Tippy content={item.deletedBy || ""} placement="top">
+                      <span>
+                        {item.deletedBy?.length > 20
+                          ? item.deletedBy.substring(0, 20) + "..."
+                          : item.deletedBy || ""}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td className="actions">
                     <button
                       style={{ marginLeft: "10px" }}

@@ -38,6 +38,7 @@ const SupervisorHome = () => {
   const [selectedPriority, setSelectedPriority] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [rescheduleModalData, setRescheduleModalData] = useState(null);
+  const [status ,setStatus] = useState(null);
 
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
@@ -425,6 +426,7 @@ const SupervisorHome = () => {
     setSelectedTechnicianUpdate(null);
     setAssignDate(null);
     setAssignTime(null);
+    setStatus(null)
   };
 
   const handleRescheduleView = (item) => {
@@ -432,6 +434,9 @@ const SupervisorHome = () => {
     setSelectedTechnicianUpdate(item?.technicianEmail || "");
     setAssignDate(item?.reportingDate);
     setAssignTime(item?.startTime);
+    setStatus(item?.status);
+
+    console.log("item",item)
   };
 
   const [sortOrder, setSortOrder] = useState({
@@ -712,7 +717,7 @@ const SupervisorHome = () => {
             {/* Close Button */}
             <div className="modal-header">
               <h2 style={{ fontSize: "18px" }} className="form-h">
-                Schedule Form: {modalData.scheduleId}
+                Schedule Form
               </h2>
               <button className="close-btn" onClick={handleCloseModal}>
                 <IoIosCloseCircle
@@ -788,7 +793,7 @@ const SupervisorHome = () => {
             {/* Close Button */}
             <div className="modal-header">
               <h2 style={{ fontSize: "18px" }} className="form-h">
-                Reschedule Form: {rescheduleModalData.repairID}
+                Reschedule Form
               </h2>
               <button className="close-btn" onClick={handleCloseModal2}>
                 <IoIosCloseCircle
@@ -831,15 +836,17 @@ const SupervisorHome = () => {
                 <input type="text" value={assignTime} readOnly />
               </div>
 
-              <div className="modal-buttons">
-                <button
-                  className="accept-btn"
-                  style={{ width: "80px" }}
-                  onClick={handleReschedule}
-                >
-                  Done
-                </button>
-              </div>
+              {status === "Pending" && (
+                <div className="modal-buttons">
+                  <button
+                    className="accept-btn"
+                    style={{ width: "80px" }}
+                    onClick={handleReschedule}
+                  >
+                    Done
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -37,6 +37,7 @@ const SupervisorWO = () => {
   const [modalData, setModalData] = useState(null);
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [rescheduleModalData, setRescheduleModalData] = useState(null);
+  const [statusPending, setStatusPending] = useState(null);
 
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
@@ -345,6 +346,8 @@ const SupervisorWO = () => {
     setStartDate(null);
     setEndDate(null);
     setAssignTime(null);
+    setStatusPending(null);
+
   };
   const handleRescheduleView = (item) => {
     setRescheduleModalData(item);
@@ -352,6 +355,8 @@ const SupervisorWO = () => {
     setStartDate(item?.startDate);
     setEndDate(item?.endDate);
     setAssignTime(item?.timeStart);
+    setStatusPending(item?.repairInfo?.status);
+
   };
 
   return (
@@ -559,8 +564,10 @@ const SupervisorWO = () => {
                   className="accept-btn"
                   style={{ width: "80px" }}
                   onClick={handleSchedule}
-                >
-                  Done
+                  disabled={userSchedulesLoading}
+
+                  >
+                   {userSchedulesLoading ? "Saving..." : "Done"}
                 </button>
               </div>
             </div>
@@ -622,15 +629,20 @@ const SupervisorWO = () => {
                 <input type="text" value={assignTime} readOnly />
               </div>
 
-              <div className="modal-buttons">
+              
+              {statusPending === "Pending" && (
+                <div className="modal-buttons">
                 <button
                   className="accept-btn"
                   style={{ width: "80px" }}
                   onClick={handleReschedule}
+                  disabled={userSchedulesLoading}
+
                 >
-                  Done
+                 {userSchedulesLoading ? "Saving..." : "Done"}
                 </button>
               </div>
+              )}
             </div>
           </div>
         </div>

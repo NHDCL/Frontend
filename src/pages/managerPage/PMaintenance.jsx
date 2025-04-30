@@ -35,6 +35,7 @@ const PMaintenance = () => {
   const [userID, setUserID] = useState(null);
   const [supervisor, setEmail] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [statusPending, setStatusPending] = useState(null);
 
   const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
@@ -220,6 +221,7 @@ const PMaintenance = () => {
 
   const handleScheduleView = (item) => {
     setModalData(item);
+
   };
   const handleCloseModal = () => {
     setModalData(null);
@@ -228,6 +230,8 @@ const PMaintenance = () => {
   // Open Edit Modal
   const handleEditRow = (item) => {
     setEditModalData(item);
+    setStatusPending(item?.status);
+
   };
 
   const handleSaveEdit = async () => {
@@ -666,16 +670,19 @@ const PMaintenance = () => {
             </div>
 
             {/* <button className="save-btn" onClick={handleSaveEdit}>Save</button> */}
-            <div className="modal-buttons">
-              <button
-                className="accept-btn"
-                style={{ width: "80px" }}
-                onClick={handleSaveEdit}
-                disabled={isSaving}
-              >
-                {isSaving ? "Saving..." : "Save"}
-              </button>
-            </div>
+           
+            {statusPending === "Pending" && (
+                <div className="modal-buttons">
+                <button
+                  className="accept-btn"
+                  style={{ width: "80px" }}
+                  onClick={handleSaveEdit}
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Saving..." : "Save"}
+                </button>
+              </div>
+              )}
           </div>
         </div>
       )}

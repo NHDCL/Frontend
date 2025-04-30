@@ -4,6 +4,7 @@ import "./../../managerPage/css/table.css";
 import "./../../managerPage/css/form.css";
 import { IoIosSearch } from "react-icons/io";
 import { FaFileAlt } from "react-icons/fa";
+import Tippy from "@tippyjs/react";
 
 const BulkFileApproval = () => {
   const [searchTerm, setSearchTerm] = useState("");
