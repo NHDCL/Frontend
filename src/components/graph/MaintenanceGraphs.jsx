@@ -1,85 +1,89 @@
 import React, { useState } from "react";
-import { 
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label 
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Label,
 } from "recharts";
 import "./../../pages/adminPages/css/MintenanceGraphs.css";
 import Select from "react-select";
+import {
+  useGetAllCombinedMaintenanceCostQuery,
+  useGetAverageResponseTimeQuery,
+} from "../../slices/maintenanceApiSlice";
+import { useGetAcademyQuery } from "../../slices/userApiSlice";
 
-const sampleData = [
-  {
-    name: "Gyelpozhing",
-    years: {
-      "2023": [
-        { month: "Jan", cost: 60, responseTime: 40 },
-        { month: "Feb", cost: 45, responseTime: 60 },
-        { month: "Mar", cost: 20, responseTime: 25 },
-        { month: "Apr", cost: 55, responseTime: 80 },
-        { month: "May", cost: 10, responseTime: 30 },
-        { month: "Jun", cost: 5, responseTime: 35 },
-        { month: "Jul", cost: 15, responseTime: 40 },
-        { month: "Aug", cost: 80, responseTime: 85 },
-        { month: "Sep", cost: 40, responseTime: 35 },
-        { month: "Oct", cost: 60, responseTime: 45 },
-        { month: "Nov", cost: 10, responseTime: 20 },
-        { month: "Dec", cost: 30, responseTime: 50 }
-      ],
-      "2024": [
-        { month: "Jan", cost: 40, responseTime: 50 },
-        { month: "Feb", cost: 35, responseTime: 55 },
-        { month: "Mar", cost: 25, responseTime: 30 },
-        { month: "Apr", cost: 75, responseTime: 60 },
-        { month: "May", cost: 20, responseTime: 35 },
-        { month: "Jun", cost: 10, responseTime: 90 },
-        { month: "Jul", cost: 25, responseTime: 45 },
-        { month: "Aug", cost: 90, responseTime: 95 },
-        { month: "Sep", cost: 50, responseTime: 40 },
-        { month: "Oct", cost: 70, responseTime: 55 },
-        { month: "Nov", cost: 15, responseTime: 25 },
-        { month: "Dec", cost: 40, responseTime: 60 }
-      ]
-    }
-  },
-  {
-    name: "Tareythang",
-    years: {
-      "2023": [
-        { month: "Jan", cost: 30, responseTime: 40 },
-        { month: "Feb", cost: 45, responseTime: 60 },
-        { month: "Mar", cost: 20, responseTime: 25 },
-        { month: "Apr", cost: 55, responseTime: 50 },
-        { month: "May", cost: 10, responseTime: 30 },
-        { month: "Jun", cost: 5, responseTime: 35 },
-        { month: "Jul", cost: 15, responseTime: 40 },
-        { month: "Aug", cost: 80, responseTime: 85 },
-        { month: "Sep", cost: 40, responseTime: 35 },
-        { month: "Oct", cost: 60, responseTime: 45 },
-        { month: "Nov", cost: 10, responseTime: 20 },
-        { month: "Dec", cost: 30, responseTime: 50 }
-      ],
-      "2024": [
-        { month: "Jan", cost: 40, responseTime: 50 },
-        { month: "Feb", cost: 35, responseTime: 55 },
-        { month: "Mar", cost: 25, responseTime: 30 },
-        { month: "Apr", cost: 65, responseTime: 60 },
-        { month: "May", cost: 20, responseTime: 35 },
-        { month: "Jun", cost: 10, responseTime: 40 },
-        { month: "Jul", cost: 25, responseTime: 45 },
-        { month: "Aug", cost: 90, responseTime: 95 },
-        { month: "Sep", cost: 50, responseTime: 40 },
-        { month: "Oct", cost: 70, responseTime: 55 },
-        { month: "Nov", cost: 15, responseTime: 25 },
-        { month: "Dec", cost: 40, responseTime: 60 }
-      ]
-    }
-  }
+const months = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
 
 const MaintenanceGraphs = () => {
-  const [selectedAcademy, setSelectedAcademy] = useState("Gyelpozhing");
-  const [selectedYear, setSelectedYear] = useState("2023");
+  const [selectedAcademy, setSelectedAcademy] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
 
-  const selectedAcademyData = sampleData.find(a => a.name === selectedAcademy);
-  const selectedData = selectedAcademyData?.years[selectedYear] || [];
+  const {
+    data: maintenanceData,
+    isLoading,
+    error,
+  } = useGetAllCombinedMaintenanceCostQuery();
+
+  const { data: academies } = useGetAcademyQuery();
+  const { data: responseTimeData } = useGetAverageResponseTimeQuery();
+  console.log(responseTimeData)
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading data</div>;
+
+  const validAcademyIds = new Set(academies.map((a) => a.academyId));
+
+  const filteredMaintenanceData = maintenanceData.filter(
+    (item) => item.academyId && validAcademyIds.has(item.academyId)
+  );
+
+  const academyIdToName = academies.reduce((acc, curr) => {
+    acc[curr.academyId] = curr.name;
+    return acc;
+  }, {});
+
+  const academyData = filteredMaintenanceData.reduce((acc, curr) => {
+    const { academyId, year, month, totalCost } = curr;
+    const academyName = academyIdToName[academyId];
+
+    if (!acc[academyId]) acc[academyId] = { name: academyName, years: {} };
+    if (!acc[academyId].years[year])
+      acc[academyId].years[year] = Array(12).fill(0);
+
+    acc[academyId].years[year][month - 1] += totalCost;
+    return acc;
+  }, {});
+
+  const selectedAcademyData = academyData[selectedAcademy];
+  const selectedYearCostData =
+    selectedAcademyData?.years[selectedYear] || Array(12).fill(0);
+
+  const filteredResponseTime = (responseTimeData || []).filter(
+    (entry) =>
+      entry.academyId === selectedAcademy &&
+      String(entry.year) === String(selectedYear)
+  );
+
+  const responseTimePerMonth = Array(12).fill(null);
+  filteredResponseTime.forEach((entry) => {
+    responseTimePerMonth[entry.month - 1] = entry.averageResponseTimeHours;
+  });
+
+  const mappedData = months.map((month, index) => ({
+    month,
+    cost: selectedYearCostData[index],
+    responseTime: responseTimePerMonth[index] ?? 0,
+  }));
 
   return (
     <div className="graph-container">
@@ -87,45 +91,82 @@ const MaintenanceGraphs = () => {
       <div className="graph-select-container">
         <Select
           classNamePrefix="custom-select-workstatus"
-          options={sampleData.map((academy) => ({ value: academy.name, label: academy.name }))}
-          value={{ value: selectedAcademy, label: selectedAcademy }}
-          onChange={(selectedOption) => setSelectedAcademy(selectedOption.value)}
+          options={academies.map((a) => ({
+            value: a.academyId,
+            label: a.name,
+          }))}
+          value={
+            selectedAcademy
+              ? {
+                  value: selectedAcademy,
+                  label: academyIdToName[selectedAcademy],
+                }
+              : null
+          }
+          onChange={(selectedOption) => {
+            setSelectedAcademy(selectedOption.value);
+            setSelectedYear("");
+          }}
         />
         <Select
           classNamePrefix="custom-select-workstatus"
-          options={Object.keys(selectedAcademyData?.years || {}).map((year) => ({ value: year, label: year }))}
-          value={{ value: selectedYear, label: selectedYear }}
+          options={Object.keys(selectedAcademyData?.years || {}).map((year) => ({
+            value: year,
+            label: year,
+          }))}
+          value={
+            selectedYear ? { value: selectedYear, label: selectedYear } : null
+          }
           onChange={(selectedOption) => setSelectedYear(selectedOption.value)}
+          isDisabled={!selectedAcademy}
         />
       </div>
+
       <div className="graph-grid">
         <div className="graph-card">
           <h3 className="graph-subtitle">Maintenance Cost</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={selectedData}>
+            <BarChart data={mappedData}>
               <XAxis tick={{ fontSize: 12 }} dataKey="month">
                 <Label value="Month" offset={-5} position="insideBottom" />
               </XAxis>
               <YAxis tick={{ fontSize: 12 }}>
-                <Label value="Cost (Nu)" angle={-90} position="Center" dx={-20} style={{ textAnchor: "middle" }} />
+                <Label
+                  value="Cost (Nu)"
+                  angle={-90}
+                  position="center"
+                  dx={-20}
+                />
               </YAxis>
               <Tooltip />
               <Bar dataKey="cost" fill="#897463" radius={[5, 5, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
+
         <div className="graph-card">
           <h3 className="graph-subtitle">Average Response Time</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={selectedData}>
+            <LineChart data={mappedData}>
               <XAxis tick={{ fontSize: 12 }} dataKey="month">
                 <Label value="Month" offset={-5} position="insideBottom" />
               </XAxis>
               <YAxis tick={{ fontSize: 12 }}>
-                <Label value="Response Time (min)" angle={-90} position="center" dx={-20} style={{ textAnchor: "middle" }} />
+                <Label
+                  value="Response Time (hrs)"
+                  angle={-90}
+                  position="center"
+                  dx={-20}
+                />
               </YAxis>
               <Tooltip />
-              <Line type="monotone" dataKey="responseTime" stroke="#315845" strokeWidth={2} dot={{ r: 4 }} />
+              <Line
+                type="monotone"
+                dataKey="responseTime"
+                stroke="#315845"
+                strokeWidth={2}
+                dot={{ r: 4 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>

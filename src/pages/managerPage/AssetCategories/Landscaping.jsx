@@ -617,7 +617,7 @@ const Landscaping = ({ category }) => {
   const handleCreateSchedule = async () => {
     setIsCreating(true);
     try {
-      await createMaintenance({
+      const res=await createMaintenance({
         timeStart: scheduleModalData.Schedule,
         startDate: scheduleModalData.Lastworkorder,
         endDate: scheduleModalData.Nextworkorder,
@@ -626,6 +626,7 @@ const Landscaping = ({ category }) => {
         repeat: repeatFrequency?.value || "none",
         userID: assignedWorker?.value || "",
         assetCode: scheduleModalData.assetCode,
+        academyId: academyId,
       }).unwrap();
 
       // Send email to the assigned worker
@@ -642,6 +643,8 @@ const Landscaping = ({ category }) => {
 
       // Optionally close modal
       setIsScheduleModalOpen(false);
+      setRepeatFrequency(null);
+      setAssignedWorker(null);
       setScheduleModalData(null);
     } catch (error) {
       Swal.fire({

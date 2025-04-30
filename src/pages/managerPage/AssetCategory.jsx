@@ -30,7 +30,8 @@ const Category = () => {
   const [postCategory] = usePostCategoryMutation();
   const [updateCategory, { isLoading: isUpdating }] =
     useUpdateCategoryMutation();
-  const [softDeleteCategory] = useSoftDeleteCategoryMutation();
+  const [softDeleteCategory, { isLoading: isDeleting }] =
+    useSoftDeleteCategoryMutation();
 
   const rowsPerPage = 10;
 
@@ -96,6 +97,10 @@ const Category = () => {
   const handleAddCategory = () => {
     setShowAddModal(true);
     setNewCategory({ category: "", DepreciatedValue: "" });
+  };
+
+  const handleView = (item) => {
+    setModalData(item);
   };
 
   const handleSaveNewCategory = async () => {
@@ -180,45 +185,53 @@ const Category = () => {
           </div>
         </div>
         {/* Table */}
-        <>
-          {/* Table */}
-          <div className="table-container">
-            <table className="RequestTable">
-              <thead className="table-header">
-                <tr>
-                  <th>SI.No</th>
-                  <th>Category</th>
-                  <th>Depreciated Value (%)</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayedData.map((item, index) => (
-                  <tr key={item.id}>
-                    <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
-                    <td>{item.name}</td>
-                    <td>{item.depreciatedValue}</td>
-                    <td className="actions">
-                      <button
-                        className="edit-btn"
-                        onClick={() => handleEditRow(item)}
-                      >
-                        <FaEdit style={{ width: "20px", height: "20px" }} />
-                      </button>
-                      <button
-                        className="delete-btn"
-                        onClick={() => handleDeleteRow(item.id)}
-                      >
-                        <RiDeleteBin6Line
-                          style={{ width: "20px", height: "20px" }}
-                        />
-                      </button>
-                    </td>
+          <>
+            {/* Table */}
+            <div className="table-container">
+              <table className="RequestTable">
+                <thead className="table-header">
+                  <tr>
+                    <th>SI.No</th>
+                    <th>Category</th>
+                    <th>Depreciated Value (%)</th>
+                    <th>Edit</th>
+                    <th></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {displayedData.map((item, index) => (
+                    <tr key={item.id}>
+                      <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
+                      <td>{item.name}</td>
+                      <td>{item.depreciatedValue}</td>
+                      <td className="actions">
+                        <button
+                          className="edit-btn"
+                          onClick={() => handleEditRow(item)}
+                        >
+                          <FaEdit style={{ width: "20px", height: "20px" }} />
+                        </button>
+                      </td>
+                      <td
+                        className="actions"
+                        style={{
+                          display: "flex",
+                          gap: "0.5rem",
+                          maxWidth: "150px",
+                        }}
+                      >
+                        <button
+                          className="view-btn"
+                          onClick={() => handleView(item)}
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
           {/* Pagination */}
           <div className="pagination">
@@ -247,6 +260,41 @@ const Category = () => {
           </div>
         </>
       </div>
+
+      {modalData && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="form-h">Asset Category Details</h2>
+              <button className="close-btn" onClick={() => setModalData(null)}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <div className="schedule-form">
+              <div className="modal-content-field">
+                <label>Category Name:</label>
+                <input type="text" value={modalData.name} />
+              </div>
+              <div className="modal-content-field">
+                <label>Depreciated Value (%):</label>
+                <input type="number" value={modalData.depreciatedValue} />
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="accept-btn"
+                  style={{ width: "80px", backgroundColor: "#E72B2B" }}
+                  onClick={() => handleDeleteRow(modalData.id)}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Category Modal */}
       {showAddModal && (

@@ -622,6 +622,7 @@ const Machinery = ({ category }) => {
         repeat: repeatFrequency?.value || "none",
         userID: assignedWorker?.value || "",
         assetCode: scheduleModalData.assetCode,
+        academyId: academyId,
       }).unwrap();
 
       // Send email to the assigned worker
@@ -638,6 +639,8 @@ const Machinery = ({ category }) => {
 
       // Optionally close modal
       setIsScheduleModalOpen(false);
+      setRepeatFrequency(null);
+      setAssignedWorker(null);
       setScheduleModalData(null);
     } catch (error) {
       Swal.fire({
