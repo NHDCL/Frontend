@@ -74,7 +74,7 @@ const SupervisorAccount = () => {
         name: userData.user.name || "",
         email: userData.user.email || "",
         academyId: userData.user.academyId || "",
-        employeeId: userData.user.employeeId,
+        employeeId: userData.user.employeeId || "",
         departmentId: userData.user.departmentId || "",
         image: userData.user.image || img,
       }));

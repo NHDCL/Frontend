@@ -33,7 +33,8 @@ const AdminAcademies = () => {
 
   const { data: academies, isLoading, error, refetch } = useGetAcademyQuery();
   const [addAcademy] = usePostAcademyMutation();
-  const [updateAcademy] = useUpdateAcademyMutation();
+  const [updateAcademy, { isLoading: isSavingLoading }] =
+    useUpdateAcademyMutation();
   const [deleteAcademy] = useDeleteAcademyMutation();
   console.log("add academy:", newAcademy);
 
@@ -428,8 +429,12 @@ const AdminAcademies = () => {
                 <RiImageAddLine />
               </div>
             </label>
-            <button className="AdminA-add" onClick={handleEdit}>
-              Save
+            <button
+              className="AdminA-add"
+              onClick={handleEdit}
+              disabled={isSavingLoading}
+            >
+              {isSavingLoading ? "Saving..." : "Save"}
             </button>
           </div>
         </div>

@@ -24,6 +24,7 @@ import { useSelector } from "react-redux";
 import { createSelector } from "reselect";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import Tippy from "@tippyjs/react";
 
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
@@ -58,7 +59,6 @@ const Building = ({ category }) => {
   const [floorAndRooms, setFloorAndRooms] = useState({});
   const [floorInput, setFloorInput] = useState("");
   const [roomInput, setRoomInput] = useState("");
-  // const [scheduleModalData, setScheduleModalData] = useState(null);
   const [jsonData, setJson] = useState("");
   const [academyId, setAcademyId] = useState(null);
   const [CategoryId, setCategoryId] = useState(null);
@@ -884,7 +884,17 @@ const Building = ({ category }) => {
                 <tr key={index}>
                   <td>{index + 1}</td>
                   <td>{item.assetCode}</td>
-                  <td>{item.title}</td>
+                  {/* <td>{item.title}</td> */}
+                  <td className="description">
+                    <Tippy content={item.title || ""} placement="top">
+                      <span>
+                        {item.title?.length > 20
+                          ? item.title.substring(0, 20) + "..."
+                          : item.title || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+
                   <td>{item.acquireDate}</td>
                   <td>{item.lifespan}</td>
                   <td>{floorCount}</td> {/* Number of floors */}

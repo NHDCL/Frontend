@@ -7,10 +7,8 @@ import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
 import { FaDownload } from "react-icons/fa";
 import { jsPDF } from "jspdf";
-import {
-  useGetAssetQuery
-} from "../../../slices/assetApiSlice";
-
+import { useGetAssetQuery } from "../../../slices/assetApiSlice";
+import Tippy from "@tippyjs/react";
 
 const Other = ({ category }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -242,10 +240,26 @@ const Other = ({ category }) => {
                   </td>
                   <td>{index + 1}</td> {/* Just showing serial # in table */}
                   <td>{item.assetCode}</td>
-                  <td>{item.title}</td>
+                  <td className="description">
+                    <Tippy content={item.title || ""} placement="top">
+                      <span>
+                        {item.title?.length > 20
+                          ? item.title.substring(0, 20) + "..."
+                          : item.title || ""}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td>{item.acquireDate}</td>
                   <td>{item.lifespan}</td>
-                  <td>{item.assetArea}</td>
+                  <td className="description">
+                    <Tippy content={item.assetArea || ""} placement="top">
+                      <span>
+                        {item.assetArea?.length > 20
+                          ? item.assetArea.substring(0, 20) + "..."
+                          : item.assetArea || ""}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td>
                     <div className={getStatusClass(item.status)}>
                       {item.status}

@@ -6,12 +6,14 @@ import "./../../managerPage/css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
+import { TiArrowSortedUp } from "react-icons/ti";
 import {
   useUpdateAssetStatusMutation,
   useGetAssetQuery,
   useUpdateAssetMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
+import Tippy from "@tippyjs/react";
 
 const CreationApproval = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,7 +78,7 @@ const CreationApproval = () => {
 
     if (result.isConfirmed) {
       try {
-        const res=await updateAsset({
+        const res = await updateAsset({
           assetCode: updatedAsset.assetCode,
           assetData: updatedAsset,
         }).unwrap();
@@ -190,6 +192,48 @@ const CreationApproval = () => {
   // Ref for the modal
   const modalRef = useRef(null);
 
+      const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+      const sortData = (column, ascending) => {
+        const sortedData = [...data].sort((a, b) => {
+          let valA = a[column];
+          let valB = b[column];
+      
+          // Normalize: Handle undefined, null, numbers, strings consistently
+          if (valA === undefined || valA === null) valA = "";
+          if (valB === undefined || valB === null) valB = "";
+      
+          // If both are numbers, compare numerically
+          if (!isNaN(valA) && !isNaN(valB)) {
+            valA = Number(valA);
+            valB = Number(valB);
+          } else {
+            // Otherwise, compare as lowercase strings (for emails, names, etc.)
+            valA = valA.toString().toLowerCase();
+            valB = valB.toString().toLowerCase();
+          }
+      
+          if (valA < valB) return ascending ? -1 : 1;
+          if (valA > valB) return ascending ? 1 : -1;
+          return 0;
+        });
+      
+        setData(sortedData);
+      };
+      
+      const handleSort = (column) => {
+        const newSortOrder =
+          column === sortOrder.column
+            ? !sortOrder.ascending
+            : true;
+      
+        setSortOrder({
+          column,
+          ascending: newSortOrder,
+        });
+      
+        sortData(column, newSortOrder);
+      };
+
   return (
     <div className="ManagerDashboard">
       {/* Home table */}
@@ -210,14 +254,40 @@ const CreationApproval = () => {
             <thead className="table-header">
               <tr>
                 {[
-                  "Sl. No.",
-                  "Asset_Code",
-                  "Asset Name",
-                  "Area",
-                  "Requested By",
+                  { label: "Sl. No.", field: null },           // Usually index-based
+                  { label: "Asset_Code", field: "assetCode" },
+                  { label: "Asset Name", field: "title" },
+                  { label: "Area", field: "assetArea" },
+                  { label: "Requested By", field: "createdBy" }
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
-                ))}
+                    <th key={index}>
+                      {header.field ? (
+                        <div className="header-title">
+                          {header.label}
+                          <div className="sort-icons">
+                            <button
+                              className="sort-btn"
+                              onClick={() => handleSort(header.field)}
+                              title={`Sort by ${header.label}`}
+                            >
+                              <TiArrowSortedUp
+                                style={{
+                                  color: "#305845",
+                                  transform:
+                                    sortOrder.column === header.field && sortOrder.ascending
+                                      ? "rotate(0deg)"
+                                      : "rotate(180deg)",
+                                  transition: "transform 0.3s ease",
+                                }}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        header.label // Non-sortable label like "Action"
+                      )}
+                    </th>
+                  ))}
                 <th>
                   {selectedRows.length > 0 ? (
                     <button
@@ -239,9 +309,33 @@ const CreationApproval = () => {
                 <tr key={index}>
                   <td>{index + 1}</td>
                   <td>{item.assetCode}</td>
-                  <td>{item.title}</td>
-                  <td>{item.assetArea}</td>
-                  <td>{item.createdBy}</td>
+                  <td className="description">
+                    <Tippy content={item.title || ""} placement="top">
+                      <span>
+                        {item.title?.length > 20
+                          ? item.title.substring(0, 20) + "..."
+                          : item.title || ""}
+                      </span>
+                    </Tippy>
+                  </td>                  
+                  <td className="description">
+                    <Tippy content={item.assetArea || ""} placement="top">
+                      <span>
+                        {item.assetArea?.length > 20
+                          ? item.assetArea.substring(0, 20) + "..."
+                          : item.assetArea || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="description">
+                    <Tippy content={item.createdBy || ""} placement="top">
+                      <span>
+                        {item.createdBy?.length > 20
+                          ? item.createdBy.substring(0, 20) + "..."
+                          : item.createdBy || ""}
+                      </span>
+                    </Tippy>
+                  </td>                  
                   <td className="actions">
                     <button
                       style={{ marginLeft: "10px" }}
@@ -342,10 +436,10 @@ const CreationApproval = () => {
                           ...prev,
                           attributes: prev.attributes
                             ? prev.attributes.map((attr) =>
-                                attr.name === "Plint_area"
-                                  ? { ...attr, value: newValue }
-                                  : attr
-                              )
+                              attr.name === "Plint_area"
+                                ? { ...attr, value: newValue }
+                                : attr
+                            )
                             : [],
                         }));
                       }}
@@ -445,7 +539,7 @@ const CreationApproval = () => {
                   <div className="modal-buttons">
                     {!isEditing ? (
                       <button
-                      type="button"
+                        type="button"
                         className="download-all-btn"
                         onClick={(e) => {
                           e.preventDefault(); // 👈 prevent form submit
@@ -481,155 +575,155 @@ const CreationApproval = () => {
               {(modalData.categoryDetails?.name === "Landscaping" ||
                 modalData.categoryDetails?.name === "Facility" ||
                 modalData.categoryDetails?.name === "Infrastructure") && (
-                <form className="repair-form">
-                  <div className="modal-content-field">
-                    <label>Asset Id:</label>
-                    <input type="text" value={modalData.assetID} readOnly />
-                  </div>
+                  <form className="repair-form">
+                    <div className="modal-content-field">
+                      <label>Asset Id:</label>
+                      <input type="text" value={modalData.assetID} readOnly />
+                    </div>
 
-                  <div className="modal-content-field">
-                    <label>Title:</label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={updatedAsset.title || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Asset Code:</label>
-                    <input type="email" value={modalData.assetCode} readOnly />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Size</label>
-                    <input
-                      type="text"
-                      value={
-                        updatedAsset?.attributes?.find(
-                          (attr) => attr.name === "Size"
-                        )?.value || ""
-                      }
-                      onChange={(e) => {
-                        const newValue = e.target.value;
-                        setUpdatedAsset((prev) => ({
-                          ...prev,
-                          attributes: prev.attributes
-                            ? prev.attributes.map((attr) =>
+                    <div className="modal-content-field">
+                      <label>Title:</label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={updatedAsset.title || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Asset Code:</label>
+                      <input type="email" value={modalData.assetCode} readOnly />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Size</label>
+                      <input
+                        type="text"
+                        value={
+                          updatedAsset?.attributes?.find(
+                            (attr) => attr.name === "Size"
+                          )?.value || ""
+                        }
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          setUpdatedAsset((prev) => ({
+                            ...prev,
+                            attributes: prev.attributes
+                              ? prev.attributes.map((attr) =>
                                 attr.name === "Size"
                                   ? { ...attr, value: newValue }
                                   : attr
                               )
-                            : [],
-                        }));
-                      }}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-
-                  <div className="modal-content-field">
-                    <label>Cost:</label>
-                    <input
-                      type="text"
-                      name="cost"
-                      value={updatedAsset?.cost || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Depreciated Value:</label>
-                    <input
-                      value={modalData.categoryDetails?.depreciatedValue}
-                      readOnly
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Acquired Date:</label>
-                    <input
-                      type="text"
-                      name="acquireDate"
-                      value={updatedAsset?.acquireDate || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Useful Life (Years):</label>
-                    <input
-                      type="text"
-                      name="lifespan"
-                      value={updatedAsset?.lifespan || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>status:</label>
-                    <input value={modalData.status} readOnly />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>category:</label>
-                    <input value={modalData.categoryDetails?.name} readOnly />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Area:</label>
-                    <input
-                      type="text"
-                      name="assetArea"
-                      value={updatedAsset?.assetArea || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Created by</label>
-                    <input value={modalData.createdBy} readOnly />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Description:</label>
-                    <textarea
-                      name="description"
-                      value={updatedAsset?.description || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-buttons">
-                  {!isEditing ? (
-                      <button
-                      type="button"
-                        className="download-all-btn"
-                        onClick={(e) => {
-                          e.preventDefault(); // 👈 prevent form submit
-                          setIsEditing(true);
+                              : [],
+                          }));
                         }}
-                      >
-                        Edit
-                      </button>
-                    ) : (
-                      <button type="button" className="download-all-btn" onClick={handleSave}>
-                        Save
-                      </button>
-                    )}
-                    <button
-                      className="accept-btn"
-                      onClick={handleApprove}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Approving..." : "Approve"}
-                    </button>
+                        readOnly={!isEditing}
+                      />
+                    </div>
 
-                    <button
-                      className="reject-btn"
-                      onClick={handleDecline}
-                      disabled={isDeclining}
-                    >
-                      {isDeclining ? "Declining..." : "Decline"}
-                    </button>
-                  </div>
-                </form>
-              )}
+                    <div className="modal-content-field">
+                      <label>Cost:</label>
+                      <input
+                        type="text"
+                        name="cost"
+                        value={updatedAsset?.cost || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Depreciated Value:</label>
+                      <input
+                        value={modalData.categoryDetails?.depreciatedValue}
+                        readOnly
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Acquired Date:</label>
+                      <input
+                        type="text"
+                        name="acquireDate"
+                        value={updatedAsset?.acquireDate || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Useful Life (Years):</label>
+                      <input
+                        type="text"
+                        name="lifespan"
+                        value={updatedAsset?.lifespan || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>status:</label>
+                      <input value={modalData.status} readOnly />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>category:</label>
+                      <input value={modalData.categoryDetails?.name} readOnly />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Area:</label>
+                      <input
+                        type="text"
+                        name="assetArea"
+                        value={updatedAsset?.assetArea || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Created by</label>
+                      <input value={modalData.createdBy} readOnly />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Description:</label>
+                      <textarea
+                        name="description"
+                        value={updatedAsset?.description || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-buttons">
+                      {!isEditing ? (
+                        <button
+                          type="button"
+                          className="download-all-btn"
+                          onClick={(e) => {
+                            e.preventDefault(); // 👈 prevent form submit
+                            setIsEditing(true);
+                          }}
+                        >
+                          Edit
+                        </button>
+                      ) : (
+                        <button type="button" className="download-all-btn" onClick={handleSave}>
+                          Save
+                        </button>
+                      )}
+                      <button
+                        className="accept-btn"
+                        onClick={handleApprove}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Approving..." : "Approve"}
+                      </button>
+
+                      <button
+                        className="reject-btn"
+                        onClick={handleDecline}
+                        disabled={isDeclining}
+                      >
+                        {isDeclining ? "Declining..." : "Decline"}
+                      </button>
+                    </div>
+                  </form>
+                )}
 
               {modalData.categoryDetails?.name === "Machinery" && (
                 <form className="repair-form">
@@ -667,10 +761,10 @@ const CreationApproval = () => {
                           ...prev,
                           attributes: prev.attributes
                             ? prev.attributes.map((attr) =>
-                                attr.name === "Serial_number"
-                                  ? { ...attr, value: newValue }
-                                  : attr
-                              )
+                              attr.name === "Serial_number"
+                                ? { ...attr, value: newValue }
+                                : attr
+                            )
                             : [],
                         }));
                       }}
@@ -747,9 +841,9 @@ const CreationApproval = () => {
                     />
                   </div>
                   <div className="modal-buttons">
-                  {!isEditing ? (
+                    {!isEditing ? (
                       <button
-                      type="button"
+                        type="button"
                         className="download-all-btn"
                         onClick={(e) => {
                           e.preventDefault(); // 👈 prevent form submit
@@ -790,129 +884,129 @@ const CreationApproval = () => {
                 "Infrastructure",
                 "Machinery",
               ].includes(modalData.categoryDetails?.name) && (
-                <form className="repair-form">
-                  <div className="modal-content-field">
-                    <label>Asset Id:</label>
-                    <input type="text" value={modalData.assetID} readOnly />
-                  </div>
+                  <form className="repair-form">
+                    <div className="modal-content-field">
+                      <label>Asset Id:</label>
+                      <input type="text" value={modalData.assetID} readOnly />
+                    </div>
 
-                  <div className="modal-content-field">
-                    <label>Title:</label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={updatedAsset.title || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Asset Code:</label>
-                    <input type="email" value={modalData.assetCode} readOnly />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Cost:</label>
-                    <input
-                      type="text"
-                      name="cost"
-                      value={updatedAsset?.cost || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Depreciated Value:</label>
-                    <input
-                      value={modalData.categoryDetails?.depreciatedValue}
-                      readOnly
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Acquired Date:</label>
-                    <input
-                      type="text"
-                      name="acquireDate"
-                      value={updatedAsset?.acquireDate || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Useful Life (Years):</label>
-                    <input
-                      type="text"
-                      name="lifespan"
-                      value={updatedAsset?.lifespan || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Status:</label>
-                    <input value={modalData.status} readOnly />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Category:</label>
-                    <input value={modalData.categoryDetails?.name} readOnly />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Area:</label>
-                    <input
-                      type="text"
-                      name="assetArea"
-                      value={updatedAsset?.assetArea || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Created by</label>
-                    <input value={modalData.createdBy} readOnly />
-                  </div>
-                  <div className="modal-content-field">
-                    <label>Description:</label>
-                    <textarea
-                      name="description"
-                      value={updatedAsset?.description || ""}
-                      onChange={handleEditChange}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div className="modal-buttons">
-                  {!isEditing ? (
+                    <div className="modal-content-field">
+                      <label>Title:</label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={updatedAsset.title || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Asset Code:</label>
+                      <input type="email" value={modalData.assetCode} readOnly />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Cost:</label>
+                      <input
+                        type="text"
+                        name="cost"
+                        value={updatedAsset?.cost || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Depreciated Value:</label>
+                      <input
+                        value={modalData.categoryDetails?.depreciatedValue}
+                        readOnly
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Acquired Date:</label>
+                      <input
+                        type="text"
+                        name="acquireDate"
+                        value={updatedAsset?.acquireDate || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Useful Life (Years):</label>
+                      <input
+                        type="text"
+                        name="lifespan"
+                        value={updatedAsset?.lifespan || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Status:</label>
+                      <input value={modalData.status} readOnly />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Category:</label>
+                      <input value={modalData.categoryDetails?.name} readOnly />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Area:</label>
+                      <input
+                        type="text"
+                        name="assetArea"
+                        value={updatedAsset?.assetArea || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Created by</label>
+                      <input value={modalData.createdBy} readOnly />
+                    </div>
+                    <div className="modal-content-field">
+                      <label>Description:</label>
+                      <textarea
+                        name="description"
+                        value={updatedAsset?.description || ""}
+                        onChange={handleEditChange}
+                        readOnly={!isEditing}
+                      />
+                    </div>
+                    <div className="modal-buttons">
+                      {!isEditing ? (
+                        <button
+                          type="button"
+                          className="download-all-btn"
+                          onClick={(e) => {
+                            e.preventDefault(); // 👈 prevent form submit
+                            setIsEditing(true);
+                          }}
+                        >
+                          Edit
+                        </button>
+                      ) : (
+                        <button type="button" className="download-all-btn" onClick={handleSave}>
+                          Save
+                        </button>
+                      )}
                       <button
-                      type="button"
-                        className="download-all-btn"
-                        onClick={(e) => {
-                          e.preventDefault(); // 👈 prevent form submit
-                          setIsEditing(true);
-                        }}
+                        className="accept-btn"
+                        onClick={handleApprove}
+                        disabled={isLoading}
                       >
-                        Edit
+                        {isLoading ? "Approving..." : "Approve"}
                       </button>
-                    ) : (
-                      <button type="button" className="download-all-btn" onClick={handleSave}>
-                        Save
-                      </button>
-                    )}
-                    <button
-                      className="accept-btn"
-                      onClick={handleApprove}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Approving..." : "Approve"}
-                    </button>
 
-                    <button
-                      className="reject-btn"
-                      onClick={handleDecline}
-                      disabled={isDeclining}
-                    >
-                      {isDeclining ? "Declining..." : "Decline"}
-                    </button>
-                  </div>
-                </form>
-              )}
+                      <button
+                        className="reject-btn"
+                        onClick={handleDecline}
+                        disabled={isDeclining}
+                      >
+                        {isDeclining ? "Declining..." : "Decline"}
+                      </button>
+                    </div>
+                  </form>
+                )}
             </div>
           </div>
         </div>

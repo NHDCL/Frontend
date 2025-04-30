@@ -29,6 +29,7 @@ import {
   useCreateMaintenanceMutation,
   useSendEmailMutation,
 } from "../../../slices/maintenanceApiSlice";
+import Tippy from "@tippyjs/react";
 
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
@@ -747,10 +748,26 @@ const Machinery = ({ category }) => {
                   </td>
                   <td>{index + 1}</td> {/* Just showing serial # in table */}
                   <td>{item.assetCode}</td>
-                  <td>{item.title}</td>
+                  <td className="description">
+                    <Tippy content={item.title || ""} placement="top">
+                      <span>
+                        {item.title?.length > 20
+                          ? item.title.substring(0, 20) + "..."
+                          : item.title || ""}
+                      </span>
+                    </Tippy>
+                  </td>                  
                   <td>{item.acquireDate}</td>
                   <td>{item.lifespan}</td>
-                  <td>{item.assetArea}</td>
+                  <td className="description">
+                    <Tippy content={item.assetArea || ""} placement="top">
+                      <span>
+                        {item.assetArea?.length > 20
+                          ? item.assetArea.substring(0, 20) + "..."
+                          : item.assetArea || ""}
+                      </span>
+                    </Tippy>
+                  </td> 
                   <td>
                     <div className={getStatusClass(item.status)}>
                       {item.status}

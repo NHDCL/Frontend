@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./../managerPage/css/card.css";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/form.css";
@@ -13,6 +13,7 @@ import autoTable from "jspdf-autotable";
 import Select from "react-select";
 import Tippy from "@tippyjs/react";
 import { useGetRepairReportsQuery } from "../../slices/maintenanceApiSlice"; // Import the query hook
+import Swal from "sweetalert2";
 
 const SAdminRReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,6 +77,20 @@ const SAdminRReport = () => {
   // Log the structure of the API data and processed data for debugging
   console.log("Original API data:", apiData);
   console.log("Processed data:", data);
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading repair reports...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   const sortedData = [...data].sort((a, b) => {
     // We want newest reports first, but we don't have a proper way to determine this
@@ -334,7 +349,7 @@ const SAdminRReport = () => {
                         </span>
                       </Tippy>
                     </td>
-                   
+
                     <td className="description">
                       <Tippy
                         content={item.Additional_information || ""}

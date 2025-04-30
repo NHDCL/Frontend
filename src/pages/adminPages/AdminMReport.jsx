@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import "./../managerPage/css/card.css";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/form.css";
@@ -12,7 +12,9 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Select from "react-select";
 import Tippy from "@tippyjs/react";
+import { TiArrowSortedUp } from "react-icons/ti";
 import { useGetPreventiveMaintenanceReportsQuery } from "../../slices/maintenanceApiSlice"; // Import the query hook
+import Swal from "sweetalert2";
 
 const AdminMReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,14 +26,11 @@ const AdminMReport = () => {
     Additional_Hour: "",
     Remarks: "",
   });
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
 
   // Fetch repair reports data using RTK Query
-  const {
-    data: apiData,
-    isLoading,
-    isError,
-    error,
-  } = useGetPreventiveMaintenanceReportsQuery();
+  const { data: apiData, isLoading } =
+    useGetPreventiveMaintenanceReportsQuery();
 
   const rowsPerPage = 10;
 
@@ -71,11 +70,34 @@ const AdminMReport = () => {
   };
 
   // Get processed data
-  const data = processApiData(apiData);
+  // const data = processApiData(apiData);
+  const [data, setData] = useState([]);
+  console.log("Data: ", data);
+
+  useEffect(() => {
+    if (apiData) {
+      const processed = processApiData(apiData); // your existing function
+      setData(processed);
+    }
+  }, [apiData]);
 
   // Log the structure of the API data and processed data for debugging
   console.log("Original API data:", apiData);
   console.log("Processed data:", data);
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading maintenance reports...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   const sortedData = [...data].sort((a, b) => {
     // We want newest reports first, but we don't have a proper way to determine this
@@ -83,14 +105,49 @@ const AdminMReport = () => {
     return b.rid.localeCompare(a.rid);
   });
 
-  const filteredData = sortedData.filter((item) => {
-    return Object.values(item).some(
-      (value) =>
-        value &&
-        typeof value === "string" &&
-        value.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+  const getNestedValue = (obj, path) => {
+    return path?.split(".").reduce((acc, part) => acc && acc[part], obj) ?? "";
+  };
+  const filteredData = useMemo(() => {
+    let tempData = [...data];
+
+    // Apply search
+    if (searchTerm) {
+      tempData = tempData.filter((item) =>
+        Object.values(item).some(
+          (value) =>
+            value &&
+            typeof value === "string" &&
+            value.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    }
+
+    // Apply sorting
+    if (sortOrder.column) {
+      tempData.sort((a, b) => {
+        const aValue = getNestedValue(a, sortOrder.column);
+        const bValue = getNestedValue(b, sortOrder.column);
+
+        // Handle "NU." prefix
+        const parseValue = (val) => {
+          if (typeof val === "string" && val.startsWith("NU.")) {
+            return parseFloat(val.replace("NU.", ""));
+          }
+          return typeof val === "string" ? val.toLowerCase() : val;
+        };
+
+        const aParsed = parseValue(aValue);
+        const bParsed = parseValue(bValue);
+
+        if (aParsed < bParsed) return sortOrder.ascending ? -1 : 1;
+        if (aParsed > bParsed) return sortOrder.ascending ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return tempData;
+  }, [data, searchTerm, sortOrder]);
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -204,17 +261,30 @@ const AdminMReport = () => {
     document.body.removeChild(a);
   };
 
-  if (isLoading) {
-    return <div className="loading">Loading repair reports...</div>;
-  }
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      if (a[column] < b[column]) return ascending ? -1 : 1;
+      if (a[column] > b[column]) return ascending ? 1 : -1;
+      return 0;
+    });
+    setData(sortedData);
+  };
 
-  if (isError) {
-    return (
-      <div className="error">
-        Error loading repair reports: {error?.message || "Unknown error"}
-      </div>
-    );
-  }
+  const handleSort = (field) => {
+    const ascending = sortOrder.column === field ? !sortOrder.ascending : true;
+
+    const sorted = [...data].sort((a, b) => {
+      const aValue = getNestedValue(a, field);
+      const bValue = getNestedValue(b, field);
+
+      if (aValue < bValue) return ascending ? -1 : 1;
+      if (aValue > bValue) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setData(sorted);
+    setSortOrder({ column: field, ascending });
+  };
 
   return (
     <div className="ManagerDashboard">
@@ -260,16 +330,43 @@ const AdminMReport = () => {
                   />
                 </th>
                 {[
-                  "Report ID",
-                  "Start Time",
-                  "End Time",
-                  "Date",
-                  "Total Cost",
-                  "Parts Used",
-                  "Technicians",
-                  "Information",
+                  { label: "Report ID", field: null },
+                  { label: "Start Time", field: "startTime" },
+                  { label: "End Time", field: "endTime" },
+                  { label: "Date", field: "Date" },
+                  { label: "Total Cost", field: "Total_cost" },
+                  { label: "Parts Used", field: null },
+                  { label: "Technicians", field: "Assigned_Technician" },
+                  { label: "Information", field: null },
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header.field ? (
+                      <div className="header-title">
+                        {header.label}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() => handleSort(header.field)}
+                            title={`Sort by ${header.label}`}
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform:
+                                  sortOrder.column === header.field &&
+                                  sortOrder.ascending
+                                    ? "rotate(0deg)"
+                                    : "rotate(180deg)",
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header.label // Non-sortable label like "Action"
+                    )}
+                  </th>
                 ))}
                 <th>
                   {selectedRows.length > 0 ? (

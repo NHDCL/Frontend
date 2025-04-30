@@ -230,7 +230,7 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
 
     getMaintenanceReportByID: builder.query({
       query: (id) =>
-        `${MAINTENANCE_URL}/maintenance-reports//by-maintenance-id/${id}`,
+        `${MAINTENANCE_URL}/maintenance-reports/by-maintenance-id/${id}`,
     }),
     getAllCombinedMaintenanceCost: builder.query({
       query: () => ({

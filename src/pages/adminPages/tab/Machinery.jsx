@@ -7,9 +7,8 @@ import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
 import { FaDownload } from "react-icons/fa";
 import { jsPDF } from "jspdf";
-import {
-  useGetAssetQuery
-} from "../../../slices/assetApiSlice";
+import { useGetAssetQuery } from "../../../slices/assetApiSlice";
+import Tippy from "@tippyjs/react";
 
 const Machinery = ({ category }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,7 +16,7 @@ const Machinery = ({ category }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [modalData, setModalData] = useState(null);
-  const { data: assets} = useGetAssetQuery();
+  const { data: assets } = useGetAssetQuery();
   const [data, setData] = useState([]);
   const rowsPerPage = 9; // 3x3 grid for QR codes per page
   const qrSize = 40; // Size of each QR code (adjust as needed)
@@ -29,7 +28,6 @@ const Machinery = ({ category }) => {
       setData(filteredAssets);
     }
   }, [assets, category]);
-
 
   // Filtering data based on search and priority selection and work status
   const sortedData = [...data].sort((a, b) => b.mid - a.mid);
@@ -75,7 +73,6 @@ const Machinery = ({ category }) => {
   const handleCloseModal = () => {
     setModalData(null);
   };
-
 
   const getQrImageUrl = (attributes) => {
     const qrAttr = attributes?.find((attr) => attr.name === "QR Code");
@@ -242,10 +239,26 @@ const Machinery = ({ category }) => {
                   </td>
                   <td>{index + 1}</td> {/* Just showing serial # in table */}
                   <td>{item.assetCode}</td>
-                  <td>{item.title}</td>
+                  <td className="description">
+                    <Tippy content={item.title || ""} placement="top">
+                      <span>
+                        {item.title?.length > 20
+                          ? item.title.substring(0, 20) + "..."
+                          : item.title || ""}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td>{item.acquireDate}</td>
                   <td>{item.lifespan}</td>
-                  <td>{item.assetArea}</td>
+                  <td className="description">
+                    <Tippy content={item.assetArea || ""} placement="top">
+                      <span>
+                        {item.assetArea?.length > 20
+                          ? item.assetArea.substring(0, 20) + "..."
+                          : item.assetArea || ""}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td>
                     <div className={getStatusClass(item.status)}>
                       {item.status}
@@ -277,7 +290,7 @@ const Machinery = ({ category }) => {
           </tbody>
         </table>
       </div>
-      
+
       <div className="pagination">
         <span>{filteredData.length} Results</span>
         <div>

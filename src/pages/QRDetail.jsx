@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/LandingComponents/Header";
 import LandingFooter from "../components/LandingComponents/LandingFooter";
 import "./css/QRDetail.css";
@@ -38,6 +38,20 @@ const QRDetail = () => {
     description: "",
     email: "",
   });
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading asset details...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -101,12 +115,13 @@ const QRDetail = () => {
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "Do you want to send this repair request?",
-      icon: "question",
+      icon: "warning",
+      color: "#305845",
       showCancelButton: true,
       confirmButtonText: "Yes, send it!",
       cancelButtonText: "Cancel",
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
     });
 
     if (!result.isConfirmed) return;
@@ -151,37 +166,37 @@ const QRDetail = () => {
             <h3 className="section-title" style={{ textAlign: "start" }}>
               Asset Information
             </h3>
-            {isLoading ? (
+            {/* {isLoading ? (
               <p>Loading asset...</p>
             ) : error ? (
               <p>
                 Error loading asset:{" "}
                 {error?.data?.message || error?.error || "Unknown error"}
               </p>
-            ) : (
-              <div className="asset_detail">
-                <div className="pp">
-                  <p className="p1">Asset Name:</p>
-                  <p className="p2">{asset?.title}</p>
-                </div>
-                <div className="pp">
-                  <p className="p1">Asset Code:</p>
-                  <p className="p2">{asset?.assetCode}</p>
-                </div>
-                <div className="pp">
-                  <p className="p1">Area:</p>
-                  <p className="p2">{asset?.assetArea}</p>
-                </div>
-                <div className="pp">
-                  <p className="p1">Location:</p>
-                  <p className="p2">{academy?.name || "Not specified"}</p>
-                </div>
-                <div className="pp">
-                  <p className="p1">Category:</p>
-                  <p className="p2">{asset?.categoryDetails?.name}</p>
-                </div>
+            ) : ( */}
+            <div className="asset_detail">
+              <div className="pp">
+                <p className="p1">Asset Name:</p>
+                <p className="p2">{asset?.title}</p>
               </div>
-            )}
+              <div className="pp">
+                <p className="p1">Asset Code:</p>
+                <p className="p2">{asset?.assetCode}</p>
+              </div>
+              <div className="pp">
+                <p className="p1">Area:</p>
+                <p className="p2">{asset?.assetArea}</p>
+              </div>
+              <div className="pp">
+                <p className="p1">Location:</p>
+                <p className="p2">{academy?.name || "Not specified"}</p>
+              </div>
+              <div className="pp">
+                <p className="p1">Category:</p>
+                <p className="p2">{asset?.categoryDetails?.name}</p>
+              </div>
+            </div>
+            {/* )} */}
           </div>
 
           <h4 className="form-title">
@@ -195,7 +210,7 @@ const QRDetail = () => {
               onChange={handleChange}
               placeholder="Your Name"
             />
-            {errors.name && <div className="error-text">{errors.name}</div>}
+            {errors.name && <div className="qr-error-text">{errors.name}</div>}
 
             <input
               type="tel"
@@ -204,7 +219,9 @@ const QRDetail = () => {
               onChange={handleChange}
               placeholder="Phone Number"
             />
-            {errors.phone && <div className="error-text">{errors.phone}</div>}
+            {errors.phone && (
+              <div className="qr-error-text">{errors.phone}</div>
+            )}
 
             <input
               type="email"
@@ -213,7 +230,9 @@ const QRDetail = () => {
               onChange={handleChange}
               placeholder="Email Address"
             />
-            {errors.email && <div className="error-text">{errors.email}</div>}
+            {errors.email && (
+              <div className="qr-error-text">{errors.email}</div>
+            )}
 
             <Select
               classNamePrefix="customm-select-department"
@@ -225,7 +244,7 @@ const QRDetail = () => {
               isClearable
             />
             {errors.priority && (
-              <div className="error-text">{errors.priority}</div>
+              <div className="qr-error-text">{errors.priority}</div>
             )}
 
             <textarea
@@ -235,7 +254,7 @@ const QRDetail = () => {
               placeholder="Description"
             />
             {errors.description && (
-              <div className="error-text">{errors.description}</div>
+              <div className="qr-error-text">{errors.description}</div>
             )}
 
             <input
@@ -246,14 +265,15 @@ const QRDetail = () => {
               onChange={handleImageUpload}
               style={{ display: "none" }}
             />
-            {imageError && <div className="error-text">{imageError}</div>}
+            {imageError && <div className="qr-qr-error-text">{imageError}</div>}
 
             <div className="mr-upload-box-img">
-              {images.map((imgSrc, index) => (
+              {imageError && <p className="error-text">{imageError}</p>}
+              {images.map((imgFile, index) => (
                 <div key={index} className="mr-image-wrapper">
                   <img
-                    src={imgSrc}
-                    alt={`Uploaded Preview ${index}`}
+                    src={URL.createObjectURL(imgFile)}
+                    alt={`Preview ${index}`}
                     className="mr-upload-preview"
                   />
                   <div

@@ -1,7 +1,9 @@
-import React, { useState, lazy, Suspense } from "react";
-import "./../managerPage/css/assetTap.css"; // Ensure this is just a CSS import
-import AssetTap from "./../managerPage/AssetTap"; // Ensure this is the correct component import
+import React, { useState, lazy, Suspense, useEffect } from "react";
+import "./../managerPage/css/assetTap.css";
+import AssetTap from "./../managerPage/AssetTap";
 import { useGetCategoryQuery } from "../../slices/assetApiSlice";
+import Swal from "sweetalert2"; // Import SweetAlert2
+
 const categoryMapping = {
   Building: "Building",
   Infrastructure: "Landscaping",
@@ -9,7 +11,7 @@ const categoryMapping = {
   Landscaping: "Landscaping",
   Machinery: "Machinery",
   Furniture: "Other",
-  RoomQR: "RoomQR", // Fixing casing to match "roomQR" -> "RoomQR"
+  RoomQR: "RoomQR",
 };
 
 // Default component when category is not found
@@ -19,7 +21,35 @@ const DefaultCategory = lazy(() => import("./tab/Other"));
 const RoomQrComponent = lazy(() => import("./tab/Room"));
 
 const AdminAssets = () => {
-  const { data: categories, error, isLoading } = useGetCategoryQuery(); // Fetch categories from API
+  const { data: categories, error, isLoading } = useGetCategoryQuery();
+
+  // Use SweetAlert2 for loading state
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading assets...",
+        text: "Please wait while we fetch the asset categories",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      // Close the alert when loading is complete
+      if (Swal.isVisible()) {
+        Swal.close();
+      }
+
+      // Show error message if there was an error
+      if (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to load asset categories. Please try again later.",
+        });
+      }
+    }
+  }, [isLoading, error]);
 
   // Filter out categories where 'deleted' is true
   const activeCategories = categories
@@ -34,9 +64,6 @@ const AdminAssets = () => {
   // Adding RoomQr manually to categories to display in the AssetTap
   const categoryList = [...activeCategories, { name: "Room QR" }];
 
-  if (isLoading) return <div>Loading categories...</div>;
-  if (error) return <div>Error fetching categories</div>;
-
   // Get the correct filename based on the category name
   const normalizedTab = activeTab.replace(/\s+/g, "").toLowerCase();
   const componentFile = categoryMapping[activeTab] || "Other";
@@ -45,27 +72,48 @@ const AdminAssets = () => {
   const CategoryComponent =
     normalizedTab === "roomqr"
       ? RoomQrComponent
-      : lazy(
-          () => import(`./tab/${componentFile}`).catch(() => DefaultCategory) // If not found, load 'Other.js'
+      : lazy(() =>
+          import(`./tab/${componentFile}`).catch(() => DefaultCategory)
         );
+
+  // Add loading state for Suspense fallback
+  const [tabLoading, setTabLoading] = useState(false);
+
+  // Handle tab change with loading indicator
+  const handleTabChange = (tab) => {
+    setTabLoading(true);
+    setActiveTab(tab);
+    // The loading state will be handled by Suspense
+  };
 
   return (
     <div className="ManagerDashboard">
       <div className="container">
         <div>
-          {/* Render AssetTap with RoomQr included as an option */}
+          {/* Render AssetTap with categories */}
           {categoryList.length > 0 && (
             <AssetTap
               activeTab={activeTab}
-              setActiveTab={setActiveTab}
+              setActiveTab={handleTabChange}
               categories={categoryList}
             />
           )}
 
-          {/* Dynamically Load Component Based on Active Tab */}
+          {/* Suspense with enhanced loading state for tab content */}
           <div className="tab-content">
-            <Suspense fallback={<div>Loading...</div>}>
-              <CategoryComponent key={activeTab} category={activeTab} />
+            <Suspense
+              fallback={
+                <div className="loading-container">
+                  <div className="loading-spinner"></div>
+                  <p>Loading content...</p>
+                </div>
+              }
+            >
+              <CategoryComponent
+                key={activeTab}
+                category={activeTab}
+                onLoad={() => setTabLoading(false)}
+              />
             </Suspense>
           </div>
         </div>

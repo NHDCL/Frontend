@@ -1,117 +1,134 @@
-  .qrcontainer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    padding: 4rem;
-    margin-top: 90px;
-    justify-content: center;
+.qrcontainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 4rem;
+  margin-top: 90px;
+  justify-content: center;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.mr-remove-btn {
+  background-color: transparent; /* normal state */
+  border: none; /* if you don't want any border */
+  color: black; /* or whatever text color you prefer */
+  cursor: pointer;
+}
+
+.mr-remove-btn:hover {
+  background-color: transparent; /* no brown hover */
+}
+
+.qr-error-text {
+  color: red;
+  font-size: 14px;
+  margin-bottom: -5px;
+  align-self: center;
+}
+
+.asset_detail {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.pp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.pp .p2 {
+  width: 70%;
+  border-radius: 10px;
+  max-width: 350px;
+  font-size: 13px;
+  padding: 6px;
+}
+
+.pp .p1 {
+  text-align: right;
+  font-size: 13px;
+  width: 50%;
+  font-weight: 600;
+}
+.section-title,
+.form-title {
+  color: #2e5d47;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+/* Form */
+.report-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.report-form input,
+.report-form textarea {
+  padding: 0.75rem;
+  border: 1.5px solid #897463;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.report-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Upload */
+.upload-box {
+  padding: 1rem;
+  border: 1.5px dashed #897463;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+}
+
+.upload-box input[type="file"] {
+  display: none;
+}
+
+/* Button */
+.report-form .button {
+  background-color: #897463;
+  color: white;
+  border: none;
+  padding: 0.8rem;
+  border-radius: 10px;
+  width: 50%;
+  font-size: 1rem;
+  align-self: center;
+  cursor: pointer;
+}
+
+.report-form button:hover {
+  background-color: #7c634e;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    align-items: center;
   }
-  
-  /* Cards */
+
   .card {
-    background: #fff;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    padding: 1.5rem;
-    border-radius: 10px;
-    width: 100%;
-    max-width: 400px;
-  }
-  
-  .asset_detail{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  .pp{
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 100%;
   }
-  .pp .p2 {
-    width: 70%;
-    border-radius: 10px;
-    max-width: 350px;
-    font-size: 13px;
-    padding: 6px;
-  }
-  
-  .pp .p1 {
-    text-align: right;
-    font-size: 13px;
-    width: 50%;
-    font-weight: 600;
-  }
-  .section-title,
-  .form-title {
-    color: #2e5d47;
-    margin-bottom: 1rem;
-    text-align: center;
-  }
-  
-  /* Form */
-  .report-form form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .report-form input,
-  .report-form textarea {
-    padding: 0.75rem;
-    border: 1.5px solid #897463;
-    border-radius: 8px;
-    font-size: 14px;
-  }
-  
-  .report-form textarea {
-    resize: vertical;
-    min-height: 80px;
-  }
-  
-  /* Upload */
-  .upload-box {
-    padding: 1rem;
-    border: 1.5px dashed #897463;
-    text-align: center;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #555;
-  }
-  
-  .upload-box input[type="file"] {
-    display: none;
-  }
-  
-  /* Button */
-  .report-form .button {
-    background-color: #897463;
-    color: white;
-    border: none;
-    padding: 0.8rem;
-    border-radius: 10px;
-    width: 50%;
-    font-size: 1rem;
-    align-self: center;
-    cursor: pointer;
-  }
-  
-  .report-form button:hover {
-    background-color: #7c634e;
-  }
-  
-  /* Responsive */
-  @media (max-width: 768px) {
-    .container {
-      flex-direction: column;
-      align-items: center;
-    }
-  
-    .card {
-      width: 100%;
-    }
-  }
-  
+}

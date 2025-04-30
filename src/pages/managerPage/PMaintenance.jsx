@@ -8,6 +8,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { FaEdit } from "react-icons/fa";
 import Select from "react-select";
+import { TiArrowSortedUp } from "react-icons/ti";
 import Swal from "sweetalert2";
 import { createSelector } from "reselect";
 import { useSelector } from "react-redux";
@@ -34,14 +35,20 @@ const PMaintenance = () => {
   const [userID, setUserID] = useState(null);
   const [supervisor, setEmail] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [statusPending, setStatusPending] = useState(null);
 
   const [assignedWorker, setAssignedWorker] = useState("");
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
-  const { data: maintenanceRequest, refetch: refetchMaintenanceRequest } =
-    useGetMaintenanceRequestQuery();
-  const [updatePreventiveMaintenance, { isLoading, error }] =
+
+  const {
+    data: maintenanceRequest,
+    isLoading,
+    refetch: refetchMaintenanceRequest,
+  } = useGetMaintenanceRequestQuery();
+  const [updatePreventiveMaintenance] =
     useUpdatePreventiveMaintenanceMutation();
+
   const { data: assetData, refetch: refetchAssetData } = useGetAssetQuery();
   const { data: allUsers } = useGetUsersQuery(); // hypothetical slice
   const { data: allDepartment } = useGetDepartmentQuery(); // hypothetical slice
@@ -82,19 +89,21 @@ const PMaintenance = () => {
       const userAcademyId = userByEmial?.user?.academyId;
       console.log("🏫 User's Academy ID:", userAcademyId);
 
+
       const filtered = maintenanceRequest
         .map((request) => {
           const matchedAsset = assetData.find(
             (a) =>
               a.assetCode === request.assetCode && a.academyID === userAcademyId
-          );
 
+          );
           const user = allUsers.find((u) => u?.userId === request.userID);
           const email = user ? user.email : "N/A";
           const department = user
             ? allDepartment.find((d) => d?.departmentId === user.departmentId)
             : null;
           const departmentName = department ? department.name : "N/A";
+          const AcademyName = department ? department.name : "N/A";
 
           console.log("📝 Request:", request);
           console.log("📝 usersss:", user);
@@ -107,6 +116,7 @@ const PMaintenance = () => {
               ...request,
               assetName: matchedAsset.title,
               userEmail: email,
+              // userAcademy:
               userDepartment: departmentName,
             };
           }
@@ -117,17 +127,31 @@ const PMaintenance = () => {
 
       console.log("✅ Filtered & Enriched Requests:", filtered);
 
-      const sorted = filtered.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
+      // const sorted = filtered.sort(
+      //   (a, b) => new Date(b?.createdAt) - new Date(a?.createdAt)
+      // );
 
-      console.log("📊 Sorted Requests:", sorted);
+      const sortedFiltered = filtered.sort((a, b) => b.maintenanceID.localeCompare(a.maintenanceID));
 
-      setData(sorted);
+      setData(sortedFiltered);
     }
   }, [maintenanceRequest, assetData, userByEmial, allUsers, allDepartment]);
 
   const rowsPerPage = 10;
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading maintenance...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   // Function to get the class based on workstatus
   const getWorkOrderStatusClass = (status) => {
@@ -173,17 +197,19 @@ const PMaintenance = () => {
   ];
 
   // Filtering data based on search and priority selection and work status
-  const sortedData = [...data].sort((a, b) => b.assetCode - a.assetCode);
+  const sortedData = [...data].sort((a, b) => b?.assetCode - a?.assetCode);
   const filteredData = sortedData.filter((item) => {
     const matchesSearch = Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      value != null && value.toString().toLowerCase().includes(searchTerm.toLowerCase()) // Check for null or undefined
     );
+
     const matchesWorkStatus =
       selectedWorkStatus === "" ||
       item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
 
     return matchesSearch && matchesWorkStatus;
   });
+
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -214,6 +240,7 @@ const PMaintenance = () => {
 
   const handleScheduleView = (item) => {
     setModalData(item);
+
   };
   const handleCloseModal = () => {
     setModalData(null);
@@ -222,6 +249,8 @@ const PMaintenance = () => {
   // Open Edit Modal
   const handleEditRow = (item) => {
     setEditModalData(item);
+    setStatusPending(item?.status);
+
   };
 
   const handleSaveEdit = async () => {
@@ -313,6 +342,30 @@ const PMaintenance = () => {
   console.log("🛠️ Workers List for Department:", editModalData?.userDepartment);
   console.log("👥 Matched Workers:", workersList);
 
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      if (a[column] < b[column]) return ascending ? -1 : 1;
+      if (a[column] > b[column]) return ascending ? 1 : -1;
+      return 0;
+    });
+    setData(sortedData);
+  };
+
+
+  const handleSort = (column) => {
+    const newSortOrder =
+      column === sortOrder.column
+        ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
+        : true; // Start with ascending for a new column
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+    sortData(column, newSortOrder);
+  };
+
   return (
     <div className="ManagerDashboard">
       <div className="container">
@@ -350,7 +403,7 @@ const PMaintenance = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-                <th>
+                {/* <th>
                   <input
                     type="checkbox"
                     checked={selectedRows.length === displayedData.length} // Select all checkboxes when all rows are selected
@@ -362,20 +415,46 @@ const PMaintenance = () => {
                       )
                     }
                   />
-                </th>
+                </th> */}
                 {[
-                  "Asset Code",
-                  "Asset Name",
-                  "Description",
-                  "Schedule(month)",
-                  "Start Date",
-                  "End Date",
-                  "Assign to",
-                  "Workstatus",
+                  { label: "Asset Code", field: "assetCode" },
+                  { label: "Asset Name", field: "assetName" },
+                  { label: "Description", field: null },
+                  { label: "Schedule(month)", field: null },
+                  { label: "Start Date", field: "startDate" },
+                  { label: "End Date", field: "endDate" },
+                  { label: "Assign to", field: "userEmail" },
+                  { label: "Workstatus", field: null },
+                  { label: " ", field: null },
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header.field ? (
+                      <div className="header-title">
+                        {header.label}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() => handleSort(header.field)}
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform:
+                                  sortOrder.column === header.field && sortOrder.ascending
+                                    ? "rotate(0deg)"
+                                    : "rotate(180deg)",
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header.label
+                    )}
+                  </th>
                 ))}
-                <th>
+                {/* <th>
                   {selectedRows.length > 0 ? (
                     <button
                       className="deleteMaintenance-all-btn"
@@ -388,19 +467,19 @@ const PMaintenance = () => {
                   ) : (
                     " "
                   )}
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  <td>
+                  {/* <td>
                     <input
                       type="checkbox"
                       checked={selectedRows.includes(item.maintenanceID)}
                       onChange={() => handleSelectRow(item.maintenanceID)}
                     />
-                  </td>
+                  </td> */}
                   <td>{item.assetCode}</td>
                   <td className="description">
                     <Tippy content={item.assetName || ""} placement="top">
@@ -449,14 +528,14 @@ const PMaintenance = () => {
                     >
                       <FaEdit style={{ width: "20px", height: "20px" }} />
                     </button>
-                    <button
+                    {/* <button
                       className="delete-btn"
                       onClick={() => handleDeleteRow(item.assetCode)}
                     >
                       <RiDeleteBin6Line
                         style={{ width: "20px", height: "20px" }}
                       />
-                    </button>
+                    </button> */}
                   </td>
                 </tr>
               ))}
@@ -610,16 +689,19 @@ const PMaintenance = () => {
             </div>
 
             {/* <button className="save-btn" onClick={handleSaveEdit}>Save</button> */}
-            <div className="modal-buttons">
-              <button
-                className="accept-btn"
-                style={{ width: "80px" }}
-                onClick={handleSaveEdit}
-                disabled={isSaving}
-              >
-                {isSaving ? "Saving..." : "Save"}
-              </button>
-            </div>
+           
+            {statusPending === "Pending" && (
+                <div className="modal-buttons">
+                <button
+                  className="accept-btn"
+                  style={{ width: "80px" }}
+                  onClick={handleSaveEdit}
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Saving..." : "Save"}
+                </button>
+              </div>
+              )}
           </div>
         </div>
       )}

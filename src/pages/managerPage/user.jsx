@@ -10,10 +10,32 @@ import {
   useGetUsersQuery,
 } from "../../slices/userApiSlice";
 import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
+import {
+  useGetMaintenanceByTechnicianEmailQuery,
+  useGetSchedulesByTechnicianEmailQuery,
+} from "../../slices/maintenanceApiSlice";
+
 import { useSelector } from "react-redux";
 import { createSelector } from "reselect";
 import Swal from "sweetalert2";
 import Tippy from "@tippyjs/react";
+
+const WorkAssigned = ({ email }) => {
+  const { data: maintenanceData, isLoading: maintenanceLoading } = useGetMaintenanceByTechnicianEmailQuery(email);
+  const { data: repairData, isLoading: repairLoading } = useGetSchedulesByTechnicianEmailQuery(email);
+  // console.log("email", email);
+
+  if (maintenanceLoading || repairLoading) {
+    return <span>Loading...</span>;
+  }
+
+  const maintenanceCount = Array.isArray(maintenanceData) ? maintenanceData.length : 0;
+  const repairCount = Array.isArray(repairData) ? repairData.length : 0;
+
+  const totalWork = maintenanceCount + repairCount;
+
+  return <span>{totalWork}</span>;
+};
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,6 +101,9 @@ const Users = () => {
     currentPage * rowsPerPage
   );
 
+  const emails = displayedData.map((item) => item.email);
+  console.log("emails", emails);
+  
   // Sorting
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
 
@@ -279,7 +304,12 @@ const Users = () => {
 
                   <td>{item.role ? item.role.name : "No Role"}</td>
                   {activeTab === "Technician" && (
-                    <td>{item.workAssigned ?? 0}</td>
+                    // <td>{loading ? "Loading..." : totalWorkCount ?? 0}</td>
+                    
+                    <td>
+                      <WorkAssigned email={item.email} />
+                    </td>
+
                   )}
                 </tr>
               ))}

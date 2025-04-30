@@ -28,6 +28,8 @@ import {
   useCreateMaintenanceMutation,
   useSendEmailMutation,
 } from "../../../slices/maintenanceApiSlice";
+import Tippy from "@tippyjs/react";
+
 
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
@@ -739,7 +741,15 @@ const Landscaping = ({ category }) => {
                 <tr key={index}>
                   <td>{index + 1}</td>
                   <td>{item.assetCode}</td>
-                  <td>{item.title}</td>
+                  <td className="description">
+                    <Tippy content={item.title || ""} placement="top">
+                      <span>
+                        {item.title?.length > 20
+                          ? item.title.substring(0, 20) + "..."
+                          : item.title || ""}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td>{item.acquireDate}</td>
                   <td>{item.lifespan}</td>
                   <td>{size}</td>

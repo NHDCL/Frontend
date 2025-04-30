@@ -1,6 +1,7 @@
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState, lazy, Suspense, useEffect } from "react";
 import AssetTap from "./AssetTap";
 import { useGetCategoryQuery } from "../../slices/assetApiSlice";
+import Swal from "sweetalert2";
 
 // Mapping API category names to corresponding component filenames
 const categoryMapping = {
@@ -22,8 +23,37 @@ const RoomQrComponent = lazy(() => import("./AssetCategories/Room"));
 const MAsset = () => {
   const { data: categories, error, isLoading } = useGetCategoryQuery(); // Fetch categories from API
 
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading assets...",
+        text: "Please wait while we fetch the asset categories",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      // Close the alert when loading is complete
+      if (Swal.isVisible()) {
+        Swal.close();
+      }
+
+      // Show error message if there was an error
+      if (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to load asset categories. Please try again later.",
+        });
+      }
+    }
+  }, [isLoading, error]);
+
   // Filter out categories where 'deleted' is true
-  const activeCategories = categories ? categories.filter(category => !category.deleted) : [];
+  const activeCategories = categories
+    ? categories.filter((category) => !category.deleted)
+    : [];
 
   // Ensure categories exist before setting defaultTab
   const defaultTab =

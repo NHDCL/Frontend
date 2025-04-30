@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./../managerPage/css/card.css";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/form.css";
@@ -13,6 +13,7 @@ import autoTable from "jspdf-autotable";
 import Tippy from "@tippyjs/react";
 import Select from "react-select";
 import { useGetPreventiveMaintenanceReportsQuery } from "../../slices/maintenanceApiSlice"; // Import the query hook
+import Swal from "sweetalert2";
 
 const SAdminMReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,6 +77,20 @@ const SAdminMReport = () => {
   // Log the structure of the API data and processed data for debugging
   console.log("Original API data:", apiData);
   console.log("Processed data:", data);
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading repair reports...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   const sortedData = [...data].sort((a, b) => {
     // We want newest reports first, but we don't have a proper way to determine this
@@ -307,7 +322,6 @@ const SAdminMReport = () => {
                     <td>{item.startTime}</td>
                     <td>{item.endTime}</td>
                     <td>{item.Date}</td>
-                    {/* <td>{item.Total_cost}</td> */}
                     <td className="description">
                       <Tippy content={item.Total_cost || ""} placement="top">
                         <span>
@@ -317,7 +331,6 @@ const SAdminMReport = () => {
                         </span>
                       </Tippy>
                     </td>
-                    {/* <td>{item.part_used}</td> */}
                     <td className="description">
                       <Tippy content={item.part_used || ""} placement="top">
                         <span>
@@ -327,9 +340,11 @@ const SAdminMReport = () => {
                         </span>
                       </Tippy>
                     </td>
-                    {/* <td>{item.Assigned_Technician}</td> */}
                     <td className="description">
-                      <Tippy content={item.Assigned_Technician || ""} placement="top">
+                      <Tippy
+                        content={item.Assigned_Technician || ""}
+                        placement="top"
+                      >
                         <span>
                           {item.Assigned_Technician?.length > 20
                             ? item.Assigned_Technician.substring(0, 20) + "..."
@@ -337,24 +352,15 @@ const SAdminMReport = () => {
                         </span>
                       </Tippy>
                     </td>
-                    {/* <td className="description">
+                    <td className="description">
                       <Tippy
-                        content={item.Additional_information}
+                        content={item.Additional_information || ""}
                         placement="top"
                       >
                         <span>
-                          {item.Additional_information.length > 20
+                          {item.Additional_information?.length > 20
                             ? item.Additional_information.substring(0, 20) +
                               "..."
-                            : item.Additional_information}
-                        </span>
-                      </Tippy>
-                    </td> */}
-                    <td className="description">
-                      <Tippy content={item.Additional_information || ""} placement="top">
-                        <span>
-                          {item.Additional_information?.length > 20
-                            ? item.Additional_information.substring(0, 20) + "..."
                             : item.Additional_information || ""}
                         </span>
                       </Tippy>
