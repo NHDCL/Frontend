@@ -10,6 +10,7 @@ import { useGetAssetQuery } from "../../slices/assetApiSlice";
 import { useGetAcademyQuery } from "../../slices/userApiSlice";
 import Tippy from "@tippyjs/react";
 import Swal from "sweetalert2";
+import { TiArrowSortedUp } from "react-icons/ti";
 
 const AdminMaintenance = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -143,6 +144,35 @@ const AdminMaintenance = () => {
     currentPage * rowsPerPage
   );
 
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      if (a[column] < b[column]) return ascending ? -1 : 1;
+      if (a[column] > b[column]) return ascending ? 1 : -1;
+      return 0;
+    });
+    setData(sortedData);
+  };
+
+  const handleSort = (field) => {
+    const ascending = sortOrder.column === field ? !sortOrder.ascending : true;
+
+    const sorted = [...data].sort((a, b) => {
+      const aValue = getNestedValue(a, field);
+      const bValue = getNestedValue(b, field);
+
+      if (aValue < bValue) return ascending ? -1 : 1;
+      if (aValue > bValue) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setData(sorted);
+    setSortOrder({ column: field, ascending });
+  };
+  const getNestedValue = (obj, path) => {
+    return path?.split(".").reduce((acc, part) => acc && acc[part], obj) ?? "";
+  };
+
   return (
     <div className="ManagerDashboard">
       <div className="container">
@@ -194,16 +224,43 @@ const AdminMaintenance = () => {
             <thead className="table-header">
               <tr>
                 {[
-                  "Asset Code",
-                  "Asset Name",
-                  "Description",
-                  "Schedule(month)",
-                  "Start Date",
-                  "End Date",
-                  "Assign to",
-                  "Workstatus",
+                  { label: "Asset Code", field: "assetCode" },
+                  { label: "Asset Name", field: "assetName" },
+                  { label: "Description", field: "description" },
+                  { label: "Schedule(month)", field: "repeat" },
+                  { label: "Start Date", field: "startDate" },
+                  { label: "End Date", field: "endDate" },
+                  // { label: "Assign to", field: "userEmail" },
+                  { label: "Workstatus", field: null },
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header.field ? (
+                      <div className="header-title">
+                        {header.label}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() => handleSort(header.field)}
+                            title={`Sort by ${header.label}`}
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform:
+                                  sortOrder.column === header.field &&
+                                  sortOrder.ascending
+                                    ? "rotate(0deg)"
+                                    : "rotate(180deg)",
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header.label // Non-sortable label like "Action"
+                    )}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -237,7 +294,7 @@ const AdminMaintenance = () => {
                   <td>{item.repeat}</td>
                   <td>{item.startDate}</td>
                   <td>{item.endDate}</td>
-                  <td className="description">
+                  {/* <td className="description">
                     <Tippy
                       content={item.assignedSupervisors || ""}
                       placement="top"
@@ -250,7 +307,7 @@ const AdminMaintenance = () => {
                           : ""}
                       </span>
                     </Tippy>
-                  </td>
+                  </td> */}
                   <td>
                     <div
                       className={getWorkOrderStatusClass(

@@ -41,6 +41,8 @@ const Repair = () => {
   const [updateAssignedWorker, setUpdateAssignedWorker] = useState("");
   const [assignTimeU, setAssignTimeU] = useState("");
   const [assignDateU, setAssignDateU] = useState("");
+  const [statusPending, setStatusPending] = useState(null);
+  
   console.log(
     "start........................................................................."
   );
@@ -191,15 +193,15 @@ const Repair = () => {
     supervisorsInDepartment.length > 0
       ? supervisorsInDepartment
       : supervisorOption
-      ? [supervisorOption]
-      : [];
+        ? [supervisorOption]
+        : [];
 
   // Department dropdown options
   const departmentOptionsU = Array.isArray(departments)
     ? departments.map((dept) => ({
-        label: dept.name,
-        value: dept.departmentId,
-      }))
+      label: dept.name,
+      value: dept.departmentId,
+    }))
     : [];
 
   // For default department selection
@@ -228,19 +230,21 @@ const Repair = () => {
     setUpdateAssignedWorker(
       item?.updateAssignedWorker
         ? {
-            value: item.updateAssignedWorker.userID,
-            label: item.updateAssignedWorker.email,
-          }
+          value: item.updateAssignedWorker.userID,
+          label: item.updateAssignedWorker.email,
+        }
         : null
     );
 
     setAssignDateU(item?.reportingDate || "");
     setAssignTimeU(item?.startTime?.slice(0, 5) || "");
     setSelectedDepartmentName(item?.departmentId || "");
+    setStatusPending(item?.status);
+
   };
   console.log("update", updateAssignedWorker);
 
-  const [postRepairSchedule] = usePostRepairScheduleMutation();
+  const [postRepairSchedule ] = usePostRepairScheduleMutation();
 
   const handleAssignAndSchedule = async () => {
     if (!assignedWorker || !assignTime || !assignDate || !modalData?.repairID) {
@@ -349,8 +353,9 @@ const Repair = () => {
       return requestAcademy === userAcademy && req.accept === true;
     });
 
+    const sortedFiltered = filtered.sort((a, b) => b.repairID.localeCompare(a.repairID));
     setData(
-      filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      sortedFiltered
     );
   }, [repairRequest, userByEmial]);
 
@@ -458,29 +463,57 @@ const Repair = () => {
     refetchRepairRequest();
   };
 
-  const [sortOrder, setSortOrder] = useState({
-    column: null,
-    direction: "asc",
-  });
+    const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+    const sortData = (column, ascending) => {
+      const sortedData = [...data].sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+    
+        // Normalize: Handle undefined, null, numbers, strings consistently
+        if (valA === undefined || valA === null) valA = "";
+        if (valB === undefined || valB === null) valB = "";
+    
+        // If both are numbers, compare numerically
+        if (!isNaN(valA) && !isNaN(valB)) {
+          valA = Number(valA);
+          valB = Number(valB);
+        } else {
+          // Otherwise, compare as lowercase strings (for emails, names, etc.)
+          valA = valA.toString().toLowerCase();
+          valB = valB.toString().toLowerCase();
+        }
+    
+        if (valA < valB) return ascending ? -1 : 1;
+        if (valA > valB) return ascending ? 1 : -1;
+        return 0;
+      });
+    
+      setData(sortedData);
+    };
+
 
   const handleSort = (column) => {
-    setSortOrder((prev) => ({
+    const newSortOrder =
+      column === sortOrder.column
+        ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
+        : true; // Start with ascending for a new column
+
+    setSortOrder({
       column,
-      direction:
-        prev.column === column && prev.direction === "asc" ? "desc" : "asc",
-    }));
+      ascending: newSortOrder,
+    });
+    sortData(column, newSortOrder);
   };
+  // const sortedData = [...data].sort((a, b) => {
+  //   if (!sortOrder.column) return b.repairID - a.repairID;
 
-  const sortedData = [...data].sort((a, b) => {
-    if (!sortOrder.column) return b.repairID - a.repairID;
+  //   const valA = a[sortOrder.column];
+  //   const valB = b[sortOrder.column];
 
-    const valA = a[sortOrder.column];
-    const valB = b[sortOrder.column];
-
-    if (valA < valB) return sortOrder.direction === "asc" ? -1 : 1;
-    if (valA > valB) return sortOrder.direction === "asc" ? 1 : -1;
-    return 0;
-  });
+  //   if (valA < valB) return sortOrder.direction === "asc" ? -1 : 1;
+  //   if (valA > valB) return sortOrder.direction === "asc" ? 1 : -1;
+  //   return 0;
+  // });
 
   return (
     <div className="ManagerDashboard">
@@ -534,7 +567,7 @@ const Repair = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-                <th>
+                {/* <th>
                   <input
                     type="checkbox"
                     checked={selectedRows.length === displayedData.length} // Select all checkboxes when all rows are selected
@@ -546,45 +579,34 @@ const Repair = () => {
                       )
                     }
                   />
-                </th>
+                </th> */}
                 {[
-                  "RID",
-                  "Image",
-                  "Name",
-                  "Email",
-                  "phone",
-                  "Area",
-                  "Priority",
-                  "Workstatus",
+                  { label: "RID", field: null },
+                  { label: "Image", field: null },
+                  { label: "Name", field: "name" },
+                  { label: "Email", field: null },
+                  { label: "phone", field: null },
+                  { label: "Area", field: "area" },
+                  { label: "Priority", field: null },
+                  { label: "Workstatus", field: null },
+                  { label: " ", field: null },
                 ].map((header, index) => (
                   <th key={index}>
-                    {header === "Area" || header === "Name" ? (
+                    {header.field ? (
                       <div className="header-title">
-                        {header}
+                        {header.label}
                         <div className="sort-icons">
                           <button
                             className="sort-btn"
-                            onClick={() =>
-                              handleSort(
-                                header === "Area"
-                                  ? "Area"
-                                  : header.toLowerCase().replace(" ", "")
-                              )
-                            }
+                            onClick={() => handleSort(header.field)}
                           >
                             <TiArrowSortedUp
                               style={{
                                 color: "#305845",
                                 transform:
-                                  sortOrder.column ===
-                                    header.toLowerCase().replace(" ", "") &&
-                                  sortOrder.ascending
-                                    ? "rotate(0deg)" // Ascending
-                                    : sortOrder.column ===
-                                        header.toLowerCase().replace(" ", "") &&
-                                      !sortOrder.ascending
-                                    ? "rotate(180deg)" // Descending
-                                    : "rotate(0deg)", // Default
+                                  sortOrder.column === header.field && sortOrder.ascending
+                                    ? "rotate(0deg)"
+                                    : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
                               }}
                             />
@@ -592,11 +614,11 @@ const Repair = () => {
                         </div>
                       </div>
                     ) : (
-                      header
+                      header.label
                     )}
                   </th>
                 ))}
-                <th>
+                {/* <th>
                   {selectedRows.length > 0 ? (
                     <button
                       className="delete-all-btn"
@@ -609,19 +631,20 @@ const Repair = () => {
                   ) : (
                     " "
                   )}
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
+
                 <tr key={index}>
-                  <td>
+                  {/* <td>
                     <input
                       type="checkbox"
                       checked={selectedRows.includes(item.repairID)}
                       onChange={() => handleSelectRow(item.repairID)}
                     />
-                  </td>
+                  </td> */}
                   <td>{index + 1}</td>
                   <td>
                     <img
@@ -898,11 +921,14 @@ const Repair = () => {
                 />
               </div>
 
-              <div>
+             
+              {statusPending === "Pending" && (
+                <div>
                 <button className="accept-btn" onClick={handleUpdateSchedule}>
                   Done
                 </button>
               </div>
+              )}
             </div>
           </div>
         </div>

@@ -16,7 +16,11 @@ import {
   useGetRepairRequestQuery,
   useAcceptOrRejectRepairRequestMutation,
 } from "../../slices/maintenanceApiSlice";
-import { useGetUserByEmailQuery } from "../../slices/userApiSlice";
+import {
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+} from "../../slices/userApiSlice";
+import { useGetAssetQuery } from "../../slices/assetApiSlice";
 import Tippy from "@tippyjs/react";
 
 const ManagerDashboard = () => {
@@ -29,7 +33,10 @@ const ManagerDashboard = () => {
 
   const { data: repairRequest, refetch: refetchRepairRequest } =
     useGetRepairRequestQuery();
-  const [acceptOrRejectRepairRequest, { isLoading, error, isSuccess }] =
+  
+  const [acceptRepairRequest, { isLoading: isLoadingA }] =
+    useAcceptOrRejectRepairRequestMutation();
+  const [rejectRepairRequest, { isLoading: isLoadingB }] =
     useAcceptOrRejectRepairRequestMutation();
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
@@ -41,27 +48,62 @@ const ManagerDashboard = () => {
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);
 
+  const userID = userByEmial?.user?.userId;
+  console.log("userID", userID);
+
+  const academyId = userByEmial?.user?.academyId;
+  console.log("academyId", academyId);
+
+  const { data: users, isLoading: usersLoading } = useGetUsersQuery();
+  const { data: asset } = useGetAssetQuery();
+
+  const filteredUsers = users?.filter(
+    (user) =>
+      user.academyId === academyId &&
+      typeof user.role?.name === "string" &&
+      user.role.name.toLowerCase() === "technician"
+  );
+  console.log("filteredUsers:", filteredUsers);
+
+  const totalRepair = repairRequest?.filter(
+    (req) => req.academyId === academyId && req.accept === true
+  );
+  console.log("totalRepair:", totalRepair);
+
+  const SupervisorsUsers = users?.filter(
+    (user) =>
+      user.academyId === academyId &&
+      typeof user.role?.name === "string" &&
+      user.role.name.toLowerCase() === "supervisor"
+  );
+  console.log("SupervisorsUsers:", SupervisorsUsers);
+
+  const assets = asset?.filter((ass) => ass.academyID === academyId);
+  console.log("assets:", assets);
+
   const [data, setData] = useState([]);
   console.log("data: ", data);
 
   useEffect(() => {
     if (!repairRequest || !userByEmial) return;
 
-    // console.log("User Email:", email);
-    // console.log("User Academy ID:", userByEmial?.user.academyId);
-
-    const userAcademy = userByEmial?.user.academyId?.trim().toLowerCase();
+    const userAcademy = userByEmial.user.academyId?.trim().toLowerCase();
 
     const filtered = repairRequest.filter((req) => {
-      console.log("Request Academy ID:", req.academyId); // Log each one
       const requestAcademy = req.academyId?.trim().toLowerCase();
       return requestAcademy === userAcademy && req.accept === null;
     });
 
-    console.log("Filtered Length:", filtered.length);
-    setData(
-      filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    const sortedFiltered = filtered.sort((a, b) =>
+      b.repairID.localeCompare(a.repairID)
     );
+
+    console.log(
+      "Sorted Repair IDs:",
+      sortedFiltered.map((f) => f.repairID)
+    );
+
+    setData(sortedFiltered);
   }, [repairRequest, userByEmial]);
 
   // Sorting
@@ -89,7 +131,7 @@ const ManagerDashboard = () => {
 
     if (confirm.isConfirmed) {
       try {
-        const response = await acceptOrRejectRepairRequest({
+        const response = await acceptRepairRequest({
           repairId,
           accept: acceptValue,
         }).unwrap();
@@ -103,6 +145,7 @@ const ManagerDashboard = () => {
           timer: 2000,
           showConfirmButton: false,
         });
+
         handleCloseModal();
         refetchRepairRequest();
       } catch (err) {
@@ -125,9 +168,9 @@ const ManagerDashboard = () => {
 
     if (confirm.isConfirmed) {
       try {
-        const response = await acceptOrRejectRepairRequest({
+        const response = await rejectRepairRequest({
           repairId,
-          accept: false, // Set accept to false to reject
+          accept: false,
         }).unwrap();
 
         console.log("Server response:", response);
@@ -140,16 +183,13 @@ const ManagerDashboard = () => {
           showConfirmButton: false,
         });
 
-        // Close the modal after success
-        handleCloseModal(); // Add this line to close the modal
-
+        handleCloseModal();
         refetchRepairRequest();
       } catch (err) {
         console.error("Error:", err);
         Swal.fire("Error", "Failed to update repair request.", "error");
       }
     } else {
-      // Close the modal if the user cancels the rejection
       handleCloseModal();
     }
   };
@@ -234,25 +274,25 @@ const ManagerDashboard = () => {
         <div className="cardCount cardCount1">
           <div className="CardContent">
             <h3 className="cardTitle">Total Technician Count</h3>
-            <p className="count">45</p>
+            <p className="count">{filteredUsers?.length || 0}</p>
           </div>
         </div>
         <div className="cardCount">
           <div className="CardContent">
             <h3 className="cardTitle">Total Supervisor Count</h3>
-            <p className="count">45</p>
+            <p className="count">{SupervisorsUsers?.length || 0}</p>
           </div>
         </div>
         <div className="cardCount cardCount1">
           <div className="CardContent">
             <h3 className="cardTitle">Total Asset Count</h3>
-            <p className="count">56</p>
+            <p className="count">{assets?.length || 0}</p>
           </div>
         </div>
         <div className="cardCount">
           <div className="CardContent">
             <h3 className="cardTitle">Total Repair Request</h3>
-            <p className="count">78</p>
+            <p className="count">{totalRepair?.length || 0}</p>
           </div>
         </div>
       </div>
@@ -306,22 +346,20 @@ const ManagerDashboard = () => {
                   "Description",
                 ].map((header, index) => (
                   <th key={index}>
-                    {header === "Asset Name" || header === "Location" ? (
+                    {header === "Asset Name" || header === "Name" ? (
                       <div className="header-title">
                         {header}
                         <div className="sort-icons">
                           <button
                             className="sort-btn"
-                            onClick={() =>
-                              handleSort("assetName" || "Location")
-                            }
+                            onClick={() => handleSort("assetName" || "Name")}
                           >
                             <TiArrowSortedUp
                               style={{
                                 color: "#305845",
                                 transform:
                                   (sortOrder.column === "assetName" ||
-                                    sortOrder.column === "Location") &&
+                                    sortOrder.column === "Name") &&
                                   sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
@@ -513,7 +551,6 @@ const ManagerDashboard = () => {
                   )}
                 </div>
               </div>
-
               <div className="modal-buttons">
                 <button
                   className="accept-btn"
@@ -521,22 +558,20 @@ const ManagerDashboard = () => {
                     e.preventDefault();
                     handleAccept(modalData.repairID, true);
                   }}
-                  disabled={isLoading}
+                  disabled={isLoadingA}
                 >
-                  {/* Accept */}
-                  {isLoading ? "Accepting.." : "Accept   "}{" "}
+                  {isLoadingA ? "Accepting..." : "Accept"}
                 </button>
 
                 <button
                   className="reject-btn"
                   onClick={(e) => {
                     e.preventDefault();
-                    handleReject(modalData.repairID, false);
+                    handleReject(modalData.repairID);
                   }}
-                  disabled={isLoading}
+                  disabled={isLoadingB}
                 >
-                  {/* Reject */}
-                  {isLoading ? "Rejecting.." : "Reject"}{" "}
+                  {isLoadingB ? "Rejecting..." : "Reject"}
                 </button>
               </div>
             </form>

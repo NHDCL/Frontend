@@ -7,6 +7,7 @@ import { IoIosSearch } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
+import { TiArrowSortedUp } from "react-icons/ti";
 import {
   useGetMaintenanceRequestQuery,
   useGetSchedulesByUserIDQuery,
@@ -35,6 +36,7 @@ const SupervisorWO = () => {
   const [modalData, setModalData] = useState(null);
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [rescheduleModalData, setRescheduleModalData] = useState(null);
+  const [statusPending, setStatusPending] = useState(null);
 
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
@@ -273,7 +275,7 @@ const SupervisorWO = () => {
     switch (status) {
       case "pending":
         return "pending-status";
-      case "inusage":
+      case "inprogress":
         return "in-progress-status";
       case "completed":
         return "completed-status";
@@ -313,15 +315,15 @@ const SupervisorWO = () => {
   const filteredData =
     data && data.length
       ? data.filter((item) => {
-          // Match search term with any field at any level in the object
-          const matchesSearch = searchRecursively(item, searchTerm);
+        // Match search term with any field at any level in the object
+        const matchesSearch = searchRecursively(item, searchTerm);
 
-          const matchesWorkStatus =
-            selectedWorkStatus === "" ||
-            item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
+        const matchesWorkStatus =
+          selectedWorkStatus === "" ||
+          item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
 
-          return matchesSearch && matchesWorkStatus;
-        })
+        return matchesSearch && matchesWorkStatus;
+      })
       : [];
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -357,6 +359,8 @@ const SupervisorWO = () => {
     setStartDate(null);
     setEndDate(null);
     setAssignTime(null);
+    setStatusPending(null);
+
   };
   const handleRescheduleView = (item) => {
     setRescheduleModalData(item);
@@ -364,6 +368,37 @@ const SupervisorWO = () => {
     setStartDate(item?.startDate);
     setEndDate(item?.endDate);
     setAssignTime(item?.timeStart);
+    setStatusPending(item?.repairInfo?.status);
+
+  };
+
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      if (a[column] < b[column]) return ascending ? -1 : 1;
+      if (a[column] > b[column]) return ascending ? 1 : -1;
+      return 0;
+    });
+    setData(sortedData);
+  };
+
+  const handleSort = (field) => {
+    const ascending = sortOrder.column === field ? !sortOrder.ascending : true;
+
+    const sorted = [...data].sort((a, b) => {
+      const aValue = getNestedValue(a, field);
+      const bValue = getNestedValue(b, field);
+
+      if (aValue < bValue) return ascending ? -1 : 1;
+      if (aValue > bValue) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setData(sorted);
+    setSortOrder({ column: field, ascending });
+  };
+  const getNestedValue = (obj, path) => {
+    return path?.split('.').reduce((acc, part) => acc && acc[part], obj) ?? "";
   };
 
   return (
@@ -404,17 +439,43 @@ const SupervisorWO = () => {
             <thead className="table-header">
               <tr>
                 {[
-                  "Asset Code",
-                  "Asset Name",
-                  "Report Time",
-                  "Date",
-                  "Asset ID",
-                  "Area",
-                  "Workstatus",
-                  "Description",
-                  "",
+                  { label: "Asset Code", field: "asset.assetCode" },
+                  { label: "Asset Name", field: "asset.title" },
+                  { label: "Report Time", field: "timeStart" },
+                  { label: "Date", field: "reportingDate" },
+                  { label: "Asset ID", field: "asset.assetId" },
+                  { label: "Area", field: "asset.assetArea" },
+                  { label: "Workstatus", field: null },
+                  { label: "Description", field: null },
+                  { label: "", field: "" } 
                 ].map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header.field ? (
+                      <div className="header-title">
+                        {header.label}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() => handleSort(header.field)}
+                            title={`Sort by ${header.label}`}
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform:
+                                  sortOrder.column === header.field && sortOrder.ascending
+                                    ? "rotate(0deg)"
+                                    : "rotate(180deg)",
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header.label // Non-sortable label like "Action"
+                    )}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -442,7 +503,7 @@ const SupervisorWO = () => {
                     >
                       <span>
                         {item.asset?.assetArea &&
-                        item.asset.assetArea.length > 20
+                          item.asset.assetArea.length > 20
                           ? item.asset.assetArea.substring(0, 20) + "..."
                           : item.asset?.assetArea || ""}
                       </span>
@@ -571,8 +632,10 @@ const SupervisorWO = () => {
                   className="accept-btn"
                   style={{ width: "80px" }}
                   onClick={handleSchedule}
-                >
-                  Done
+                  disabled={userSchedulesLoading}
+
+                  >
+                   {userSchedulesLoading ? "Saving..." : "Done"}
                 </button>
               </div>
             </div>
@@ -634,15 +697,20 @@ const SupervisorWO = () => {
                 <input type="text" value={assignTime} readOnly />
               </div>
 
-              <div className="modal-buttons">
+              
+              {statusPending === "Pending" && (
+                <div className="modal-buttons">
                 <button
                   className="accept-btn"
                   style={{ width: "80px" }}
                   onClick={handleReschedule}
+                  disabled={userSchedulesLoading}
+
                 >
-                  Done
+                 {userSchedulesLoading ? "Saving..." : "Done"}
                 </button>
               </div>
+              )}
             </div>
           </div>
         </div>
