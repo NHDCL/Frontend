@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./css/card.css";
 import "./css/table.css";
 import "./css/form.css";
@@ -15,6 +15,7 @@ import {
   useSoftDeleteCategoryMutation,
 } from "../../slices/assetApiSlice";
 import Swal from "sweetalert2";
+
 const Category = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,6 +54,20 @@ const Category = () => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading asset category...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
 
   const handleDeleteRow = async (id) => {
     const { value: confirmed } = await Swal.fire({
@@ -169,13 +184,7 @@ const Category = () => {
             </button>
           </div>
         </div>
-
         {/* Table */}
-        {isLoading ? (
-          <p>Loading...</p>
-        ) : error ? (
-          <p>Error fetching categories.</p>
-        ) : (
           <>
             {/* Table */}
             <div className="table-container">
@@ -224,33 +233,32 @@ const Category = () => {
               </table>
             </div>
 
-            {/* Pagination */}
-            <div className="pagination">
-              <span>{filteredData.length} Results</span>
-              <div>
-                {[...Array(totalPages).keys()]
-                  .slice(0, totalPages < 5 ? totalPages : 5)
-                  .map((num) => (
-                    <button
-                      key={num}
-                      className={currentPage === num + 1 ? "active" : ""}
-                      onClick={() => setCurrentPage(num + 1)}
-                    >
-                      {num + 1}
-                    </button>
-                  ))}
-                {totalPages > 5 && (
-                  <>
-                    <span>...</span>
-                    <button onClick={() => setCurrentPage(totalPages)}>
-                      {totalPages}
-                    </button>
-                  </>
-                )}
-              </div>
+          {/* Pagination */}
+          <div className="pagination">
+            <span>{filteredData.length} Results</span>
+            <div>
+              {[...Array(totalPages).keys()]
+                .slice(0, totalPages < 5 ? totalPages : 5)
+                .map((num) => (
+                  <button
+                    key={num}
+                    className={currentPage === num + 1 ? "active" : ""}
+                    onClick={() => setCurrentPage(num + 1)}
+                  >
+                    {num + 1}
+                  </button>
+                ))}
+              {totalPages > 5 && (
+                <>
+                  <span>...</span>
+                  <button onClick={() => setCurrentPage(totalPages)}>
+                    {totalPages}
+                  </button>
+                </>
+              )}
             </div>
-          </>
-        )}
+          </div>
+        </>
       </div>
 
       {modalData && (
