@@ -881,7 +881,6 @@ const Building = ({ category }) => {
                 <tr key={index}>
                   <td>{index + 1}</td>
                   <td>{item.assetCode}</td>
-                  {/* <td>{item.title}</td> */}
                   <td className="description">
                     <Tippy content={item.title || ""} placement="top">
                       <span>
