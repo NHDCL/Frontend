@@ -41,6 +41,8 @@ const Repair = () => {
   const [updateAssignedWorker, setUpdateAssignedWorker] = useState("");
   const [assignTimeU, setAssignTimeU] = useState("");
   const [assignDateU, setAssignDateU] = useState("");
+  const [statusPending, setStatusPending] = useState(null);
+  
   console.log(
     "start........................................................................."
   );
@@ -221,10 +223,12 @@ const Repair = () => {
     setAssignDateU(item?.reportingDate || "");
     setAssignTimeU(item?.startTime?.slice(0, 5) || "");
     setSelectedDepartmentName(item?.departmentId || "");
+    setStatusPending(item?.status);
+
   };
   console.log("update", updateAssignedWorker);
 
-  const [postRepairSchedule] = usePostRepairScheduleMutation();
+  const [postRepairSchedule ] = usePostRepairScheduleMutation();
 
   const handleAssignAndSchedule = async () => {
     if (!assignedWorker || !assignTime || !assignDate || !modalData?.repairID) {
@@ -901,11 +905,14 @@ const Repair = () => {
                 />
               </div>
 
-              <div>
+             
+              {statusPending === "Pending" && (
+                <div>
                 <button className="accept-btn" onClick={handleUpdateSchedule}>
                   Done
                 </button>
               </div>
+              )}
             </div>
           </div>
         </div>

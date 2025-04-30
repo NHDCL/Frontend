@@ -13,6 +13,7 @@ import {
   useUpdateAssetMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
+import Tippy from "@tippyjs/react";
 
 const CreationApproval = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -308,9 +309,33 @@ const CreationApproval = () => {
                 <tr key={index}>
                   <td>{index + 1}</td>
                   <td>{item.assetCode}</td>
-                  <td>{item.title}</td>
-                  <td>{item.assetArea}</td>
-                  <td>{item.createdBy}</td>
+                  <td className="description">
+                    <Tippy content={item.title || ""} placement="top">
+                      <span>
+                        {item.title?.length > 20
+                          ? item.title.substring(0, 20) + "..."
+                          : item.title || ""}
+                      </span>
+                    </Tippy>
+                  </td>                  
+                  <td className="description">
+                    <Tippy content={item.assetArea || ""} placement="top">
+                      <span>
+                        {item.assetArea?.length > 20
+                          ? item.assetArea.substring(0, 20) + "..."
+                          : item.assetArea || ""}
+                      </span>
+                    </Tippy>
+                  </td>
+                  <td className="description">
+                    <Tippy content={item.createdBy || ""} placement="top">
+                      <span>
+                        {item.createdBy?.length > 20
+                          ? item.createdBy.substring(0, 20) + "..."
+                          : item.createdBy || ""}
+                      </span>
+                    </Tippy>
+                  </td>                  
                   <td className="actions">
                     <button
                       style={{ marginLeft: "10px" }}

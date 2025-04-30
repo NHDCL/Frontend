@@ -4,6 +4,7 @@ import { IoIosSearch } from "react-icons/io";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
 import { useGetAssetQuery } from "../../../slices/assetApiSlice";
+import Tippy from "@tippyjs/react";
 
 const Building = ({ category }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -229,7 +230,15 @@ const Building = ({ category }) => {
                 <tr key={index}>
                   <td>{index + 1}</td>
                   <td>{item.assetCode}</td>
-                  <td>{item.title}</td>
+                  <td className="description">
+                    <Tippy content={item.title || ""} placement="top">
+                      <span>
+                        {item.title?.length > 20
+                          ? item.title.substring(0, 20) + "..."
+                          : item.title || ""}
+                      </span>
+                    </Tippy>
+                  </td>
                   <td>{item.acquireDate}</td>
                   <td>{item.lifespan}</td>
                   <td>{floorCount}</td> {/* Number of floors */}

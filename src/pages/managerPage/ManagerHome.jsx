@@ -16,7 +16,10 @@ import {
   useGetRepairRequestQuery,
   useAcceptOrRejectRepairRequestMutation,
 } from "../../slices/maintenanceApiSlice";
-import { useGetUserByEmailQuery, useGetUsersQuery } from "../../slices/userApiSlice";
+import {
+  useGetUserByEmailQuery,
+  useGetUsersQuery,
+} from "../../slices/userApiSlice";
 import { useGetAssetQuery } from "../../slices/assetApiSlice";
 import Tippy from "@tippyjs/react";
 
@@ -30,7 +33,10 @@ const ManagerDashboard = () => {
 
   const { data: repairRequest, refetch: refetchRepairRequest } =
     useGetRepairRequestQuery();
-  const [acceptOrRejectRepairRequest, { isLoading, error, isSuccess }] =
+  
+  const [acceptRepairRequest, { isLoading: isLoadingA }] =
+    useAcceptOrRejectRepairRequestMutation();
+  const [rejectRepairRequest, { isLoading: isLoadingB }] =
     useAcceptOrRejectRepairRequestMutation();
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
@@ -48,40 +54,32 @@ const ManagerDashboard = () => {
   const academyId = userByEmial?.user?.academyId;
   console.log("academyId", academyId);
 
-   const { data: users, isLoading: usersLoading } = useGetUsersQuery();
-   const { data: asset,} = useGetAssetQuery();
+  const { data: users, isLoading: usersLoading } = useGetUsersQuery();
+  const { data: asset } = useGetAssetQuery();
 
-  
-    const filteredUsers = users?.filter(
-      (user) =>
-        user.academyId === academyId &&
-        typeof user.role?.name === "string" &&
-        user.role.name.toLowerCase() === "technician"
-    );
-    console.log("filteredUsers:", filteredUsers);
+  const filteredUsers = users?.filter(
+    (user) =>
+      user.academyId === academyId &&
+      typeof user.role?.name === "string" &&
+      user.role.name.toLowerCase() === "technician"
+  );
+  console.log("filteredUsers:", filteredUsers);
 
-    const totalRepair = repairRequest?.filter(
-      (req) =>
-        req.academyId === academyId &&
-        req.accept === true
-    );
-    console.log("totalRepair:", totalRepair);
+  const totalRepair = repairRequest?.filter(
+    (req) => req.academyId === academyId && req.accept === true
+  );
+  console.log("totalRepair:", totalRepair);
 
-    const SupervisorsUsers = users?.filter(
-      (user) =>
-        user.academyId === academyId &&
-        typeof user.role?.name === "string" &&
-        user.role.name.toLowerCase() === "supervisor"
-    );
-    console.log("SupervisorsUsers:", SupervisorsUsers);
+  const SupervisorsUsers = users?.filter(
+    (user) =>
+      user.academyId === academyId &&
+      typeof user.role?.name === "string" &&
+      user.role.name.toLowerCase() === "supervisor"
+  );
+  console.log("SupervisorsUsers:", SupervisorsUsers);
 
-    const assets = asset?.filter(
-      (ass) =>
-        ass.academyID === academyId 
-    );  
-    console.log("assets:", assets);
-    
-
+  const assets = asset?.filter((ass) => ass.academyID === academyId);
+  console.log("assets:", assets);
 
   const [data, setData] = useState([]);
   console.log("data: ", data);
@@ -96,14 +94,17 @@ const ManagerDashboard = () => {
       return requestAcademy === userAcademy && req.accept === null;
     });
 
-    const sortedFiltered = filtered.sort((a, b) => b.repairID.localeCompare(a.repairID));
+    const sortedFiltered = filtered.sort((a, b) =>
+      b.repairID.localeCompare(a.repairID)
+    );
 
-    console.log("Sorted Repair IDs:", sortedFiltered.map(f => f.repairID));
+    console.log(
+      "Sorted Repair IDs:",
+      sortedFiltered.map((f) => f.repairID)
+    );
 
     setData(sortedFiltered);
-
   }, [repairRequest, userByEmial]);
-
 
   // Sorting
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
@@ -130,7 +131,7 @@ const ManagerDashboard = () => {
 
     if (confirm.isConfirmed) {
       try {
-        const response = await acceptOrRejectRepairRequest({
+        const response = await acceptRepairRequest({
           repairId,
           accept: acceptValue,
         }).unwrap();
@@ -144,6 +145,7 @@ const ManagerDashboard = () => {
           timer: 2000,
           showConfirmButton: false,
         });
+
         handleCloseModal();
         refetchRepairRequest();
       } catch (err) {
@@ -166,9 +168,9 @@ const ManagerDashboard = () => {
 
     if (confirm.isConfirmed) {
       try {
-        const response = await acceptOrRejectRepairRequest({
+        const response = await rejectRepairRequest({
           repairId,
-          accept: false, // Set accept to false to reject
+          accept: false,
         }).unwrap();
 
         console.log("Server response:", response);
@@ -181,16 +183,13 @@ const ManagerDashboard = () => {
           showConfirmButton: false,
         });
 
-        // Close the modal after success
-        handleCloseModal(); // Add this line to close the modal
-
+        handleCloseModal();
         refetchRepairRequest();
       } catch (err) {
         console.error("Error:", err);
         Swal.fire("Error", "Failed to update repair request.", "error");
       }
     } else {
-      // Close the modal if the user cancels the rejection
       handleCloseModal();
     }
   };
@@ -353,9 +352,7 @@ const ManagerDashboard = () => {
                         <div className="sort-icons">
                           <button
                             className="sort-btn"
-                            onClick={() =>
-                              handleSort("assetName" || "Name")
-                            }
+                            onClick={() => handleSort("assetName" || "Name")}
                           >
                             <TiArrowSortedUp
                               style={{
@@ -363,7 +360,7 @@ const ManagerDashboard = () => {
                                 transform:
                                   (sortOrder.column === "assetName" ||
                                     sortOrder.column === "Name") &&
-                                    sortOrder.ascending
+                                  sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -533,7 +530,7 @@ const ManagerDashboard = () => {
                 <label>Repaired Images:</label>
                 <div className="TModal-profile-img">
                   {Array.isArray(modalData.images) &&
-                    modalData.images.length > 0 ? (
+                  modalData.images.length > 0 ? (
                     modalData.images.map((imgSrc, index) => (
                       <img
                         key={index}
@@ -554,7 +551,6 @@ const ManagerDashboard = () => {
                   )}
                 </div>
               </div>
-
               <div className="modal-buttons">
                 <button
                   className="accept-btn"
@@ -562,22 +558,20 @@ const ManagerDashboard = () => {
                     e.preventDefault();
                     handleAccept(modalData.repairID, true);
                   }}
-                  disabled={isLoading}
+                  disabled={isLoadingA}
                 >
-                  {/* Accept */}
-                  {isLoading ? "Accepting.." : "Accept   "}{" "}
+                  {isLoadingA ? "Accepting..." : "Accept"}
                 </button>
 
                 <button
                   className="reject-btn"
                   onClick={(e) => {
                     e.preventDefault();
-                    handleReject(modalData.repairID, false);
+                    handleReject(modalData.repairID);
                   }}
-                  disabled={isLoading}
+                  disabled={isLoadingB}
                 >
-                  {/* Reject */}
-                  {isLoading ? "Rejecting.." : "Reject"}{" "}
+                  {isLoadingB ? "Rejecting..." : "Reject"}
                 </button>
               </div>
             </form>
