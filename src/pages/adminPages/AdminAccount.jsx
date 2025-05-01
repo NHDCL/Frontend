@@ -263,7 +263,7 @@ const AdminAccount = () => {
             placeholder="Name"
             readOnly
           />
-          {errors.name && <p className="error-text">{errors.name}</p>}
+          {errors.name && <p className="ma-error-text">{errors.name}</p>}
 
           <input
             className="profile-input"
@@ -274,7 +274,7 @@ const AdminAccount = () => {
             placeholder="Email"
             readOnly
           />
-          {errors.email && <p className="error-text">{errors.email}</p>}
+          {errors.email && <p className="ma-error-text">{errors.email}</p>}
 
           <input
             className="profile-input"
@@ -285,7 +285,7 @@ const AdminAccount = () => {
             placeholder="Employee Id"
             readOnly
           />
-          {errors.name && <p className="error-text">{errors.employeeId}</p>}
+          {errors.name && <p className="ma-error-text">{errors.employeeId}</p>}
 
           {["oldPassword", "newPassword", "confirmPassword"].map((field) => (
             <div className="password-container" key={field}>
@@ -317,7 +317,9 @@ const AdminAccount = () => {
               </span>
 
               {/* Show error if any */}
-              {errors[field] && <p className="error-text">{errors[field]}</p>}
+              {errors[field] && (
+                <p className="ma-error-text">{errors[field]}</p>
+              )}
 
               {/* Show strength only for newPassword */}
               {field === "newPassword" && profile.newPassword && (

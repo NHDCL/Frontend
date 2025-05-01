@@ -250,7 +250,7 @@ const SAdminAccount = () => {
             placeholder="Name"
             readOnly
           />
-          {errors.name && <p className="error-text">{errors.name}</p>}
+          {errors.name && <p className="ma-error-text">{errors.name}</p>}
 
           <input
             className="profile-input"
@@ -261,7 +261,7 @@ const SAdminAccount = () => {
             placeholder="Email"
             readOnly
           />
-          {errors.email && <p className="error-text">{errors.email}</p>}
+          {errors.email && <p className="ma-error-text">{errors.email}</p>}
 
           <input
             className="profile-input"
@@ -272,7 +272,7 @@ const SAdminAccount = () => {
             placeholder="Employee Id"
             readOnly
           />
-          {errors.name && <p className="error-text">{errors.employeeId}</p>}
+          {errors.name && <p className="ma-error-text">{errors.employeeId}</p>}
 
           {["oldPassword", "newPassword", "confirmPassword"].map((field) => (
             <div className="password-container" key={field}>
@@ -302,7 +302,9 @@ const SAdminAccount = () => {
               >
                 {showPassword[field] ? <AiFillEye /> : <AiFillEyeInvisible />}
               </span>
-              {errors[field] && <p className="error-text">{errors[field]}</p>}
+              {errors[field] && (
+                <p className="ma-error-text">{errors[field]}</p>
+              )}
               {/* Show strength only for newPassword */}
               {field === "newPassword" && profile.newPassword && (
                 <p

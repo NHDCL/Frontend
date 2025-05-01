@@ -286,7 +286,7 @@ const SupervisorAccount = () => {
             placeholder="Name"
             readOnly
           />
-          {errors.name && <p className="error-text">{errors.name}</p>}
+          {errors.name && <p className="ma-error-text">{errors.name}</p>}
 
           <input
             className="profile-input"
@@ -297,7 +297,7 @@ const SupervisorAccount = () => {
             placeholder="Email"
             readOnly
           />
-          {errors.email && <p className="error-text">{errors.email}</p>}
+          {errors.email && <p className="ma-error-text">{errors.email}</p>}
 
           <input
             className="profile-input"
@@ -308,7 +308,7 @@ const SupervisorAccount = () => {
             placeholder="Employee Id"
             readOnly
           />
-          {errors.name && <p className="error-text">{errors.employeeId}</p>}
+          {errors.name && <p className="ma-error-text">{errors.employeeId}</p>}
 
           <input
             className="profile-input"
@@ -319,7 +319,7 @@ const SupervisorAccount = () => {
             disabled
             readOnly
           />
-          {errors.academy && <p className="error-text">{errors.academy}</p>}
+          {errors.academy && <p className="ma-error-text">{errors.academy}</p>}
 
           <input
             className="profile-input"
@@ -331,7 +331,7 @@ const SupervisorAccount = () => {
             readOnly
           />
           {errors.department && (
-            <p className="error-text">{errors.department}</p>
+            <p className="ma-error-text">{errors.department}</p>
           )}
 
           {["oldPassword", "newPassword", "confirmPassword"].map((field) => (
@@ -364,7 +364,9 @@ const SupervisorAccount = () => {
               </span>
 
               {/* Show error if any */}
-              {errors[field] && <p className="error-text">{errors[field]}</p>}
+              {errors[field] && (
+                <p className="ma-error-text">{errors[field]}</p>
+              )}
 
               {/* Show strength only for newPassword */}
               {field === "newPassword" && profile.newPassword && (

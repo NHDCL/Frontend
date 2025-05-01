@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -18,10 +18,21 @@ import {
   useGetAverageResponseTimeQuery,
 } from "../../slices/maintenanceApiSlice";
 import { useGetAcademyQuery } from "../../slices/userApiSlice";
+import Swal from "sweetalert2";
 
 const months = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
 const MaintenanceGraphs = () => {
@@ -36,10 +47,46 @@ const MaintenanceGraphs = () => {
 
   const { data: academies } = useGetAcademyQuery();
   const { data: responseTimeData } = useGetAverageResponseTimeQuery();
-  console.log(responseTimeData)
+  console.log(responseTimeData);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error loading data</div>;
+  // Simple SweetAlert loading effect
+  useEffect(() => {
+    // Show loading alert when data is loading
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading graphs...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    }
+    // Close the loading alert when data is loaded
+    else if (Swal.isVisible()) {
+      Swal.close();
+    }
+
+    // Show error alert if there's an error
+    if (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to load data",
+      });
+    }
+
+    // Cleanup function
+    return () => {
+      if (Swal.isVisible()) {
+        Swal.close();
+      }
+    };
+  }, [isLoading, error]);
+
+  // Return empty div while loading instead of the text "Loading..."
+  if (isLoading || !academies || !maintenanceData) {
+    return <div></div>;
+  }
 
   const validAcademyIds = new Set(academies.map((a) => a.academyId));
 
@@ -110,10 +157,12 @@ const MaintenanceGraphs = () => {
         />
         <Select
           classNamePrefix="custom-select-workstatus"
-          options={Object.keys(selectedAcademyData?.years || {}).map((year) => ({
-            value: year,
-            label: year,
-          }))}
+          options={Object.keys(selectedAcademyData?.years || {}).map(
+            (year) => ({
+              value: year,
+              label: year,
+            })
+          )}
           value={
             selectedYear ? { value: selectedYear, label: selectedYear } : null
           }

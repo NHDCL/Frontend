@@ -192,8 +192,35 @@ const MaintenanceRequest = () => {
     });
   };
 
+  const isFormComplete = () => {
+    // Check if any required field is empty
+    return (
+      formData.name.trim() !== "" &&
+      validatePhoneNumber(formData.phoneNumber) === "" &&
+      validateEmail(formData.email) === "" &&
+      formData.assetName.trim() !== "" &&
+      formData.academy !== "" &&
+      formData.area !== "" &&
+      formData.priority !== "" &&
+      formData.description.trim() !== ""
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Check if form is empty without setting error messages
+    if (!isFormComplete()) {
+      // Show simple SweetAlert for empty form
+      Swal.fire({
+        icon: "warning",
+        title: "Form Incomplete",
+        text: "Please fill in all required fields to submit the request.",
+        confirmButtonColor: "#305845",
+      });
+      return;
+    }
+
+    // Now validate with error messages for any remaining issues
     if (!validateForm()) return;
 
     const {
@@ -304,9 +331,6 @@ const MaintenanceRequest = () => {
               onChange={handleInputChange}
               className="mr-input"
               placeholder="Enter your name"
-              onBlur={() =>
-                setErrors({ ...errors, name: validateName(formData.name) })
-              }
             />
             {errors.name && <p className="error-text">{errors.name}</p>}
 

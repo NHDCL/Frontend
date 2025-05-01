@@ -43,19 +43,49 @@ const RoomQRDetail = () => {
   const [imageError, setImageError] = useState("");
   const [errors, setErrors] = useState({});
 
-  const validateForm = () => {
-    let newErrors = {};
-    if (!formData.assetName.trim())
-      newErrors.assetName = "Name of the asset is required.";
-    if (!formData.name.trim()) newErrors.name = "Name is required.";
-    if (!formData.phoneNumber.trim())
-      newErrors.phoneNumber = "Phone number is required.";
-    if (!formData.email.trim()) newErrors.email = "Email is required.";
-    if (!formData.priority) newErrors.priority = "Please select a priority.";
-    if (!formData.description.trim())
-      newErrors.description = "Description is required.";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const validateAssetName = (assetName) => {
+    if (!assetName.trim()) return "Asset name is required.";
+    return "";
+  };
+
+  const validateName = (name) => {
+    if (!name.trim()) return "Name is required.";
+    return "";
+  };
+
+  const validateDescription = (description) => {
+    if (!description.trim()) return "Description is required.";
+    return "";
+  };
+
+  const validatePhoneNumber = (phoneNumber) => {
+    if (!phoneNumber || typeof phoneNumber !== "string")
+      return "Phone number is required.";
+    const phoneRegex = /^(17|77)\d{6}$/;
+    if (!phoneNumber.trim()) return "Phone number is required.";
+    if (!phoneRegex.test(phoneNumber))
+      return "Phone must start with 17 or 77 and be 8 digits.";
+    return "";
+  };
+
+  const validateEmail = (email) => {
+    if (!email || typeof email !== "string") return "Email is required.";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) return "Email is required.";
+    if (!emailRegex.test(email)) return "Enter a valid email address.";
+    return "";
+  };
+
+  const isFormComplete = () => {
+    // Check if any required field is empty
+    return (
+      formData.assetName.trim() !== "" &&
+      formData.name.trim() !== "" &&
+      validatePhoneNumber(formData.phoneNumber) === "" && // Changed from phone to phoneNumber
+      validateEmail(formData.email) === "" &&
+      formData.priority !== "" &&
+      formData.description.trim() !== ""
+    );
   };
 
   useEffect(() => {
@@ -86,9 +116,54 @@ const RoomQRDetail = () => {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleInputChange = (e, field) => {
+    const { name, value } = e.target || {};
+
+    if (field) {
+      setFormData({ ...formData, [field]: e.value });
+
+      // Validate field after selection
+      if (field === "priority") {
+        setErrors({
+          ...errors,
+          priority: e.value ? "" : "Please select a priority.",
+        });
+      }
+    } else {
+      setFormData({ ...formData, [name]: value });
+
+      // Validate in real-time as user types
+      if (name === "phoneNumber") {
+        // Changed from phone to phoneNumber
+        setErrors({ ...errors, phoneNumber: validatePhoneNumber(value) });
+      } else if (name === "email") {
+        setErrors({ ...errors, email: validateEmail(value) });
+      } else if (name === "name") {
+        setErrors({ ...errors, name: validateName(value) });
+      } else if (name === "description") {
+        setErrors({ ...errors, description: validateDescription(value) });
+      } else if (name === "assetName") {
+        setErrors({ ...errors, assetName: validateAssetName(value) });
+      }
+    }
+  };
+
+  const validateForm = () => {
+    let newErrors = {};
+    newErrors.assetName = validateAssetName(formData.assetName);
+    newErrors.name = validateName(formData.name);
+    newErrors.phoneNumber = validatePhoneNumber(formData.phoneNumber); // Changed from phone to phoneNumber
+    newErrors.email = validateEmail(formData.email);
+    newErrors.priority = formData.priority ? "" : "Please select a priority.";
+    newErrors.description = validateDescription(formData.description);
+
+    // Filter out empty error messages
+    const filteredErrors = Object.fromEntries(
+      Object.entries(newErrors).filter(([_, value]) => value !== "")
+    );
+
+    setErrors(filteredErrors);
+    return Object.keys(filteredErrors).length === 0;
   };
 
   const handlePriorityChange = (selectedOption) => {
@@ -97,6 +172,18 @@ const RoomQRDetail = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isFormComplete()) {
+      // Show simple SweetAlert for empty form
+      Swal.fire({
+        icon: "warning",
+        title: "Form Incomplete",
+        text: "Please fill in all required fields to submit the request.",
+        confirmButtonColor: "#305845",
+      });
+      return;
+    }
+
+    // Now validate with error messages for any remaining issues
     if (!validateForm()) return;
 
     const { assetName, name, phoneNumber, email, priority, description } =
@@ -204,7 +291,7 @@ const RoomQRDetail = () => {
               type="text"
               name="assetName"
               value={formData.assetName}
-              onChange={handleChange}
+              onChange={handleInputChange}
               placeholder="Name of the asset"
             />
             {errors.assetName && (
@@ -215,7 +302,7 @@ const RoomQRDetail = () => {
               type="text"
               name="name"
               value={formData.name}
-              onChange={handleChange}
+              onChange={handleInputChange}
               placeholder="Your Name"
             />
             {errors.name && <div className="qr-error-text">{errors.name}</div>}
@@ -224,7 +311,7 @@ const RoomQRDetail = () => {
               type="tel"
               name="phoneNumber"
               value={formData.phoneNumber}
-              onChange={handleChange}
+              onChange={handleInputChange}
               placeholder="Phone Number"
             />
             {errors.phoneNumber && (
@@ -235,7 +322,7 @@ const RoomQRDetail = () => {
               type="email"
               name="email"
               value={formData.email}
-              onChange={handleChange}
+              onChange={handleInputChange}
               placeholder="Email Address"
             />
             {errors.email && (
@@ -258,7 +345,7 @@ const RoomQRDetail = () => {
             <textarea
               name="description"
               value={formData.description}
-              onChange={handleChange}
+              onChange={handleInputChange}
               placeholder="Description"
             />
             {errors.description && (

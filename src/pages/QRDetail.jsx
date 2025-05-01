@@ -63,33 +63,112 @@ const QRDetail = () => {
     setImages((prevImages) => [...prevImages, ...files]); // Store the files themselves, not URLs
   };
 
-  const validateForm = () => {
-    let newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required.";
-    if (!formData.phone.trim()) newErrors.phone = "Phone number is required.";
-    if (!formData.email.trim()) newErrors.email = "Email is required.";
-    if (!formData.priority) newErrors.priority = "Please select a priority.";
-    if (!formData.description.trim())
-      newErrors.description = "Description is required.";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const removeImage = (index) => {
     setImages(images.filter((_, i) => i !== index));
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePriorityChange = (selectedOption) => {
     setFormData((prev) => ({ ...prev, priority: selectedOption?.value || "" }));
   };
 
+  const validateName = (name) => {
+    if (!name.trim()) return "Name is required.";
+    return "";
+  };
+
+  const validateDescription = (description) => {
+    if (!description.trim()) return "Description is required.";
+    return "";
+  };
+
+  const validatePhoneNumber = (phone) => {
+    const phoneRegex = /^(17|77)\d{6}$/;
+    if (!phone.trim()) return "Phone number is required.";
+    if (!phoneRegex.test(phone))
+      return "Phone must start with 17 or 77 and be 8 digits.";
+    return "";
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) return "Email is required.";
+    if (!emailRegex.test(email)) return "Enter a valid email address.";
+    return "";
+  };
+
+  const isFormComplete = () => {
+    // Check if any required field is empty
+    return (
+      formData.name.trim() !== "" &&
+      validatePhoneNumber(formData.phone) === "" &&
+      validateEmail(formData.email) === "" &&
+      formData.priority !== "" &&
+      formData.description.trim() !== ""
+    );
+  };
+
+  const handleInputChange = (e, field) => {
+    const { name, value } = e.target || {};
+
+    if (field) {
+      setFormData({ ...formData, [field]: e.value });
+
+      // Validate field after selection
+      if (field === "priority") {
+        setErrors({
+          ...errors,
+          priority: e.value ? "" : "Please select a priority.",
+        });
+      }
+    } else {
+      setFormData({ ...formData, [name]: value });
+
+      // Validate in real-time as user types - FIX THE ERROR KEYS HERE
+      if (name === "phone") {
+        setErrors({ ...errors, phone: validatePhoneNumber(value) }); // Changed from phoneNumber to phone
+      } else if (name === "email") {
+        setErrors({ ...errors, email: validateEmail(value) });
+      } else if (name === "name") {
+        setErrors({ ...errors, name: validateName(value) });
+      } else if (name === "description") {
+        setErrors({ ...errors, description: validateDescription(value) });
+      }
+    }
+  };
+
+  // 2. Fix the validateForm function to match the field names
+  const validateForm = () => {
+    let newErrors = {};
+
+    newErrors.name = validateName(formData.name);
+    newErrors.phone = validatePhoneNumber(formData.phone); // Changed from phoneNumber to phone
+    newErrors.email = validateEmail(formData.email);
+    newErrors.priority = formData.priority ? "" : "Please select a priority.";
+    newErrors.description = validateDescription(formData.description);
+
+    // Filter out empty error messages
+    const filteredErrors = Object.fromEntries(
+      Object.entries(newErrors).filter(([_, value]) => value !== "")
+    );
+
+    setErrors(filteredErrors);
+    return Object.keys(filteredErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isFormComplete()) {
+      // Show simple SweetAlert for empty form
+      Swal.fire({
+        icon: "warning",
+        title: "Form Incomplete",
+        text: "Please fill in all required fields to submit the request.",
+        confirmButtonColor: "#305845",
+      });
+      return;
+    }
+
+    // Now validate with error messages for any remaining issues
     if (!validateForm()) return;
 
     const { name, phone, email, priority, description } = formData;
@@ -207,7 +286,7 @@ const QRDetail = () => {
               type="text"
               name="name"
               value={formData.name}
-              onChange={handleChange}
+              onChange={handleInputChange}
               placeholder="Your Name"
             />
             {errors.name && <div className="qr-error-text">{errors.name}</div>}
@@ -216,7 +295,7 @@ const QRDetail = () => {
               type="tel"
               name="phone"
               value={formData.phone}
-              onChange={handleChange}
+              onChange={handleInputChange}
               placeholder="Phone Number"
             />
             {errors.phone && (
@@ -227,7 +306,7 @@ const QRDetail = () => {
               type="email"
               name="email"
               value={formData.email}
-              onChange={handleChange}
+              onChange={handleInputChange}
               placeholder="Email Address"
             />
             {errors.email && (
@@ -250,7 +329,7 @@ const QRDetail = () => {
             <textarea
               name="description"
               value={formData.description}
-              onChange={handleChange}
+              onChange={handleInputChange}
               placeholder="Description"
             />
             {errors.description && (
