@@ -2,9 +2,11 @@ import React, { useEffect } from "react";
 import MaintenanceGraphs from "../../components/graph/MaintenanceGraphs";
 import { useGetAcademyQuery } from "./../../slices/userApiSlice";
 import Swal from "sweetalert2";
+import { useGetRepairRequestQuery } from "../../slices/maintenanceApiSlice";
 
 const AdminHome = () => {
   const { data: academies, error } = useGetAcademyQuery();
+  const { data: repairRequest } = useGetRepairRequestQuery();
 
   useEffect(() => {
     if (error) {
@@ -16,6 +18,14 @@ const AdminHome = () => {
     }
   }, [error]);
 
+  const totalRepair = repairRequest?.filter((req) => req.accept === true);
+
+  const totalResolvedRepair = totalRepair?.filter(
+    (req) => req.status === "completed"
+  );
+  const totalUnResolvedRepair = totalRepair?.filter(
+    (req) => req.status === "Pending" || req.status === "In progress"
+  );
   return (
     <div>
       <div className="cardwrap">
@@ -29,19 +39,19 @@ const AdminHome = () => {
         <div className="cardCount">
           <div className="CardContent">
             <h3 className="cardTitle">Total Maintenance Request</h3>
-            <p className="count">45</p>
+            <p className="count">{totalRepair?.length || 0}</p>
           </div>
         </div>
         <div className="cardCount cardCount1">
           <div className="CardContent">
             <h3 className="cardTitle">Total Resolved Requests</h3>
-            <p className="count">56</p>
+            <p className="count">{totalResolvedRepair?.length || 0}</p>
           </div>
         </div>
         <div className="cardCount">
           <div className="CardContent">
             <h3 className="cardTitle">Total Unresolved Requests</h3>
-            <p className="count">78</p>
+            <p className="count">{totalUnResolvedRepair?.length || 0}</p>
           </div>
         </div>
       </div>
