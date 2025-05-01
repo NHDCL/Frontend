@@ -8,12 +8,7 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import { RiImageAddLine } from "react-icons/ri";
 
-import {
-  useGetMaintenanceByTechnicianEmailQuery,
-  useCreateMaintenanceReportMutation,
-  useGetMaintenanceReportByIDQuery,
-  useUpdatePreventiveMaintenanceMutation,
-} from "../../slices/maintenanceApiSlice";
+import {useGetMaintenanceByTechnicianEmailQuery, useCreateMaintenanceReportMutation,useGetMaintenanceReportByIDQuery, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { assetApiSlice } from "../../slices/assetApiSlice";
@@ -32,7 +27,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   );
   const [images, setImages] = useState([]); // Allow multiple images
   const [imageError, setImageError] = useState("");
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef(null)
 
   const [updateMaintenanceById, { isLoading, error }] =
     useUpdatePreventiveMaintenanceMutation();
@@ -569,23 +564,9 @@ const TechnicianMSchedule = () => {
   const [data, setData] = useState([]);
 
   const email = useSelector(getUserEmail);
-  const { data: technicianSchedules, isLoading } =
+  const { data: technicianSchedules } =
     useGetMaintenanceByTechnicianEmailQuery(email);
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    if (isLoading) {
-      Swal.fire({
-        title: "Loading schedules...",
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
-      });
-    } else {
-      Swal.close();
-    }
-  }, [isLoading]);
 
   useEffect(() => {
     let isMounted = true;
@@ -595,9 +576,7 @@ const TechnicianMSchedule = () => {
         const assetPromises = technicianSchedules.map(async (schedule) => {
           try {
             const Asset = await dispatch(
-              assetApiSlice.endpoints.getAssetByAssetCode.initiate(
-                schedule?.assetCode
-              )
+              assetApiSlice.endpoints.getAssetByAssetCode.initiate(schedule?.assetCode)
             ).unwrap();
 
             return {
@@ -605,10 +584,7 @@ const TechnicianMSchedule = () => {
               asset_Details: Asset,
             };
           } catch (err) {
-            console.error(
-              `❌ Error fetching repair for ID ${schedule?.assetCode}:`,
-              err
-            );
+            console.error(`❌ Error fetching repair for ID ${schedule?.assetCode}:`, err);
             return null; // return null to filter out later
           }
         });
@@ -627,6 +603,7 @@ const TechnicianMSchedule = () => {
       isMounted = false;
     };
   }, [technicianSchedules, dispatch]);
+
 
   console.log("Dataaa", data);
 
