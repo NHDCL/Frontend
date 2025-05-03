@@ -581,7 +581,7 @@ const Repair = () => {
                   />
                 </th> */}
                 {[
-                  { label: "RID", field: null },
+                  { label: "Sl.No", field: null },
                   { label: "Image", field: null },
                   { label: "Name", field: "name" },
                   { label: "Email", field: null },
