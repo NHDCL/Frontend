@@ -7,6 +7,7 @@ import { useGetAssetQuery } from "../../../slices/assetApiSlice";
 import Tippy from "@tippyjs/react";
 import { FaDownload } from "react-icons/fa";
 import { jsPDF } from "jspdf";
+import { TiArrowSortedUp } from "react-icons/ti";
 
 const Building = ({ category }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,7 +70,6 @@ const Building = ({ category }) => {
       });
 
       setOther(filteredAssets);
-      console.log(Other);
     }
   }, [assets, selectedBuilding, selectedFloor, selectedRoom]);
 
@@ -304,6 +304,90 @@ const Building = ({ category }) => {
     setModalData2(null);
   };
 
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      let valA = a[column];
+      let valB = b[column];
+
+      // Normalize: Handle undefined, null, numbers, strings consistently
+      if (valA === undefined || valA === null) valA = "";
+      if (valB === undefined || valB === null) valB = "";
+
+      // If both are numbers, compare numerically
+      if (!isNaN(valA) && !isNaN(valB)) {
+        valA = Number(valA);
+        valB = Number(valB);
+      } else {
+        // Otherwise, compare as lowercase strings (for emails, names, etc.)
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+      }
+
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setData(sortedData);
+  };
+
+  const handleSort = (column) => {
+    const newSortOrder =
+      column === sortOrder.column
+        ? !sortOrder.ascending
+        : true;
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+
+    sortData(column, newSortOrder);
+  };
+
+
+  const sortDatas = (column, ascending) => {
+    const sortedData = [...Other].sort((a, b) => {
+      let valA = a[column];
+      let valB = b[column];
+
+      // Normalize: Handle undefined, null, numbers, strings consistently
+      if (valA === undefined || valA === null) valA = "";
+      if (valB === undefined || valB === null) valB = "";
+
+      // If both are numbers, compare numerically
+      if (!isNaN(valA) && !isNaN(valB)) {
+        valA = Number(valA);
+        valB = Number(valB);
+      } else {
+        // Otherwise, compare as lowercase strings (for emails, names, etc.)
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+      }
+
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setOther(sortedData);
+  };
+
+  const handleSorts = (column) => {
+    const newSortOrder =
+      column === sortOrder.column
+        ? !sortOrder.ascending
+        : true;
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+
+    sortDatas(column, newSortOrder);
+  };
+
   return (
     <div className="managerDashboard">
       <div className="search-sort-container">
@@ -396,15 +480,41 @@ const Building = ({ category }) => {
                     />
                   </th>
                   {[
-                    "Sl. No.",
-                    "Asset Code",
-                    "Title",
-                    "Acquire Date",
-                    "Useful Life(year)",
-                    "Area",
-                    "Status",
+                    { label: "Sl. No.", field: null },  // for index or row number
+                    { label: "Asset Code", field: "assetCode" },
+                    { label: "Title", field: "title" },
+                    { label: "Acquire Date", field: "acquireDate" },
+                    { label: "Useful Life(year)", field: null },
+                    { label: "Area", field: "assetArea" },
+                    { label: "Status", field: "status" }
                   ].map((header, index) => (
-                    <th key={index}>{header}</th>
+                    <th key={index}>
+                      {header.field ? (
+                        <div className="header-title">
+                          {header.label}
+                          <div className="sort-icons">
+                            <button
+                              className="sort-btn"
+                              onClick={() => handleSorts(header.field)}
+                              title={`Sort by ${header.label}`}
+                            >
+                              <TiArrowSortedUp
+                                style={{
+                                  color: "#305845",
+                                  transform:
+                                    sortOrder.column === header.field && sortOrder.ascending
+                                      ? "rotate(0deg)"
+                                      : "rotate(180deg)",
+                                  transition: "transform 0.3s ease",
+                                }}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        header.label // Non-sortable label like "Action"
+                      )}
+                    </th>
                   ))}
                   <th>
                     {selectedRows.length > 0 && (
@@ -523,17 +633,43 @@ const Building = ({ category }) => {
               <thead className="table-header">
                 <tr>
                   {[
-                    "Sl. No.",
-                    "Asset Code",
-                    "Title",
-                    "Acquire Date",
-                    "Useful Life(year)",
-                    "Floors",
-                    "Plint_area(sq.,)",
-                    "Depreciated Value (%)",
-                    "Status",
+                    { label: "Sl. No.", field: null },  // for index or row number
+                    { label: "Asset Code", field: "assetCode" },
+                    { label: "Title", field: "title" },
+                    { label: "Acquire Date", field: "acquireDate" },
+                    { label: "Useful Life(year)", field: null },
+                    { label: "Floors", field: null },
+                    { label: "Plint_area(sq.,)", field: null },
+                    { label: "Depreciated Value (%)", field: null },
+                    { label: "Status", field: "status" }
                   ].map((header, index) => (
-                    <th key={index}>{header}</th>
+                    <th key={index}>
+                      {header.field ? (
+                        <div className="header-title">
+                          {header.label}
+                          <div className="sort-icons">
+                            <button
+                              className="sort-btn"
+                              onClick={() => handleSort(header.field)}
+                              title={`Sort by ${header.label}`}
+                            >
+                              <TiArrowSortedUp
+                                style={{
+                                  color: "#305845",
+                                  transform:
+                                    sortOrder.column === header.field && sortOrder.ascending
+                                      ? "rotate(0deg)"
+                                      : "rotate(180deg)",
+                                  transition: "transform 0.3s ease",
+                                }}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        header.label // Non-sortable label like "Action"
+                      )}
+                    </th>
                   ))}
                   <th></th>
                 </tr>
@@ -745,9 +881,9 @@ const Building = ({ category }) => {
                 {/* Align Download Button with Schedule Maintenance */}
                 <div className="align-buttons">
                   {modalData.attributes &&
-                  modalData.attributes.some((attr) =>
-                    attr.name.startsWith("image")
-                  ) ? (
+                    modalData.attributes.some((attr) =>
+                      attr.name.startsWith("image")
+                    ) ? (
                     <button
                       type="button"
                       className="download-all-btn"
@@ -763,85 +899,85 @@ const Building = ({ category }) => {
         </div>
       )}
       {modalData2 && (
-              <div className="modal-overlay">
-                <div className="modal-content">
-                  {/* Close Button */}
-                  <div className="modal-header">
-                    <h2 className="form-h">Asset Details</h2>
-                    <button className="close-btn" onClick={handleCloseModal2}>
-                      <IoIosCloseCircle
-                        style={{ color: "#897463", width: "20px", height: "20px" }}
-                      />
-                    </button>
-                  </div>
-                  <form className="repair-form">
-                    <div className="modal-content-field">
-                      <label>Asset Id:</label>
-                      <input type="text" value={modalData2.assetID} readOnly />
-                    </div>
-      
-                    <div className="modal-content-field">
-                      <label>Title:</label>
-                      <input type="text" value={modalData2.title} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Asset Code:</label>
-                      <input type="email" value={modalData2.assetCode} readOnly />
-                    </div>
-      
-                    <div className="modal-content-field">
-                      <label>Cost:</label>
-                      <input type="text" value={modalData2.cost} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Depreciated Value:</label>
-                      <input
-                        value={modalData2.categoryDetails?.depreciatedValue}
-                        readOnly
-                      />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Acquired Date:</label>
-                      <input type="text" value={modalData2.acquireDate} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Useful Life(Years):</label>
-                      <input value={modalData2.lifespan} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Status:</label>
-                      <input value={modalData2.status} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Category:</label>
-                      <input value={modalData2.categoryDetails?.name} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Area:</label>
-                      <input value={modalData2.assetArea} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Created by</label>
-                      <input value={modalData2.createdBy} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Description: </label>
-                      <textarea value={modalData2.description} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>QR: </label>
-                      <div className="image-container">
-                        <img
-                          src={getQrImageUrl(modalData2.attributes)}
-                          alt="QR Code"
-                          style={{ width: 300, height: 300 }}
-                        />
-                      </div>
-                    </div>
-                  </form>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Asset Details</h2>
+              <button className="close-btn" onClick={handleCloseModal2}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <form className="repair-form">
+              <div className="modal-content-field">
+                <label>Asset Id:</label>
+                <input type="text" value={modalData2.assetID} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Title:</label>
+                <input type="text" value={modalData2.title} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Asset Code:</label>
+                <input type="email" value={modalData2.assetCode} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Cost:</label>
+                <input type="text" value={modalData2.cost} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Depreciated Value:</label>
+                <input
+                  value={modalData2.categoryDetails?.depreciatedValue}
+                  readOnly
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Acquired Date:</label>
+                <input type="text" value={modalData2.acquireDate} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Useful Life(Years):</label>
+                <input value={modalData2.lifespan} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Status:</label>
+                <input value={modalData2.status} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Category:</label>
+                <input value={modalData2.categoryDetails?.name} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Area:</label>
+                <input value={modalData2.assetArea} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Created by</label>
+                <input value={modalData2.createdBy} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Description: </label>
+                <textarea value={modalData2.description} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>QR: </label>
+                <div className="image-container">
+                  <img
+                    src={getQrImageUrl(modalData2.attributes)}
+                    alt="QR Code"
+                    style={{ width: 300, height: 300 }}
+                  />
                 </div>
               </div>
-            )}
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
