@@ -14,7 +14,10 @@ import {
   useUploadExcelMutation,
   useRequestDisposeMutation,
 } from "../../../slices/assetApiSlice";
-import { useCreateMaintenanceMutation, useSendEmailMutation } from "../../../slices/maintenanceApiSlice";
+import {
+  useCreateMaintenanceMutation,
+  useSendEmailMutation,
+} from "../../../slices/maintenanceApiSlice";
 import {
   useGetDepartmentQuery,
   useGetUserByEmailQuery,
@@ -80,12 +83,10 @@ const Building = ({ category }) => {
     useGetDepartmentQuery();
   const { data: users } = useGetUsersQuery();
   const [assignedWorker, setAssignedWorker] = useState(null);
-  const [createMaintenance] =
-    useCreateMaintenanceMutation();
+  const [createMaintenance] = useCreateMaintenanceMutation();
   const [repeatFrequency, setRepeatFrequency] = useState(null);
   const [sendEmail] = useSendEmailMutation();
   const [isCreating, setIsCreating] = useState(false);
-
 
   const supervisorsFromSameAcademy =
     users?.filter(
@@ -713,7 +714,7 @@ const Building = ({ category }) => {
     }));
 
   const handleCreateSchedule = async () => {
-    setIsCreating(true)
+    setIsCreating(true);
     try {
       await createMaintenance({
         timeStart: scheduleModalData.Schedule,
@@ -751,7 +752,7 @@ const Building = ({ category }) => {
         text: error?.data?.message || "Something went wrong. Please try again.",
       });
     }
-    setIsCreating(false)
+    setIsCreating(false);
   };
 
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
@@ -784,9 +785,7 @@ const Building = ({ category }) => {
 
   const handleSort = (column) => {
     const newSortOrder =
-      column === sortOrder.column
-        ? !sortOrder.ascending
-        : true;
+      column === sortOrder.column ? !sortOrder.ascending : true;
 
     setSortOrder({
       column,
@@ -875,7 +874,7 @@ const Building = ({ category }) => {
           <thead className="table-header">
             <tr>
               {[
-                { label: "Sl. No.", field: null },  // for index or row number
+                { label: "Sl. No.", field: null }, // for index or row number
                 { label: "Asset Code", field: "assetCode" },
                 { label: "Title", field: "title" },
                 { label: "Acquire Date", field: "acquireDate" },
@@ -883,7 +882,7 @@ const Building = ({ category }) => {
                 { label: "Floors", field: null },
                 { label: "Plint_area(sq.,)", field: null },
                 { label: "Depreciated Value (%)", field: null },
-                { label: "Status", field: "status" }
+                { label: "Status", field: "status" },
               ].map((header, index) => (
                 <th key={index}>
                   {header.field ? (
@@ -899,7 +898,8 @@ const Building = ({ category }) => {
                             style={{
                               color: "#305845",
                               transform:
-                                sortOrder.column === header.field && sortOrder.ascending
+                                sortOrder.column === header.field &&
+                                sortOrder.ascending
                                   ? "rotate(0deg)"
                                   : "rotate(180deg)",
                               transition: "transform 0.3s ease",
@@ -962,7 +962,6 @@ const Building = ({ category }) => {
                       </span>
                     </Tippy>
                   </td>
-
                   <td>{item.acquireDate}</td>
                   <td>{item.lifespan}</td>
                   <td>{floorCount}</td> {/* Number of floors */}
@@ -1390,10 +1389,10 @@ const Building = ({ category }) => {
               <div className="modal-content-field">
                 <label>Images:</label>
                 {modalData &&
-                  modalData.attributes &&
-                  modalData.attributes.filter((attr) =>
-                    attr.name.startsWith("image")
-                  ).length > 0 ? (
+                modalData.attributes &&
+                modalData.attributes.filter((attr) =>
+                  attr.name.startsWith("image")
+                ).length > 0 ? (
                   <div className="image-gallery">
                     {modalData.attributes
                       .filter((attr) => attr.name.startsWith("image"))
@@ -1443,9 +1442,9 @@ const Building = ({ category }) => {
                 {/* Align Download Button with Schedule Maintenance */}
                 <div className="align-buttons">
                   {modalData.attributes &&
-                    modalData.attributes.some((attr) =>
-                      attr.name.startsWith("image")
-                    ) ? (
+                  modalData.attributes.some((attr) =>
+                    attr.name.startsWith("image")
+                  ) ? (
                     <button
                       type="button"
                       className="download-all-btn"
@@ -1557,16 +1556,25 @@ const Building = ({ category }) => {
                   value={
                     scheduleModalData.Lastworkorder
                       ? new Date(scheduleModalData.Lastworkorder)
-                        .toISOString()
-                        .split("T")[0]
+                          .toISOString()
+                          .split("T")[0]
                       : ""
                   }
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    // When start date changes, update the state
+                    const newStartDate = e.target.value;
                     setScheduleModalData({
                       ...scheduleModalData,
-                      Lastworkorder: e.target.value,
-                    })
-                  }
+                      Lastworkorder: newStartDate,
+                      // If end date is before new start date, update end date to start date
+                      Nextworkorder:
+                        scheduleModalData.Nextworkorder &&
+                        new Date(scheduleModalData.Nextworkorder) <
+                          new Date(newStartDate)
+                          ? newStartDate
+                          : scheduleModalData.Nextworkorder,
+                    });
+                  }}
                 />
               </div>
               <div className="modal-content-field">
@@ -1589,8 +1597,8 @@ const Building = ({ category }) => {
                   value={
                     scheduleModalData.Nextworkorder
                       ? new Date(scheduleModalData.Nextworkorder)
-                        .toISOString()
-                        .split("T")[0]
+                          .toISOString()
+                          .split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
@@ -1599,6 +1607,15 @@ const Building = ({ category }) => {
                       Nextworkorder: e.target.value,
                     })
                   }
+                  // Set min attribute to the selected start date to prevent selecting dates before start date
+                  min={
+                    scheduleModalData.Lastworkorder
+                      ? new Date(scheduleModalData.Lastworkorder)
+                          .toISOString()
+                          .split("T")[0]
+                      : ""
+                  }
+                  disabled={!scheduleModalData.Lastworkorder}
                 />
               </div>
 
