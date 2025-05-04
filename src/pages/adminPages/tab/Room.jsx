@@ -4,6 +4,7 @@ import Select from "react-select";
 import { FaDownload } from "react-icons/fa";
 import jsPDF from "jspdf";
 import { useGetAssetQuery } from "../../../slices/assetApiSlice";
+import { TiArrowSortedUp } from "react-icons/ti";
 
 const RoomQR = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,29 +33,49 @@ const RoomQR = () => {
   }, [assets]);
 
   // Sorting and filtering logic
-  const sortedData = [...data].sort((a, b) => b.assetID - a.assetID);
-  const filteredData = sortedData.filter((item) => {
-    const matchesSearch = Object.values(item).some((value) =>
-      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+  const filteredData = [...data]
+    .filter((item) => {
+      const matchesSearch = Object.values(item).some((value) =>
+        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
-    const matchesBuilding =
-      selectedBuilding === "" || item.title === selectedBuilding;
+      const matchesBuilding =
+        selectedBuilding === "" || item.title === selectedBuilding;
 
-    const floorRoomsAttr = item.attributes.find(
-      (attr) => attr.name === "Floor and rooms"
-    );
-    const floorRoomObj = floorRoomsAttr ? JSON.parse(floorRoomsAttr.value) : {};
+      const floorRoomsAttr = item.attributes.find(
+        (attr) => attr.name === "Floor and rooms"
+      );
+      const floorRoomObj = floorRoomsAttr ? JSON.parse(floorRoomsAttr.value) : {};
+      const floors = Object.keys(floorRoomObj);
+      const rooms = Object.values(floorRoomObj).flat();
 
-    const floors = Object.keys(floorRoomObj);
-    const rooms = Object.values(floorRoomObj).flat();
+      const matchesFloor = selectedFloor === "" || floors.includes(selectedFloor);
+      const matchesRoom = selectedRoom === "" || rooms.includes(selectedRoom);
 
-    const matchesFloor = selectedFloor === "" || floors.includes(selectedFloor);
+      return matchesSearch && matchesBuilding && matchesFloor && matchesRoom;
+    })
+    .sort((a, b) => {
+      if (!sortOrder.column) return 0;
 
-    const matchesRoom = selectedRoom === "" || rooms.includes(selectedRoom);
+      let valA = a[sortOrder.column];
+      let valB = b[sortOrder.column];
 
-    return matchesSearch && matchesBuilding && matchesFloor && matchesRoom;
-  });
+      if (valA === undefined || valA === null) valA = "";
+      if (valB === undefined || valB === null) valB = "";
+
+      if (!isNaN(valA) && !isNaN(valB)) {
+        valA = Number(valA);
+        valB = Number(valB);
+      } else {
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+      }
+
+      if (valA < valB) return sortOrder.ascending ? -1 : 1;
+      if (valA > valB) return sortOrder.ascending ? 1 : -1;
+      return 0;
+    });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -203,6 +224,47 @@ const RoomQR = () => {
     );
   };
 
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      let valA = a[column];
+      let valB = b[column];
+
+      // Normalize: Handle undefined, null, numbers, strings consistently
+      if (valA === undefined || valA === null) valA = "";
+      if (valB === undefined || valB === null) valB = "";
+
+      // If both are numbers, compare numerically
+      if (!isNaN(valA) && !isNaN(valB)) {
+        valA = Number(valA);
+        valB = Number(valB);
+      } else {
+        // Otherwise, compare as lowercase strings (for emails, names, etc.)
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+      }
+
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setData(sortedData);
+  };
+
+  const handleSort = (column) => {
+    const newSortOrder =
+      column === sortOrder.column
+        ? !sortOrder.ascending
+        : true;
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+
+    sortData(column, newSortOrder);
+  };
+
   return (
     <div className="managerDashboard">
       {/* Search and filter inputs */}
@@ -314,9 +376,41 @@ const RoomQR = () => {
                   }}
                 />
               </th>
-              {["Sl. No.", "Asset Code", "Building Name", "Floor", "Room"].map(
+              {[
+                { label: "Sl. No.", field: null }, // typically used for index
+                { label: "Asset Code", field: "assetCode" },
+                { label: "Building Name", field: "title" },
+                { label: "Floor", field: null },
+                { label: "Room", field: null }
+              ].map(
                 (header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    {header.field ? (
+                      <div className="header-title">
+                        {header.label}
+                        <div className="sort-icons">
+                          <button
+                            className="sort-btn"
+                            onClick={() => handleSort(header.field)}
+                            title={`Sort by ${header.label}`}
+                          >
+                            <TiArrowSortedUp
+                              style={{
+                                color: "#305845",
+                                transform:
+                                  sortOrder.column === header.field && sortOrder.ascending
+                                    ? "rotate(0deg)"
+                                    : "rotate(180deg)",
+                                transition: "transform 0.3s ease",
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      header.label // Non-sortable label like "Action"
+                    )}
+                  </th>
                 )
               )}
               <th>
