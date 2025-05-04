@@ -698,7 +698,7 @@ const PMaintenance = () => {
                   onClick={handleSaveEdit}
                   disabled={isSaving}
                 >
-                  {isSaving ? "Saving..." : "Save"}
+                  {isSaving ? "Saving..." : "Done"}
                 </button>
               </div>
               )}
