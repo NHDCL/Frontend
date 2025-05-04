@@ -17,11 +17,6 @@ import {
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice";
-
-import {
-  useGetUserByEmailQuery,
-  useGetUsersQuery,
-} from "../../slices/userApiSlice";
 import { createSelector } from "reselect";
 import Swal from "sweetalert2";
 
