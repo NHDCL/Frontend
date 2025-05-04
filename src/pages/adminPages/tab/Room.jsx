@@ -24,7 +24,8 @@ const RoomQR = () => {
     if (assets) {
       const filteredAssets = assets.filter(
         (asset) =>
-          asset.categoryDetails?.name === "Building" && asset.status === "In Usage"
+          asset.categoryDetails?.name === "Building" &&
+          asset.status === "In Usage"
       );
       setData(filteredAssets);
     }
@@ -220,6 +221,8 @@ const RoomQR = () => {
       {/* Dropdowns for filtering */}
       <div className="Building-sort">
         <Select
+          classNamePrefix="custom-select-workstatus"
+          className="workstatus-dropdown"
           options={uniqueBuilding}
           value={uniqueBuilding.find(
             (option) => option.value === selectedBuilding
@@ -232,6 +235,8 @@ const RoomQR = () => {
         />
         {selectedBuilding && (
           <Select
+            classNamePrefix="custom-select-workstatus"
+            className="workstatus-dropdown"
             options={uniqueFloors}
             value={uniqueFloors.find(
               (option) => option.value === selectedFloor
@@ -244,6 +249,8 @@ const RoomQR = () => {
         )}
         {selectedFloor && (
           <Select
+            classNamePrefix="custom-select-workstatus"
+            className="workstatus-dropdown"
             options={uniqueRoom}
             value={uniqueRoom.find((option) => option.value === selectedRoom)}
             onChange={(selectedOption) =>
