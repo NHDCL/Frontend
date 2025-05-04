@@ -62,7 +62,11 @@ const AdminAssets = () => {
   const [activeTab, setActiveTab] = useState(defaultTab);
 
   // Adding RoomQr manually to categories to display in the AssetTap
-  const categoryList = [...activeCategories, { name: "Room QR" }];
+  const categoryList = [
+    ...activeCategories.slice(0, 1),
+    { name: "Room QR" },
+    ...activeCategories.slice(1)
+  ];
 
   // Get the correct filename based on the category name
   const normalizedTab = activeTab.replace(/\s+/g, "").toLowerCase();

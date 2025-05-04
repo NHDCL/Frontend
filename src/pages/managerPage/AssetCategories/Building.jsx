@@ -5,6 +5,7 @@ import { IoMdAdd } from "react-icons/io";
 import { ImFolderDownload } from "react-icons/im";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
+import { TiArrowSortedUp } from "react-icons/ti";
 import {
   useGetAssetByAcademyQuery,
   usePostUploadImagesMutation,
@@ -754,6 +755,46 @@ const Building = ({ category }) => {
     setIsCreating(false);
   };
 
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      let valA = a[column];
+      let valB = b[column];
+
+      // Normalize: Handle undefined, null, numbers, strings consistently
+      if (valA === undefined || valA === null) valA = "";
+      if (valB === undefined || valB === null) valB = "";
+
+      // If both are numbers, compare numerically
+      if (!isNaN(valA) && !isNaN(valB)) {
+        valA = Number(valA);
+        valB = Number(valB);
+      } else {
+        // Otherwise, compare as lowercase strings (for emails, names, etc.)
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+      }
+
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setData(sortedData);
+  };
+
+  const handleSort = (column) => {
+    const newSortOrder =
+      column === sortOrder.column ? !sortOrder.ascending : true;
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+
+    sortData(column, newSortOrder);
+  };
+
   return (
     <div className="managerDashboard">
       <div className="search-sort-container">
@@ -833,17 +874,44 @@ const Building = ({ category }) => {
           <thead className="table-header">
             <tr>
               {[
-                "Sl. No.",
-                "Asset Code",
-                "Title",
-                "Acquire Date",
-                "Useful Life(year)",
-                "Floors",
-                "Plint_area(sq.,)",
-                "Depreciated Value (%)",
-                "Status",
+                { label: "Sl. No.", field: null }, // for index or row number
+                { label: "Asset Code", field: "assetCode" },
+                { label: "Title", field: "title" },
+                { label: "Acquire Date", field: "acquireDate" },
+                { label: "Useful Life(year)", field: null },
+                { label: "Floors", field: null },
+                { label: "Plint_area(sq.,)", field: null },
+                { label: "Depreciated Value (%)", field: null },
+                { label: "Status", field: "status" },
               ].map((header, index) => (
-                <th key={index}>{header}</th>
+                <th key={index}>
+                  {header.field ? (
+                    <div className="header-title">
+                      {header.label}
+                      <div className="sort-icons">
+                        <button
+                          className="sort-btn"
+                          onClick={() => handleSort(header.field)}
+                          title={`Sort by ${header.label}`}
+                        >
+                          <TiArrowSortedUp
+                            style={{
+                              color: "#305845",
+                              transform:
+                                sortOrder.column === header.field &&
+                                sortOrder.ascending
+                                  ? "rotate(0deg)"
+                                  : "rotate(180deg)",
+                              transition: "transform 0.3s ease",
+                            }}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    header.label // Non-sortable label like "Action"
+                  )}
+                </th>
               ))}
               <th>
                 {selectedRows.length > 0 && (
