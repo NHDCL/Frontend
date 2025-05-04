@@ -216,9 +216,9 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
 
   // Extract unique work statuses from data
   const WorkOrder = [
-    { value: "pending", label: "Pending" },
+    { value: "Pending", label: "Pending" },
     { value: "In progress", label: "In progress" },
-    { value: "completed", label: "Completed" },
+    { value: "Completed", label: "Completed" },
   ];
 
   const today = new Date().toISOString().split("T")[0];
