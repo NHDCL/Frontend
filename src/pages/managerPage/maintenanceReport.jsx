@@ -202,8 +202,10 @@ const Maintenancereport = () => {
         item.Assigned_Technician,
       ]),
     ]
-      .map((row) => row.join(","))
-      .join("\n");
+    .map((row) =>
+      row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+    )
+    .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);

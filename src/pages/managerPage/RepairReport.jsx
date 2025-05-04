@@ -286,12 +286,9 @@ const Repairreport = () => {
       ["Area", modalData.area],
       ["Total Cost", modalData.totalCost],
       ["Part Used", modalData.partsUsed],
-      ["Location", modalData.location],
       ["Description", modalData.description],
       ["Total Technicians", modalData.totalTechnicians],
-      ["Assigned Supervisor", modalData.Assigned_supervisor],
       ["Assigned Technician", modalData.technicians],
-      ["Additional Info", modalData.Additional_information],
     ];
 
     // Generate the table using autoTable
@@ -326,10 +323,8 @@ const Repairreport = () => {
         "Area",
         "Total Cost",
         "Parts Used",
-        "Location",
         "Description",
         "Total Technicians",
-        "Assigned Supervisor",
         "Assigned Technician",
       ],
       ...selectedData.map((item) => [
@@ -341,14 +336,14 @@ const Repairreport = () => {
         item.area,
         item.totalCost,
         item.partsUsed,
-        item.location,
         item.description,
         item.totalTechnicians,
-        item.Assigned_supervisor,
         item.technicians,
       ]),
     ]
-      .map((row) => row.join(","))
+      .map((row) =>
+        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+      )
       .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -361,48 +356,48 @@ const Repairreport = () => {
     document.body.removeChild(a);
   };
 
-    const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
-    const sortData = (column, ascending) => {
-      const sortedData = [...data].sort((a, b) => {
-        let valA = a[column];
-        let valB = b[column];
-    
-        // Normalize: Handle undefined, null, numbers, strings consistently
-        if (valA === undefined || valA === null) valA = "";
-        if (valB === undefined || valB === null) valB = "";
-    
-        // If both are numbers, compare numerically
-        if (!isNaN(valA) && !isNaN(valB)) {
-          valA = Number(valA);
-          valB = Number(valB);
-        } else {
-          // Otherwise, compare as lowercase strings (for emails, names, etc.)
-          valA = valA.toString().toLowerCase();
-          valB = valB.toString().toLowerCase();
-        }
-    
-        if (valA < valB) return ascending ? -1 : 1;
-        if (valA > valB) return ascending ? 1 : -1;
-        return 0;
-      });
-    
-      setData(sortedData);
-    };
-    
-    const handleSort = (column) => {
-      const newSortOrder =
-        column === sortOrder.column
-          ? !sortOrder.ascending
-          : true;
-    
-      setSortOrder({
-        column,
-        ascending: newSortOrder,
-      });
-    
-      sortData(column, newSortOrder);
-    };
-    
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      let valA = a[column];
+      let valB = b[column];
+
+      // Normalize: Handle undefined, null, numbers, strings consistently
+      if (valA === undefined || valA === null) valA = "";
+      if (valB === undefined || valB === null) valB = "";
+
+      // If both are numbers, compare numerically
+      if (!isNaN(valA) && !isNaN(valB)) {
+        valA = Number(valA);
+        valB = Number(valB);
+      } else {
+        // Otherwise, compare as lowercase strings (for emails, names, etc.)
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+      }
+
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setData(sortedData);
+  };
+
+  const handleSort = (column) => {
+    const newSortOrder =
+      column === sortOrder.column
+        ? !sortOrder.ascending
+        : true;
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+
+    sortData(column, newSortOrder);
+  };
+
 
   return (
     <div className="ManagerDashboard">
@@ -451,7 +446,7 @@ const Repairreport = () => {
                   { label: "Area", field: "area" },
                   { label: "Total Cost", field: "totalCost" },
                   { label: "Parts_used", field: null },
-                  { label: "Description", field: null}
+                  { label: "Description", field: null }
                 ].map((header, index) => (
                   <th key={index}>
                     {header.field ? (
