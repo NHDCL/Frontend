@@ -17,6 +17,7 @@ import {
   useGetUsersQuery,
   useGetRolesQuery,
   useSoftDeleteUserMutation,
+  useDeleteDepartmentMutation,
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 import Tippy from "@tippyjs/react";
@@ -117,10 +118,42 @@ const AdminUser = () => {
   // console.log("Mausers: ", managerUser.role.name)
   // console.log("MRoleausers: ", managerRoleId)
 
+  // Add this with your other hooks
+  const [deleteDepartment] = useDeleteDepartmentMutation();
+
+  // Add this function to handle department deletion
+  const handleDeleteDepartment = async (departmentId) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to delete this department?",
+      icon: "warning",
+      color: "#305845",
+      showCancelButton: true,
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteDepartment(departmentId).unwrap();
+        Swal.fire("Deleted!", "Department has been deleted.", "success");
+        refetch(); // Refetch departments after deletion
+      } catch (error) {
+        Swal.fire("Error", "Failed to delete department", "error");
+      }
+    }
+  };
+
   console.log("AAA", academies);
 
+  // Update the button click handlers to handle Department tab
   const handleAddUserClick = () => {
-    setShowModal(true);
+    if (activeTab === "Department") {
+      setShowModalDepartment(true);
+    } else {
+      setShowModal(true);
+    }
   };
 
   const handleAddDepartmentClick = () => {
@@ -158,10 +191,10 @@ const AdminUser = () => {
       activeTab === "Manager"
         ? managerRoleId
         : activeTab === "Supervisor"
-          ? supervisorRoleId
-          : activeTab === "Technician"
-            ? technicianRoleId
-            : null;
+        ? supervisorRoleId
+        : activeTab === "Technician"
+        ? technicianRoleId
+        : null;
 
     // console.log("roleid: ", roleId)
 
@@ -265,15 +298,21 @@ const AdminUser = () => {
     }
   }, [users]);
 
-  const filteredData = (data || []).filter(
-    (item) =>
-      item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
-      Object.values(item).some((value) =>
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      )
-  );
-
-  
+  // Update the filteredData to handle Department tab
+  const filteredData =
+    activeTab === "Department"
+      ? (department || []).filter((item) =>
+          Object.values(item).some((value) =>
+            value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        )
+      : (data || []).filter(
+          (item) =>
+            item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
+            Object.values(item).some((value) =>
+              value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+            )
+        );
 
   console.log("FD", filteredData);
 
@@ -322,54 +361,52 @@ const AdminUser = () => {
     return regex.test(email);
   };
 
-    const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
-    const sortData = (column, ascending) => {
-      const sortedData = [...data].sort((a, b) => {
-        let valA = a[column];
-        let valB = b[column];
-    
-        // Normalize: Handle undefined, null, numbers, strings consistently
-        if (valA === undefined || valA === null) valA = "";
-        if (valB === undefined || valB === null) valB = "";
-    
-        // If both are numbers, compare numerically
-        if (!isNaN(valA) && !isNaN(valB)) {
-          valA = Number(valA);
-          valB = Number(valB);
-        } else {
-          // Otherwise, compare as lowercase strings (for emails, names, etc.)
-          valA = valA.toString().toLowerCase();
-          valB = valB.toString().toLowerCase();
-        }
-    
-        if (valA < valB) return ascending ? -1 : 1;
-        if (valA > valB) return ascending ? 1 : -1;
-        return 0;
-      });
-    
-      setData(sortedData);
-    };
-    
-    const handleSort = (column) => {
-      const newSortOrder =
-        column === sortOrder.column
-          ? !sortOrder.ascending
-          : true;
-    
-      setSortOrder({
-        column,
-        ascending: newSortOrder,
-      });
-    
-      sortData(column, newSortOrder);
-    };
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      let valA = a[column];
+      let valB = b[column];
+
+      // Normalize: Handle undefined, null, numbers, strings consistently
+      if (valA === undefined || valA === null) valA = "";
+      if (valB === undefined || valB === null) valB = "";
+
+      // If both are numbers, compare numerically
+      if (!isNaN(valA) && !isNaN(valB)) {
+        valA = Number(valA);
+        valB = Number(valB);
+      } else {
+        // Otherwise, compare as lowercase strings (for emails, names, etc.)
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+      }
+
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setData(sortedData);
+  };
+
+  const handleSort = (column) => {
+    const newSortOrder =
+      column === sortOrder.column ? !sortOrder.ascending : true;
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+
+    sortData(column, newSortOrder);
+  };
 
   return (
     <div className="user-dashboard">
       {/* Tab Switcher */}
       <div className="user-tab-outer">
         <div className="user-tab-container">
-          {["Manager", "Supervisor", "Technician"].map((tab) => (
+          {["Manager", "Supervisor", "Technician", "Department"].map((tab) => (
             <button
               key={tab}
               className={`tab ${activeTab === tab ? "active" : ""}`}
@@ -380,16 +417,15 @@ const AdminUser = () => {
           ))}
         </div>
 
-        {/* Add User Button */}
+        {/* Add User/Department Button - Single button approach */}
         <div className="addUserDep">
           <div className="add-user" onClick={handleAddUserClick}>
-            <AiOutlineUsergroupAdd style={{ fontSize: "20px" }} />
+            {activeTab === "Department" ? (
+              <RiApps2AddFill style={{ fontSize: "20px" }} />
+            ) : (
+              <AiOutlineUsergroupAdd style={{ fontSize: "20px" }} />
+            )}
             <button style={{ color: "white" }}> Add {activeTab} </button>
-          </div>
-
-          <div className="add-user" onClick={handleAddDepartmentClick}>
-            <RiApps2AddFill style={{ fontSize: "20px" }} />
-            <button style={{ color: "white" }}> Add Department </button>
           </div>
         </div>
       </div>
@@ -408,133 +444,208 @@ const AdminUser = () => {
           </div>
         </div>
 
-        {/* Data Table */}
+        {/* Data Table - Conditional rendering based on activeTab */}
         <div className="table-container">
-          <table className="RequestTable">
-            <thead>
-              <tr>
-                {[
-                  { label: "Image", field: null },
-                  { label: "Name", field: "name"},
-                  { label: "Email", field: "email"},
-                  { label: "EmployeeId", field: "employeeId"},
-                  { label: "Academy", field: null },
-                  ...(activeTab !== "Manager"
-                    ? [{ label: "Department", field: "departmentId" }]
-                    : []),
-                  // { label: "Role", field: "role" },
-                  { label: " ", field: null }, // for actions like view/edit
-                ]
-                  .filter(Boolean)
-                  .map((header, index) => (
-                    <th key={index}>
-                      {header.field ? (
-                        <div className="header-title">
-                          {header.label}
-                          <div className="sort-icons">
-                            <button
-                              className="sort-btn"
-                              onClick={() => handleSort(header.field)}
-                              title={`Sort by ${header.label}`}
-                            >
-                              <TiArrowSortedUp
-                                style={{
-                                  color: "#305845",
-                                  transform:
-                                    sortOrder.column === header.field && sortOrder.ascending
-                                      ? "rotate(0deg)"
-                                      : "rotate(180deg)",
-                                  transition: "transform 0.3s ease",
-                                }}
-                              />
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        header.label // Non-sortable label like "Action"
-                      )}
-                    </th>
-                  ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((item, index) => (
-                <tr key={index}>
-                  <td>
-                    <img
-                      className="User-profile"
-                      src={item.image || img}
-                      alt="User"
-                      style={{
-                        width: "50px",
-                        height: "50px",
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                      }}
-                      onMouseOver={(e) =>
-                        (e.target.style.transform = "scale(1.3)")
-                      }
-                      onMouseOut={(e) =>
-                        (e.target.style.transform = "scale(1)")
-                      }
-                    />
-                  </td>
-                  <td className="description">
-                    <Tippy content={item.name || ""} placement="top">
-                      <span>
-                        {item.name
-                          ? item.name.length > 20
-                            ? item.name.substring(0, 20) + "..."
-                            : item.name
-                          : ""}
-                      </span>
-                    </Tippy>
-                  </td>
-
-                  <td className="description">
-                    <Tippy content={item.email || ""} placement="top">
-                      <span>
-                        {item.email
-                          ? item.email.length > 20
-                            ? item.email.substring(0, 20) + "..."
-                            : item.email
-                          : ""}
-                      </span>
-                    </Tippy>
-                  </td>
-
-                  <td>{item.employeeId || ""}</td>
-
-                  <td className="description">
-                    <Tippy
-                      content={getAcademyName(item.academyId) || ""}
-                      placement="top"
-                    >
-                      <span>
-                        {getAcademyName(item.academyId)
-                          ? getAcademyName(item.academyId).length > 20
-                            ? getAcademyName(item.academyId).substring(0, 20) +
-                            "..."
-                            : getAcademyName(item.academyId)
-                          : ""}
-                      </span>
-                    </Tippy>
-                  </td>
-
-                  {activeTab !== "Manager" && (
-                    <td>{getDepartmentName(item.departmentId)}</td>
-                  )}
-                  {/* <td>{item.role ? item.role.name : "No Role"}</td> */}
-                  <td>
-                    <RiDeleteBin6Line
-                      onClick={() => handleDelete(item.userId)}
-                      style={{ width: "20px", height: "20px", color: "red" }}
-                    />
-                  </td>
+          {activeTab === "Department" ? (
+            <table className="RequestTable">
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th>
+                    <div className="header-title">
+                      Name
+                      <div className="sort-icons">
+                        <button
+                          className="sort-btn"
+                          onClick={() => handleSort("name")}
+                          title="Sort by Name"
+                        >
+                          <TiArrowSortedUp
+                            style={{
+                              color: "#305845",
+                              transform:
+                                sortOrder.column === "name" &&
+                                sortOrder.ascending
+                                  ? "rotate(0deg)"
+                                  : "rotate(180deg)",
+                              transition: "transform 0.3s ease",
+                            }}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </th>
+                  <th>Description</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredData.map((item, index) => (
+                  <tr key={item.departmentId}>
+                    <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
+                    <td className="description">
+                      <Tippy content={item.name || ""} placement="top">
+                        <span>
+                          {item.name
+                            ? item.name.length > 20
+                              ? item.name.substring(0, 20) + "..."
+                              : item.name
+                            : ""}
+                        </span>
+                      </Tippy>
+                    </td>
+                    <td className="description">
+                      <Tippy content={item.description || ""} placement="top">
+                        <span>
+                          {item.description
+                            ? item.description.length > 40
+                              ? item.description.substring(0, 40) + "..."
+                              : item.description
+                            : ""}
+                        </span>
+                      </Tippy>
+                    </td>
+                    <td>
+                      <RiDeleteBin6Line
+                        onClick={() =>
+                          handleDeleteDepartment(item.departmentId)
+                        }
+                        style={{ width: "20px", height: "20px", color: "red" }}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <table className="RequestTable">
+              {/* Your existing user table code here */}
+              <thead>
+                <tr>
+                  {[
+                    { label: "Image", field: null },
+                    { label: "Name", field: "name" },
+                    { label: "Email", field: "email" },
+                    { label: "EmployeeId", field: "employeeId" },
+                    { label: "Academy", field: null },
+                    ...(activeTab !== "Manager"
+                      ? [{ label: "Department", field: "departmentId" }]
+                      : []),
+                    { label: " ", field: null }, // for actions like view/edit
+                  ]
+                    .filter(Boolean)
+                    .map((header, index) => (
+                      <th key={index}>
+                        {header.field ? (
+                          <div className="header-title">
+                            {header.label}
+                            <div className="sort-icons">
+                              <button
+                                className="sort-btn"
+                                onClick={() => handleSort(header.field)}
+                                title={`Sort by ${header.label}`}
+                              >
+                                <TiArrowSortedUp
+                                  style={{
+                                    color: "#305845",
+                                    transform:
+                                      sortOrder.column === header.field &&
+                                      sortOrder.ascending
+                                        ? "rotate(0deg)"
+                                        : "rotate(180deg)",
+                                    transition: "transform 0.3s ease",
+                                  }}
+                                />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          header.label // Non-sortable label like "Action"
+                        )}
+                      </th>
+                    ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map((item, index) => (
+                  <tr key={index}>
+                    <td>
+                      <img
+                        className="User-profile"
+                        src={item.image || img}
+                        alt="User"
+                        style={{
+                          width: "50px",
+                          height: "50px",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                        }}
+                        onMouseOver={(e) =>
+                          (e.target.style.transform = "scale(1.3)")
+                        }
+                        onMouseOut={(e) =>
+                          (e.target.style.transform = "scale(1)")
+                        }
+                      />
+                    </td>
+                    <td className="description">
+                      <Tippy content={item.name || ""} placement="top">
+                        <span>
+                          {item.name
+                            ? item.name.length > 20
+                              ? item.name.substring(0, 20) + "..."
+                              : item.name
+                            : ""}
+                        </span>
+                      </Tippy>
+                    </td>
+
+                    <td className="description">
+                      <Tippy content={item.email || ""} placement="top">
+                        <span>
+                          {item.email
+                            ? item.email.length > 20
+                              ? item.email.substring(0, 20) + "..."
+                              : item.email
+                            : ""}
+                        </span>
+                      </Tippy>
+                    </td>
+
+                    <td>{item.employeeId || ""}</td>
+
+                    <td className="description">
+                      <Tippy
+                        content={getAcademyName(item.academyId) || ""}
+                        placement="top"
+                      >
+                        <span>
+                          {getAcademyName(item.academyId)
+                            ? getAcademyName(item.academyId).length > 20
+                              ? getAcademyName(item.academyId).substring(
+                                  0,
+                                  20
+                                ) + "..."
+                              : getAcademyName(item.academyId)
+                            : ""}
+                        </span>
+                      </Tippy>
+                    </td>
+
+                    {activeTab !== "Manager" && (
+                      <td>{getDepartmentName(item.departmentId)}</td>
+                    )}
+                    <td>
+                      <RiDeleteBin6Line
+                        onClick={() => handleDelete(item.userId)}
+                        style={{ width: "20px", height: "20px", color: "red" }}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
         <div className="pagination">
           <span>{filteredData.length} Results</span>
