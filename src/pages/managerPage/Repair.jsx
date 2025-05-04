@@ -42,7 +42,7 @@ const Repair = () => {
   const [assignTimeU, setAssignTimeU] = useState("");
   const [assignDateU, setAssignDateU] = useState("");
   const [statusPending, setStatusPending] = useState(null);
-  
+
   console.log(
     "start........................................................................."
   );
@@ -193,15 +193,15 @@ const Repair = () => {
     supervisorsInDepartment.length > 0
       ? supervisorsInDepartment
       : supervisorOption
-        ? [supervisorOption]
-        : [];
+      ? [supervisorOption]
+      : [];
 
   // Department dropdown options
   const departmentOptionsU = Array.isArray(departments)
     ? departments.map((dept) => ({
-      label: dept.name,
-      value: dept.departmentId,
-    }))
+        label: dept.name,
+        value: dept.departmentId,
+      }))
     : [];
 
   // For default department selection
@@ -230,9 +230,9 @@ const Repair = () => {
     setUpdateAssignedWorker(
       item?.updateAssignedWorker
         ? {
-          value: item.updateAssignedWorker.userID,
-          label: item.updateAssignedWorker.email,
-        }
+            value: item.updateAssignedWorker.userID,
+            label: item.updateAssignedWorker.email,
+          }
         : null
     );
 
@@ -240,11 +240,10 @@ const Repair = () => {
     setAssignTimeU(item?.startTime?.slice(0, 5) || "");
     setSelectedDepartmentName(item?.departmentId || "");
     setStatusPending(item?.status);
-
   };
   console.log("update", updateAssignedWorker);
 
-  const [postRepairSchedule ] = usePostRepairScheduleMutation();
+  const [postRepairSchedule] = usePostRepairScheduleMutation();
 
   const handleAssignAndSchedule = async () => {
     if (!assignedWorker || !assignTime || !assignDate || !modalData?.repairID) {
@@ -353,10 +352,10 @@ const Repair = () => {
       return requestAcademy === userAcademy && req.accept === true;
     });
 
-    const sortedFiltered = filtered.sort((a, b) => b.repairID.localeCompare(a.repairID));
-    setData(
-      sortedFiltered
+    const sortedFiltered = filtered.sort((a, b) =>
+      b.repairID.localeCompare(a.repairID)
     );
+    setData(sortedFiltered);
   }, [repairRequest, userByEmial]);
 
   console.log("data", data);
@@ -463,34 +462,33 @@ const Repair = () => {
     refetchRepairRequest();
   };
 
-    const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
-    const sortData = (column, ascending) => {
-      const sortedData = [...data].sort((a, b) => {
-        let valA = a[column];
-        let valB = b[column];
-    
-        // Normalize: Handle undefined, null, numbers, strings consistently
-        if (valA === undefined || valA === null) valA = "";
-        if (valB === undefined || valB === null) valB = "";
-    
-        // If both are numbers, compare numerically
-        if (!isNaN(valA) && !isNaN(valB)) {
-          valA = Number(valA);
-          valB = Number(valB);
-        } else {
-          // Otherwise, compare as lowercase strings (for emails, names, etc.)
-          valA = valA.toString().toLowerCase();
-          valB = valB.toString().toLowerCase();
-        }
-    
-        if (valA < valB) return ascending ? -1 : 1;
-        if (valA > valB) return ascending ? 1 : -1;
-        return 0;
-      });
-    
-      setData(sortedData);
-    };
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      let valA = a[column];
+      let valB = b[column];
 
+      // Normalize: Handle undefined, null, numbers, strings consistently
+      if (valA === undefined || valA === null) valA = "";
+      if (valB === undefined || valB === null) valB = "";
+
+      // If both are numbers, compare numerically
+      if (!isNaN(valA) && !isNaN(valB)) {
+        valA = Number(valA);
+        valB = Number(valB);
+      } else {
+        // Otherwise, compare as lowercase strings (for emails, names, etc.)
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+      }
+
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setData(sortedData);
+  };
 
   const handleSort = (column) => {
     const newSortOrder =
@@ -604,7 +602,8 @@ const Repair = () => {
                               style={{
                                 color: "#305845",
                                 transform:
-                                  sortOrder.column === header.field && sortOrder.ascending
+                                  sortOrder.column === header.field &&
+                                  sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -636,7 +635,6 @@ const Repair = () => {
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
-
                 <tr key={index}>
                   {/* <td>
                     <input
@@ -654,6 +652,7 @@ const Repair = () => {
                       style={{
                         width: "100px",
                         height: "100px",
+                        objectFit: "cover",
                       }}
                     />
                   </td>
@@ -849,7 +848,9 @@ const Repair = () => {
                 Reschedule Form
               </h2>
               <button className="close-btn" onClick={handleCloseModal2}>
-                <IoIosCloseCircle />
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
               </button>
             </div>
             <div className="schedule-form">
@@ -921,13 +922,12 @@ const Repair = () => {
                 />
               </div>
 
-             
               {statusPending === "Pending" && (
                 <div>
-                <button className="accept-btn" onClick={handleUpdateSchedule}>
-                  Done
-                </button>
-              </div>
+                  <button className="accept-btn" onClick={handleUpdateSchedule}>
+                    Done
+                  </button>
+                </div>
               )}
             </div>
           </div>

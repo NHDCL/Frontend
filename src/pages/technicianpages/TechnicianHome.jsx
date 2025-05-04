@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import WorkOrderCard from "./TWorkOrderCard";
+import { Link } from "react-router-dom";
 import "./css/Thome.css";
 import "./css/TModalOverlay.css";
 import "./css/dropdownTechnician.css";
@@ -575,11 +576,42 @@ const TechnicianHome = () => {
     selectUserInfo,
     (userInfo) => userInfo?.user?.username || ""
   );
+  console.log();
   const [data, setData] = useState([]);
   const email = useSelector(getUserEmail);
-  const { data: technicianSchedules } =
+  const { data: userData } = useGetUserByEmailQuery(email);
+  const { data: technicianSchedules, isLoading } =
     useGetSchedulesByTechnicianEmailQuery(email);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (isLoading) {
+      Swal.fire({
+        title: "Loading work order...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+    } else {
+      Swal.close();
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    // Show "No work orders" alert when data is loaded but empty
+    if (
+      !isLoading &&
+      (!technicianSchedules || technicianSchedules.length === 0)
+    ) {
+      Swal.fire({
+        icon: "info",
+        title: "No Work Orders",
+        text: "You currently have no assigned work orders.",
+        confirmButtonColor: "#897463",
+      });
+    }
+  }, [isLoading, technicianSchedules]);
 
   useEffect(() => {
     const fetchRepairDetails = async () => {
@@ -588,8 +620,9 @@ const TechnicianHome = () => {
           try {
             const repair = await dispatch(
               maintenanceApiSlice.endpoints.getRepairById.initiate(
-                schedule?.repairID, {
-                  forceRefetch:true,
+                schedule?.repairID,
+                {
+                  forceRefetch: true,
                 }
               )
             ).unwrap();
@@ -676,10 +709,12 @@ const TechnicianHome = () => {
   return (
     <div className="work-orders-container">
       <div className="WorkOrder-UpperDiv">
-        <p className="WorkOrder-Greeting">Good morning, Tenzin</p>
+        {/* <p className="WorkOrder-Greeting">Good morning, {userData.user.name}</p> */}
         <h2 className="WorkOrder-header">Today's Work</h2>
         <MdWorkHistory className="WorkOrder-icon" />
-        <button className="WorkOrder-button">View my work</button>
+        <Link to="work-order" className="WorkOrder-button">
+          View my work
+        </Link>
       </div>
 
       <div className="WorkOrder-filter-section">
