@@ -13,7 +13,10 @@ import {
   useUploadExcelMutation,
   useRequestDisposeMutation,
 } from "../../../slices/assetApiSlice";
-import { useCreateMaintenanceMutation, useSendEmailMutation } from "../../../slices/maintenanceApiSlice";
+import {
+  useCreateMaintenanceMutation,
+  useSendEmailMutation,
+} from "../../../slices/maintenanceApiSlice";
 import {
   useGetDepartmentQuery,
   useGetUserByEmailQuery,
@@ -79,12 +82,10 @@ const Building = ({ category }) => {
     useGetDepartmentQuery();
   const { data: users } = useGetUsersQuery();
   const [assignedWorker, setAssignedWorker] = useState(null);
-  const [createMaintenance] =
-    useCreateMaintenanceMutation();
-    const [repeatFrequency, setRepeatFrequency] = useState(null);
-    const [sendEmail] = useSendEmailMutation();
-    const [isCreating, setIsCreating] = useState(false);
-
+  const [createMaintenance] = useCreateMaintenanceMutation();
+  const [repeatFrequency, setRepeatFrequency] = useState(null);
+  const [sendEmail] = useSendEmailMutation();
+  const [isCreating, setIsCreating] = useState(false);
 
   const supervisorsFromSameAcademy =
     users?.filter(
@@ -712,7 +713,7 @@ const Building = ({ category }) => {
     }));
 
   const handleCreateSchedule = async () => {
-    setIsCreating(true)
+    setIsCreating(true);
     try {
       await createMaintenance({
         timeStart: scheduleModalData.Schedule,
@@ -725,7 +726,7 @@ const Building = ({ category }) => {
         assetCode: scheduleModalData.assetCode,
         academyId: academyId,
       }).unwrap();
-      
+
       // Send email to the assigned worker
       if (assignedWorker?.label) {
         await sendEmail({
@@ -750,7 +751,7 @@ const Building = ({ category }) => {
         text: error?.data?.message || "Something went wrong. Please try again.",
       });
     }
-    setIsCreating(false)
+    setIsCreating(false);
   };
 
   return (
@@ -893,7 +894,6 @@ const Building = ({ category }) => {
                       </span>
                     </Tippy>
                   </td>
-
                   <td>{item.acquireDate}</td>
                   <td>{item.lifespan}</td>
                   <td>{floorCount}</td> {/* Number of floors */}
@@ -1492,12 +1492,21 @@ const Building = ({ category }) => {
                           .split("T")[0]
                       : ""
                   }
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    // When start date changes, update the state
+                    const newStartDate = e.target.value;
                     setScheduleModalData({
                       ...scheduleModalData,
-                      Lastworkorder: e.target.value,
-                    })
-                  }
+                      Lastworkorder: newStartDate,
+                      // If end date is before new start date, update end date to start date
+                      Nextworkorder:
+                        scheduleModalData.Nextworkorder &&
+                        new Date(scheduleModalData.Nextworkorder) <
+                          new Date(newStartDate)
+                          ? newStartDate
+                          : scheduleModalData.Nextworkorder,
+                    });
+                  }}
                 />
               </div>
               <div className="modal-content-field">
@@ -1530,6 +1539,15 @@ const Building = ({ category }) => {
                       Nextworkorder: e.target.value,
                     })
                   }
+                  // Set min attribute to the selected start date to prevent selecting dates before start date
+                  min={
+                    scheduleModalData.Lastworkorder
+                      ? new Date(scheduleModalData.Lastworkorder)
+                          .toISOString()
+                          .split("T")[0]
+                      : ""
+                  }
+                  disabled={!scheduleModalData.Lastworkorder}
                 />
               </div>
 
