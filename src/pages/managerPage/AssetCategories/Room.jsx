@@ -170,7 +170,7 @@ const RoomQR = () => {
   );
 
   const uniqueBuilding = [
-    { value: "", label: "All buildings" },
+    { value: "", label: "All Buildings" },
     ...Array.from(new Set(data.map((item) => item.title))).map((title) => ({
       value: title,
       label: title,

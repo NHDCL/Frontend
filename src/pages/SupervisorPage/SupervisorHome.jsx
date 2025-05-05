@@ -43,29 +43,21 @@ const SupervisorHome = () => {
     useState(null);
 
   const rowsPerPage = 10;
-  console.log(
-    "start.........................................................................", status
-  );
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
     selectUserInfo,
     (userInfo) => userInfo?.user?.username || ""
   );
-  console.log("selectedTechnicianId", selectedTechnicianId);
-  console.log("selectedTechnicianUpdate", selectedTechnicianUpdate);
 
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);
 
   const userID = userByEmial?.user?.userId;
-  console.log("userID", userID);
 
   const academyId = userByEmial?.user?.academyId;
-  console.log("academyId", academyId);
 
   const departmentId = userByEmial?.user?.departmentId;
-  console.log("departmentId", departmentId);
 
   const { data: users, isLoading: usersLoading } = useGetUsersQuery();
 
@@ -76,13 +68,11 @@ const SupervisorHome = () => {
       typeof user.role?.name === "string" &&
       user.role.name.toLowerCase() === "technician"
   );
-  console.log("filteredUsers:", filteredUsers);
 
   const workerOptions = filteredUsers?.map((user) => ({
     label: user.email,
     value: user.email,
   }));
-  console.log("workerOptions:", workerOptions);
 
   const updatedOption = workerOptions?.find(
     (w) => w.label === selectedTechnicianUpdate
@@ -97,9 +87,7 @@ const SupervisorHome = () => {
     skip: !userID, // skip until userID is available
   });
 
-  const repairID = userSchedules?.repairID;
-  console.log("rid", repairID);
-  console.log("userSchedule", userSchedules);
+  const repairID = userSchedules?.repai
 
   const [data, setData] = useState([]);
   const [repairs, setRepairs] = useState([]);
@@ -135,7 +123,6 @@ const SupervisorHome = () => {
     fetchRepairDetails();
   }, [userSchedules, dispatch]);
 
-  console.log("Dataaa", data);
 
   const [selectedDepartment, setSelectedDepartment] = useState(null);
 
@@ -160,7 +147,6 @@ const SupervisorHome = () => {
     }
 
     const scheduleId = matchingSchedule.scheduleID;
-    console.log("scheduleId", scheduleId);
 
     if (!selectedTechnicianId) {
       Swal.fire("Error", "Technician email is missing.", "error");
@@ -172,8 +158,6 @@ const SupervisorHome = () => {
       technicianEmail: selectedTechnicianId,
       repairID: matchingSchedule.repairID, // Use repairID from the matching schedule
     };
-
-    console.log("Updated Data:", updatedData);
 
     try {
       await updateSchedule({ scheduleId, updatedData }).unwrap();
@@ -193,8 +177,6 @@ const SupervisorHome = () => {
     }
     refetch();
   };
-
-  console.log("Technician Email:", selectedTechnicianId);
 
   const handleReschedule = async () => {
     // Assuming userSchedules is an array and repairID is available within the schedules.
@@ -254,7 +236,6 @@ const SupervisorHome = () => {
     }
     refetch();
   };
-  console.log("rescheduleModalData:", rescheduleModalData);
 
   const userIDD = userByEmial?.user?.userId;
   const [maintenanceData, setMaintenanceData] = useState([]);
@@ -383,27 +364,6 @@ const SupervisorHome = () => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
-
-  const handleSelectRow = (repairID) => {
-    setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(repairID)
-        ? prevSelectedRows.filter((item) => item !== repairID)
-        : [...prevSelectedRows, repairID]
-    );
-  };
-
-  const handleDeleteSelected = () => {
-    const updatedData = data.filter(
-      (item) => !selectedRows.includes(item.repairID)
-    );
-    setData(updatedData);
-    setSelectedRows([]);
-  };
-
-  const handleDeleteRow = (repairID) => {
-    const updatedData = data.filter((item) => item.repairID !== repairID);
-    setData(updatedData);
-  };
 
   const handleScheduleView = (item) => {
     setModalData(item);

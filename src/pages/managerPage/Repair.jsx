@@ -35,13 +35,14 @@ const Repair = () => {
   const [rescheduleModalData, setRescheduleModalData] = useState(null);
   const [selectedPriority, setSelectedPriority] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
-  const [assignedWorker, setAssignedWorker] = useState("");
+  const [assignedWorker, setAssignedWorker] = useState(null);
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
   const [updateAssignedWorker, setUpdateAssignedWorker] = useState("");
   const [assignTimeU, setAssignTimeU] = useState("");
   const [assignDateU, setAssignDateU] = useState("");
   const [statusPending, setStatusPending] = useState(null);
+  const [supervisorWorker, setSupervisorOption] = useState(null);
 
   console.log(
     "start........................................................................."
@@ -209,13 +210,6 @@ const Repair = () => {
   const initialDepartmentOption = departmentOptionsU.find(
     (opt) => opt.label === departmentName
   );
-  console.log("👉 selectedDepartmentU:", selectedDepartmentU);
-  console.log("👉 supervisorsFromSameAcademy:", supervisorsFromSameAcademy);
-  console.log("supervisorsInDepartment", supervisorsInDepartment);
-  console.log("supervisorOption", supervisorOption);
-  console.log("finalOptions", finalOptions);
-  console.log("departmentOptionsU", departmentOptionsU);
-
   // Set reporting time/date
   useEffect(() => {
     if (Array.isArray(scheduleData) && scheduleData.length > 0) {
@@ -242,7 +236,6 @@ const Repair = () => {
     setSelectedDepartmentName(item?.departmentId || "");
     setStatusPending(item?.status);
   };
-  console.log("update", updateAssignedWorker);
 
   const [postRepairSchedule] = usePostRepairScheduleMutation();
 
@@ -262,16 +255,13 @@ const Repair = () => {
 
     try {
       // 1. First assign the repair
-      const assignmentResponse = await assignRepair({
+      await assignRepair({
         repairId: modalData.repairID,
         email: assignedWorker?.label,
       });
 
-      console.log("Assign Response Message:", assignmentResponse);
-
       // 2. Then post the schedule to backend
-      const scheduleResponse = await postRepairSchedule(scheduleData);
-      console.log("Schedule Response:", scheduleResponse);
+      await postRepairSchedule(scheduleData);
 
       Swal.fire({
         icon: "success",
@@ -290,13 +280,10 @@ const Repair = () => {
         error?.data?.message || JSON.stringify(error) || "Something went wrong",
         "error"
       );
-      console.log("Full Error:", error);
     }
   };
 
   const handleUpdateSchedule = async () => {
-    console.log("Schedule Data1:", scheduleData);
-
     if (!scheduleData?.[0]?.scheduleID) {
       Swal.fire("Error", "Schedule data not found.", "error");
       return;
@@ -304,32 +291,37 @@ const Repair = () => {
 
     const scheduleId = scheduleData[0].scheduleID;
 
-    // ensure time is in HH:mm:ss format
     let formattedTime = assignTimeU;
     if (assignTimeU.length === 5) {
-      // if it's HH:mm, add seconds
       formattedTime = `${assignTimeU}:00`;
     }
 
     const updatedData = {
       startTime: formattedTime,
       reportingDate: assignDateU,
-      userID: selectedSupervisorId || supervisorOption.value,
+      userID: selectedSupervisorId || supervisorWorker?.value,
       repairID: scheduleData[0].repairID,
     };
 
-    console.log("Updated Data:", updatedData);
-
     try {
+      // ✅ Step 1: Assign the repair to new supervisor
+      await assignRepair({
+        repairId: scheduleData[0].repairID,
+        email: supervisorWorker?.label, // assuming label is email
+      });
+
+      // ✅ Step 2: Update the schedule
       await updateSchedule({ scheduleId, updatedData }).unwrap();
+
       Swal.fire({
         icon: "success",
-        title: "Schedule updated successfully!",
+        title: "Schedule updated and repair reassigned!",
         toast: true,
         position: "top-end",
         showConfirmButton: false,
         timer: 2000,
       });
+
       refetchRepairRequest();
       handleCloseModal2();
     } catch (error) {
@@ -337,7 +329,6 @@ const Repair = () => {
       console.error("Update schedule error:", error);
     }
   };
-  console.log("aw", selectedSupervisorId);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -358,8 +349,6 @@ const Repair = () => {
     );
     setData(sortedFiltered);
   }, [repairRequest, userByEmial]);
-
-  console.log("data", data);
 
   const getWorkOrderStatusClass = (status) => {
     switch (status) {
@@ -618,32 +607,11 @@ const Repair = () => {
                     )}
                   </th>
                 ))}
-                {/* <th>
-                  {selectedRows.length > 0 ? (
-                    <button
-                      className="delete-all-btn"
-                      onClick={handleDeleteSelected}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px", color: "red" }}
-                      />
-                    </button>
-                  ) : (
-                    " "
-                  )}
-                </th> */}
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  {/* <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(item.repairID)}
-                      onChange={() => handleSelectRow(item.repairID)}
-                    />
-                  </td> */}
                   <td>{index + 1}</td>
                   <td>
                     <img
@@ -882,13 +850,14 @@ const Repair = () => {
                     finalOptions.find(
                       (opt) => opt.value === selectedSupervisorId
                     ) ||
-                    supervisorOption ||
+                    supervisorWorker ||
                     null
                   }
                   options={finalOptions}
                   isClearable
                   onChange={(selectedOption) => {
                     setSelectedSupervisorId(selectedOption?.value || null);
+                    setSupervisorOption(selectedOption || null);
                     console.log(
                       "Selected Supervisor Email:",
                       selectedOption?.label || "None"

@@ -106,21 +106,29 @@ const AdminRepair = () => {
   // Filtering data based on search and priority selection and work status
   const sortedData = [...data].sort((a, b) => b.repairID - a.repairID);
   const filteredData = sortedData.filter((item) => {
-    const matchesSearch = Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
+    const searchLower = searchTerm.toLowerCase();
+  
+    const matchesSearch =
+      item.repairID?.toString().toLowerCase().includes(searchLower) ||
+      Object.values(item).some(
+        (value) =>
+          typeof value === "string" &&
+          value.toLowerCase().includes(searchLower)
+      );
+  
     const matchesPriority =
       selectedPriority === "" ||
       item.priority?.toLowerCase() === selectedPriority.toLowerCase();
+  
     const matchesWorkStatus =
       selectedWorkStatus === "" ||
       item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
+  
     const matchesLocation =
       selectedLocation === "" ||
       getAcademyName(item.academyId)?.toLowerCase() ===
         selectedLocation.toLowerCase();
-
+  
     return (
       matchesSearch && matchesPriority && matchesWorkStatus && matchesLocation
     );
@@ -303,6 +311,7 @@ const AdminRepair = () => {
                       style={{
                         width: "100px",
                         height: "100px",
+                        objectFit: "cover",
                       }}
                     />
                   </td>

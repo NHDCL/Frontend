@@ -439,7 +439,7 @@ const Repairreport = () => {
                   />
                 </th>
                 {[
-                  { label: "RRID", field: null },
+                  { label: "Sl. No.", field: null },
                   { label: "Asset Name", field: "assetName" },
                   { label: "Time", field: null },
                   { label: "Date", field: "finishedDate" },

@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import store, { persistor } from "./store";
 import { PersistGate } from "redux-persist/integration/react";
 import { SidebarProvider } from "./context/sidebarContext";
+import SessionTimeoutManager from "./pages/sessionTimeoutManager";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <SidebarProvider>
           <Router>
             <AppRoutes />
+            <SessionTimeoutManager />
           </Router>
         </SidebarProvider>
       </PersistGate>
