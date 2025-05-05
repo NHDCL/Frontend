@@ -206,7 +206,9 @@ const SAdminMReport = () => {
         item.Additional_information || "",
       ]),
     ]
-      .map((row) => row.join(","))
+      .map((row) =>
+        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+      )
       .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -360,7 +362,7 @@ const SAdminMReport = () => {
                         <span>
                           {item.Additional_information?.length > 20
                             ? item.Additional_information.substring(0, 20) +
-                              "..."
+                            "..."
                             : item.Additional_information || ""}
                         </span>
                       </Tippy>
@@ -512,7 +514,7 @@ const SAdminMReport = () => {
                   <label>Repair Images:</label>
                   <div className="TModal-profile-img">
                     {Array.isArray(modalData.imageUrl) &&
-                    modalData.imageUrl.length > 0 ? (
+                      modalData.imageUrl.length > 0 ? (
                       modalData.imageUrl.map((imgSrc, index) => (
                         <img
                           key={index}

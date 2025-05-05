@@ -128,7 +128,7 @@ const SupervisorHome = () => {
 
   const today = new Date().toISOString().split("T")[0];
 
-  const [updateSchedule] = useUpdateRepairScheduleMutation();
+  const [updateSchedule, { isLoading: updating }] = useUpdateRepairScheduleMutation();
 
   const handleSchedule = async () => {
     const repairID = modalData.repairID; // Ensure the correct way to access repairID
@@ -390,7 +390,7 @@ const SupervisorHome = () => {
     setSelectedTechnicianUpdate(item?.technicianEmail || "");
     setAssignDate(item?.reportingDate);
     setAssignTime(item?.startTime);
-    setStatus(item?.status);
+    setStatus(item?.repairInfo?.status);
 
     console.log("item",item)
   };
@@ -718,8 +718,9 @@ const SupervisorHome = () => {
                   className="accept-btn"
                   style={{ width: "80px" }}
                   onClick={handleSchedule}
-                >
-                  Done
+                  disabled={updating}
+                  >
+                    {updating ? "Saving..." : "Done"}
                 </button>
               </div>
             </div>
@@ -782,8 +783,9 @@ const SupervisorHome = () => {
                     className="accept-btn"
                     style={{ width: "80px" }}
                     onClick={handleReschedule}
+                    disabled={updating}
                   >
-                    Done
+                    {updating ? "Saving..." : "Done"}
                   </button>
                 </div>
               )}

@@ -92,7 +92,7 @@ const SupervisorWO = () => {
 
   const {
     data: userSchedules,
-    isLoading: userSchedulesLoading,
+    // isLoading: userSchedulesLoading,
     error: userSchedulesError,
     refetch,
   } = useGetPreventiveSchedulesByUserIDQuery(userID, {
@@ -162,7 +162,7 @@ const SupervisorWO = () => {
 
   const today = new Date().toISOString().split("T")[0];
 
-  const [updateSchedule] = useUpdatePreventiveMaintenanceMutation();
+  const [updateSchedule, {isLoading: userSchedulesLoading}] = useUpdatePreventiveMaintenanceMutation();
 
   const handleSchedule = async () => {
     const maintenanceID = modalData.maintenanceID; // Ensure the correct way to access repairID

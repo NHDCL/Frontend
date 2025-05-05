@@ -248,7 +248,9 @@ const AdminMReport = () => {
         item.Additional_information || "",
       ]),
     ]
-      .map((row) => row.join(","))
+      .map((row) =>
+        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+      )
       .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -354,7 +356,7 @@ const AdminMReport = () => {
                                 color: "#305845",
                                 transform:
                                   sortOrder.column === header.field &&
-                                  sortOrder.ascending
+                                    sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -437,7 +439,7 @@ const AdminMReport = () => {
                           {item.Assigned_Technician
                             ? item.Assigned_Technician.length > 20
                               ? item.Assigned_Technician.substring(0, 20) +
-                                "..."
+                              "..."
                               : item.Assigned_Technician
                             : ""}
                         </span>
@@ -453,7 +455,7 @@ const AdminMReport = () => {
                           {item.Additional_information
                             ? item.Additional_information.length > 20
                               ? item.Additional_information.substring(0, 20) +
-                                "..."
+                              "..."
                               : item.Additional_information
                             : ""}
                         </span>
@@ -607,7 +609,7 @@ const AdminMReport = () => {
                   <label>Repair Images:</label>
                   <div className="TModal-profile-img">
                     {Array.isArray(modalData.imageUrl) &&
-                    modalData.imageUrl.length > 0 ? (
+                      modalData.imageUrl.length > 0 ? (
                       modalData.imageUrl.map((imgSrc, index) => (
                         <img
                           key={index}

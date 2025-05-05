@@ -79,7 +79,7 @@ const Repair = () => {
     }
   }, [isLoading]);
 
-  const [updateSchedule] = useUpdateRepairScheduleMutation();
+  const [updateSchedule,{isLoading:updating}] = useUpdateRepairScheduleMutation();
 
   useEffect(() => {
     if (repairID) {
@@ -189,6 +189,7 @@ const Repair = () => {
   const supervisorOption = supervisorEmail
     ? { label: supervisorEmail, value: matchedSupervisor?.userId }
     : null;
+    console.log("supervisorOption",supervisorOption)
 
   const finalOptions =
     supervisorsInDepartment.length > 0
@@ -893,8 +894,8 @@ const Repair = () => {
 
               {statusPending === "Pending" && (
                 <div>
-                  <button className="accept-btn" onClick={handleUpdateSchedule}>
-                    Done
+                  <button disabled={updating} className="accept-btn" onClick={handleUpdateSchedule}>
+                  {updating ? "Saving..." : "Done"}
                   </button>
                 </div>
               )}

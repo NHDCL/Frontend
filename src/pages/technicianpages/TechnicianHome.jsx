@@ -217,9 +217,9 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   };
 
   const WorkOrder = [
-    { value: "pending", label: "Pending" },
+    { value: "Pending", label: "Pending" },
     { value: "In progress", label: "In progress" },
-    { value: "completed", label: "Completed" },
+    { value: "Completed", label: "Completed" },
   ];
   const today = new Date().toISOString().split("T")[0];
 
@@ -581,9 +581,13 @@ const TechnicianHome = () => {
   const [data, setData] = useState([]);
   const email = useSelector(getUserEmail);
   const { data: userData } = useGetUserByEmailQuery(email);
+
   const { data: technicianSchedules, isLoading } =
     useGetSchedulesByTechnicianEmailQuery(email);
   const dispatch = useDispatch();
+
+  const name = userData?.user?.name;
+  console.log(name);
 
   useEffect(() => {
     if (isLoading) {
@@ -707,10 +711,20 @@ const TechnicianHome = () => {
         })
       : [];
 
+      const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good morning";
+        if (hour < 18) return "Good afternoon";
+        return "Good evening";
+
+      };
+      
+      const greeting = getGreeting()
+
   return (
     <div className="work-orders-container">
       <div className="WorkOrder-UpperDiv">
-        {/* <p className="WorkOrder-Greeting">Good morning, {userData.user.name}</p> */}
+        <p className="WorkOrder-Greeting">{greeting}, {name}</p>
         <h2 className="WorkOrder-header">Today's Work</h2>
         <MdWorkHistory className="WorkOrder-icon" />
         <Link to="work-order" className="WorkOrder-button">
