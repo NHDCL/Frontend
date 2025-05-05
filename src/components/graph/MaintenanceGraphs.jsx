@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -21,18 +21,8 @@ import { useGetAcademyQuery } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 
 const months = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
 const MaintenanceGraphs = () => {
@@ -41,18 +31,28 @@ const MaintenanceGraphs = () => {
 
   const {
     data: maintenanceData,
-    isLoading,
-    error,
+    isLoading: loadingMaintenance,
+    error: errorMaintenance,
   } = useGetAllCombinedMaintenanceCostQuery();
 
-  const { data: academies } = useGetAcademyQuery();
-  const { data: responseTimeData } = useGetAverageResponseTimeQuery();
-  console.log(responseTimeData);
+  const {
+    data: academies,
+    isLoading: loadingAcademies,
+    error: errorAcademies,
+  } = useGetAcademyQuery();
 
-  // Simple SweetAlert loading effect
+  const {
+    data: responseTimeData,
+    isLoading: loadingResponse,
+    error: errorResponse,
+  } = useGetAverageResponseTimeQuery();
+
+  const isLoadingAll =
+    loadingAcademies || loadingMaintenance || loadingResponse;
+  const hasError = errorAcademies || errorMaintenance || errorResponse;
+
   useEffect(() => {
-    // Show loading alert when data is loading
-    if (isLoading) {
+    if (isLoadingAll) {
       Swal.fire({
         title: "Loading graphs...",
         allowOutsideClick: false,
@@ -60,56 +60,80 @@ const MaintenanceGraphs = () => {
           Swal.showLoading();
         },
       });
-    }
-    // Close the loading alert when data is loaded
-    else if (Swal.isVisible()) {
+    } else if (Swal.isVisible()) {
       Swal.close();
     }
 
-    // Show error alert if there's an error
-    if (error) {
+    if (hasError) {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Failed to load data",
+        text: "Failed to load data from server.",
       });
     }
 
-    // Cleanup function
     return () => {
-      if (Swal.isVisible()) {
-        Swal.close();
-      }
+      if (Swal.isVisible()) Swal.close();
     };
-  }, [isLoading, error]);
+  }, [isLoadingAll, hasError]);
 
-  // Return empty div while loading instead of the text "Loading..."
-  if (isLoading || !academies || !maintenanceData) {
+  const validAcademyIds = useMemo(() => {
+    return new Set((academies || []).map((a) => a.academyId));
+  }, [academies]);
+
+  const filteredMaintenanceData = useMemo(() => {
+    if (!maintenanceData) return [];
+    return maintenanceData.filter(
+      (item) => item.academyId && validAcademyIds.has(item.academyId)
+    );
+  }, [maintenanceData, validAcademyIds]);
+
+  const academyIdToName = useMemo(() => {
+    return (academies || []).reduce((acc, curr) => {
+      acc[curr.academyId] = curr.name;
+      return acc;
+    }, {});
+  }, [academies]);
+
+  const academyData = useMemo(() => {
+    return filteredMaintenanceData.reduce((acc, curr) => {
+      const { academyId, year, month, totalCost } = curr;
+      const academyName = academyIdToName[academyId];
+      if (!acc[academyId]) acc[academyId] = { name: academyName, years: {} };
+      if (!acc[academyId].years[year])
+        acc[academyId].years[year] = Array(12).fill(0);
+      acc[academyId].years[year][month - 1] += totalCost;
+      return acc;
+    }, {});
+  }, [filteredMaintenanceData, academyIdToName]);
+
+  // ✅ Always called - safe hook usage
+  useEffect(() => {
+    if (
+      academies &&
+      academies.length > 0 &&
+      !selectedAcademy
+    ) {
+      setSelectedAcademy(academies[0].academyId);
+    }
+  }, [academies, selectedAcademy]);
+
+  useEffect(() => {
+    if (
+      selectedAcademy &&
+      academyData[selectedAcademy] &&
+      !selectedYear
+    ) {
+      const years = Object.keys(academyData[selectedAcademy].years || {});
+      if (years.length > 0) {
+        setSelectedYear(years[0]);
+      }
+    }
+  }, [selectedAcademy, academyData, selectedYear]);
+
+  if (isLoadingAll || !academies || !maintenanceData || !responseTimeData) {
     return <div></div>;
   }
-
-  const validAcademyIds = new Set(academies.map((a) => a.academyId));
-
-  const filteredMaintenanceData = maintenanceData.filter(
-    (item) => item.academyId && validAcademyIds.has(item.academyId)
-  );
-
-  const academyIdToName = academies.reduce((acc, curr) => {
-    acc[curr.academyId] = curr.name;
-    return acc;
-  }, {});
-
-  const academyData = filteredMaintenanceData.reduce((acc, curr) => {
-    const { academyId, year, month, totalCost } = curr;
-    const academyName = academyIdToName[academyId];
-
-    if (!acc[academyId]) acc[academyId] = { name: academyName, years: {} };
-    if (!acc[academyId].years[year])
-      acc[academyId].years[year] = Array(12).fill(0);
-
-    acc[academyId].years[year][month - 1] += totalCost;
-    return acc;
-  }, {});
 
   const selectedAcademyData = academyData[selectedAcademy];
   const selectedYearCostData =
