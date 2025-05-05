@@ -147,8 +147,8 @@
 /* workstaus for technician */
 .customm-select-workstatus__control {
   width: 100% !important;
-  min-width: 350px !important;
-  max-width: 350px !important;
+  min-width: 20px !important;
+  max-width: 750px !important;
   border: 1px solid #897463 !important;
   border-radius: 10px !important;
   padding: 2px;
@@ -170,8 +170,8 @@
   border-radius: 4px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   width: 100%;
-  min-width: 350px !important;
-  max-width: 350px !important;
+  min-width: 20px !important;
+  max-width: 650px !important;
 }
 
 /* Change dropdown option color */
