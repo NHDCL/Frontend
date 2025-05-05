@@ -122,21 +122,30 @@ const AdminMaintenance = () => {
 
   // Filtering data based on search and priority selection and work status
   const sortedData = [...data].sort((a, b) => b.assetCode - a.assetCode);
-  const filteredData = sortedData.filter((item) => {
-    const matchesSearch = Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+
+const filteredData = sortedData.filter((item) => {
+  const searchLower = searchTerm.toLowerCase();
+
+  const matchesSearch =
+    item.maintenanceID?.toString().toLowerCase().includes(searchLower) ||
+    Object.values(item).some(
+      (value) =>
+        value != null &&
+        value.toString().toLowerCase().includes(searchLower)
     );
-    const matchesWorkStatus =
-      selectedWorkStatus === "" ||
-      item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
 
-    const matchesLocation =
-      selectedLocation === "" ||
-      getAcademyName(item.academyID)?.toLowerCase() ===
-        selectedLocation.toLowerCase();
+  const matchesWorkStatus =
+    selectedWorkStatus === "" ||
+    item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
 
-    return matchesSearch && matchesWorkStatus && matchesLocation;
-  });
+  const matchesLocation =
+    selectedLocation === "" ||
+    getAcademyName(item.academyID)?.toLowerCase() ===
+      selectedLocation.toLowerCase();
+
+  return matchesSearch && matchesWorkStatus && matchesLocation;
+});
+
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
