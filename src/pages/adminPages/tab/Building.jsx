@@ -92,10 +92,6 @@ const Building = ({ category }) => {
     currentPage * rowsPerPage
   );
 
-  const handleDeleteSelected = () => {
-    setData(assets.filter((item) => !selectedRows.includes(item.AID)));
-    setSelectedRows([]);
-  };
   const handleView = (item) => {
     setModalData(item); // This will set the selected asset data for the modal
   };
@@ -117,7 +113,7 @@ const Building = ({ category }) => {
   };
   // Extract unique work statuses from data
   const uniqueStatuses = [
-    { value: "", label: "All Work status" },
+    { value: "", label: "All Work Status" },
     ...Array.from(new Set(data.map((item) => item.status))).map((status) => ({
       value: status,
       label: status,
@@ -154,7 +150,7 @@ const Building = ({ category }) => {
   };
 
   const uniqueBuilding = [
-    { value: "", label: "All buildings" },
+    { value: "", label: "All Buildings" },
     ...Array.from(new Set(building.map((item) => item.title))).map((title) => ({
       value: title,
       label: title,
@@ -334,9 +330,7 @@ const Building = ({ category }) => {
 
   const handleSort = (column) => {
     const newSortOrder =
-      column === sortOrder.column
-        ? !sortOrder.ascending
-        : true;
+      column === sortOrder.column ? !sortOrder.ascending : true;
 
     setSortOrder({
       column,
@@ -345,7 +339,6 @@ const Building = ({ category }) => {
 
     sortData(column, newSortOrder);
   };
-
 
   const sortDatas = (column, ascending) => {
     const sortedData = [...Other].sort((a, b) => {
@@ -376,9 +369,7 @@ const Building = ({ category }) => {
 
   const handleSorts = (column) => {
     const newSortOrder =
-      column === sortOrder.column
-        ? !sortOrder.ascending
-        : true;
+      column === sortOrder.column ? !sortOrder.ascending : true;
 
     setSortOrder({
       column,
@@ -418,49 +409,59 @@ const Building = ({ category }) => {
         </div>
       </div>
       {/* Dropdowns for filtering */}
-      <div className="Building-sort">
-        <Select
-          classNamePrefix="custom-select-workstatus"
-          className="workstatus-dropdown"
-          options={uniqueBuilding}
-          value={uniqueBuilding.find(
-            (option) => option.value === selectedBuilding
-          )}
-          onChange={(selectedOption) => {
-            const value = selectedOption ? selectedOption.value : "";
-            setSelectedBuilding(value);
-            setSelectedFloor("");
-            setSelectedRoom(""); // ✅ Add this
-          }}
-          isClearable
-        />
-        {selectedBuilding && (
+      <div
+        className="Building-sort"
+      >
+        <div style={{ marginRight: "5px" }}>
           <Select
             classNamePrefix="custom-select-workstatus"
             className="workstatus-dropdown"
-            options={uniqueFloors}
-            value={uniqueFloors.find(
-              (option) => option.value === selectedFloor
+            options={uniqueBuilding}
+            value={uniqueBuilding.find(
+              (option) => option.value === selectedBuilding
             )}
             onChange={(selectedOption) => {
               const value = selectedOption ? selectedOption.value : "";
-              setSelectedFloor(value);
-              setSelectedRoom(""); // ✅ Add this
+              setSelectedBuilding(value);
+              setSelectedFloor("");
+              setSelectedRoom("");
             }}
             isClearable
           />
+        </div>
+
+        {selectedBuilding && (
+          <div style={{ marginRight: "5px" }}>
+            <Select
+              classNamePrefix="custom-select-workstatus"
+              className="workstatus-dropdown"
+              options={uniqueFloors}
+              value={uniqueFloors.find(
+                (option) => option.value === selectedFloor
+              )}
+              onChange={(selectedOption) => {
+                const value = selectedOption ? selectedOption.value : "";
+                setSelectedFloor(value);
+                setSelectedRoom("");
+              }}
+              isClearable
+            />
+          </div>
         )}
+
         {selectedFloor && (
-          <Select
-            classNamePrefix="custom-select-workstatus"
-            className="workstatus-dropdown"
-            options={uniqueRoom}
-            value={uniqueRoom.find((option) => option.value === selectedRoom)}
-            onChange={(selectedOption) =>
-              setSelectedRoom(selectedOption ? selectedOption.value : "")
-            }
-            isClearable
-          />
+          <div >
+            <Select
+              classNamePrefix="custom-select-workstatus"
+              className="workstatus-dropdown"
+              options={uniqueRoom}
+              value={uniqueRoom.find((option) => option.value === selectedRoom)}
+              onChange={(selectedOption) =>
+                setSelectedRoom(selectedOption ? selectedOption.value : "")
+              }
+              isClearable
+            />
+          </div>
         )}
       </div>
 
@@ -480,13 +481,13 @@ const Building = ({ category }) => {
                     />
                   </th>
                   {[
-                    { label: "Sl. No.", field: null },  // for index or row number
+                    { label: "Sl. No.", field: null }, // for index or row number
                     { label: "Asset Code", field: "assetCode" },
                     { label: "Title", field: "title" },
                     { label: "Acquire Date", field: "acquireDate" },
                     { label: "Useful Life(year)", field: null },
                     { label: "Area", field: "assetArea" },
-                    { label: "Status", field: "status" }
+                    { label: "Status", field: "status" },
                   ].map((header, index) => (
                     <th key={index}>
                       {header.field ? (
@@ -502,7 +503,8 @@ const Building = ({ category }) => {
                                 style={{
                                   color: "#305845",
                                   transform:
-                                    sortOrder.column === header.field && sortOrder.ascending
+                                    sortOrder.column === header.field &&
+                                    sortOrder.ascending
                                       ? "rotate(0deg)"
                                       : "rotate(180deg)",
                                   transition: "transform 0.3s ease",
@@ -633,7 +635,7 @@ const Building = ({ category }) => {
               <thead className="table-header">
                 <tr>
                   {[
-                    { label: "Sl. No.", field: null },  // for index or row number
+                    { label: "Sl. No.", field: null }, // for index or row number
                     { label: "Asset Code", field: "assetCode" },
                     { label: "Title", field: "title" },
                     { label: "Acquire Date", field: "acquireDate" },
@@ -641,7 +643,7 @@ const Building = ({ category }) => {
                     { label: "Floors", field: null },
                     { label: "Plint_area(sq.,)", field: null },
                     { label: "Depreciated Value (%)", field: null },
-                    { label: "Status", field: "status" }
+                    { label: "Status", field: "status" },
                   ].map((header, index) => (
                     <th key={index}>
                       {header.field ? (
@@ -657,7 +659,8 @@ const Building = ({ category }) => {
                                 style={{
                                   color: "#305845",
                                   transform:
-                                    sortOrder.column === header.field && sortOrder.ascending
+                                    sortOrder.column === header.field &&
+                                    sortOrder.ascending
                                       ? "rotate(0deg)"
                                       : "rotate(180deg)",
                                   transition: "transform 0.3s ease",
@@ -881,9 +884,9 @@ const Building = ({ category }) => {
                 {/* Align Download Button with Schedule Maintenance */}
                 <div className="align-buttons">
                   {modalData.attributes &&
-                    modalData.attributes.some((attr) =>
-                      attr.name.startsWith("image")
-                    ) ? (
+                  modalData.attributes.some((attr) =>
+                    attr.name.startsWith("image")
+                  ) ? (
                     <button
                       type="button"
                       className="download-all-btn"

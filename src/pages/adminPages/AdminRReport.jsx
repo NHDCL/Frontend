@@ -319,7 +319,7 @@ const AdminRReport = () => {
                   />
                 </th>
                 {[
-                  { label: "Report ID", field: null },
+                  { label: "Sl. No.", field: null },
                   { label: "Start Time", field: "startTime" },
                   { label: "End Time", field: "endTime" },
                   { label: "Date", field: "Date" },
@@ -389,7 +389,7 @@ const AdminRReport = () => {
                         onChange={() => handleSelectRow(item.rid)}
                       />
                     </td>
-                    <td>{item.rid}</td>
+                    <td>{index+1}</td>
                     <td>{item.startTime}</td>
                     <td>{item.endTime}</td>
                     <td>{item.Date}</td>

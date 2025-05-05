@@ -29,6 +29,8 @@ import { createSelector } from "reselect";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import Tippy from "@tippyjs/react";
+import { FaDownload } from "react-icons/fa";
+import { jsPDF } from "jspdf";
 
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
@@ -46,6 +48,7 @@ const Building = ({ category }) => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedFloor, setSelectedFloor] = useState("");
+   const [selectedRoom, setSelectedRoom] = useState("");
   const [modalData, setModalData] = useState(null);
   const [editModalData, setEditModalData] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -87,6 +90,11 @@ const Building = ({ category }) => {
   const [repeatFrequency, setRepeatFrequency] = useState(null);
   const [sendEmail] = useSendEmailMutation();
   const [isCreating, setIsCreating] = useState(false);
+    const [building, setBuilding] = useState([]);
+    const [Other, setOther] = useState([]);
+    const qrSize = 40;
+    const itemsPerPage = 10;
+    const [modalData2, setModalData2] = useState(null);
 
   const supervisorsFromSameAcademy =
     users?.filter(
@@ -123,6 +131,43 @@ const Building = ({ category }) => {
       setCategoryId(filteredCategories[0].id);
     }
   }, [assets]);
+
+   useEffect(() => {
+      if (assets) {
+        const filteredAssets = assets.filter(
+          (asset) =>
+            asset.categoryDetails?.name === "Building" &&
+            asset.status === "In Usage"
+        );
+        setBuilding(filteredAssets);
+      }
+    }, [assets]);
+  
+    useEffect(() => {
+      if (assets) {
+        const filteredAssets = assets.filter((asset) => {
+          const area = asset.assetArea || "";
+          const normalize = (str) => str?.toLowerCase().trim();
+  
+          const matchesBuilding = selectedBuilding
+            ? normalize(area).includes(normalize(selectedBuilding))
+            : true;
+  
+          const matchesFloor = selectedFloor
+            ? normalize(area).includes(normalize(selectedFloor))
+            : true;
+  
+          const matchesRoom = selectedRoom
+            ? normalize(area).includes(normalize(selectedRoom))
+            : true;
+  
+          return matchesBuilding && matchesFloor && matchesRoom;
+        });
+  
+        setOther(filteredAssets);
+      }
+    }, [assets, selectedBuilding, selectedFloor, selectedRoom]);
+  
 
   const addRoom = () => {
     if (floorInput.trim() && roomInput.trim()) {
@@ -246,12 +291,7 @@ const Building = ({ category }) => {
     const matchesStatus =
       selectedStatus === "" || item.status === selectedStatus;
 
-    const matchesBuilding =
-      selectedBuilding === "" || item.title === selectedBuilding;
-
-    const matchesFloor = selectedFloor === "" || item.Floor === selectedFloor;
-
-    return matchesSearch && matchesStatus && matchesBuilding && matchesFloor;
+    return matchesSearch && matchesStatus;
   });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -285,7 +325,7 @@ const Building = ({ category }) => {
   };
   // Extract unique work statuses from data
   const uniqueStatuses = [
-    { value: "", label: "All Work status" },
+    { value: "", label: "All Work Status" },
     ...Array.from(new Set(data.map((item) => item.status))).map((status) => ({
       value: status,
       label: status,
@@ -405,29 +445,6 @@ const Building = ({ category }) => {
     }
   };
 
-  const uniqueBuilding = [
-    { value: "", label: "All buildings" },
-    ...Array.from(new Set(data.map((item) => item.Title))).map((Title) => ({
-      value: Title,
-      label: Title,
-    })),
-  ];
-
-  const uniqueFloors = [
-    { value: "", label: "All Floors" },
-    ...Array.from(
-      new Set(
-        data
-          .filter(
-            (item) => selectedBuilding === "" || item.Title === selectedBuilding
-          )
-          .map((item) => item.Floor)
-      )
-    ).map((floor) => ({
-      value: floor,
-      label: `Floor ${floor}`,
-    })),
-  ];
   const handleAddBuilding = () => {
     setShowAddModal(true);
   };
@@ -521,13 +538,6 @@ const Building = ({ category }) => {
       });
     }
   };
-
-  // Sample workers list
-  const workersList = [
-    { value: "Worker A", label: "Worker A" },
-    { value: "Worker B", label: "Worker B" },
-    { value: "Worker C", label: "Worker C" },
-  ];
 
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
@@ -795,6 +805,196 @@ const Building = ({ category }) => {
     sortData(column, newSortOrder);
   };
 
+  const uniqueBuilding = [
+      { value: "", label: "All Buildings" },
+      ...Array.from(new Set(building.map((item) => item.title))).map((title) => ({
+        value: title,
+        label: title,
+      })),
+    ];
+  
+    const uniqueFloors = [
+      { value: "", label: "All Floors" },
+      ...Array.from(
+        new Set(
+          building
+            .filter(
+              (item) => selectedBuilding === "" || item.title === selectedBuilding
+            )
+            .flatMap((item) => {
+              const floorRoomAttr = item.attributes.find(
+                (attr) => attr.name === "Floor and rooms"
+              );
+              const floorRoomObj = floorRoomAttr
+                ? JSON.parse(floorRoomAttr.value)
+                : {};
+              return Object.keys(floorRoomObj);
+            })
+        )
+      ).map((floor) => ({
+        value: floor,
+        label: floor,
+      })),
+    ];
+  
+    const uniqueRoom = [
+      { value: "", label: "All Rooms" },
+      ...Array.from(
+        new Set(
+          building
+            .filter(
+              (item) => selectedBuilding === "" || item.title === selectedBuilding
+            )
+            .flatMap((item) => {
+              const floorRoomAttr = item.attributes.find(
+                (attr) => attr.name === "Floor and rooms"
+              );
+              const floorRoomObj = floorRoomAttr
+                ? JSON.parse(floorRoomAttr.value)
+                : {};
+              return Object.entries(floorRoomObj)
+                .filter(
+                  ([floor]) => selectedFloor === "" || floor === selectedFloor
+                )
+                .flatMap(([, rooms]) => rooms);
+            })
+        )
+      ).map((room) => ({
+        value: room,
+        label: `Room ${room}`,
+      })),
+    ];
+  
+    const handleSelectAllRows = () => {
+      if (selectedRows.length === Other.length) {
+        setSelectedRows([]); // Deselect all if all are selected
+      } else {
+        setSelectedRows(Other.map((item) => item.assetCode)); // Select all
+      }
+    };
+  
+    const handleSelectRow = (assetCode) => {
+      setSelectedRows((prev) =>
+        prev.includes(assetCode)
+          ? prev.filter((item) => item !== assetCode)
+          : [...prev, assetCode]
+      );
+    };
+  
+    const getQrImageUrl = (attributes) => {
+      const qrAttr = attributes?.find((attr) => attr.name === "QR Code");
+      return qrAttr?.value || "";
+    };
+  
+    const loadImageAsDataURL = async (url) => {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    };
+  
+    const handleDownloadPDF = async () => {
+      if (selectedRows.length === 0) {
+        alert("Please select at least one asset.");
+        return;
+      }
+  
+      const doc = new jsPDF();
+      let pageY = 10;
+      let pageX = 20;
+      let rowCount = 0;
+  
+      // Loop over selected rows
+      for (const assetID of selectedRows) {
+        const rowData = Other.find((item) => item.assetCode === assetID);
+        if (!rowData) continue;
+  
+        const qrUrl = getQrImageUrl(rowData.attributes);
+        if (!qrUrl) continue;
+  
+        try {
+          const qrDataUrl = await loadImageAsDataURL(qrUrl);
+          doc.addImage(qrDataUrl, "PNG", pageX, pageY, qrSize, qrSize);
+  
+          doc.setFontSize(8);
+          pageY += qrSize + 4;
+          doc.text(`Asset Code: ${rowData.assetCode}`, pageX, pageY);
+          pageY += 6;
+          doc.text(`Title: ${rowData.title}`, pageX, pageY);
+          pageY += 6;
+          doc.text(`Category: ${rowData.categoryDetails?.name}`, pageX, pageY);
+          pageY += 10;
+  
+          rowCount++;
+  
+          if (rowCount % 3 === 0) {
+            pageX += qrSize + 30;
+            pageY = 10;
+          }
+  
+          if (rowCount % rowsPerPage === 0) {
+            doc.addPage();
+            pageY = 10;
+            pageX = 20;
+          }
+        } catch (err) {
+          console.error("Failed to load QR image:", err);
+        }
+      }
+  
+      doc.save("Assets_with_QR_Codes.pdf");
+    };
+  
+    const handleView2 = (item) => {
+      setModalData2(item); // This will set the selected asset data for the modal
+    };
+  
+    const handleCloseModal2 = () => {
+      setModalData2(null);
+    };
+
+    const sortDatas = (column, ascending) => {
+      const sortedData = [...Other].sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+  
+        // Normalize: Handle undefined, null, numbers, strings consistently
+        if (valA === undefined || valA === null) valA = "";
+        if (valB === undefined || valB === null) valB = "";
+  
+        // If both are numbers, compare numerically
+        if (!isNaN(valA) && !isNaN(valB)) {
+          valA = Number(valA);
+          valB = Number(valB);
+        } else {
+          // Otherwise, compare as lowercase strings (for emails, names, etc.)
+          valA = valA.toString().toLowerCase();
+          valB = valB.toString().toLowerCase();
+        }
+  
+        if (valA < valB) return ascending ? -1 : 1;
+        if (valA > valB) return ascending ? 1 : -1;
+        return 0;
+      });
+  
+      setOther(sortedData);
+    };
+  
+    const handleSorts = (column) => {
+      const newSortOrder =
+        column === sortOrder.column ? !sortOrder.ascending : true;
+  
+      setSortOrder({
+        column,
+        ascending: newSortOrder,
+      });
+  
+      sortDatas(column, newSortOrder);
+    };
+
   return (
     <div className="managerDashboard">
       <div className="search-sort-container">
@@ -838,173 +1038,359 @@ const Building = ({ category }) => {
           </div>
         </div>
       </div>
-      {/* <div className="Building-sort">
-        <Select
-          classNamePrefix="custom-select-workstatus"
-          className="workstatus-dropdown"
-          options={uniqueBuilding}
-          value={uniqueBuilding.find(
-            (option) => option.value === selectedBuilding
-          )}
-          onChange={(selectedOption) => {
-            setSelectedBuilding(selectedOption ? selectedOption.value : "");
-            setSelectedFloor("");
-          }}
-          isClearable
-        />
-        {selectedBuilding && (
-          <Select
-            classNamePrefix="custom-select-workstatus"
-            className="workstatus-dropdown"
-            options={uniqueFloors}
-            value={uniqueFloors.find(
-              (option) => option.value === selectedFloor
-            )}
-            onChange={(selectedOption) => {
-              setSelectedFloor(selectedOption ? selectedOption.value : "");
-            }}
-            isClearable
-          />
-        )}
-      </div> */}
+      {/* Dropdowns for filtering */}
+            <div
+              className="Building-sort"
+            >
+              <div style={{ marginRight: "5px" }}>
+                <Select
+                  classNamePrefix="custom-select-workstatus"
+                  className="workstatus-dropdown"
+                  options={uniqueBuilding}
+                  value={uniqueBuilding.find(
+                    (option) => option.value === selectedBuilding
+                  )}
+                  onChange={(selectedOption) => {
+                    const value = selectedOption ? selectedOption.value : "";
+                    setSelectedBuilding(value);
+                    setSelectedFloor("");
+                    setSelectedRoom("");
+                  }}
+                  isClearable
+                />
+              </div>
+      
+              {selectedBuilding && (
+                <div style={{ marginRight: "5px" }}>
+                  <Select
+                    classNamePrefix="custom-select-workstatus"
+                    className="workstatus-dropdown"
+                    options={uniqueFloors}
+                    value={uniqueFloors.find(
+                      (option) => option.value === selectedFloor
+                    )}
+                    onChange={(selectedOption) => {
+                      const value = selectedOption ? selectedOption.value : "";
+                      setSelectedFloor(value);
+                      setSelectedRoom("");
+                    }}
+                    isClearable
+                  />
+                </div>
+              )}
+      
+              {selectedFloor && (
+                <div >
+                  <Select
+                    classNamePrefix="custom-select-workstatus"
+                    className="workstatus-dropdown"
+                    options={uniqueRoom}
+                    value={uniqueRoom.find((option) => option.value === selectedRoom)}
+                    onChange={(selectedOption) =>
+                      setSelectedRoom(selectedOption ? selectedOption.value : "")
+                    }
+                    isClearable
+                  />
+                </div>
+              )}
+            </div>
+      
 
       {/* Table */}
       <div className="table-container">
-        <table className="RequestTable">
-          <thead className="table-header">
-            <tr>
-              {[
-                { label: "Sl. No.", field: null }, // for index or row number
-                { label: "Asset Code", field: "assetCode" },
-                { label: "Title", field: "title" },
-                { label: "Acquire Date", field: "acquireDate" },
-                { label: "Useful Life(year)", field: null },
-                { label: "Floors", field: null },
-                { label: "Plint_area(sq.,)", field: null },
-                { label: "Depreciated Value (%)", field: null },
-                { label: "Status", field: "status" },
-              ].map((header, index) => (
-                <th key={index}>
-                  {header.field ? (
-                    <div className="header-title">
-                      {header.label}
-                      <div className="sort-icons">
-                        <button
-                          className="sort-btn"
-                          onClick={() => handleSort(header.field)}
-                          title={`Sort by ${header.label}`}
-                        >
-                          <TiArrowSortedUp
-                            style={{
-                              color: "#305845",
-                              transform:
-                                sortOrder.column === header.field &&
-                                sortOrder.ascending
-                                  ? "rotate(0deg)"
-                                  : "rotate(180deg)",
-                              transition: "transform 0.3s ease",
-                            }}
-                          />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    header.label // Non-sortable label like "Action"
-                  )}
-                </th>
-              ))}
-              <th>
-                {selectedRows.length > 0 && (
-                  <button
-                    className="delete-all-btn"
-                    onClick={handleDeleteSelected}
-                  >
-                    <RiDeleteBin6Line
-                      style={{ width: "20px", height: "20px", color: "red" }}
+        {selectedBuilding || selectedFloor || selectedRoom ? (
+          // 🔁 Second Table when a dropdown value is selected
+          <div>
+            <table className="RequestTable">
+              <thead className="table-header">
+                <tr>
+                  <th>
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.length === Other.length}
+                      onChange={handleSelectAllRows}
                     />
-                  </button>
-                )}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayedData.map((item, index) => {
-              // Extract values from `attributes`
-              const plintAreaAttr = item.attributes.find(
-                (attr) => attr.name === "Plint_area"
-              );
-              // const depreciatedValueAttr = item.attributes.find(
-              //   (attr) => attr.name === "Depreciated_Value"
-              // );
-              const floorAttr = item.attributes.find(
-                (attr) => attr.name === "Floor and rooms"
-              );
-
-              // Get values or fallback to 'N/A'
-              const plintArea = plintAreaAttr ? plintAreaAttr.value : "N/A";
-              // const depreciatedValue = depreciatedValueAttr
-              //   ? depreciatedValueAttr.value
-              //   : "N/A";
-              const floorCount = floorAttr
-                ? Object.keys(JSON.parse(floorAttr.value)).length
-                : "N/A";
-
-              return (
-                <tr key={index}>
-                  <td>{index + 1}</td>
-                  <td>{item.assetCode}</td>
-                  <td className="description">
-                    <Tippy content={item.title || ""} placement="top">
-                      <span>
-                        {item.title?.length > 20
-                          ? item.title.substring(0, 20) + "..."
-                          : item.title || ""}
-                      </span>
-                    </Tippy>
-                  </td>
-                  <td>{item.acquireDate}</td>
-                  <td>{item.lifespan}</td>
-                  <td>{floorCount}</td> {/* Number of floors */}
-                  <td>{plintArea}</td> {/* Plint area */}
-                  <td>{item.categoryDetails?.depreciatedValue}</td>{" "}
-                  {/* Depreciated value */}
-                  <td>
-                    <div className={getStatusClass(item.status)}>
-                      {item.status}
-                    </div>
-                  </td>
-                  <td className="actions">
-                    <button
-                      className="view-btn"
-                      onClick={() => handleView(item)}
-                    >
-                      View
-                    </button>
-                  </td>
+                  </th>
+                  {[
+                    { label: "Sl. No.", field: null }, // for index or row number
+                    { label: "Asset Code", field: "assetCode" },
+                    { label: "Title", field: "title" },
+                    { label: "Acquire Date", field: "acquireDate" },
+                    { label: "Useful Life(year)", field: null },
+                    { label: "Area", field: "assetArea" },
+                    { label: "Status", field: "status" },
+                  ].map((header, index) => (
+                    <th key={index}>
+                      {header.field ? (
+                        <div className="header-title">
+                          {header.label}
+                          <div className="sort-icons">
+                            <button
+                              className="sort-btn"
+                              onClick={() => handleSorts(header.field)}
+                              title={`Sort by ${header.label}`}
+                            >
+                              <TiArrowSortedUp
+                                style={{
+                                  color: "#305845",
+                                  transform:
+                                    sortOrder.column === header.field &&
+                                    sortOrder.ascending
+                                      ? "rotate(0deg)"
+                                      : "rotate(180deg)",
+                                  transition: "transform 0.3s ease",
+                                }}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        header.label // Non-sortable label like "Action"
+                      )}
+                    </th>
+                  ))}
+                  <th>
+                    {selectedRows.length > 0 && (
+                      <button
+                        className="delete-all-btn"
+                        style={{ paddingLeft: "98px" }}
+                        onClick={handleDownloadPDF}
+                      >
+                        <FaDownload
+                          style={{
+                            width: "20px",
+                            height: "20px",
+                            color: "green",
+                          }}
+                        />
+                      </button>
+                    )}
+                  </th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      {/* Pagination */}
-      <div className="pagination">
-        <span>{filteredData.length} Results</span>
-        <div>
-          {[...Array(totalPages).keys()].slice(0, 5).map((num) => (
-            <button
-              key={num}
-              className={currentPage === num + 1 ? "active" : ""}
-              onClick={() => setCurrentPage(num + 1)}
-            >
-              {num + 1}
-            </button>
-          ))}
-          <span>...</span>
-          <button onClick={() => setCurrentPage(totalPages)}>
-            {totalPages}
-          </button>
-        </div>
+              </thead>
+              <tbody>
+                {Other.map((item, index) => {
+                  const isSelected = selectedRows.includes(item.assetCode);
+                  return (
+                    <tr key={item.assetCode}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleSelectRow(item.assetCode)}
+                        />
+                      </td>
+                      <td>{index + 1}</td>
+                      <td>{item.assetCode}</td>
+                      <td className="description">
+                        <Tippy content={item.title || ""} placement="top">
+                          <span>
+                            {item.title?.length > 20
+                              ? item.title.substring(0, 20) + "..."
+                              : item.title || ""}
+                          </span>
+                        </Tippy>
+                      </td>
+                      <td>{item.acquireDate}</td>
+                      <td>{item.lifespan}</td>
+                      <td className="description">
+                        <Tippy content={item.assetArea || ""} placement="top">
+                          <span>
+                            {item.assetArea?.length > 20
+                              ? item.assetArea.substring(0, 20) + "..."
+                              : item.assetArea || ""}
+                          </span>
+                        </Tippy>
+                      </td>
+                      <td>
+                        <div className={getStatusClass(item.status)}>
+                          {item.status}
+                        </div>
+                      </td>
+                      <td
+                        className="actions"
+                        style={{
+                          display: "flex",
+                          gap: "0.5rem",
+                          maxWidth: "150px",
+                        }}
+                      >
+                        <button
+                          className="view-btn"
+                          onClick={() => handleView2(item)}
+                        >
+                          View
+                        </button>
+                        <img
+                          src={getQrImageUrl(item.attributes)}
+                          alt="QR Code"
+                          style={{ width: qrSize, height: qrSize }}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* Pagination for the second table */}
+            <div className="pagination">
+              <span>{Other.length} Results</span>
+              <div>
+                {[...Array(Math.ceil(Other.length / itemsPerPage)).keys()]
+                  .slice(0, 5)
+                  .map((num) => (
+                    <button
+                      key={num}
+                      className={currentPage === num + 1 ? "active" : ""}
+                      onClick={() => setCurrentPage(num + 1)}
+                    >
+                      {num + 1}
+                    </button>
+                  ))}
+                <span>...</span>
+                <button
+                  onClick={() =>
+                    setCurrentPage(Math.ceil(Other.length / itemsPerPage))
+                  }
+                >
+                  {Math.ceil(Other.length / itemsPerPage)}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          // 🔁 Default Table when no dropdown value is selected
+          <div>
+            <table className="RequestTable">
+              <thead className="table-header">
+                <tr>
+                  {[
+                    { label: "Sl. No.", field: null }, // for index or row number
+                    { label: "Asset Code", field: "assetCode" },
+                    { label: "Title", field: "title" },
+                    { label: "Acquire Date", field: "acquireDate" },
+                    { label: "Useful Life(year)", field: null },
+                    { label: "Floors", field: null },
+                    { label: "Plint_area(sq.,)", field: null },
+                    { label: "Depreciated Value (%)", field: null },
+                    { label: "Status", field: "status" },
+                  ].map((header, index) => (
+                    <th key={index}>
+                      {header.field ? (
+                        <div className="header-title">
+                          {header.label}
+                          <div className="sort-icons">
+                            <button
+                              className="sort-btn"
+                              onClick={() => handleSort(header.field)}
+                              title={`Sort by ${header.label}`}
+                            >
+                              <TiArrowSortedUp
+                                style={{
+                                  color: "#305845",
+                                  transform:
+                                    sortOrder.column === header.field &&
+                                    sortOrder.ascending
+                                      ? "rotate(0deg)"
+                                      : "rotate(180deg)",
+                                  transition: "transform 0.3s ease",
+                                }}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        header.label // Non-sortable label like "Action"
+                      )}
+                    </th>
+                  ))}
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedData.map((item, index) => {
+                  const plintAreaAttr = item.attributes.find(
+                    (attr) => attr.name === "Plint_area"
+                  );
+                  const floorAttr = item.attributes.find(
+                    (attr) => attr.name === "Floor and rooms"
+                  );
+                  const plintArea = plintAreaAttr ? plintAreaAttr.value : "N/A";
+                  const floorCount = floorAttr
+                    ? Object.keys(JSON.parse(floorAttr.value)).length
+                    : "N/A";
+
+                  return (
+                    <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>{item.assetCode}</td>
+                      <td className="description">
+                        <Tippy content={item.title || ""} placement="top">
+                          <span>
+                            {item.title?.length > 20
+                              ? item.title.substring(0, 20) + "..."
+                              : item.title || ""}
+                          </span>
+                        </Tippy>
+                      </td>
+                      <td>{item.acquireDate}</td>
+                      <td>{item.lifespan}</td>
+                      <td>{floorCount}</td>
+                      <td>{plintArea}</td>
+                      <td>{item.categoryDetails?.depreciatedValue}</td>
+                      <td>
+                        <div className={getStatusClass(item.status)}>
+                          {item.status}
+                        </div>
+                      </td>
+                      <td className="actions">
+                        <button
+                          className="view-btn"
+                          onClick={() => handleView(item)}
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* Pagination for the default table */}
+            <div className="pagination">
+              <span>{displayedData.length} Results</span>
+              <div>
+                {[
+                  ...Array(
+                    Math.ceil(displayedData.length / itemsPerPage)
+                  ).keys(),
+                ]
+                  .slice(0, 5)
+                  .map((num) => (
+                    <button
+                      key={num}
+                      className={currentPage === num + 1 ? "active" : ""}
+                      onClick={() => setCurrentPage(num + 1)}
+                    >
+                      {num + 1}
+                    </button>
+                  ))}
+                <span>...</span>
+                <button
+                  onClick={() =>
+                    setCurrentPage(
+                      Math.ceil(displayedData.length / itemsPerPage)
+                    )
+                  }
+                >
+                  {Math.ceil(displayedData.length / itemsPerPage)}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {showBulkModal && (
