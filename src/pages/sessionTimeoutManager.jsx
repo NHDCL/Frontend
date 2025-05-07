@@ -11,7 +11,8 @@ const SessionTimeoutManager = () => {
   // Change these back to your desired values after testing
   const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes total session timeout
   const WARNING_TIME_MS = 2 * 60 * 1000; // 2 minutes warning before expiry
-
+  // const SESSION_TIMEOUT_MS = 1 * 60 * 1000; // 1 minute total session timeout
+  // const WARNING_TIME_MS = 10 * 1000; // 10 seconds warning before expiry (for quick testing)
   useEffect(() => {
     console.log("SessionTimeoutManager mounted"); // Debugging line
 

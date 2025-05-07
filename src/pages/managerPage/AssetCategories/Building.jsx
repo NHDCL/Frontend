@@ -1534,7 +1534,8 @@ const Building = ({ category }) => {
               <div className="modal-content-field">
                 <label>Useful Life (Year):</label>
                 <input
-                  type="text"
+                  type="number"
+                  min="0"
                   value={newBuilding.lifespan}
                   onChange={(e) =>
                     setNewBuilding({

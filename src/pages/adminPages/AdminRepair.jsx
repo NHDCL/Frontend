@@ -107,28 +107,27 @@ const AdminRepair = () => {
   const sortedData = [...data].sort((a, b) => b.repairID - a.repairID);
   const filteredData = sortedData.filter((item) => {
     const searchLower = searchTerm.toLowerCase();
-  
+
     const matchesSearch =
       item.repairID?.toString().toLowerCase().includes(searchLower) ||
       Object.values(item).some(
         (value) =>
-          typeof value === "string" &&
-          value.toLowerCase().includes(searchLower)
+          typeof value === "string" && value.toLowerCase().includes(searchLower)
       );
-  
+
     const matchesPriority =
       selectedPriority === "" ||
       item.priority?.toLowerCase() === selectedPriority.toLowerCase();
-  
+
     const matchesWorkStatus =
       selectedWorkStatus === "" ||
       item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
-  
+
     const matchesLocation =
       selectedLocation === "" ||
       getAcademyName(item.academyId)?.toLowerCase() ===
         selectedLocation.toLowerCase();
-  
+
     return (
       matchesSearch && matchesPriority && matchesWorkStatus && matchesLocation
     );
