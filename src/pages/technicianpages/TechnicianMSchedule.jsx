@@ -8,7 +8,12 @@ import { IoIosCloseCircle } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import { RiImageAddLine } from "react-icons/ri";
 
-import {useGetMaintenanceByTechnicianEmailQuery, useCreateMaintenanceReportMutation,useGetMaintenanceReportByIDQuery, useUpdatePreventiveMaintenanceMutation } from "../../slices/maintenanceApiSlice";
+import {
+  useGetMaintenanceByTechnicianEmailQuery,
+  useCreateMaintenanceReportMutation,
+  useGetMaintenanceReportByIDQuery,
+  useUpdatePreventiveMaintenanceMutation,
+} from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { assetApiSlice } from "../../slices/assetApiSlice";
@@ -27,7 +32,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   );
   const [images, setImages] = useState([]); // Allow multiple images
   const [imageError, setImageError] = useState("");
-  const fileInputRef = useRef(null)
+  const fileInputRef = useRef(null);
 
   const [updateMaintenanceById, { isLoading, error }] =
     useUpdatePreventiveMaintenanceMutation();
@@ -273,10 +278,12 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <textarea value={order.description} readOnly />
           </div>
 
+
           <div className="TModal-content-field">
             <label>Work Status:</label>
-            {/* Work Status Dropdown */}
-            <Select
+            <div style={{ width: "100%",maxWidth:"350px" }}>
+             
+               <Select
               classNamePrefix="customm-select-workstatus"
               className="Wworkstatus-dropdown"
               options={WorkOrder}
@@ -317,6 +324,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
               isClearable
               isSearchable={false}
             />
+            </div>
           </div>
 
           <div className="TModal-content-field">
@@ -576,7 +584,9 @@ const TechnicianMSchedule = () => {
         const assetPromises = technicianSchedules.map(async (schedule) => {
           try {
             const Asset = await dispatch(
-              assetApiSlice.endpoints.getAssetByAssetCode.initiate(schedule?.assetCode)
+              assetApiSlice.endpoints.getAssetByAssetCode.initiate(
+                schedule?.assetCode
+              )
             ).unwrap();
 
             return {
@@ -584,7 +594,10 @@ const TechnicianMSchedule = () => {
               asset_Details: Asset,
             };
           } catch (err) {
-            console.error(`❌ Error fetching repair for ID ${schedule?.assetCode}:`, err);
+            console.error(
+              `❌ Error fetching repair for ID ${schedule?.assetCode}:`,
+              err
+            );
             return null; // return null to filter out later
           }
         });
@@ -603,7 +616,6 @@ const TechnicianMSchedule = () => {
       isMounted = false;
     };
   }, [technicianSchedules, dispatch]);
-
 
   console.log("Dataaa", data);
 

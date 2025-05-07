@@ -292,6 +292,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
 
           <div className="TModal-content-field">
             <label>Work Status:</label>
+            <div style={{ width: "100%",maxWidth:"350px" }}>
             <Select
               classNamePrefix="customm-select-workstatus"
               className="Wworkstatus-dropdown"
@@ -334,6 +335,8 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
               isSearchable={false}
             />
           </div>
+          </div>
+
           <div className="TModal-content-field">
             <label>Time:</label>
             <div className="TModal-time-inputs">

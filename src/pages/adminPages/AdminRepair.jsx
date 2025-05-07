@@ -311,6 +311,7 @@ const AdminRepair = () => {
                       style={{
                         width: "100px",
                         height: "100px",
+                        objectFit: "cover",
                       }}
                     />
                   </td>
