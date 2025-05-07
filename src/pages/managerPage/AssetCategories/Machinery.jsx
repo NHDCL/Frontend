@@ -418,7 +418,8 @@ const Machinery = ({ category }) => {
         await postAsset(payload).unwrap();
         Swal.fire({
           icon: "success",
-          title: "Asset created successfully!",
+          title: "Asset creation request submitted.",
+          text: "Asset creation request has been successfully submitted. Please wait for admin approval.",
           confirmButtonColor: "#305845",
         });
         refetch();
@@ -683,9 +684,7 @@ const Machinery = ({ category }) => {
 
   const handleSort = (column) => {
     const newSortOrder =
-      column === sortOrder.column
-        ? !sortOrder.ascending
-        : true;
+      column === sortOrder.column ? !sortOrder.ascending : true;
 
     setSortOrder({
       column,
@@ -727,7 +726,7 @@ const Machinery = ({ category }) => {
               style={{ color: "#ffffff", marginLeft: "12px" }}
             />
             <button className="category-btn" onClick={handleBulkImport}>
-              Bulk Import
+              Bulk Upload
             </button>
           </div>
           <div className="create-category-btn">
@@ -754,7 +753,7 @@ const Machinery = ({ category }) => {
               {[
                 { label: "Sl. No.", field: null },
                 { label: "Asset Code", field: "assetCode" },
-                { label: "Title", field: "title" },
+                { label: "Name", field: "title" },
                 { label: "Acquire Date", field: "acquireDate" },
                 { label: "Useful Life(year)", field: "usefulLife" },
                 { label: "Area", field: "assetArea" },
@@ -774,7 +773,8 @@ const Machinery = ({ category }) => {
                             style={{
                               color: "#305845",
                               transform:
-                                sortOrder.column === header.field && sortOrder.ascending
+                                sortOrder.column === header.field &&
+                                sortOrder.ascending
                                   ? "rotate(0deg)"
                                   : "rotate(180deg)",
                               transition: "transform 0.3s ease",
@@ -962,7 +962,7 @@ const Machinery = ({ category }) => {
             </div>
             <div className="schedule-form">
               <div className="modal-content-field">
-                <label>Title:</label>
+                <label>Name:</label>
                 <input
                   type="text"
                   value={newMachinery.title}
@@ -1121,11 +1121,11 @@ const Machinery = ({ category }) => {
               <div className="modal-actions">
                 <button
                   className="accept-btn"
-                  style={{ width: "80px" }}
+                  style={{ width: "110px" }}
                   onClick={handleSaveNewMachinery}
                   disabled={isLoading2}
                 >
-                  {isLoading2 ? "Saving..." : "Save"}
+                  {isLoading2 ? "Submitting..." : "Submit"}
                 </button>
               </div>
             </div>
@@ -1153,7 +1153,7 @@ const Machinery = ({ category }) => {
               </div>
 
               <div className="modal-content-field">
-                <label>Title:</label>
+                <label>Name:</label>
                 <input type="text" value={modalData.title} readOnly />
               </div>
               <div className="modal-content-field">
@@ -1329,8 +1329,8 @@ const Machinery = ({ category }) => {
                   value={
                     scheduleModalData.Lastworkorder
                       ? new Date(scheduleModalData.Lastworkorder)
-                        .toISOString()
-                        .split("T")[0]
+                          .toISOString()
+                          .split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
@@ -1361,8 +1361,8 @@ const Machinery = ({ category }) => {
                   value={
                     scheduleModalData.Nextworkorder
                       ? new Date(scheduleModalData.Nextworkorder)
-                        .toISOString()
-                        .split("T")[0]
+                          .toISOString()
+                          .split("T")[0]
                       : ""
                   }
                   onChange={(e) =>

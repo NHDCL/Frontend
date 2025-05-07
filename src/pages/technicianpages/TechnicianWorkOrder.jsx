@@ -297,47 +297,49 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
 
           <div className="TModal-content-field">
             <label>Work Status:</label>
-            <Select
-              classNamePrefix="customm-select-workstatus"
-              className="Wworkstatus-dropdown"
-              options={WorkOrder}
-              value={WorkOrder.find(
-                (option) => option.value === selectedWorkStatus
-              )}
-              onChange={async (selectedOption) => {
-                const newStatus = selectedOption ? selectedOption.value : "";
-                setSelectedWorkStatus(newStatus);
-                console.log("🟡 Selected Status:", newStatus); // ✅ Log selected value
-                console.log("🛠 Repair ID:", order.repairID);
+            <div style={{ width: "100%", maxWidth: "350px" }}>
+              <Select
+                classNamePrefix="customm-select-workstatus"
+                className="Wworkstatus-dropdown"
+                options={WorkOrder}
+                value={WorkOrder.find(
+                  (option) => option.value === selectedWorkStatus
+                )}
+                onChange={async (selectedOption) => {
+                  const newStatus = selectedOption ? selectedOption.value : "";
+                  setSelectedWorkStatus(newStatus);
+                  console.log("🟡 Selected Status:", newStatus); // ✅ Log selected value
+                  console.log("🛠 Repair ID:", order.repairID);
 
-                // ⚡ Update status inside repairInfo
-                try {
-                  const response = await updateRepairById({
-                    repairID: order.repairID, // use correct repairID from `order`
-                    updateFields: { status: newStatus }, // this updates repairInfo.status
-                  }).unwrap();
+                  // ⚡ Update status inside repairInfo
+                  try {
+                    const response = await updateRepairById({
+                      repairID: order.repairID, // use correct repairID from `order`
+                      updateFields: { status: newStatus }, // this updates repairInfo.status
+                    }).unwrap();
 
-                  console.log("✅ Status updated in repairInfo:", response);
+                    console.log("✅ Status updated in repairInfo:", response);
 
-                  Swal.fire({
-                    icon: "success",
-                    title: "Work Status Updated",
-                    text: `Status is now "${newStatus}"`,
-                    timer: 1500,
-                    showConfirmButton: false,
-                  });
-                } catch (err) {
-                  console.error("❌ Failed to update work status:", err);
-                  Swal.fire({
-                    icon: "error",
-                    title: "Error Updating Status",
-                    text: "Could not update status. Try again later.",
-                  });
-                }
-              }}
-              isClearable
-              isSearchable={false}
-            />
+                    Swal.fire({
+                      icon: "success",
+                      title: "Work Status Updated",
+                      text: `Status is now "${newStatus}"`,
+                      timer: 1500,
+                      showConfirmButton: false,
+                    });
+                  } catch (err) {
+                    console.error("❌ Failed to update work status:", err);
+                    Swal.fire({
+                      icon: "error",
+                      title: "Error Updating Status",
+                      text: "Could not update status. Try again later.",
+                    });
+                  }
+                }}
+                isClearable
+                isSearchable={false}
+              />
+            </div>
           </div>
           <div className="TModal-content-field">
             <label>Time:</label>

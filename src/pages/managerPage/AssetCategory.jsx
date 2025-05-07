@@ -72,7 +72,7 @@ const Category = () => {
   const handleDeleteRow = async (id) => {
     const { value: confirmed } = await Swal.fire({
       title: "Are you sure?",
-      text: "This will soft delete the category!",
+      text: "This will delete the category!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Yes, delete it!",
@@ -81,8 +81,9 @@ const Category = () => {
     if (confirmed) {
       try {
         await softDeleteCategory(id).unwrap();
-        Swal.fire("Deleted!", "Category has been soft deleted.", "success");
+        Swal.fire("Deleted!", "Category has been deleted.", "success");
         refetch(); // Refresh the category list
+        setModalData(null)
       } catch (err) {
         console.error(err);
         Swal.fire("Error!", "Something went wrong while deleting.", "error");

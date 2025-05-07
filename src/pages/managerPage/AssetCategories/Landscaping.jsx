@@ -31,7 +31,6 @@ import {
 } from "../../../slices/maintenanceApiSlice";
 import Tippy from "@tippyjs/react";
 
-
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
   selectUserInfo,
@@ -400,7 +399,8 @@ const Landscaping = ({ category }) => {
       }
       Swal.fire({
         icon: "success",
-        title: "Asset created successfully!",
+        title: "Asset creation request submitted.",
+        text: "Asset creation request has been successfully submitted. Please wait for admin approval.",
         confirmButtonColor: "#305845",
       });
       refetch();
@@ -660,21 +660,21 @@ const Landscaping = ({ category }) => {
   const sortData = (column, ascending) => {
     const sortedData = [...data].sort((a, b) => {
       let valA, valB;
-  
+
       if (column === "Size") {
-        const attrA = a.attributes.find(attr => attr.name === "Size");
-        const attrB = b.attributes.find(attr => attr.name === "Size");
+        const attrA = a.attributes.find((attr) => attr.name === "Size");
+        const attrB = b.attributes.find((attr) => attr.name === "Size");
         valA = attrA ? attrA.value : "";
         valB = attrB ? attrB.value : "";
       } else {
         valA = a[column];
         valB = b[column];
       }
-  
+
       // Normalize: Handle undefined, null, numbers, strings consistently
       if (valA === undefined || valA === null) valA = "";
       if (valB === undefined || valB === null) valB = "";
-  
+
       // If both are numbers, compare numerically
       if (!isNaN(valA) && !isNaN(valB)) {
         valA = Number(valA);
@@ -684,20 +684,18 @@ const Landscaping = ({ category }) => {
         valA = valA.toString().toLowerCase();
         valB = valB.toString().toLowerCase();
       }
-  
+
       if (valA < valB) return ascending ? -1 : 1;
       if (valA > valB) return ascending ? 1 : -1;
       return 0;
     });
-  
+
     setData(sortedData);
-  };  
+  };
 
   const handleSort = (column) => {
     const newSortOrder =
-      column === sortOrder.column
-        ? !sortOrder.ascending
-        : true;
+      column === sortOrder.column ? !sortOrder.ascending : true;
 
     setSortOrder({
       column,
@@ -739,7 +737,7 @@ const Landscaping = ({ category }) => {
               style={{ color: "#ffffff", marginLeft: "12px" }}
             />
             <button className="category-btn" onClick={handleBulkImport}>
-              Bulk Import
+              Bulk Upload
             </button>
           </div>
           <div className="create-category-btn">
@@ -758,7 +756,7 @@ const Landscaping = ({ category }) => {
               {[
                 { label: "Sl. No.", field: null },
                 { label: "Asset Code", field: "assetCode" },
-                { label: "Title", field: "title" },
+                { label: "Name", field: "title" },
                 { label: "Acquire Date", field: "acquireDate" },
                 { label: "Useful Life(year)", field: null },
                 { label: "Size", field: "Size" },
@@ -779,7 +777,8 @@ const Landscaping = ({ category }) => {
                             style={{
                               color: "#305845",
                               transform:
-                                sortOrder.column === header.field && sortOrder.ascending
+                                sortOrder.column === header.field &&
+                                sortOrder.ascending
                                   ? "rotate(0deg)"
                                   : "rotate(180deg)",
                               transition: "transform 0.3s ease",
@@ -941,7 +940,7 @@ const Landscaping = ({ category }) => {
             </div>
             <div className="schedule-form">
               <div className="modal-content-field">
-                <label>Title:</label>
+                <label>Name:</label>
                 <input
                   type="text"
                   value={newLandscaping.title}
@@ -1085,11 +1084,11 @@ const Landscaping = ({ category }) => {
               <div className="modal-actions">
                 <button
                   className="accept-btn"
-                  style={{ width: "80px" }}
+                  style={{ width: "110px" }}
                   onClick={handleSaveNewLandscaping}
                   disabled={isLoading || isLoading2}
                 >
-                  {isLoading || isLoading2 ? "Saving..." : "Save"}
+                  {isLoading || isLoading2 ? "Submitting..." : "Submit"}
                 </button>
               </div>
             </div>
@@ -1117,7 +1116,7 @@ const Landscaping = ({ category }) => {
               </div>
 
               <div className="modal-content-field">
-                <label>Title:</label>
+                <label>Name:</label>
                 <input type="text" value={modalData.title} readOnly />
               </div>
               <div className="modal-content-field">
@@ -1179,10 +1178,10 @@ const Landscaping = ({ category }) => {
               <div className="modal-content-field">
                 <label>Images:</label>
                 {modalData &&
-                  modalData.attributes &&
-                  modalData.attributes.filter((attr) =>
-                    attr.name.startsWith("image")
-                  ).length > 0 ? (
+                modalData.attributes &&
+                modalData.attributes.filter((attr) =>
+                  attr.name.startsWith("image")
+                ).length > 0 ? (
                   <div className="image-gallery">
                     {modalData.attributes
                       .filter((attr) => attr.name.startsWith("image"))
@@ -1231,9 +1230,9 @@ const Landscaping = ({ category }) => {
                 {/* Align Download Button with Schedule Maintenance */}
                 <div className="align-buttons">
                   {modalData.attributes &&
-                    modalData.attributes.some((attr) =>
-                      attr.name.startsWith("image")
-                    ) ? (
+                  modalData.attributes.some((attr) =>
+                    attr.name.startsWith("image")
+                  ) ? (
                     <button
                       type="button"
                       className="download-all-btn"
@@ -1344,8 +1343,8 @@ const Landscaping = ({ category }) => {
                   value={
                     scheduleModalData.Lastworkorder
                       ? new Date(scheduleModalData.Lastworkorder)
-                        .toISOString()
-                        .split("T")[0]
+                          .toISOString()
+                          .split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
@@ -1376,8 +1375,8 @@ const Landscaping = ({ category }) => {
                   value={
                     scheduleModalData.Nextworkorder
                       ? new Date(scheduleModalData.Nextworkorder)
-                        .toISOString()
-                        .split("T")[0]
+                          .toISOString()
+                          .split("T")[0]
                       : ""
                   }
                   onChange={(e) =>
