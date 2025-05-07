@@ -48,7 +48,7 @@ const Building = ({ category }) => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState("");
   const [selectedFloor, setSelectedFloor] = useState("");
-   const [selectedRoom, setSelectedRoom] = useState("");
+  const [selectedRoom, setSelectedRoom] = useState("");
   const [modalData, setModalData] = useState(null);
   const [editModalData, setEditModalData] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -90,11 +90,11 @@ const Building = ({ category }) => {
   const [repeatFrequency, setRepeatFrequency] = useState(null);
   const [sendEmail] = useSendEmailMutation();
   const [isCreating, setIsCreating] = useState(false);
-    const [building, setBuilding] = useState([]);
-    const [Other, setOther] = useState([]);
-    const qrSize = 40;
-    const itemsPerPage = 10;
-    const [modalData2, setModalData2] = useState(null);
+  const [building, setBuilding] = useState([]);
+  const [Other, setOther] = useState([]);
+  const qrSize = 40;
+  const itemsPerPage = 10;
+  const [modalData2, setModalData2] = useState(null);
 
   const supervisorsFromSameAcademy =
     users?.filter(
@@ -132,42 +132,41 @@ const Building = ({ category }) => {
     }
   }, [assets]);
 
-   useEffect(() => {
-      if (assets) {
-        const filteredAssets = assets.filter(
-          (asset) =>
-            asset.categoryDetails?.name === "Building" &&
-            asset.status === "In Usage"
-        );
-        setBuilding(filteredAssets);
-      }
-    }, [assets]);
-  
-    useEffect(() => {
-      if (assets) {
-        const filteredAssets = assets.filter((asset) => {
-          const area = asset.assetArea || "";
-          const normalize = (str) => str?.toLowerCase().trim();
-  
-          const matchesBuilding = selectedBuilding
-            ? normalize(area).includes(normalize(selectedBuilding))
-            : true;
-  
-          const matchesFloor = selectedFloor
-            ? normalize(area).includes(normalize(selectedFloor))
-            : true;
-  
-          const matchesRoom = selectedRoom
-            ? normalize(area).includes(normalize(selectedRoom))
-            : true;
-  
-          return matchesBuilding && matchesFloor && matchesRoom;
-        });
-  
-        setOther(filteredAssets);
-      }
-    }, [assets, selectedBuilding, selectedFloor, selectedRoom]);
-  
+  useEffect(() => {
+    if (assets) {
+      const filteredAssets = assets.filter(
+        (asset) =>
+          asset.categoryDetails?.name === "Building" &&
+          asset.status === "In Usage"
+      );
+      setBuilding(filteredAssets);
+    }
+  }, [assets]);
+
+  useEffect(() => {
+    if (assets) {
+      const filteredAssets = assets.filter((asset) => {
+        const area = asset.assetArea || "";
+        const normalize = (str) => str?.toLowerCase().trim();
+
+        const matchesBuilding = selectedBuilding
+          ? normalize(area).includes(normalize(selectedBuilding))
+          : true;
+
+        const matchesFloor = selectedFloor
+          ? normalize(area).includes(normalize(selectedFloor))
+          : true;
+
+        const matchesRoom = selectedRoom
+          ? normalize(area).includes(normalize(selectedRoom))
+          : true;
+
+        return matchesBuilding && matchesFloor && matchesRoom;
+      });
+
+      setOther(filteredAssets);
+    }
+  }, [assets, selectedBuilding, selectedFloor, selectedRoom]);
 
   const addRoom = () => {
     if (floorInput.trim() && roomInput.trim()) {
@@ -511,7 +510,8 @@ const Building = ({ category }) => {
       }
       Swal.fire({
         icon: "success",
-        title: "Asset created successfully!",
+        title: "Asset creation request submitted.",
+        text: "Asset creation request has been successfully submitted. Please wait for admin approval.",
         confirmButtonColor: "#305845",
       });
       refetch();
@@ -806,194 +806,194 @@ const Building = ({ category }) => {
   };
 
   const uniqueBuilding = [
-      { value: "", label: "All Buildings" },
-      ...Array.from(new Set(building.map((item) => item.title))).map((title) => ({
-        value: title,
-        label: title,
-      })),
-    ];
-  
-    const uniqueFloors = [
-      { value: "", label: "All Floors" },
-      ...Array.from(
-        new Set(
-          building
-            .filter(
-              (item) => selectedBuilding === "" || item.title === selectedBuilding
-            )
-            .flatMap((item) => {
-              const floorRoomAttr = item.attributes.find(
-                (attr) => attr.name === "Floor and rooms"
-              );
-              const floorRoomObj = floorRoomAttr
-                ? JSON.parse(floorRoomAttr.value)
-                : {};
-              return Object.keys(floorRoomObj);
-            })
-        )
-      ).map((floor) => ({
-        value: floor,
-        label: floor,
-      })),
-    ];
-  
-    const uniqueRoom = [
-      { value: "", label: "All Rooms" },
-      ...Array.from(
-        new Set(
-          building
-            .filter(
-              (item) => selectedBuilding === "" || item.title === selectedBuilding
-            )
-            .flatMap((item) => {
-              const floorRoomAttr = item.attributes.find(
-                (attr) => attr.name === "Floor and rooms"
-              );
-              const floorRoomObj = floorRoomAttr
-                ? JSON.parse(floorRoomAttr.value)
-                : {};
-              return Object.entries(floorRoomObj)
-                .filter(
-                  ([floor]) => selectedFloor === "" || floor === selectedFloor
-                )
-                .flatMap(([, rooms]) => rooms);
-            })
-        )
-      ).map((room) => ({
-        value: room,
-        label: `Room ${room}`,
-      })),
-    ];
-  
-    const handleSelectAllRows = () => {
-      if (selectedRows.length === Other.length) {
-        setSelectedRows([]); // Deselect all if all are selected
-      } else {
-        setSelectedRows(Other.map((item) => item.assetCode)); // Select all
-      }
-    };
-  
-    const handleSelectRow = (assetCode) => {
-      setSelectedRows((prev) =>
-        prev.includes(assetCode)
-          ? prev.filter((item) => item !== assetCode)
-          : [...prev, assetCode]
-      );
-    };
-  
-    const getQrImageUrl = (attributes) => {
-      const qrAttr = attributes?.find((attr) => attr.name === "QR Code");
-      return qrAttr?.value || "";
-    };
-  
-    const loadImageAsDataURL = async (url) => {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-    };
-  
-    const handleDownloadPDF = async () => {
-      if (selectedRows.length === 0) {
-        alert("Please select at least one asset.");
-        return;
-      }
-  
-      const doc = new jsPDF();
-      let pageY = 10;
-      let pageX = 20;
-      let rowCount = 0;
-  
-      // Loop over selected rows
-      for (const assetID of selectedRows) {
-        const rowData = Other.find((item) => item.assetCode === assetID);
-        if (!rowData) continue;
-  
-        const qrUrl = getQrImageUrl(rowData.attributes);
-        if (!qrUrl) continue;
-  
-        try {
-          const qrDataUrl = await loadImageAsDataURL(qrUrl);
-          doc.addImage(qrDataUrl, "PNG", pageX, pageY, qrSize, qrSize);
-  
-          doc.setFontSize(8);
-          pageY += qrSize + 4;
-          doc.text(`Asset Code: ${rowData.assetCode}`, pageX, pageY);
-          pageY += 6;
-          doc.text(`Title: ${rowData.title}`, pageX, pageY);
-          pageY += 6;
-          doc.text(`Category: ${rowData.categoryDetails?.name}`, pageX, pageY);
-          pageY += 10;
-  
-          rowCount++;
-  
-          if (rowCount % 3 === 0) {
-            pageX += qrSize + 30;
-            pageY = 10;
-          }
-  
-          if (rowCount % rowsPerPage === 0) {
-            doc.addPage();
-            pageY = 10;
-            pageX = 20;
-          }
-        } catch (err) {
-          console.error("Failed to load QR image:", err);
-        }
-      }
-  
-      doc.save("Assets_with_QR_Codes.pdf");
-    };
-  
-    const handleView2 = (item) => {
-      setModalData2(item); // This will set the selected asset data for the modal
-    };
-  
-    const handleCloseModal2 = () => {
-      setModalData2(null);
-    };
+    { value: "", label: "All Buildings" },
+    ...Array.from(new Set(building.map((item) => item.title))).map((title) => ({
+      value: title,
+      label: title,
+    })),
+  ];
 
-    const sortDatas = (column, ascending) => {
-      const sortedData = [...Other].sort((a, b) => {
-        let valA = a[column];
-        let valB = b[column];
-  
-        // Normalize: Handle undefined, null, numbers, strings consistently
-        if (valA === undefined || valA === null) valA = "";
-        if (valB === undefined || valB === null) valB = "";
-  
-        // If both are numbers, compare numerically
-        if (!isNaN(valA) && !isNaN(valB)) {
-          valA = Number(valA);
-          valB = Number(valB);
-        } else {
-          // Otherwise, compare as lowercase strings (for emails, names, etc.)
-          valA = valA.toString().toLowerCase();
-          valB = valB.toString().toLowerCase();
+  const uniqueFloors = [
+    { value: "", label: "All Floors" },
+    ...Array.from(
+      new Set(
+        building
+          .filter(
+            (item) => selectedBuilding === "" || item.title === selectedBuilding
+          )
+          .flatMap((item) => {
+            const floorRoomAttr = item.attributes.find(
+              (attr) => attr.name === "Floor and rooms"
+            );
+            const floorRoomObj = floorRoomAttr
+              ? JSON.parse(floorRoomAttr.value)
+              : {};
+            return Object.keys(floorRoomObj);
+          })
+      )
+    ).map((floor) => ({
+      value: floor,
+      label: floor,
+    })),
+  ];
+
+  const uniqueRoom = [
+    { value: "", label: "All Rooms" },
+    ...Array.from(
+      new Set(
+        building
+          .filter(
+            (item) => selectedBuilding === "" || item.title === selectedBuilding
+          )
+          .flatMap((item) => {
+            const floorRoomAttr = item.attributes.find(
+              (attr) => attr.name === "Floor and rooms"
+            );
+            const floorRoomObj = floorRoomAttr
+              ? JSON.parse(floorRoomAttr.value)
+              : {};
+            return Object.entries(floorRoomObj)
+              .filter(
+                ([floor]) => selectedFloor === "" || floor === selectedFloor
+              )
+              .flatMap(([, rooms]) => rooms);
+          })
+      )
+    ).map((room) => ({
+      value: room,
+      label: `Room ${room}`,
+    })),
+  ];
+
+  const handleSelectAllRows = () => {
+    if (selectedRows.length === Other.length) {
+      setSelectedRows([]); // Deselect all if all are selected
+    } else {
+      setSelectedRows(Other.map((item) => item.assetCode)); // Select all
+    }
+  };
+
+  const handleSelectRow = (assetCode) => {
+    setSelectedRows((prev) =>
+      prev.includes(assetCode)
+        ? prev.filter((item) => item !== assetCode)
+        : [...prev, assetCode]
+    );
+  };
+
+  const getQrImageUrl = (attributes) => {
+    const qrAttr = attributes?.find((attr) => attr.name === "QR Code");
+    return qrAttr?.value || "";
+  };
+
+  const loadImageAsDataURL = async (url) => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const handleDownloadPDF = async () => {
+    if (selectedRows.length === 0) {
+      alert("Please select at least one asset.");
+      return;
+    }
+
+    const doc = new jsPDF();
+    let pageY = 10;
+    let pageX = 20;
+    let rowCount = 0;
+
+    // Loop over selected rows
+    for (const assetID of selectedRows) {
+      const rowData = Other.find((item) => item.assetCode === assetID);
+      if (!rowData) continue;
+
+      const qrUrl = getQrImageUrl(rowData.attributes);
+      if (!qrUrl) continue;
+
+      try {
+        const qrDataUrl = await loadImageAsDataURL(qrUrl);
+        doc.addImage(qrDataUrl, "PNG", pageX, pageY, qrSize, qrSize);
+
+        doc.setFontSize(8);
+        pageY += qrSize + 4;
+        doc.text(`Asset Code: ${rowData.assetCode}`, pageX, pageY);
+        pageY += 6;
+        doc.text(`Title: ${rowData.title}`, pageX, pageY);
+        pageY += 6;
+        doc.text(`Category: ${rowData.categoryDetails?.name}`, pageX, pageY);
+        pageY += 10;
+
+        rowCount++;
+
+        if (rowCount % 3 === 0) {
+          pageX += qrSize + 30;
+          pageY = 10;
         }
-  
-        if (valA < valB) return ascending ? -1 : 1;
-        if (valA > valB) return ascending ? 1 : -1;
-        return 0;
-      });
-  
-      setOther(sortedData);
-    };
-  
-    const handleSorts = (column) => {
-      const newSortOrder =
-        column === sortOrder.column ? !sortOrder.ascending : true;
-  
-      setSortOrder({
-        column,
-        ascending: newSortOrder,
-      });
-  
-      sortDatas(column, newSortOrder);
-    };
+
+        if (rowCount % rowsPerPage === 0) {
+          doc.addPage();
+          pageY = 10;
+          pageX = 20;
+        }
+      } catch (err) {
+        console.error("Failed to load QR image:", err);
+      }
+    }
+
+    doc.save("Assets_with_QR_Codes.pdf");
+  };
+
+  const handleView2 = (item) => {
+    setModalData2(item); // This will set the selected asset data for the modal
+  };
+
+  const handleCloseModal2 = () => {
+    setModalData2(null);
+  };
+
+  const sortDatas = (column, ascending) => {
+    const sortedData = [...Other].sort((a, b) => {
+      let valA = a[column];
+      let valB = b[column];
+
+      // Normalize: Handle undefined, null, numbers, strings consistently
+      if (valA === undefined || valA === null) valA = "";
+      if (valB === undefined || valB === null) valB = "";
+
+      // If both are numbers, compare numerically
+      if (!isNaN(valA) && !isNaN(valB)) {
+        valA = Number(valA);
+        valB = Number(valB);
+      } else {
+        // Otherwise, compare as lowercase strings (for emails, names, etc.)
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+      }
+
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setOther(sortedData);
+  };
+
+  const handleSorts = (column) => {
+    const newSortOrder =
+      column === sortOrder.column ? !sortOrder.ascending : true;
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+
+    sortDatas(column, newSortOrder);
+  };
 
   return (
     <div className="managerDashboard">
@@ -1027,7 +1027,7 @@ const Building = ({ category }) => {
               style={{ color: "#ffffff", marginLeft: "12px" }}
             />
             <button className="category-btn" onClick={handleBulkImport}>
-              Bulk Import
+              Bulk Upload
             </button>
           </div>
           <div className="create-category-btn">
@@ -1039,62 +1039,59 @@ const Building = ({ category }) => {
         </div>
       </div>
       {/* Dropdowns for filtering */}
-            <div
-              className="Building-sort"
-            >
-              <div style={{ marginRight: "5px" }}>
-                <Select
-                  classNamePrefix="custom-select-workstatus"
-                  className="workstatus-dropdown"
-                  options={uniqueBuilding}
-                  value={uniqueBuilding.find(
-                    (option) => option.value === selectedBuilding
-                  )}
-                  onChange={(selectedOption) => {
-                    const value = selectedOption ? selectedOption.value : "";
-                    setSelectedBuilding(value);
-                    setSelectedFloor("");
-                    setSelectedRoom("");
-                  }}
-                  isClearable
-                />
-              </div>
-      
-              {selectedBuilding && (
-                <div style={{ marginRight: "5px" }}>
-                  <Select
-                    classNamePrefix="custom-select-workstatus"
-                    className="workstatus-dropdown"
-                    options={uniqueFloors}
-                    value={uniqueFloors.find(
-                      (option) => option.value === selectedFloor
-                    )}
-                    onChange={(selectedOption) => {
-                      const value = selectedOption ? selectedOption.value : "";
-                      setSelectedFloor(value);
-                      setSelectedRoom("");
-                    }}
-                    isClearable
-                  />
-                </div>
+      <div className="Building-sort">
+        <div style={{ marginRight: "5px" }}>
+          <Select
+            classNamePrefix="custom-select-workstatus"
+            className="workstatus-dropdown"
+            options={uniqueBuilding}
+            value={uniqueBuilding.find(
+              (option) => option.value === selectedBuilding
+            )}
+            onChange={(selectedOption) => {
+              const value = selectedOption ? selectedOption.value : "";
+              setSelectedBuilding(value);
+              setSelectedFloor("");
+              setSelectedRoom("");
+            }}
+            isClearable
+          />
+        </div>
+
+        {selectedBuilding && (
+          <div style={{ marginRight: "5px" }}>
+            <Select
+              classNamePrefix="custom-select-workstatus"
+              className="workstatus-dropdown"
+              options={uniqueFloors}
+              value={uniqueFloors.find(
+                (option) => option.value === selectedFloor
               )}
-      
-              {selectedFloor && (
-                <div >
-                  <Select
-                    classNamePrefix="custom-select-workstatus"
-                    className="workstatus-dropdown"
-                    options={uniqueRoom}
-                    value={uniqueRoom.find((option) => option.value === selectedRoom)}
-                    onChange={(selectedOption) =>
-                      setSelectedRoom(selectedOption ? selectedOption.value : "")
-                    }
-                    isClearable
-                  />
-                </div>
-              )}
-            </div>
-      
+              onChange={(selectedOption) => {
+                const value = selectedOption ? selectedOption.value : "";
+                setSelectedFloor(value);
+                setSelectedRoom("");
+              }}
+              isClearable
+            />
+          </div>
+        )}
+
+        {selectedFloor && (
+          <div>
+            <Select
+              classNamePrefix="custom-select-workstatus"
+              className="workstatus-dropdown"
+              options={uniqueRoom}
+              value={uniqueRoom.find((option) => option.value === selectedRoom)}
+              onChange={(selectedOption) =>
+                setSelectedRoom(selectedOption ? selectedOption.value : "")
+              }
+              isClearable
+            />
+          </div>
+        )}
+      </div>
 
       {/* Table */}
       <div className="table-container">
@@ -1114,7 +1111,7 @@ const Building = ({ category }) => {
                   {[
                     { label: "Sl. No.", field: null }, // for index or row number
                     { label: "Asset Code", field: "assetCode" },
-                    { label: "Title", field: "title" },
+                    { label: "Name", field: "title" },
                     { label: "Acquire Date", field: "acquireDate" },
                     { label: "Useful Life(year)", field: null },
                     { label: "Area", field: "assetArea" },
@@ -1464,7 +1461,7 @@ const Building = ({ category }) => {
             </div>
             <div className="schedule-form">
               <div className="modal-content-field">
-                <label>Title:</label>
+                <label>Name:</label>
                 <input
                   type="text"
                   value={newBuilding.title}
@@ -1665,11 +1662,11 @@ const Building = ({ category }) => {
               <div className="modal-actions">
                 <button
                   className="accept-btn"
-                  style={{ width: "80px" }}
+                  style={{ width: "110px" }}
                   onClick={handleSaveNewBuilding}
                   disabled={isLoading || isLoading2}
                 >
-                  {isLoading || isLoading2 ? "Saving..." : "Save"}
+                  {isLoading || isLoading2 ? "Submitting..." : "Submit"}
                 </button>
               </div>
             </div>
@@ -1697,7 +1694,7 @@ const Building = ({ category }) => {
               </div>
 
               <div className="modal-content-field">
-                <label>Title:</label>
+                <label>Name:</label>
                 <input type="text" value={modalData.title} readOnly />
               </div>
               <div className="modal-content-field">

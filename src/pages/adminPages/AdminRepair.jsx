@@ -258,7 +258,7 @@ const AdminRepair = () => {
             <thead className="table-header">
               <tr>
                 {[
-                  { label: "RID", field: null },
+                  { label: "Sl. No.", field: null },
                   { label: "Image", field: null }, // first image if multiple
                   { label: "Name", field: "name" },
                   { label: "Email", field: "email" },
