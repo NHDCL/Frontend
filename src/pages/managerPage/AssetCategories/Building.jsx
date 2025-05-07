@@ -13,6 +13,7 @@ import {
   useGetCategoryQuery,
   useUploadExcelMutation,
   useRequestDisposeMutation,
+  useUpdateAssetStatusMutation
 } from "../../../slices/assetApiSlice";
 import {
   useCreateMaintenanceMutation,
@@ -95,6 +96,7 @@ const Building = ({ category }) => {
   const qrSize = 40;
   const itemsPerPage = 10;
   const [modalData2, setModalData2] = useState(null);
+  const [updateAssetStatus] = useUpdateAssetStatusMutation();
 
   const supervisorsFromSameAcademy =
     users?.filter(
@@ -726,6 +728,8 @@ const Building = ({ category }) => {
   const handleCreateSchedule = async () => {
     setIsCreating(true);
     try {
+      const assetCode = scheduleModalData.assetCode;
+
       await createMaintenance({
         timeStart: scheduleModalData.Schedule,
         startDate: scheduleModalData.Lastworkorder,
@@ -734,27 +738,28 @@ const Building = ({ category }) => {
         status: "Pending",
         repeat: repeatFrequency?.value || "none",
         userID: assignedWorker?.value || "",
-        assetCode: scheduleModalData.assetCode,
-        academyId: academyId,
+        assetCode,
+        academyId,
       }).unwrap();
 
-      // Send email to the assigned worker
-      if (assignedWorker?.label) {
-        await sendEmail({
-          to: assignedWorker.label,
-        }).unwrap();
-        Swal.fire({
-          icon: "success",
-          title: "Schedule Created",
-          text: "Preventive maintenance has been scheduled successfully",
-        });
-      }
+      await Promise.all([
+        updateAssetStatus({ assetCode, status: "In Maintenance" }).unwrap(),
+        assignedWorker?.label
+          ? sendEmail({ to: assignedWorker.label }).unwrap()
+          : Promise.resolve(),
+      ]);
 
-      // Optionally close modal
+      Swal.fire({
+        icon: "success",
+        title: "Schedule Created",
+        text: "Preventive maintenance has been scheduled successfully",
+      });
+
       setIsScheduleModalOpen(false);
       setRepeatFrequency(null);
       setAssignedWorker(null);
       setScheduleModalData(null);
+      refetch()
     } catch (error) {
       Swal.fire({
         icon: "error",

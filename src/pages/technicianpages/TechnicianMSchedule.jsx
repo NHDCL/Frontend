@@ -16,11 +16,7 @@ import {
 } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
-import { assetApiSlice } from "../../slices/assetApiSlice";
-import {
-  useGetUserByEmailQuery,
-  useGetUsersQuery,
-} from "../../slices/userApiSlice";
+import { assetApiSlice,useUpdateAssetStatusMutation } from "../../slices/assetApiSlice";
 import { createSelector } from "reselect";
 import Swal from "sweetalert2";
 
@@ -37,7 +33,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   const [updateMaintenanceById, { isLoading, error }] =
     useUpdatePreventiveMaintenanceMutation();
   const maintenanceID = order.maintenanceID;
-  console.log("maintenanceID", maintenanceID);
 
   const [formData, setFormData] = useState({
     startTime: "",
@@ -53,6 +48,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
 
   const [createMaintenanceReport, { isLoading: posting }] =
     useCreateMaintenanceReportMutation();
+  const [updateAssetStatus] = useUpdateAssetStatusMutation();
 
   const {
     data: maintenanceReport,
@@ -183,6 +179,11 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
     try {
       await createMaintenanceReport(sendData).unwrap();
 
+      await updateAssetStatus({
+        assetCode: order.asset_Details.assetCode, // Make sure you have this variable available in scope
+        status: "In Usage",
+      }).unwrap();
+  
       Swal.fire({
         icon: "success",
         title: "Maintenance Report added!",
