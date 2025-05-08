@@ -32,6 +32,7 @@
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 10px;
+  background-color: #897463;
 }
 
 .profile-right {
@@ -135,12 +136,13 @@
 .profile-image-wrapper {
   position: relative;
   display: inline-block;
+  /* background-color: aquamarine; */
 }
 
 .profile-camera-icon {
   position: absolute;
-  bottom: 30px;
-  right: 30px;
+  bottom: 10%;
+  right: 10%;
   width: 36px;
   height: 36px;
   background-color: white;
