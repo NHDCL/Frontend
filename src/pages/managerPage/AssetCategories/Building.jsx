@@ -13,7 +13,7 @@ import {
   useGetCategoryQuery,
   useUploadExcelMutation,
   useRequestDisposeMutation,
-  useUpdateAssetStatusMutation
+  useUpdateAssetStatusMutation,
 } from "../../../slices/assetApiSlice";
 import {
   useCreateMaintenanceMutation,
@@ -759,7 +759,7 @@ const Building = ({ category }) => {
       setRepeatFrequency(null);
       setAssignedWorker(null);
       setScheduleModalData(null);
-      refetch()
+      refetch();
     } catch (error) {
       Swal.fire({
         icon: "error",
