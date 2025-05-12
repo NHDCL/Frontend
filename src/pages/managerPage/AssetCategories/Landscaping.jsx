@@ -1324,7 +1324,7 @@ const Landscaping = ({ category }) => {
               </div>
 
               {/* Schedule fields */}
-              <p className="sub-title">Schedule</p>
+              <p className="sub-title">Schedule Maintenance Notification</p>
               <div className="modal-content-field">
                 <label>Repeat:</label>
                 <Select
@@ -1337,7 +1337,7 @@ const Landscaping = ({ category }) => {
                 />
               </div>
               <div className="modal-content-field">
-                <label>Starts on: </label>
+                <label>From date: </label>
                 <input
                   type="date"
                   value={
@@ -1369,7 +1369,7 @@ const Landscaping = ({ category }) => {
                 />
               </div>
               <div className="modal-content-field">
-                <label>Ends on: </label>
+                <label>To date: </label>
                 <input
                   type="date"
                   value={
