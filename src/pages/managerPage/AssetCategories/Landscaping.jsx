@@ -14,6 +14,7 @@ import {
   useGetCategoryQuery,
   useUploadExcelMutation,
   useRequestDisposeMutation,
+  useUpdateAssetStatusMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
 import { useSelector } from "react-redux";
@@ -83,6 +84,7 @@ const Landscaping = ({ category }) => {
   const [sendEmail] = useSendEmailMutation();
   const [isCreating, setIsCreating] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [updateAssetStatus] = useUpdateAssetStatusMutation();
 
   const supervisorsFromSameAcademy =
     users?.filter(
@@ -130,7 +132,7 @@ const Landscaping = ({ category }) => {
         lifespan: "5 years",
         assetArea: "Office Room",
         description: "24-inch LCD monitor",
-        createdBy: "jigme@gmail.com",
+        createdBy: email,
         academyID: academyId,
         assetCategoryID: CategoryId,
         // Any extra dynamic attributes can be added too
@@ -222,6 +224,22 @@ const Landscaping = ({ category }) => {
       default:
         return "";
     }
+  };
+
+  const getDisplayText = (status) => {
+    switch (status) {
+      case "In Maintenance":
+        return "In Usage"; // Show as 'In Usage'
+      default:
+        return status;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
   };
   // Extract unique work statuses from data
   const uniqueStatuses = [
@@ -618,7 +636,9 @@ const Landscaping = ({ category }) => {
   const handleCreateSchedule = async () => {
     setIsCreating(true);
     try {
-      const res = await createMaintenance({
+      const assetCode = scheduleModalData.assetCode;
+
+      await createMaintenance({
         timeStart: scheduleModalData.Schedule,
         startDate: scheduleModalData.Lastworkorder,
         endDate: scheduleModalData.Nextworkorder,
@@ -626,27 +646,30 @@ const Landscaping = ({ category }) => {
         status: "Pending",
         repeat: repeatFrequency?.value || "none",
         userID: assignedWorker?.value || "",
-        assetCode: scheduleModalData.assetCode,
+        assetCode,
         academyId: academyId,
       }).unwrap();
 
       // Send email to the assigned worker
-      if (assignedWorker?.label) {
-        await sendEmail({
-          to: assignedWorker.label,
-        }).unwrap();
-        Swal.fire({
-          icon: "success",
-          title: "Schedule Created",
-          text: "Preventive maintenance has been scheduled successfully",
-        });
-      }
+      await Promise.all([
+        updateAssetStatus({ assetCode, status: "In Maintenance" }).unwrap(),
+        assignedWorker?.label
+          ? sendEmail({ to: assignedWorker.label }).unwrap()
+          : Promise.resolve(),
+      ]);
+
+      Swal.fire({
+        icon: "success",
+        title: "Schedule Created",
+        text: "Preventive maintenance has been scheduled successfully",
+      });
 
       // Optionally close modal
       setIsScheduleModalOpen(false);
       setRepeatFrequency(null);
       setAssignedWorker(null);
       setScheduleModalData(null);
+      refetch();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -826,13 +849,13 @@ const Landscaping = ({ category }) => {
                       </span>
                     </Tippy>
                   </td>
-                  <td>{item.acquireDate}</td>
+                  <td>{formatDate(item.acquireDate)}</td>
                   <td>{item.lifespan}</td>
                   <td>{size}</td>
                   <td>{item.categoryDetails?.depreciatedValue}</td>
                   <td>
                     <div className={getStatusClass(item.status)}>
-                      {item.status}
+                      {getDisplayText(item.status)}
                     </div>
                   </td>
                   <td className="actions">
@@ -1148,18 +1171,22 @@ const Landscaping = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={modalData.acquireDate} readOnly />
+                <input
+                  type="text"
+                  value={formatDate(modalData.acquireDate)}
+                  readOnly
+                />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>
                 <input value={modalData.lifespan} readOnly />
               </div>
               <div className="modal-content-field">
-                <label>status:</label>
-                <input value={modalData.status} readOnly />
+                <label>Status:</label>
+                <input value={getDisplayText(modalData.status)} readOnly />
               </div>
               <div className="modal-content-field">
-                <label>category:</label>
+                <label>Category:</label>
                 <input value={modalData.categoryDetails?.name} readOnly />
               </div>
               <div className="modal-content-field">
@@ -1219,13 +1246,15 @@ const Landscaping = ({ category }) => {
                 >
                   {isDeleting ? "Deleting..." : <RiDeleteBin6Line />}
                 </button>
-                <button
-                  type="button" // Prevents form submission
-                  className="accept-btn"
-                  onClick={handleScheduleMaintenance}
-                >
-                  Schedule Maintenance
-                </button>
+                {modalData.status !== "Pending" && (
+                  <button
+                    type="button"
+                    className="accept-btn"
+                    onClick={handleScheduleMaintenance}
+                  >
+                    Schedule Maintenance
+                  </button>
+                )}
 
                 {/* Align Download Button with Schedule Maintenance */}
                 <div className="align-buttons">

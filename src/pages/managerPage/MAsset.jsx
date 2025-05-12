@@ -11,35 +11,30 @@ const categoryMapping = {
   Landscaping: "Landscaping",
   Machinery: "Machinery",
   Furniture: "Other",
-  RoomQR: "RoomQR", // Fixing casing to match "roomQR" -> "RoomQR"
+  RoomQR: "RoomQR",
 };
 
-// Default component when category is not found
+// Default and static components
 const DefaultCategory = lazy(() => import("./AssetCategories/Other"));
-
-// Static RoomQr component
 const RoomQrComponent = lazy(() => import("./AssetCategories/Room"));
 
 const MAsset = () => {
-  const { data: categories, error, isLoading } = useGetCategoryQuery(); // Fetch categories from API
+  const { data: categories, error, isLoading } = useGetCategoryQuery();
+  const [activeTab, setActiveTab] = useState(null);
 
   useEffect(() => {
     if (isLoading) {
       Swal.fire({
         title: "Loading assets...",
-        text: "Please wait while we fetch the asset categories",
+        text: "Please wait while we fetch the asset categories.",
         allowOutsideClick: false,
         didOpen: () => {
           Swal.showLoading();
         },
       });
     } else {
-      // Close the alert when loading is complete
-      if (Swal.isVisible()) {
-        Swal.close();
-      }
+      if (Swal.isVisible()) Swal.close();
 
-      // Show error message if there was an error
       if (error) {
         Swal.fire({
           icon: "error",
@@ -47,58 +42,64 @@ const MAsset = () => {
           text: "Failed to load asset categories. Please try again later.",
         });
       }
-    }
-  }, [isLoading, error]);
 
-  // Filter out categories where 'deleted' is true
+      if (categories) {
+        const filtered = categories.filter((category) => !category.deleted);
+        const defaultTab = filtered.length > 0 ? filtered[0].name : "Room QR";
+        setActiveTab(defaultTab);
+      }
+    }
+  }, [isLoading, error, categories]);
+
+  // Filter out deleted categories
   const activeCategories = categories
     ? categories.filter((category) => !category.deleted)
     : [];
 
-  // Ensure categories exist before setting defaultTab
-  const defaultTab =
-    activeCategories.length > 0 ? activeCategories[0].name : "Building";
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  // Add Room QR tab manually
+  const categoryList =
+    activeCategories.length > 0
+      ? [
+          ...activeCategories.slice(0, 1),
+          { name: "Room QR" },
+          ...activeCategories.slice(1),
+        ]
+      : [{ name: "Room QR" }];
 
-  // Adding RoomQr manually to categories to display in the AssetTap
-  const categoryList = [
-    ...activeCategories.slice(0, 1),
-    { name: "Room QR" },
-    ...activeCategories.slice(1)
-  ];  
+  // Wait until activeTab is ready
+  if (isLoading || !activeTab) return null;
+  if (error) return null;
 
-  if (isLoading) return <div>Loading categories...</div>;
-  if (error) return <div>Error fetching categories</div>;
-
-  // Get the correct filename based on the category name
+  // Determine component to load
   const normalizedTab = activeTab.replace(/\s+/g, "").toLowerCase();
   const componentFile = categoryMapping[activeTab] || "Other";
-
-  // Lazy load the mapped component dynamically or load RoomQr if selected
   const CategoryComponent =
     normalizedTab === "roomqr"
       ? RoomQrComponent
-      : lazy(
-          () =>
-            import(`./AssetCategories/${componentFile}`).catch(
-              () => DefaultCategory
-            ) // If not found, load 'Other.js'
+      : lazy(() =>
+          import(`./AssetCategories/${componentFile}`).catch(
+            () => DefaultCategory
+          )
         );
 
   return (
     <div className="ManagerDashboard">
       <div className="container">
         <div>
-          {/* Render AssetTap with RoomQr included as an option */}
-          {categoryList.length > 0 && (
+          {/* Tabs or fallback */}
+          {categoryList.length > 0 ? (
             <AssetTap
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               categories={categoryList}
             />
+          ) : (
+            <div className="text-center text-muted my-3">
+              No categories available
+            </div>
           )}
 
-          {/* Dynamically Load Component Based on Active Tab */}
+          {/* Dynamic tab content */}
           <div className="tab-content">
             <Suspense fallback={<div>Loading...</div>}>
               <CategoryComponent key={activeTab} category={activeTab} />

@@ -63,6 +63,22 @@ const Machinery = ({ category }) => {
         return "";
     }
   };
+
+  const getDisplayText = (status) => {
+    switch (status) {
+      case "In Maintenance":
+        return "In Usage"; // Show as 'In Usage'
+      default:
+        return status;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
+  };
   // Extract unique work statuses from data
   const uniqueStatuses = [
     { value: "", label: "All Work status" },
@@ -189,9 +205,7 @@ const Machinery = ({ category }) => {
 
   const handleSort = (column) => {
     const newSortOrder =
-      column === sortOrder.column
-        ? !sortOrder.ascending
-        : true;
+      column === sortOrder.column ? !sortOrder.ascending : true;
 
     setSortOrder({
       column,
@@ -266,7 +280,8 @@ const Machinery = ({ category }) => {
                             style={{
                               color: "#305845",
                               transform:
-                                sortOrder.column === header.field && sortOrder.ascending
+                                sortOrder.column === header.field &&
+                                sortOrder.ascending
                                   ? "rotate(0deg)"
                                   : "rotate(180deg)",
                               transition: "transform 0.3s ease",
@@ -318,7 +333,7 @@ const Machinery = ({ category }) => {
                       </span>
                     </Tippy>
                   </td>
-                  <td>{item.acquireDate}</td>
+                  <td>{formatDate(item.acquireDate)}</td>
                   <td>{item.lifespan}</td>
                   <td className="description">
                     <Tippy content={item.assetArea || ""} placement="top">
@@ -331,7 +346,7 @@ const Machinery = ({ category }) => {
                   </td>
                   <td>
                     <div className={getStatusClass(item.status)}>
-                      {item.status}
+                      {getDisplayText(item.status)}
                     </div>
                   </td>
                   <td
@@ -433,7 +448,7 @@ const Machinery = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={modalData.acquireDate} readOnly />
+                <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>
@@ -441,7 +456,7 @@ const Machinery = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Status:</label>
-                <input value={modalData.status} readOnly />
+                <input value={getDisplayText(modalData.status)} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Category:</label>

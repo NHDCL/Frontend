@@ -233,6 +233,13 @@ const CreationApproval = () => {
       
         sortData(column, newSortOrder);
       };
+    
+      const formatDate = (dateString) => {
+        if (!dateString) return "";
+    
+        const [year, month, day] = dateString.split("-");
+        return `${day}-${month}-${year}`;
+      };
 
   return (
     <div className="ManagerDashboard">
@@ -489,7 +496,7 @@ const CreationApproval = () => {
                     <input
                       type="text"
                       name="acquireDate"
-                      value={updatedAsset?.acquireDate || ""}
+                      value={formatDate(updatedAsset?.acquireDate) || ""}
                       onChange={handleEditChange}
                       readOnly={!isEditing}
                     />
@@ -643,7 +650,7 @@ const CreationApproval = () => {
                       <input
                         type="text"
                         name="acquireDate"
-                        value={updatedAsset?.acquireDate || ""}
+                        value={formatDate(updatedAsset?.acquireDate) || ""}
                         onChange={handleEditChange}
                         readOnly={!isEditing}
                       />
@@ -794,7 +801,7 @@ const CreationApproval = () => {
                     <input
                       type="text"
                       name="acquireDate"
-                      value={updatedAsset?.acquireDate || ""}
+                      value={formatDate(updatedAsset?.acquireDate) || ""}
                       onChange={handleEditChange}
                       readOnly={!isEditing}
                     />
@@ -926,7 +933,7 @@ const CreationApproval = () => {
                       <input
                         type="text"
                         name="acquireDate"
-                        value={updatedAsset?.acquireDate || ""}
+                        value={formatDate(updatedAsset?.acquireDate) || ""}
                         onChange={handleEditChange}
                         readOnly={!isEditing}
                       />

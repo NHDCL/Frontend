@@ -208,6 +208,12 @@ const DeletionApproval = () => {
 
     sortData(column, newSortOrder);
   };
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
+  };
 
   return (
     <div className="ManagerDashboard">
@@ -434,7 +440,7 @@ const DeletionApproval = () => {
                   </div>
                   <div className="modal-content-field">
                     <label>Acquired Date:</label>
-                    <input type="text" value={modalData.acquireDate} readOnly />
+                    <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
                   </div>
                   <div className="modal-content-field">
                     <label>Useful Life(Years):</label>
@@ -523,7 +529,7 @@ const DeletionApproval = () => {
                     </div>
                     <div className="modal-content-field">
                       <label>Acquired Date:</label>
-                      <input type="text" value={modalData.acquireDate} readOnly />
+                      <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
                     </div>
                     <div className="modal-content-field">
                       <label>Useful Life(Years):</label>
@@ -610,7 +616,7 @@ const DeletionApproval = () => {
                   </div>
                   <div className="modal-content-field">
                     <label>Acquired Date:</label>
-                    <input type="text" value={modalData.acquireDate} readOnly />
+                    <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
                   </div>
                   <div className="modal-content-field">
                     <label>Useful Life(Years):</label>
@@ -692,7 +698,7 @@ const DeletionApproval = () => {
                     </div>
                     <div className="modal-content-field">
                       <label>Acquired Date:</label>
-                      <input type="text" value={modalData.acquireDate} readOnly />
+                      <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
                     </div>
                     <div className="modal-content-field">
                       <label>Useful Life(Years):</label>

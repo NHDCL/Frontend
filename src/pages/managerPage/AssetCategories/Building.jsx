@@ -13,7 +13,7 @@ import {
   useGetCategoryQuery,
   useUploadExcelMutation,
   useRequestDisposeMutation,
-  useUpdateAssetStatusMutation
+  useUpdateAssetStatusMutation,
 } from "../../../slices/assetApiSlice";
 import {
   useCreateMaintenanceMutation,
@@ -203,7 +203,7 @@ const Building = ({ category }) => {
         lifespan: "5 years",
         assetArea: "Office Room",
         description: "24-inch LCD monitor",
-        createdBy: "jigme@gmail.com",
+        createdBy: email,
         academyID: academyId,
         assetCategoryID: CategoryId,
         // Any extra dynamic attributes can be added too
@@ -301,10 +301,6 @@ const Building = ({ category }) => {
     currentPage * rowsPerPage
   );
 
-  const handleDeleteSelected = () => {
-    setData(assets.filter((item) => !selectedRows.includes(item.AID)));
-    setSelectedRows([]);
-  };
   const handleView = (item) => {
     setModalData(item); // This will set the selected asset data for the modal
   };
@@ -323,6 +319,22 @@ const Building = ({ category }) => {
       default:
         return "";
     }
+  };
+
+  const getDisplayText = (status) => {
+    switch (status) {
+      case "In Maintenance":
+        return "In Usage"; // Show as 'In Usage'
+      default:
+        return status;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
   };
   // Extract unique work statuses from data
   const uniqueStatuses = [
@@ -759,7 +771,7 @@ const Building = ({ category }) => {
       setRepeatFrequency(null);
       setAssignedWorker(null);
       setScheduleModalData(null);
-      refetch()
+      refetch();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -1193,7 +1205,7 @@ const Building = ({ category }) => {
                           </span>
                         </Tippy>
                       </td>
-                      <td>{item.acquireDate}</td>
+                      <td>{formatDate(item.acquireDate)}</td>
                       <td>{item.lifespan}</td>
                       <td className="description">
                         <Tippy content={item.assetArea || ""} placement="top">
@@ -1206,7 +1218,7 @@ const Building = ({ category }) => {
                       </td>
                       <td>
                         <div className={getStatusClass(item.status)}>
-                          {item.status}
+                          {getDisplayText(item.status)}
                         </div>
                       </td>
                       <td
@@ -1336,14 +1348,14 @@ const Building = ({ category }) => {
                           </span>
                         </Tippy>
                       </td>
-                      <td>{item.acquireDate}</td>
+                      <td>{formatDate(item.acquireDate)}</td>
                       <td>{item.lifespan}</td>
                       <td>{floorCount}</td>
                       <td>{plintArea}</td>
                       <td>{item.categoryDetails?.depreciatedValue}</td>
                       <td>
                         <div className={getStatusClass(item.status)}>
-                          {item.status}
+                          {getDisplayText(item.status)}
                         </div>
                       </td>
                       <td className="actions">
@@ -1442,6 +1454,91 @@ const Building = ({ category }) => {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {modalData2 && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Close Button */}
+            <div className="modal-header">
+              <h2 className="form-h">Asset Details</h2>
+              <button className="close-btn" onClick={handleCloseModal2}>
+                <IoIosCloseCircle
+                  style={{ color: "#897463", width: "20px", height: "20px" }}
+                />
+              </button>
+            </div>
+            <form className="repair-form">
+              <div className="modal-content-field">
+                <label>Asset Id:</label>
+                <input type="text" value={modalData2.assetID} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Title:</label>
+                <input type="text" value={modalData2.title} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Asset Code:</label>
+                <input type="email" value={modalData2.assetCode} readOnly />
+              </div>
+
+              <div className="modal-content-field">
+                <label>Cost:</label>
+                <input type="text" value={modalData2.cost} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Depreciated Value:</label>
+                <input
+                  value={modalData2.categoryDetails?.depreciatedValue}
+                  readOnly
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Acquired Date:</label>
+                <input
+                  type="text"
+                  value={formatDate(modalData2.acquireDate)}
+                  readOnly
+                />
+              </div>
+              <div className="modal-content-field">
+                <label>Useful Life(Years):</label>
+                <input value={modalData2.lifespan} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Status:</label>
+                <input value={getDisplayText(modalData2.status)} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Category:</label>
+                <input value={modalData2.categoryDetails?.name} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Area:</label>
+                <input value={modalData2.assetArea} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Created by</label>
+                <input value={modalData2.createdBy} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>Description: </label>
+                <textarea value={modalData2.description} readOnly />
+              </div>
+              <div className="modal-content-field">
+                <label>QR: </label>
+                <div className="image-container">
+                  <img
+                    src={getQrImageUrl(modalData2.attributes)}
+                    alt="QR Code"
+                    style={{ width: 300, height: 300 }}
+                  />
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -1749,7 +1846,11 @@ const Building = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={modalData.acquireDate} readOnly />
+                <input
+                  type="text"
+                  value={formatDate(modalData.acquireDate)}
+                  readOnly
+                />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>
@@ -1757,7 +1858,7 @@ const Building = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Status:</label>
-                <input value={modalData.status} readOnly />
+                <input value={getDisplayText(modalData.status)} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Category:</label>
@@ -1820,13 +1921,15 @@ const Building = ({ category }) => {
                   {isDeleting ? "Deleting..." : <RiDeleteBin6Line />}
                 </button>
 
-                <button
-                  type="button" // Prevents form submission
-                  className="accept-btn"
-                  onClick={handleScheduleMaintenance}
-                >
-                  Schedule Maintenance
-                </button>
+                {modalData.status !== "Pending" && (
+                  <button
+                    type="button"
+                    className="accept-btn"
+                    onClick={handleScheduleMaintenance}
+                  >
+                    Schedule Maintenance
+                  </button>
+                )}
 
                 {/* Align Download Button with Schedule Maintenance */}
                 <div className="align-buttons">
