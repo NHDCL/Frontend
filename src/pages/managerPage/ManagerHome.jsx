@@ -420,7 +420,7 @@ const ManagerDashboard = () => {
                     </Tippy>
                   </td>
 
-                  <td className="actions">
+                  <td className="actions" >
                     <button
                       className="view-btn"
                       onClick={() => handleView(item)}

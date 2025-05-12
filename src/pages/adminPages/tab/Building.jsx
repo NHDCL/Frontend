@@ -111,6 +111,22 @@ const Building = ({ category }) => {
         return "";
     }
   };
+
+  const getDisplayText = (status) => {
+    switch (status) {
+      case "In Maintenance":
+        return "In Usage"; // Show as 'In Usage'
+      default:
+        return status;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
+  };
   // Extract unique work statuses from data
   const uniqueStatuses = [
     { value: "", label: "All Work Status" },
@@ -409,9 +425,7 @@ const Building = ({ category }) => {
         </div>
       </div>
       {/* Dropdowns for filtering */}
-      <div
-        className="Building-sort"
-      >
+      <div className="Building-sort">
         <div style={{ marginRight: "5px" }}>
           <Select
             classNamePrefix="custom-select-workstatus"
@@ -450,7 +464,7 @@ const Building = ({ category }) => {
         )}
 
         {selectedFloor && (
-          <div >
+          <div>
             <Select
               classNamePrefix="custom-select-workstatus"
               className="workstatus-dropdown"
@@ -560,7 +574,7 @@ const Building = ({ category }) => {
                           </span>
                         </Tippy>
                       </td>
-                      <td>{item.acquireDate}</td>
+                      <td>{formatDate(item.acquireDate)}</td>
                       <td>{item.lifespan}</td>
                       <td className="description">
                         <Tippy content={item.assetArea || ""} placement="top">
@@ -573,7 +587,7 @@ const Building = ({ category }) => {
                       </td>
                       <td>
                         <div className={getStatusClass(item.status)}>
-                          {item.status}
+                          {getDisplayText(item.status)}
                         </div>
                       </td>
                       <td
@@ -703,14 +717,14 @@ const Building = ({ category }) => {
                           </span>
                         </Tippy>
                       </td>
-                      <td>{item.acquireDate}</td>
+                      <td>{formatDate(item.acquireDate)}</td>
                       <td>{item.lifespan}</td>
                       <td>{floorCount}</td>
                       <td>{plintArea}</td>
                       <td>{item.categoryDetails?.depreciatedValue}</td>
                       <td>
                         <div className={getStatusClass(item.status)}>
-                          {item.status}
+                          {getDisplayText(item.status)}
                         </div>
                       </td>
                       <td className="actions">
@@ -831,7 +845,7 @@ const Building = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={modalData.acquireDate} readOnly />
+                <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>
@@ -839,7 +853,7 @@ const Building = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Status:</label>
-                <input value={modalData.status} readOnly />
+                <input value={getDisplayText(modalData.status)} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Category:</label>
@@ -941,7 +955,7 @@ const Building = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={modalData2.acquireDate} readOnly />
+                <input type="text" value={formatDate(modalData2.acquireDate)} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>
@@ -949,7 +963,7 @@ const Building = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Status:</label>
-                <input value={modalData2.status} readOnly />
+                <input value={getDisplayText(modalData2.status)} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Category:</label>

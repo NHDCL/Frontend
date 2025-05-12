@@ -107,7 +107,7 @@ const MaintenanceGraphs = () => {
     }, {});
   }, [filteredMaintenanceData, academyIdToName]);
 
-  // ✅ Always called - safe hook usage
+  // Always called - safe hook usage
   useEffect(() => {
     if (
       academies &&
@@ -118,19 +118,34 @@ const MaintenanceGraphs = () => {
     }
   }, [academies, selectedAcademy]);
 
-  useEffect(() => {
-    if (
-      selectedAcademy &&
-      academyData[selectedAcademy] &&
-      !selectedYear
-    ) {
-      const years = Object.keys(academyData[selectedAcademy].years || {});
-      if (years.length > 0) {
-        setSelectedYear(years[0]);
-      }
-    }
-  }, [selectedAcademy, academyData, selectedYear]);
+  // 🆕 Combine years from maintenance + response time
+  const allYears = useMemo(() => {
+    const yearsSet = new Set();
 
+    // From maintenance data
+    if (academyData[selectedAcademy]) {
+      Object.keys(academyData[selectedAcademy].years).forEach((year) =>
+        yearsSet.add(year)
+      );
+    }
+
+    // From response time data
+    (responseTimeData || []).forEach((entry) => {
+      if (entry.academyId === selectedAcademy) {
+        yearsSet.add(String(entry.year));
+      }
+    });
+
+    return Array.from(yearsSet).sort((a, b) => b - a);
+  }, [selectedAcademy, academyData, responseTimeData]);
+
+  useEffect(() => {
+    if (selectedAcademy && allYears.length > 0) {
+      setSelectedYear(allYears[0]); // Auto-select the first available year
+    }
+  }, [selectedAcademy, allYears]);
+
+  
   if (isLoadingAll || !academies || !maintenanceData || !responseTimeData) {
     return <div></div>;
   }
@@ -181,12 +196,10 @@ const MaintenanceGraphs = () => {
         />
         <Select
           classNamePrefix="custom-select-workstatus"
-          options={Object.keys(selectedAcademyData?.years || {}).map(
-            (year) => ({
-              value: year,
-              label: year,
-            })
-          )}
+          options={allYears.map((year) => ({
+            value: year,
+            label: year,
+          }))}
           value={
             selectedYear ? { value: selectedYear, label: selectedYear } : null
           }

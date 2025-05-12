@@ -70,6 +70,22 @@ const Landscaping = ({ category }) => {
         return "";
     }
   };
+
+  const getDisplayText = (status) => {
+    switch (status) {
+      case "In Maintenance":
+        return "In Usage"; // Show as 'In Usage'
+      default:
+        return status;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
+  };
   // Extract unique work statuses from data
   const uniqueStatuses = [
     { value: "", label: "All Work status" },
@@ -113,8 +129,8 @@ const Landscaping = ({ category }) => {
       let valA, valB;
 
       if (column === "Size") {
-        const attrA = a.attributes.find(attr => attr.name === "Size");
-        const attrB = b.attributes.find(attr => attr.name === "Size");
+        const attrA = a.attributes.find((attr) => attr.name === "Size");
+        const attrB = b.attributes.find((attr) => attr.name === "Size");
         valA = attrA ? attrA.value : "";
         valB = attrB ? attrB.value : "";
       } else {
@@ -146,9 +162,7 @@ const Landscaping = ({ category }) => {
 
   const handleSort = (column) => {
     const newSortOrder =
-      column === sortOrder.column
-        ? !sortOrder.ascending
-        : true;
+      column === sortOrder.column ? !sortOrder.ascending : true;
 
     setSortOrder({
       column,
@@ -216,7 +230,8 @@ const Landscaping = ({ category }) => {
                             style={{
                               color: "#305845",
                               transform:
-                                sortOrder.column === header.field && sortOrder.ascending
+                                sortOrder.column === header.field &&
+                                sortOrder.ascending
                                   ? "rotate(0deg)"
                                   : "rotate(180deg)",
                               transition: "transform 0.3s ease",
@@ -264,13 +279,13 @@ const Landscaping = ({ category }) => {
                       </span>
                     </Tippy>
                   </td>
-                  <td>{item.acquireDate}</td>
+                  <td>{formatDate(item.acquireDate)}</td>
                   <td>{item.lifespan}</td>
                   <td>{size}</td>
                   <td>{item.categoryDetails?.depreciatedValue}</td>
                   <td>
                     <div className={getStatusClass(item.status)}>
-                      {item.status}
+                      {getDisplayText(item.status)}
                     </div>
                   </td>
                   <td className="actions">
@@ -358,18 +373,18 @@ const Landscaping = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={modalData.acquireDate} readOnly />
+                <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>
                 <input value={modalData.lifespan} readOnly />
               </div>
               <div className="modal-content-field">
-                <label>status:</label>
-                <input value={modalData.status} readOnly />
+                <label>Status:</label>
+                <input value={getDisplayText(modalData.status)} readOnly />
               </div>
               <div className="modal-content-field">
-                <label>category:</label>
+                <label>Category:</label>
                 <input value={modalData.categoryDetails?.name} readOnly />
               </div>
               <div className="modal-content-field">
@@ -411,9 +426,9 @@ const Landscaping = ({ category }) => {
                 {/* Align Download Button with Schedule Maintenance */}
                 <div className="align-buttons">
                   {modalData.attributes &&
-                    modalData.attributes.some((attr) =>
-                      attr.name.startsWith("image")
-                    ) ? (
+                  modalData.attributes.some((attr) =>
+                    attr.name.startsWith("image")
+                  ) ? (
                     <button
                       type="button"
                       className="download-all-btn"

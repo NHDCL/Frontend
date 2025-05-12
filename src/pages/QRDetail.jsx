@@ -5,7 +5,10 @@ import "./css/QRDetail.css";
 import { RiImageAddLine } from "react-icons/ri";
 import Select from "react-select"; // Make sure to install this with: npm install react-select
 import { useParams } from "react-router-dom";
-import { useGetAssetByAssetCodeQuery } from "../slices/assetApiSlice";
+import {
+  useGetAssetByAssetCodeQuery,
+  useUpdateAssetStatusMutation,
+} from "../slices/assetApiSlice";
 import { useGetAcademyByIdQuery } from "../slices/userApiSlice";
 import { usePostRepairRequestMutation } from "../slices/maintenanceApiSlice";
 import Swal from "sweetalert2";
@@ -38,6 +41,7 @@ const QRDetail = () => {
     description: "",
     email: "",
   });
+  const [updateAssetStatus] = useUpdateAssetStatusMutation();
 
   useEffect(() => {
     if (isLoading) {
@@ -206,8 +210,10 @@ const QRDetail = () => {
     if (!result.isConfirmed) return;
 
     try {
-      const res = await postRepairRequest(requestData).unwrap();
-      console.log(res);
+      await postRepairRequest(requestData).unwrap();
+
+      await updateAssetStatus({ assetCode: asset?.assetCode, status: "In Maintenance" }).unwrap();
+
       Swal.fire({
         icon: "success",
         title: "Repair Request Sent!",
