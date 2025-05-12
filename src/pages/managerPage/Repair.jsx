@@ -663,9 +663,11 @@ const Repair = () => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Department:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
+
                 <Select
                   classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
+                  // className="workstatus-dropdown"
                   options={departmentOptions}
                   value={
                     departmentOptions.find(
@@ -679,9 +681,11 @@ const Repair = () => {
                   isClearable
                 />
               </div>
+              </div>
 
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -696,6 +700,7 @@ const Repair = () => {
                   }}
                   isClearable
                 />
+              </div>
               </div>
 
               {/* Assign Date */}
@@ -751,6 +756,7 @@ const Repair = () => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Department:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -767,8 +773,11 @@ const Repair = () => {
                   }
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -791,6 +800,8 @@ const Repair = () => {
                   }}
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Assign Date:</label>
                 <input
@@ -814,12 +825,7 @@ const Repair = () => {
                       ? assignTimeU
                       : rescheduleModalData?.startTime?.slice(0, 5) || ""
                   }
-                  // onFocus={() => {
-                  //   if (!assignTimeU) {
-                  //     const current = getLocalCurrentTime();
-                  //     setAssignTimeU(current);
-                  //   }
-                  // }}
+                 
                   onChange={(e) => setAssignTimeU(getLocalCurrentTime())}
                 />
               </div>

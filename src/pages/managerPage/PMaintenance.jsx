@@ -319,19 +319,6 @@ const PMaintenance = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-                {/* <th>
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.length === displayedData.length} // Select all checkboxes when all rows are selected
-                    onChange={() =>
-                      setSelectedRows(
-                        selectedRows.length === displayedData.length
-                          ? []
-                          : displayedData.map((item) => item.assetCode)
-                      )
-                    }
-                  />
-                </th> */}
                 {[
                   { label: "Asset Code", field: "assetCode" },
                   { label: "Asset Name", field: "assetName" },
@@ -370,32 +357,13 @@ const PMaintenance = () => {
                     )}
                   </th>
                 ))}
-                {/* <th>
-                  {selectedRows.length > 0 ? (
-                    <button
-                      className="deleteMaintenance-all-btn"
-                      onClick={handleDeleteSelected}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px", color: "red" }}
-                      />
-                    </button>
-                  ) : (
-                    " "
-                  )}
-                </th> */}
+              
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  {/* <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(item.maintenanceID)}
-                      onChange={() => handleSelectRow(item.maintenanceID)}
-                    />
-                  </td> */}
+                 
                   <td>{item.assetCode}</td>
                   <td className="description">
                     <Tippy content={item.assetName || ""} placement="top">
@@ -444,14 +412,6 @@ const PMaintenance = () => {
                     >
                       <FaEdit style={{ width: "20px", height: "20px" }} />
                     </button>
-                    {/* <button
-                      className="delete-btn"
-                      onClick={() => handleDeleteRow(item.assetCode)}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px" }}
-                      />
-                    </button> */}
                   </td>
                 </tr>
               ))}
@@ -513,6 +473,7 @@ const PMaintenance = () => {
               </div>
               <div className="modal-content-field">
                 <label htmlFor="">Assign: </label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -547,6 +508,7 @@ const PMaintenance = () => {
                     "No workers found for this department"
                   }
                 />
+              </div>
               </div>
 
               <p className="sub-title">Schedule Maintenance Notification</p>

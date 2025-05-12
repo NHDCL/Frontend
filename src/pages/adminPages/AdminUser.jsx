@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/TabSwitcher.css";
+import "./../managerPage/css/dropdown.css";
+import "./../managerPage/css/form.css";
+
 import { IoIosSearch } from "react-icons/io";
 import img from "../../assets/images/defaultImage.png";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -18,16 +21,13 @@ import {
   useGetRolesQuery,
   useSoftDeleteUserMutation,
   useDeleteDepartmentMutation,
-  useUpdateDepartmentMutation,
-
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 import Tippy from "@tippyjs/react";
-import { FaEdit } from "react-icons/fa";
 
 const AdminUser = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("Department");
+  const [activeTab, setActiveTab] = useState("Manager");
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
   const [showModal, setShowModal] = useState(false);
@@ -41,19 +41,14 @@ const AdminUser = () => {
   const [selectedAcademy, setSelectedAcademy] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState(null);
 
-  const [departments, setDepartment] = useState([]);
-  const [newDepartmentName, setNewDepartmentName] = useState("");
+  const [departments, setDepartment] = useState("");
   const [description, setDescription] = useState("");
-  const [showEditDepartmentModal, setShowEditDepartmentModal] = useState(false);
-  const [editData, setEditData] = useState({ name: '', description: '' });
-  const [selectedId, setSelectedId] = useState(null);
-
 
   const { data: academies, isLoading: isLoadingAcademies } =
     useGetAcademyQuery();
   const {
     data: department,
-    refetch: refetchDepartments,
+    refetch,
     isLoading: isLoadingDepartments,
   } = useGetDepartmentQuery();
   const {
@@ -61,8 +56,6 @@ const AdminUser = () => {
     isLoading: isLoadingUsers,
     refetch: refetchUsers,
   } = useGetUsersQuery();
-  const [updateDepartment, { isLoading: updating }] = useUpdateDepartmentMutation();
-
   const { data: roles, isLoading: isLoadingRoles } = useGetRolesQuery();
 
   const [createDepartment] = useCreateDepartmentMutation();
@@ -125,48 +118,10 @@ const AdminUser = () => {
     }
   }, [roles]);
 
-  useEffect(() => {
-    if (department && Array.isArray(department)) {
-      setDepartment(department); // Set state from the fetched data
-    }
-  }, [department]);
+  // console.log("Mausers: ", managerUser.role.name)
+  // console.log("MRoleausers: ", managerRoleId)
 
-
-  const handleEditDepartment = (id) => {
-    if (!Array.isArray(departments)) {
-      console.error("Departments is not an array");
-      return;
-    }
-
-    const departmentToEdit = departments.find(
-      (dept) => dept?.departmentId === id
-    );
-
-    if (departmentToEdit) {
-      setEditData({
-        name: departmentToEdit.name || "",
-        description: departmentToEdit.description || "",
-      });
-      setSelectedId(id);
-      setShowEditDepartmentModal(true);
-    } else {
-      console.error("Department not found");
-    }
-  };
-
-  const handleUpdateDepartment = () => {
-    updateDepartment({ id: selectedId, ...editData })
-      .then(() => {
-        Swal.fire("Updated!", "Department updated successfully.", "success");
-        setShowEditDepartmentModal(false);
-        setSelectedId(null);
-        setEditData({ name: '', description: '' });
-        refetchDepartments()
-      })
-      .catch((error) => {
-        Swal.fire("Error", "Something went wrong.", "error");
-      });
-  };
+  // Add this with your other hooks
   const [deleteDepartment] = useDeleteDepartmentMutation();
 
   // Add this function to handle department deletion
@@ -186,7 +141,7 @@ const AdminUser = () => {
       try {
         await deleteDepartment(departmentId).unwrap();
         Swal.fire("Deleted!", "Department has been deleted.", "success");
-        refetchDepartments()
+        refetch(); // Refetch departments after deletion
       } catch (error) {
         Swal.fire("Error", "Failed to delete department", "error");
       }
@@ -239,10 +194,10 @@ const AdminUser = () => {
       activeTab === "Manager"
         ? managerRoleId
         : activeTab === "Supervisor"
-          ? supervisorRoleId
-          : activeTab === "Technician"
-            ? technicianRoleId
-            : null;
+        ? supervisorRoleId
+        : activeTab === "Technician"
+        ? technicianRoleId
+        : null;
 
     // console.log("roleid: ", roleId)
 
@@ -301,7 +256,7 @@ const AdminUser = () => {
   };
 
   const handleCreateDepartment = async () => {
-    if (!newDepartmentName || !description) {
+    if (!departments || !description) {
       Swal.fire({
         icon: "error",
         title: "Incomplete Form",
@@ -311,7 +266,7 @@ const AdminUser = () => {
       return;
     }
     const departmentData = {
-      name: newDepartmentName,
+      name: departments,
       description: description,
     };
 
@@ -324,9 +279,9 @@ const AdminUser = () => {
         timer: 2000,
         showConfirmButton: false,
       });
-      setNewDepartmentName("")
+      setDepartment("");
       setDescription("");
-      refetchDepartments();
+      refetch();
       // console.log("Department created:", res);
       // setShowModal(false);
     } catch (error) {
@@ -350,17 +305,17 @@ const AdminUser = () => {
   const filteredData =
     activeTab === "Department"
       ? (department || []).filter((item) =>
-        Object.values(item).some((value) =>
-          value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      )
-      : (data || []).filter(
-        (item) =>
-          item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
           Object.values(item).some((value) =>
             value.toString().toLowerCase().includes(searchTerm.toLowerCase())
           )
-      );
+        )
+      : (data || []).filter(
+          (item) =>
+            item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
+            Object.values(item).some((value) =>
+              value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+            )
+        );
 
   console.log("FD", filteredData);
 
@@ -454,7 +409,7 @@ const AdminUser = () => {
       {/* Tab Switcher */}
       <div className="user-tab-outer">
         <div className="user-tab-container">
-          {["Department", "Manager", "Supervisor", "Technician"].map((tab) => (
+          {["Manager", "Supervisor", "Technician", "Department"].map((tab) => (
             <button
               key={tab}
               className={`tab ${activeTab === tab ? "active" : ""}`}
@@ -513,7 +468,7 @@ const AdminUser = () => {
                               color: "#305845",
                               transform:
                                 sortOrder.column === "name" &&
-                                  sortOrder.ascending
+                                sortOrder.ascending
                                   ? "rotate(0deg)"
                                   : "rotate(180deg)",
                               transition: "transform 0.3s ease",
@@ -524,7 +479,6 @@ const AdminUser = () => {
                     </div>
                   </th>
                   <th>Description</th>
-                  <th></th>
                   <th></th>
                 </tr>
               </thead>
@@ -553,11 +507,6 @@ const AdminUser = () => {
                             : ""}
                         </span>
                       </Tippy>
-                    </td>
-                    <td>
-                      <button onClick={() => handleEditDepartment(item.departmentId)}>
-                        <FaEdit style={{ width: "20px", height: "20px", color: "green" }} />
-                      </button>
                     </td>
                     <td>
                       <RiDeleteBin6Line
@@ -604,7 +553,7 @@ const AdminUser = () => {
                                     color: "#305845",
                                     transform:
                                       sortOrder.column === header.field &&
-                                        sortOrder.ascending
+                                      sortOrder.ascending
                                         ? "rotate(0deg)"
                                         : "rotate(180deg)",
                                     transition: "transform 0.3s ease",
@@ -677,9 +626,9 @@ const AdminUser = () => {
                           {getAcademyName(item.academyId)
                             ? getAcademyName(item.academyId).length > 20
                               ? getAcademyName(item.academyId).substring(
-                                0,
-                                20
-                              ) + "..."
+                                  0,
+                                  20
+                                ) + "..."
                               : getAcademyName(item.academyId)
                             : ""}
                         </span>
@@ -728,7 +677,8 @@ const AdminUser = () => {
             <div className="AdminUser_close">
               <h2>Add {activeTab}</h2>
               <button
-                className="AdminUser-close-btn"
+                // className="AdminUser-close-btn"
+                className="close-btn"
                 onClick={() => {
                   setShowModal(false);
                   resetForm();
@@ -825,55 +775,6 @@ const AdminUser = () => {
         </div>
       )}
 
-      {showEditDepartmentModal && (
-        <div className="AdminUser-modal-overlay">
-          <div className="AdminU-modal-content">
-            <div className="AdminUser_close">
-              <h2>Edit Department</h2>
-              <button
-                className="AdminUser-close-btn"
-                onClick={() => setShowEditDepartmentModal(false)}
-              >
-                <IoIosCloseCircle
-                  style={{
-                    color: "#897463",
-                    width: "20px",
-                    height: "20px",
-                    marginRight: "-120px",
-                  }}
-                />
-              </button>
-            </div>
-            <div className="AdminUser-modal-content">
-              <input
-                type="text"
-                placeholder="Department Name"
-                value={editData.name}
-                onChange={(e) =>
-                  setEditData({ ...editData, name: e.target.value })
-                }
-              />
-              <textarea
-                placeholder="Description"
-                value={editData.description}
-                onChange={(e) =>
-                  setEditData({ ...editData, description: e.target.value })
-                }
-              />
-              <button
-                disabled={updating}
-                className="AdminUser-add"
-                type="submit"
-                onClick={handleUpdateDepartment}
-              >
-                {updating ? "Updating..." : "Update"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-
       {/* Add department Modal */}
       {showModalDepartment && (
         <div className="AdminUser-modal-overlay">
@@ -898,8 +799,8 @@ const AdminUser = () => {
               <input
                 type="text"
                 placeholder="Department Name"
-                value={newDepartmentName}
-                onChange={(e) => setNewDepartmentName(e.target.value)}
+                value={departments}
+                onChange={(e) => setDepartment(e.target.value)}
                 required
               />
               <textarea
