@@ -215,11 +215,7 @@ const Category = () => {
                       </td>
                       <td
                         className="actions"
-                        style={{
-                          display: "flex",
-                          gap: "0.5rem",
-                          maxWidth: "150px",
-                        }}
+                        
                       >
                         <button
                           className="view-btn"
@@ -228,6 +224,7 @@ const Category = () => {
                           View
                         </button>
                       </td>
+                      
                     </tr>
                   ))}
                 </tbody>

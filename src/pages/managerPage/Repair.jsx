@@ -122,11 +122,6 @@ const Repair = () => {
     ...new Set(supervisorsFromSameAcademy.map((s) => s.departmentId)),
   ];
 
-  const departmentNames = uniqueSupervisorDepartmentIds.map((id) => {
-    const matchedDept = departments?.find((dept) => dept.departmentId === id);
-    return matchedDept ? matchedDept.name : "Unknown";
-  });
-
   const [selectedDepartment, setSelectedDepartment] = useState(null);
 
   const departmentOptions =
@@ -139,19 +134,26 @@ const Repair = () => {
         label: dep.name,
       })) || [];
 
+      console.log("departmentOptions", departmentOptions);
+
   const workerOptions = supervisorsFromSameAcademy
     .filter((user) => user.departmentId === selectedDepartment)
     .map((user) => ({
       value: user.userId,
       label: user.email,
     }));
+    console.log("workerOptions", workerOptions);
+
 
   const userID = scheduleData?.[0]?.userID;
 
   const matchedSupervisor = supervisorsFromSameAcademy?.find(
     (supervisor) => supervisor.userId === userID
   );
+  console.log("matchedSupervisor", matchedSupervisor);
+
   const supervisorEmail = matchedSupervisor?.email;
+  console.log("supervisorEmail", supervisorEmail)
 
   const supervisorDepartmentId = matchedSupervisor?.departmentId;
   const supervisorDepartment = Array.isArray(departments)
@@ -199,13 +201,15 @@ const Repair = () => {
       : [];
 
   // Department dropdown options
-  const departmentOptionsU = Array.isArray(departments)
-    ? departments.map((dept) => ({
-        label: dept.name,
-        value: dept.departmentId,
-      }))
-    : [];
-
+  const departmentOptionsU = departments
+  ?.filter((dep) =>
+    uniqueSupervisorDepartmentIds.includes(dep.departmentId)
+  )
+  .map((dep) => ({
+    value: dep.departmentId,
+    label: dep.name,
+  })) || [];
+console.log("departmentOptionsU",departmentOptionsU)
   // For default department selection
   const initialDepartmentOption = departmentOptionsU.find(
     (opt) => opt.label === departmentName
@@ -222,14 +226,7 @@ const Repair = () => {
   const handleRescheduleView = async (item) => {
     setRescheduleModalData(item);
 
-    setUpdateAssignedWorker(
-      item?.updateAssignedWorker
-        ? {
-            value: item.updateAssignedWorker.userID,
-            label: item.updateAssignedWorker.email,
-          }
-        : null
-    );
+    setUpdateAssignedWorker(item?.technicianEmail || ""  );
 
     setAssignDateU(item?.reportingDate || "");
     setAssignTimeU(item?.startTime?.slice(0, 5) || "");
@@ -492,17 +489,18 @@ const Repair = () => {
     });
     sortData(column, newSortOrder);
   };
-  // const sortedData = [...data].sort((a, b) => {
-  //   if (!sortOrder.column) return b.repairID - a.repairID;
-
-  //   const valA = a[sortOrder.column];
-  //   const valB = b[sortOrder.column];
-
-  //   if (valA < valB) return sortOrder.direction === "asc" ? -1 : 1;
-  //   if (valA > valB) return sortOrder.direction === "asc" ? 1 : -1;
-  //   return 0;
-  // });
-
+  const getLocalCurrentTime = () => {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
+  useEffect(() => {
+    if (modalData) {
+      setAssignTime(getLocalCurrentTime());
+    }
+  }, [modalData]);
+  
   return (
     <div className="ManagerDashboard">
       <div className="container">
@@ -555,19 +553,6 @@ const Repair = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-                {/* <th>
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.length === displayedData.length} // Select all checkboxes when all rows are selected
-                    onChange={() =>
-                      setSelectedRows(
-                        selectedRows.length === displayedData.length
-                          ? []
-                          : displayedData.map((item) => item.repairID)
-                      )
-                    }
-                  />
-                </th> */}
                 {[
                   { label: "Sl.No", field: null },
                   { label: "Image", field: null },
@@ -681,14 +666,7 @@ const Repair = () => {
                         Reschedule
                       </button>
                     )}
-                    {/* <button
-                      className="delete-btn"
-                      onClick={() => handleDeleteRow(item.repairID)}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px" }}
-                      />
-                    </button> */}
+                   
                   </td>
                 </tr>
               ))}
@@ -789,7 +767,7 @@ const Repair = () => {
                 <input
                   type="time"
                   value={assignTime}
-                  onChange={(e) => setAssignTime(e.target.value)}
+                  // onChange={(e) => setAssignTime(e.target.value)}
                 />
               </div>
               <div className="modal-buttons">
@@ -850,7 +828,7 @@ const Repair = () => {
                     finalOptions.find(
                       (opt) => opt.value === selectedSupervisorId
                     ) ||
-                    supervisorWorker ||
+                    supervisorOption ||
                     null
                   }
                   options={finalOptions}
@@ -888,7 +866,13 @@ const Repair = () => {
                       ? assignTimeU
                       : rescheduleModalData?.startTime?.slice(0, 5) || ""
                   }
-                  onChange={(e) => setAssignTimeU(e.target.value)}
+                  // onFocus={() => {
+                  //   if (!assignTimeU) {
+                  //     const current = getLocalCurrentTime();
+                  //     setAssignTimeU(current);
+                  //   }
+                  // }}
+                  onChange={(e) => setAssignTimeU(getLocalCurrentTime())}
                 />
               </div>
 
