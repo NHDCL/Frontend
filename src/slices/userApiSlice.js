@@ -243,6 +243,15 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         method: "DELETE",
       }),
     }),
+
+    updateDepartment: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `${USERS_URL}/departments/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Department'],
+    }),
   }),
 });
 
@@ -269,4 +278,5 @@ export const {
   useGetDepartmentByIdQuery,
   useSoftDeleteUserMutation,
   useDeleteDepartmentMutation,
+  useUpdateDepartmentMutation,
 } = usersApiSlice;

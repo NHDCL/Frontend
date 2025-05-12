@@ -1331,7 +1331,7 @@ const Other = ({ category }) => {
               </div>
 
               {/* Schedule fields */}
-              <p className="sub-title">Schedule</p>
+              <p className="sub-title">Schedule Maintenance Notification</p>
               <div className="modal-content-field">
                 <label>Repeat:</label>
                 <div style={{ width: "100%",maxWidth:"350px" }}>
@@ -1347,7 +1347,7 @@ const Other = ({ category }) => {
               </div>
 
               <div className="modal-content-field">
-                <label>Starts on: </label>
+                <label>From date: </label>
                 <input
                   type="date"
                   value={
@@ -1379,7 +1379,7 @@ const Other = ({ category }) => {
                 />
               </div>
               <div className="modal-content-field">
-                <label>Ends on: </label>
+                <label>To date: </label>
                 <input
                   type="date"
                   value={

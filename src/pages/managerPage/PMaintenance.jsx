@@ -225,23 +225,6 @@ const PMaintenance = () => {
     );
   };
 
-  const handleDeleteSelected = () => {
-    const updatedData = data.filter(
-      (item) => !selectedRows.includes(item.assetCode)
-    );
-    // Update the data with the filtered result after deletion
-    setData(updatedData);
-    setSelectedRows([]); // Reset selected rows after deletion
-  };
-  const handleDeleteRow = (assetCode) => {
-    const updatedData = data.filter((item) => item.assetCode !== assetCode);
-    setData(updatedData);
-  };
-
-  const handleScheduleView = (item) => {
-    setModalData(item);
-
-  };
   const handleCloseModal = () => {
     setModalData(null);
   };
@@ -312,32 +295,29 @@ const PMaintenance = () => {
     }
   };
 
-  const handleAssignRequest = () => {
-    if (!assignedWorker || !assignTime || !assignDate) {
-      alert("Please fill in all fields before assigning.");
-      return;
-    }
-
-    alert(
-      `Assigned ${modalData.rid} to ${assignedWorker} at ${assignTime} on ${assignDate}`
-    );
-
-    // Close the modal after assigning
-    handleCloseModal();
-  };
-
   // Sample workers list
+  // Sample workers list with department and academy filtering
   const workersList = (allUsers || [])
     .filter((user) => {
       const dept = allDepartment?.find(
         (d) => d?.departmentId === user?.departmentId
       );
-      return dept?.name === editModalData?.userDepartment;
+
+      const matchesDepartment =
+        dept?.name?.toLowerCase() === editModalData?.userDepartment?.toLowerCase();
+
+      const matchesAcademy =
+        user?.academyId === userByEmial?.user?.academyId;
+
+      return matchesDepartment && matchesAcademy;
     })
     .map((user) => ({
-      value: user.userId, // This is what you want to send to backend
-      label: user.email, // Display the email
+      value: user.userId,
+      label: user.email,
     }));
+
+  // Debugging output
+  console.log("👷 Filtered Workers List:", workersList);
 
   console.log("🛠️ Workers List for Department:", editModalData?.userDepartment);
   console.log("👥 Matched Workers:", workersList);
@@ -595,9 +575,9 @@ const PMaintenance = () => {
               </div>
               </div>
 
-              <p className="sub-title">Schedule</p>
+              <p className="sub-title">Schedule Maintenance Notification</p>
               <div className="modal-content-field">
-                <label htmlFor="">Starts on: </label>
+                <label htmlFor="">From date: </label>
                 <input
                   type="date"
                   value={editModalData.startDate}
@@ -636,7 +616,7 @@ const PMaintenance = () => {
                 />
               </div>
               <div className="modal-content-field">
-                <label htmlFor="">Ends on: </label>
+                <label htmlFor="">To date: </label>
                 <input
                   type="date"
                   value={editModalData.endDate}
@@ -651,9 +631,9 @@ const PMaintenance = () => {
             </div>
 
             {/* <button className="save-btn" onClick={handleSaveEdit}>Save</button> */}
-           
+
             {statusPending === "Pending" && (
-                <div className="modal-buttons">
+              <div className="modal-buttons">
                 <button
                   className="accept-btn"
                   style={{ width: "80px" }}
@@ -663,7 +643,7 @@ const PMaintenance = () => {
                   {isSaving ? "Saving..." : "Done"}
                 </button>
               </div>
-              )}
+            )}
           </div>
         </div>
       )}
