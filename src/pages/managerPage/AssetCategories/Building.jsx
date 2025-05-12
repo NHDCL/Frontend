@@ -1012,6 +1012,21 @@ const Building = ({ category }) => {
     sortDatas(column, newSortOrder);
   };
 
+  const getStatusDescription = (status) => {
+    switch (status) {
+      case "Pending":
+        return "The asset is awaiting approval or further action.";
+      case "In Usage":
+        return "The asset is currently being used.";
+      case "In Maintenance":
+        return "The asset is currently in use and also undergoing maintenance or repair.";
+      case "Disposed":
+        return "The asset has been disposed and is no longer in use.";
+      default:
+        return "Unknown status.";
+    }
+  };
+
   return (
     <div className="managerDashboard">
       <div className="search-sort-container">
@@ -1221,6 +1236,8 @@ const Building = ({ category }) => {
                           {getDisplayText(item.status)}
                         </div>
                       </td>
+                      
+
                       <td
                         className="actions"
                         style={{
@@ -1354,10 +1371,16 @@ const Building = ({ category }) => {
                       <td>{plintArea}</td>
                       <td>{item.categoryDetails?.depreciatedValue}</td>
                       <td>
-                        <div className={getStatusClass(item.status)}>
-                          {getDisplayText(item.status)}
-                        </div>
+                        <Tippy
+                          content={getStatusDescription(item.status)}
+                          placement="top"
+                        >
+                          <div className={getStatusClass(item.status)}>
+                            {getDisplayText(item.status)}
+                          </div>
+                        </Tippy>
                       </td>
+
                       <td className="actions">
                         <button
                           className="view-btn"
@@ -1988,32 +2011,38 @@ const Building = ({ category }) => {
               <p className="sub-title">Maintenance Detail</p>
               <div className="modal-content-field">
                 <label>Department:</label>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={departmentOptions}
-                  value={
-                    departmentOptions.find(
-                      (opt) => opt.value === selectedDepartment
-                    ) || null
-                  }
-                  onChange={(option) =>
-                    setSelectedDepartment(option?.value || "")
-                  }
-                  isClearable
-                />
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={departmentOptions}
+                    value={
+                      departmentOptions.find(
+                        (opt) => opt.value === selectedDepartment
+                      ) || null
+                    }
+                    onChange={(option) =>
+                      setSelectedDepartment(option?.value || "")
+                    }
+                    isClearable
+                  />
+                </div>
               </div>
+
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workerOptions}
-                  value={assignedWorker}
-                  onChange={setAssignedWorker}
-                  isClearable
-                />
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={workerOptions}
+                    value={assignedWorker}
+                    onChange={setAssignedWorker}
+                    isClearable
+                  />
+                </div>
               </div>
+
               <div className="modal-content-field">
                 <label>Description: </label>
                 <input
@@ -2032,15 +2061,18 @@ const Building = ({ category }) => {
               <p className="sub-title">Schedule</p>
               <div className="modal-content-field">
                 <label>Repeat:</label>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={repeatOptions}
-                  value={repeatFrequency}
-                  onChange={setRepeatFrequency}
-                  isClearable
-                />
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={repeatOptions}
+                    value={repeatFrequency}
+                    onChange={setRepeatFrequency}
+                    isClearable
+                  />
+                </div>
               </div>
+
               <div className="modal-content-field">
                 <label>Starts on: </label>
                 <input

@@ -727,6 +727,20 @@ const Landscaping = ({ category }) => {
 
     sortData(column, newSortOrder);
   };
+  const getStatusDescription = (status) => {
+    switch (status) {
+      case "Pending":
+        return "The asset is awaiting approval or further action.";
+      case "In Usage":
+        return "The asset is currently being used.";
+      case "In Maintenance":
+        return "The asset is currently in use and also undergoing maintenance or repair.";
+      case "Disposed":
+        return "The asset has been disposed and is no longer in use.";
+      default:
+        return "Unknown status.";
+    }
+  };
 
   return (
     <div className="managerDashboard">
@@ -853,11 +867,16 @@ const Landscaping = ({ category }) => {
                   <td>{item.lifespan}</td>
                   <td>{size}</td>
                   <td>{item.categoryDetails?.depreciatedValue}</td>
-                  <td>
-                    <div className={getStatusClass(item.status)}>
-                      {getDisplayText(item.status)}
-                    </div>
-                  </td>
+                 <td>
+                        <Tippy
+                          content={getStatusDescription(item.status)}
+                          placement="top"
+                        >
+                          <div className={getStatusClass(item.status)}>
+                            {getDisplayText(item.status)}
+                          </div>
+                        </Tippy>
+                      </td>
                   <td className="actions">
                     <button
                       className="view-btn"
@@ -1312,6 +1331,7 @@ const Landscaping = ({ category }) => {
               <p className="sub-title">Maintenance Detail</p>
               <div className="modal-content-field">
                 <label>Department:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -1327,8 +1347,11 @@ const Landscaping = ({ category }) => {
                   isClearable
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -1338,6 +1361,8 @@ const Landscaping = ({ category }) => {
                   isClearable
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Description: </label>
                 <input
@@ -1356,6 +1381,7 @@ const Landscaping = ({ category }) => {
               <p className="sub-title">Schedule</p>
               <div className="modal-content-field">
                 <label>Repeat:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -1365,6 +1391,8 @@ const Landscaping = ({ category }) => {
                   isClearable
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Starts on: </label>
                 <input

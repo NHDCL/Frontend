@@ -670,21 +670,8 @@ const SupervisorHome = () => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Assign Technician:</label>
-                {/* <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workerOptions}
-                  value={
-                    workerOptions?.find(
-                      (w) => w.value === selectedTechnicianId
-                    ) || null
-                  }
-                  onChange={(selectedOption) => {
-                    setSelectedTechnicianId(selectedOption?.label || "");
-                    console.log("Selected Worker:", selectedOption);
-                  }}
-                  isClearable
-                /> */}
+                <div style={{ width: "100%",maxWidth:"350px" }}>
+
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -701,6 +688,8 @@ const SupervisorHome = () => {
                   isClearable
                 />
               </div>
+              </div>
+
               {/* Assign Date */}
               <div className="modal-content-field">
                 <label>Assign Date:</label>
@@ -747,6 +736,7 @@ const SupervisorHome = () => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Assign Technician:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -765,6 +755,8 @@ const SupervisorHome = () => {
                   isClearable
                 />
               </div>
+              </div>
+
               {/* Assign Date */}
               <div className="modal-content-field">
                 <label>Assign Date:</label>

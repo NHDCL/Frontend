@@ -715,9 +715,11 @@ console.log("departmentOptionsU",departmentOptionsU)
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Department:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
+
                 <Select
                   classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
+                  // className="workstatus-dropdown"
                   options={departmentOptions}
                   value={
                     departmentOptions.find(
@@ -731,9 +733,11 @@ console.log("departmentOptionsU",departmentOptionsU)
                   isClearable
                 />
               </div>
+              </div>
 
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -748,6 +752,7 @@ console.log("departmentOptionsU",departmentOptionsU)
                   }}
                   isClearable
                 />
+              </div>
               </div>
 
               {/* Assign Date */}
@@ -803,6 +808,7 @@ console.log("departmentOptionsU",departmentOptionsU)
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Department:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -819,8 +825,11 @@ console.log("departmentOptionsU",departmentOptionsU)
                   }
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -843,6 +852,8 @@ console.log("departmentOptionsU",departmentOptionsU)
                   }}
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Assign Date:</label>
                 <input
@@ -866,12 +877,7 @@ console.log("departmentOptionsU",departmentOptionsU)
                       ? assignTimeU
                       : rescheduleModalData?.startTime?.slice(0, 5) || ""
                   }
-                  // onFocus={() => {
-                  //   if (!assignTimeU) {
-                  //     const current = getLocalCurrentTime();
-                  //     setAssignTimeU(current);
-                  //   }
-                  // }}
+                 
                   onChange={(e) => setAssignTimeU(getLocalCurrentTime())}
                 />
               </div>

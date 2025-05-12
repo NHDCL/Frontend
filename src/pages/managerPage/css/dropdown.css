@@ -370,7 +370,7 @@
 /* department dropdown */
 .custom-select-department__control {
   width: 100% !important;
-  min-width: 350px !important;
+  min-width: 50px !important;
   max-width: 350px !important;
   border: 1px solid #897463 !important;
   border-radius: 10px !important;
@@ -400,9 +400,9 @@
   background-color: #fff;
   border-radius: 10px !important;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  width: 350px !important;
-  min-width: 350px !important;
-  max-width: 200px !important;
+  width: 100% !important;
+  min-width: 50px !important;
+  max-width: 350px !important;
 }
 
 /* Change dropdown option color */

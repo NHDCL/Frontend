@@ -654,6 +654,7 @@ const RoomQR = () => {
             <form className="repair-form">
               <div className="modal-content-field">
                 <label>Select Building:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -671,6 +672,8 @@ const RoomQR = () => {
                   options={assetOptions}
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Floor Name:</label>
                 <input

@@ -394,6 +394,20 @@ const Building = ({ category }) => {
 
     sortDatas(column, newSortOrder);
   };
+  const getStatusDescription = (status) => {
+    switch (status) {
+      case "Pending":
+        return "The asset is awaiting approval or further action.";
+      case "In Usage":
+        return "The asset is currently being used.";
+      case "In Maintenance":
+        return "The asset is currently in use and also undergoing maintenance or repair.";
+      case "Disposed":
+        return "The asset has been disposed and is no longer in use.";
+      default:
+        return "Unknown status.";
+    }
+  };
 
   return (
     <div className="managerDashboard">
@@ -586,9 +600,14 @@ const Building = ({ category }) => {
                         </Tippy>
                       </td>
                       <td>
-                        <div className={getStatusClass(item.status)}>
-                          {getDisplayText(item.status)}
-                        </div>
+                        <Tippy
+                          content={getStatusDescription(item.status)}
+                          placement="top"
+                        >
+                          <div className={getStatusClass(item.status)}>
+                            {getDisplayText(item.status)}
+                          </div>
+                        </Tippy>
                       </td>
                       <td
                         className="actions"
@@ -723,9 +742,14 @@ const Building = ({ category }) => {
                       <td>{plintArea}</td>
                       <td>{item.categoryDetails?.depreciatedValue}</td>
                       <td>
-                        <div className={getStatusClass(item.status)}>
-                          {getDisplayText(item.status)}
-                        </div>
+                        <Tippy
+                          content={getStatusDescription(item.status)}
+                          placement="top"
+                        >
+                          <div className={getStatusClass(item.status)}>
+                            {getDisplayText(item.status)}
+                          </div>
+                        </Tippy>
                       </td>
                       <td className="actions">
                         <button

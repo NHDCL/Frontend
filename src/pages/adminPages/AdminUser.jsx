@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/TabSwitcher.css";
+import "./../managerPage/css/dropdown.css";
+import "./../managerPage/css/form.css";
+
 import { IoIosSearch } from "react-icons/io";
 import img from "../../assets/images/defaultImage.png";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -674,7 +677,8 @@ const AdminUser = () => {
             <div className="AdminUser_close">
               <h2>Add {activeTab}</h2>
               <button
-                className="AdminUser-close-btn"
+                // className="AdminUser-close-btn"
+                className="close-btn"
                 onClick={() => {
                   setShowModal(false);
                   resetForm();
