@@ -32,7 +32,7 @@ const AdminAcademies = () => {
   });
 
   const { data: academies, isLoading, error, refetch } = useGetAcademyQuery();
-  const [addAcademy] = usePostAcademyMutation();
+  const [addAcademy, { isLoading: isAddingLoading }] = usePostAcademyMutation();
   const [updateAcademy, { isLoading: isSavingLoading }] =
     useUpdateAcademyMutation();
   const [deleteAcademy] = useDeleteAcademyMutation();
@@ -328,12 +328,12 @@ const AdminAcademies = () => {
               }
             />
 
-            {/* Upload Button */}
+            {/* Upload Button - FIXED THIS SECTION */}
             <label className="AdminA-profile-upload-label">
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleImageUpload(e, true)}
+                onChange={(e) => handleImageUpload(e, false)}
                 className="AdminA-profile-hidden"
               />
 
@@ -341,12 +341,12 @@ const AdminAcademies = () => {
                 {newAcademy.imagePreview ? (
                   <img
                     src={newAcademy.imagePreview}
-                    alt="academy preview"
+                    alt="Academy preview"
                     className="AdminA-profile-image"
                   />
                 ) : (
                   <>
-                    <RiImageAddLine className="AdminA-profile-upload-icon" />
+                    <RiImageAddLine />
                     <p style={{ fontSize: "14px", fontWeight: "500" }}>
                       Upload Image
                     </p>
@@ -364,7 +364,7 @@ const AdminAcademies = () => {
                 !newAcademy.description
               }
             >
-              Add
+              {isAddingLoading ? "Adding..." : "Add"}
             </button>
           </div>
         </div>

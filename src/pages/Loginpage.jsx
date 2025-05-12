@@ -88,7 +88,7 @@ const Loginpage = () => {
 
         Swal.fire({
           icon: "success",
-          title: "Login Successful!",
+          title: "Login Successfully!",
           text: "You have logged in successfully.",
           position: "center",
           showConfirmButton: false,
@@ -115,7 +115,7 @@ const Loginpage = () => {
         Swal.fire({
           icon: "error",
           title: "Login Failed",
-          text: err?.data?.message || "An error occurred. Please try again.",
+          text: err?.data?.message || "Invalid email or password. Please try again.",
         });
       }
     }

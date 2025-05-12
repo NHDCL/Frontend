@@ -114,7 +114,7 @@ const Newpasswordpage = () => {
           <h2 className="newp-title">Reset Your Password</h2>
 
           {/* New Password Input */}
-          <div className="newp-input-group">
+          <div style={{width:"80%"}} className="newp-input-group">
             <FaLock className="newp-input-icon" />
             <input
               required
@@ -135,7 +135,7 @@ const Newpasswordpage = () => {
           </div>
 
           {/* Confirm Password Input */}
-          <div className="newp-input-group">
+          <div style={{width:"80%"}} className="newp-input-group">
             <FaLock className="newp-input-icon" />
             <input
               required

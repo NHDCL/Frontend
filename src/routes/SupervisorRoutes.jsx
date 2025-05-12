@@ -9,10 +9,10 @@ import SupervisorSidebar from "../layout/Sidebar/SupervisorSidebar";
 import SupervisorHome from "../pages/SupervisorPage/SupervisorHome";
 import SupervisorWO from "../pages/SupervisorPage/SupervisorWO";
 import SupervisorAccount from "../pages/SupervisorPage/SupervisorAccount";
-import AdminRReport from "../pages/adminPages/AdminRReport";
-import AdminMReport from "../pages/adminPages/AdminMReport";
 
 import ProtectedRoute from "./ProtectedRoute";
+import SupervisorMReport from "../pages/SupervisorPage/SupervisorMReport";
+import SupervisorRReport from "../pages/SupervisorPage/SupervisorRReport";
 
 const SupervisorRoutes = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
@@ -47,7 +47,7 @@ const SupervisorRoutes = () => {
                 path="repair-report"
                 element={
                   <ProtectedRoute
-                    element={<AdminRReport />}
+                    element={<SupervisorRReport />}
                     requiredRole="Supervisor"
                   />
                 }
@@ -56,7 +56,7 @@ const SupervisorRoutes = () => {
                 path="maintenance-report"
                 element={
                   <ProtectedRoute
-                    element={<AdminMReport />}
+                    element={<SupervisorMReport />}
                     requiredRole="Supervisor"
                   />
                 }

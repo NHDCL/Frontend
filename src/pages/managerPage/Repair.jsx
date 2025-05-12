@@ -681,14 +681,14 @@ const Repair = () => {
                         Reschedule
                       </button>
                     )}
-                    <button
+                    {/* <button
                       className="delete-btn"
                       onClick={() => handleDeleteRow(item.repairID)}
                     >
                       <RiDeleteBin6Line
                         style={{ width: "20px", height: "20px" }}
                       />
-                    </button>
+                    </button> */}
                   </td>
                 </tr>
               ))}
