@@ -4,8 +4,6 @@ import "./css/table.css";
 import "./css/form.css";
 import "./css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
-import { RiDeleteBin6Line } from "react-icons/ri";
-import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import { LuDownload } from "react-icons/lu";
 import jsPDF from "jspdf";
@@ -25,7 +23,6 @@ import {
   useGetMaintenanceRequestQuery,
 } from "../../slices/maintenanceApiSlice";
 import { useGetAssetQuery } from "../../slices/assetApiSlice";
-import Select from "react-select";
 import Swal from "sweetalert2";
 
 const Maintenancereport = () => {
@@ -69,12 +66,6 @@ const Maintenancereport = () => {
       users &&
       assets
     ) {
-      console.log("🔧 Maintenance Reports:", maintenanceReport);
-      console.log("📋 Maintenance Requests:", maintenanceRequest);
-      console.log("🎓 Academies:", academy);
-      console.log("👤 Users:", users);
-      console.log("📦 Assets:", assets);
-
       const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
 
       const mergedData = maintenanceReport
@@ -103,12 +94,6 @@ const Maintenancereport = () => {
               .split(",")
               .filter((email) => email.trim() !== "");
             total = technicianList.length;
-            console.log(
-              "👷‍♂ Technicians for Report ID",
-              report.repairID,
-              ":",
-              total
-            );
           }
 
           const matchingAcademy = academy.find(
@@ -129,13 +114,10 @@ const Maintenancereport = () => {
             description: matchingRequest.description || "N/A",
             totalTechnicians: total,
           };
-
-          console.log("🧩 Merged Item:", merged);
           return merged;
         })
         .filter(Boolean); // ✅ Remove nulls
 
-      console.log("📦 Final Merged Data:", mergedData);
       const sortedFiltered = mergedData.sort((a, b) => b.maintenanceReportID.localeCompare(a.maintenanceReportID));
 
       setData(sortedFiltered);
@@ -162,8 +144,6 @@ const Maintenancereport = () => {
       Swal.close();
     }
   }, [isLoading]);
-
-  console.log("dataa", data);
 
   const handleDownloadSelected = () => {
     if (selectedRows.length === 0) return;
@@ -336,6 +316,13 @@ const Maintenancereport = () => {
       });
       sortData(column, newSortOrder);
     };
+
+    const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
+  };
   return (
     <div className="ManagerDashboard">
       {/* Home table */}
@@ -456,7 +443,7 @@ const Maintenancereport = () => {
                     </Tippy>
                   </td>
                   <td>{[item.startTime, item.endTime].join(" - ")}</td>
-                  <td>{item.finishedDate || ""}</td>
+                  <td>{formatDate(item.finishedDate) || ""}</td>
                   <td className="description">
                     <Tippy content={item.area || ""} placement="top">
                       <span>
@@ -564,7 +551,7 @@ const Maintenancereport = () => {
                 </div>
                 <div className="modal-content-field">
                   <label>Date</label>
-                  <input type="text" value={modalData.finishedDate} readOnly />
+                  <input type="text" value={formatDate(modalData.finishedDate)} readOnly />
                 </div>
                 <div className="modal-content-field">
                   <label>Area</label>
@@ -587,10 +574,6 @@ const Maintenancereport = () => {
                   <label>Assigned Technicians</label>
                   <input type="text" value={modalData.technicians} readOnly />
                 </div>
-                {/* <div className="modal-content-field">
-                  <label>Assigned Supervisor</label>
-                  <input type="text" value={modalData.Assigned_supervisor} readOnly />
-                </div> */}
                 <div className="modal-content-field">
                   <label>Description:</label>
                   <textarea value={modalData.description} readOnly />

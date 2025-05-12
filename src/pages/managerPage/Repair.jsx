@@ -4,7 +4,6 @@ import "./css/table.css";
 import "./css/form.css";
 import "./css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
-import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
 import { TiArrowSortedUp } from "react-icons/ti";
@@ -12,11 +11,9 @@ import {
   useGetRepairRequestQuery,
   useAssignRepairMutation,
   usePostRepairScheduleMutation,
-  useGetRepairRequestScheduleQuery,
   useGetSchedulesByRepairIDQuery,
   useUpdateRepairScheduleMutation,
 } from "../../slices/maintenanceApiSlice";
-import { useUser } from "../../context/userContext";
 import { useSelector } from "react-redux";
 import {
   useGetUserByEmailQuery,
@@ -38,15 +35,10 @@ const Repair = () => {
   const [assignedWorker, setAssignedWorker] = useState(null);
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
-  const [updateAssignedWorker, setUpdateAssignedWorker] = useState("");
   const [assignTimeU, setAssignTimeU] = useState("");
   const [assignDateU, setAssignDateU] = useState("");
   const [statusPending, setStatusPending] = useState(null);
   const [supervisorWorker, setSupervisorOption] = useState(null);
-
-  console.log(
-    "start........................................................................."
-  );
 
   const rowsPerPage = 10;
 
@@ -81,19 +73,11 @@ const Repair = () => {
 
   const [updateSchedule,{isLoading:updating}] = useUpdateRepairScheduleMutation();
 
-  useEffect(() => {
-    if (repairID) {
-      console.log("Fetching schedule for repair ID:", repairID);
-    }
-  }, [repairID]);
-
   if (error) {
     console.error("Error fetching schedule data:", error);
   }
-  console.log("Schedule Data:", scheduleData);
 
   const [assignRepair, { isLoading: scheduling }] = useAssignRepairMutation();
-  const { userInfo, userRole } = useSelector((state) => state.auth);
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
@@ -134,26 +118,20 @@ const Repair = () => {
         label: dep.name,
       })) || [];
 
-      console.log("departmentOptions", departmentOptions);
-
   const workerOptions = supervisorsFromSameAcademy
     .filter((user) => user.departmentId === selectedDepartment)
     .map((user) => ({
       value: user.userId,
       label: user.email,
     }));
-    console.log("workerOptions", workerOptions);
-
 
   const userID = scheduleData?.[0]?.userID;
 
   const matchedSupervisor = supervisorsFromSameAcademy?.find(
     (supervisor) => supervisor.userId === userID
   );
-  console.log("matchedSupervisor", matchedSupervisor);
 
   const supervisorEmail = matchedSupervisor?.email;
-  console.log("supervisorEmail", supervisorEmail)
 
   const supervisorDepartmentId = matchedSupervisor?.departmentId;
   const supervisorDepartment = Array.isArray(departments)
@@ -165,15 +143,12 @@ const Repair = () => {
   const [selectedDepartmentU, setSelectedDepartmentU] = useState(
     supervisorDepartmentId
   );
-  const [selectedDepartmentName, setSelectedDepartmentName] =
-    useState(departmentName);
   const [selectedSupervisorId, setSelectedSupervisorId] = useState(null);
 
   // Update selected department when matchedSupervisor is found
   useEffect(() => {
     if (supervisorDepartmentId) {
       setSelectedDepartmentU(supervisorDepartmentId);
-      setSelectedDepartmentName(departmentName);
     }
   }, [supervisorDepartmentId, departmentName]);
 
@@ -191,7 +166,6 @@ const Repair = () => {
   const supervisorOption = supervisorEmail
     ? { label: supervisorEmail, value: matchedSupervisor?.userId }
     : null;
-    console.log("supervisorOption",supervisorOption)
 
   const finalOptions =
     supervisorsInDepartment.length > 0
@@ -209,7 +183,6 @@ const Repair = () => {
     value: dep.departmentId,
     label: dep.name,
   })) || [];
-console.log("departmentOptionsU",departmentOptionsU)
   // For default department selection
   const initialDepartmentOption = departmentOptionsU.find(
     (opt) => opt.label === departmentName
@@ -226,11 +199,8 @@ console.log("departmentOptionsU",departmentOptionsU)
   const handleRescheduleView = async (item) => {
     setRescheduleModalData(item);
 
-    setUpdateAssignedWorker(item?.technicianEmail || ""  );
-
     setAssignDateU(item?.reportingDate || "");
     setAssignTimeU(item?.startTime?.slice(0, 5) || "");
-    setSelectedDepartmentName(item?.departmentId || "");
     setStatusPending(item?.status);
   };
 
@@ -248,7 +218,6 @@ console.log("departmentOptionsU",departmentOptionsU)
       startTime: `${assignTime}:00`,
       userID: assignedWorker?.value, // user ID from Select's value
     };
-    console.log("sc data", scheduleData);
 
     try {
       // 1. First assign the repair
@@ -401,27 +370,6 @@ console.log("departmentOptionsU",departmentOptionsU)
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
-
-  const handleSelectRow = (repairID) => {
-    setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(repairID)
-        ? prevSelectedRows.filter((item) => item !== repairID)
-        : [...prevSelectedRows, repairID]
-    );
-  };
-
-  const handleDeleteSelected = () => {
-    const updatedData = data.filter(
-      (item) => !selectedRows.includes(item.repairID)
-    );
-    setData(updatedData);
-    setSelectedRows([]);
-  };
-
-  const handleDeleteRow = (repairID) => {
-    const updatedData = data.filter((item) => item.repairID !== repairID);
-    setData(updatedData);
-  };
 
   const handleScheduleView = (item) => {
     setModalData(item);

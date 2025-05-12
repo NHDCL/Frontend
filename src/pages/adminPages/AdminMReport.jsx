@@ -69,10 +69,7 @@ const AdminMReport = () => {
     });
   };
 
-  // Get processed data
-  // const data = processApiData(apiData);
   const [data, setData] = useState([]);
-  console.log("Data: ", data);
 
   useEffect(() => {
     if (apiData) {
@@ -80,10 +77,6 @@ const AdminMReport = () => {
       setData(processed);
     }
   }, [apiData]);
-
-  // Log the structure of the API data and processed data for debugging
-  console.log("Original API data:", apiData);
-  console.log("Processed data:", data);
 
   useEffect(() => {
     if (isLoading) {
@@ -98,12 +91,6 @@ const AdminMReport = () => {
       Swal.close();
     }
   }, [isLoading]);
-
-  const sortedData = [...data].sort((a, b) => {
-    // We want newest reports first, but we don't have a proper way to determine this
-    // without a timestamp field, so we'll use the ID for now
-    return b.rid.localeCompare(a.rid);
-  });
 
   const getNestedValue = (obj, path) => {
     return path?.split(".").reduce((acc, part) => acc && acc[part], obj) ?? "";
@@ -169,11 +156,6 @@ const AdminMReport = () => {
 
   const handleCloseModal = () => {
     setModalData(null);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditableData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Ref for the modal
@@ -263,15 +245,6 @@ const AdminMReport = () => {
     document.body.removeChild(a);
   };
 
-  const sortData = (column, ascending) => {
-    const sortedData = [...data].sort((a, b) => {
-      if (a[column] < b[column]) return ascending ? -1 : 1;
-      if (a[column] > b[column]) return ascending ? 1 : -1;
-      return 0;
-    });
-    setData(sortedData);
-  };
-
   const handleSort = (field) => {
     const ascending = sortOrder.column === field ? !sortOrder.ascending : true;
 
@@ -286,6 +259,13 @@ const AdminMReport = () => {
 
     setData(sorted);
     setSortOrder({ column: field, ascending });
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
   };
 
   return (
@@ -405,7 +385,7 @@ const AdminMReport = () => {
                     <td>{index+1}</td>
                     <td>{item.startTime}</td>
                     <td>{item.endTime}</td>
-                    <td>{item.Date}</td>
+                    <td>{formatDate(item.Date)}</td>
                     <td className="description">
                       <Tippy content={item.Total_cost || ""} placement="top">
                         <span>
@@ -560,7 +540,7 @@ const AdminMReport = () => {
                   <label>Finished Date:</label>
                   <input
                     type="text"
-                    value={modalData.Date || "Not completed"}
+                    value={formatDate(modalData.Date)|| "Not completed"}
                     readOnly
                   />
                 </div>

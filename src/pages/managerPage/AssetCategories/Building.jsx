@@ -562,7 +562,7 @@ const Building = ({ category }) => {
       Description: modalData.Description || "",
       Assign: modalData.Assign || "",
       Lastworkorder: modalData.Lastworkorder || "",
-      Schedule: modalData.Schedule || "",
+      Schedule: getCurrentTime(),
       Nextworkorder: modalData.Nextworkorder || "",
       assetCode: modalData.assetCode || "",
     });
@@ -741,7 +741,6 @@ const Building = ({ category }) => {
     setIsCreating(true);
     try {
       const assetCode = scheduleModalData.assetCode;
-
       await createMaintenance({
         timeStart: scheduleModalData.Schedule,
         startDate: scheduleModalData.Lastworkorder,
@@ -1010,6 +1009,11 @@ const Building = ({ category }) => {
     });
 
     sortDatas(column, newSortOrder);
+  };
+
+  const getCurrentTime = () => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // returns "HH:MM"
   };
 
   return (
@@ -2074,12 +2078,8 @@ const Building = ({ category }) => {
                 <input
                   type="time"
                   value={scheduleModalData.Schedule}
-                  onChange={(e) =>
-                    setScheduleModalData({
-                      ...scheduleModalData,
-                      Schedule: e.target.value,
-                    })
-                  }
+                  readOnly
+                  disabled
                 />
               </div>
               <div className="modal-content-field">

@@ -28,18 +28,12 @@ import Tippy from "@tippyjs/react";
 const PMaintenance = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [modalData, setModalData] = useState(null);
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [editModalData, setEditModalData] = useState(null);
   const [userID, setUserID] = useState(null);
   const [supervisor, setEmail] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [statusPending, setStatusPending] = useState(null);
-
-  const [assignedWorker, setAssignedWorker] = useState("");
-  const [assignTime, setAssignTime] = useState("");
-  const [assignDate, setAssignDate] = useState("");
 
   const {
     data: maintenanceRequest,
@@ -63,14 +57,7 @@ const PMaintenance = () => {
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);
 
-  const academyName = userByEmial?.user.academyId;
-
-  const today = new Date().toISOString().split("T")[0];
-
   const [data, setData] = useState([]);
-  // console.log('mdata: ', maintenanceRequest)
-  // console.log('adata: ', assetData)
-  console.log("data: ", data);
 
   useEffect(() => {
     if (
@@ -80,15 +67,8 @@ const PMaintenance = () => {
       allUsers &&
       allDepartment
     ) {
-      console.log("🔧 Raw Maintenance Requests:", maintenanceRequest);
-      console.log("📦 Asset Data:", assetData);
-      console.log("📧 All Users:", allUsers);
-      console.log("🏛️ Departments:", allDepartment);
-      console.log("👤 Logged-in User:", userByEmial);
 
       const userAcademyId = userByEmial?.user?.academyId;
-      console.log("🏫 User's Academy ID:", userAcademyId);
-
 
       const filtered = maintenanceRequest
         .map((request) => {
@@ -103,13 +83,6 @@ const PMaintenance = () => {
             ? allDepartment.find((d) => d?.departmentId === user.departmentId)
             : null;
           const departmentName = department ? department.name : "N/A";
-          const AcademyName = department ? department.name : "N/A";
-
-          console.log("📝 Request:", request);
-          console.log("📝 usersss:", user);
-          console.log("📎 Matched Asset:", matchedAsset);
-          console.log("📨 User Email:", email);
-          console.log("🏛️ Department Name:", departmentName);
 
           if (matchedAsset) {
             return {
@@ -124,12 +97,6 @@ const PMaintenance = () => {
           return null;
         })
         .filter((r) => r !== null);
-
-      console.log("✅ Filtered & Enriched Requests:", filtered);
-
-      // const sorted = filtered.sort(
-      //   (a, b) => new Date(b?.createdAt) - new Date(a?.createdAt)
-      // );
 
       const sortedFiltered = filtered.sort((a, b) => b.maintenanceID.localeCompare(a.maintenanceID));
 
@@ -167,24 +134,6 @@ const PMaintenance = () => {
     }
   };
 
-  const handleUpdate = async () => {
-    const updatedMaintenance = {
-      title: "New Title",
-      description: "Updated description",
-      // ...other fields
-    };
-
-    try {
-      const res = await updatePreventiveMaintenance({
-        id: "1234567890",
-        maintenance: updatedMaintenance,
-      }).unwrap();
-      console.log("Update successful:", res);
-    } catch (err) {
-      console.error("Update failed:", err);
-    }
-  };
-
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
@@ -217,18 +166,6 @@ const PMaintenance = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (assetCode) => {
-    setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(assetCode)
-        ? prevSelectedRows.filter((item) => item !== assetCode)
-        : [...prevSelectedRows, assetCode]
-    );
-  };
-
-  const handleCloseModal = () => {
-    setModalData(null);
-  };
-
   // Open Edit Modal
   const handleEditRow = (item) => {
     setEditModalData(item);
@@ -256,11 +193,9 @@ const PMaintenance = () => {
       };
 
       const response = await updatePreventiveMaintenance(payload).unwrap();
-      console.log("✅ Maintenance updated:", response);
 
       if (supervisor) {
-        await sendEmail({ to: supervisor }).unwrap(); // Send email after successful update
-        console.log("📧 Email sent to:", supervisor);
+        await sendEmail({ to: supervisor }).unwrap();
       }
 
       setUserID(null);
@@ -316,12 +251,6 @@ const PMaintenance = () => {
       label: user.email,
     }));
 
-  // Debugging output
-  console.log("👷 Filtered Workers List:", workersList);
-
-  console.log("🛠️ Workers List for Department:", editModalData?.userDepartment);
-  console.log("👥 Matched Workers:", workersList);
-
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
   const sortData = (column, ascending) => {
     const sortedData = [...data].sort((a, b) => {
@@ -344,6 +273,13 @@ const PMaintenance = () => {
       ascending: newSortOrder,
     });
     sortData(column, newSortOrder);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
   };
 
   return (
@@ -401,8 +337,8 @@ const PMaintenance = () => {
                   { label: "Asset Name", field: "assetName" },
                   { label: "Description", field: null },
                   { label: "Schedule(month)", field: null },
-                  { label: "Start Date", field: "startDate" },
-                  { label: "End Date", field: "endDate" },
+                  { label: "From Date", field: "startDate" },
+                  { label: "To Date", field: "endDate" },
                   { label: "Assign to", field: "userEmail" },
                   { label: "Workstatus", field: null },
                   { label: " ", field: null },
@@ -480,8 +416,8 @@ const PMaintenance = () => {
                     </Tippy>
                   </td>
                   <td>{item.repeat || ""}</td>
-                  <td>{item.startDate || ""}</td>
-                  <td>{item.endDate || ""}</td>
+                  <td>{formatDate(item.startDate) || ""}</td>
+                  <td>{formatDate(item.endDate) || ""}</td>
                   <td className="description">
                     <Tippy content={item.userEmail || ""} placement="top">
                       <span>

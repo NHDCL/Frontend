@@ -4,10 +4,8 @@ import "./css/table.css";
 import "./css/form.css";
 import "./css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
-import { RiDeleteBin6Line } from "react-icons/ri";
-import img from "../../assets/images/person_four.jpg";
-import { IoIosCloseCircle } from "react-icons/io";
 import Select from "react-select";
+import { IoIosCloseCircle } from "react-icons/io";
 import { TiArrowSortedUp } from "react-icons/ti";
 import { createSelector } from "reselect";
 import { useSelector } from "react-redux";
@@ -15,6 +13,7 @@ import Swal from "sweetalert2";
 import {
   useGetRepairRequestQuery,
   useAcceptOrRejectRepairRequestMutation,
+  useUpdateRepairByIdMutation,
 } from "../../slices/maintenanceApiSlice";
 import {
   useGetUserByEmailQuery,
@@ -23,6 +22,12 @@ import {
 import { useGetAssetQuery } from "../../slices/assetApiSlice";
 import Tippy from "@tippyjs/react";
 
+const priorities = [
+  { value: "Immediate", label: "Immediate (Within 24 hours)" },
+  { value: "High", label: "High (Within 1-2 days)" },
+  { value: "Moderate", label: "Moderate (Within 1 week)" },
+  { value: "Low", label: "Low (More than a week)" },
+];
 const ManagerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,7 +38,7 @@ const ManagerDashboard = () => {
 
   const { data: repairRequest, refetch: refetchRepairRequest } =
     useGetRepairRequestQuery();
-  
+
   const [acceptRepairRequest, { isLoading: isLoadingA }] =
     useAcceptOrRejectRepairRequestMutation();
   const [rejectRepairRequest, { isLoading: isLoadingB }] =
@@ -48,11 +53,7 @@ const ManagerDashboard = () => {
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);
 
-  const userID = userByEmial?.user?.userId;
-  console.log("userID", userID);
-
   const academyId = userByEmial?.user?.academyId;
-  console.log("academyId", academyId);
 
   const { data: users, isLoading: usersLoading } = useGetUsersQuery();
   const { data: asset } = useGetAssetQuery();
@@ -63,12 +64,10 @@ const ManagerDashboard = () => {
       typeof user.role?.name === "string" &&
       user.role.name.toLowerCase() === "technician"
   );
-  console.log("filteredUsers:", filteredUsers);
 
   const totalRepair = repairRequest?.filter(
     (req) => req.academyId === academyId && req.accept === true
   );
-  console.log("totalRepair:", totalRepair);
 
   const SupervisorsUsers = users?.filter(
     (user) =>
@@ -76,13 +75,25 @@ const ManagerDashboard = () => {
       typeof user.role?.name === "string" &&
       user.role.name.toLowerCase() === "supervisor"
   );
-  console.log("SupervisorsUsers:", SupervisorsUsers);
 
   const assets = asset?.filter((ass) => ass.academyID === academyId);
-  console.log("assets:", assets);
 
   const [data, setData] = useState([]);
-  console.log("data: ", data);
+
+  const [isEditingPriority, setIsEditingPriority] = useState(false);
+  const [editablePriority, setEditablePriority] = useState(null);
+
+  const [updateRepairById, { isLoading: isUpdating }] =
+    useUpdateRepairByIdMutation();
+
+  useEffect(() => {
+    if (modalData) {
+      setEditablePriority(
+        priorities.find((p) => p.value === modalData.priority) || null
+      );
+      setIsEditingPriority(false); // reset edit mode
+    }
+  }, [modalData]);
 
   useEffect(() => {
     if (!repairRequest || !userByEmial) return;
@@ -96,11 +107,6 @@ const ManagerDashboard = () => {
 
     const sortedFiltered = filtered.sort((a, b) =>
       b.repairID.localeCompare(a.repairID)
-    );
-
-    console.log(
-      "Sorted Repair IDs:",
-      sortedFiltered.map((f) => f.repairID)
     );
 
     setData(sortedFiltered);
@@ -136,8 +142,6 @@ const ManagerDashboard = () => {
           accept: acceptValue,
         }).unwrap();
 
-        console.log("Server response:", response);
-
         await Swal.fire({
           title: "Accepted!",
           text: "Successed mail successfully sent to user.",
@@ -172,8 +176,6 @@ const ManagerDashboard = () => {
           repairId,
           accept: false,
         }).unwrap();
-
-        console.log("Server response:", response);
 
         await Swal.fire({
           title: "Rejected!",
@@ -239,14 +241,6 @@ const ManagerDashboard = () => {
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (repairID) => {
-    setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(repairID)
-        ? prevSelectedRows.filter((item) => item !== repairID)
-        : [...prevSelectedRows, repairID]
-    );
-  };
-
   const handleDeleteSelected = () => {
     const updatedData = data.filter(
       (item) => !selectedRows.includes(item.repairID)
@@ -254,10 +248,6 @@ const ManagerDashboard = () => {
     // Update the data with the filtered result after deletion
     setData(updatedData);
     setSelectedRows([]); // Reset selected rows after deletion
-  };
-  const handleDeleteRow = (repairID) => {
-    const updatedData = data.filter((item) => item.repairID !== repairID);
-    setData(updatedData);
   };
 
   const handleView = (item) => {
@@ -420,7 +410,7 @@ const ManagerDashboard = () => {
                     </Tippy>
                   </td>
 
-                  <td className="actions" >
+                  <td className="actions">
                     <button
                       className="view-btn"
                       onClick={() => handleView(item)}
@@ -488,10 +478,6 @@ const ManagerDashboard = () => {
                 <label>Email:</label>
                 <input type="email" value={modalData.email} readOnly />
               </div>
-              {/* <div className="modal-content-field">
-                <label>RID</label>
-                <input type="text" value={modalData.rid} readOnly />
-              </div> */}
 
               <div className="modal-content-field">
                 <label>Area:</label>
@@ -503,29 +489,113 @@ const ManagerDashboard = () => {
               </div>
               <div className="modal-content-field">
                 <label>Priority:</label>
-                <input type="text" value={modalData.priority} readOnly />
+
+                {!isEditingPriority ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      width: "100%",
+                      maxWidth: "350px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: "100%",
+                        padding: "12px",
+                        border: "1px solid #897463",
+                        borderRadius: "10px",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {editablePriority?.label || "Not Set"}
+                    </span>
+                    <button
+                      className="accept-btn"
+                      type="button"
+                      onClick={() => setIsEditingPriority(true)}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <Select
+                      classNamePrefix="custom-select-department"
+                      className="workstatus-dropdown"
+                      options={priorities}
+                      value={editablePriority}
+                      onChange={(selected) => setEditablePriority(selected)}
+                      placeholder="Select priority"
+                      isClearable
+                    />
+                    <div style={{ gap: "1rem" }}>
+                      <button
+                        className="accept-btn"
+                        type="button"
+                        onClick={async () => {
+                          const result = await Swal.fire({
+                            title: "Are you sure?",
+                            text: `Update priority to "${editablePriority?.label}"?`,
+                            icon: "question",
+                            showCancelButton: true,
+                            confirmButtonColor: "#315845",
+                            cancelButtonColor: "#897463",
+                            confirmButtonText: "Yes, save it!",
+                          });
+
+                          if (result.isConfirmed && editablePriority) {
+                            await updateRepairById({
+                              repairID: modalData.repairID,
+                              updateFields: {
+                                priority: editablePriority.value,
+                              },
+                            });
+                            Swal.fire({
+                              icon: "success",
+                              title: "Updated!",
+                              text: "Priority has been updated.",
+                              showConfirmButton: false,
+                              timer: 1500,
+                            });
+                            setIsEditingPriority(false);
+                            refetchRepairRequest();
+                          }
+                        }}
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? "Saving..." : "Save"}
+                      </button>
+
+                      <button
+                        className="reject-btn"
+                        type="button"
+                        onClick={() => {
+                          setEditablePriority(
+                            priorities.find(
+                              (p) => p.value === modalData.priority
+                            ) || null
+                          );
+                          setIsEditingPriority(false);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="modal-content-field">
                 <label>Description:</label>
                 <textarea value={modalData.description} readOnly />
               </div>
-              {/* <div className="modal-content-field">
-                <label>Image:</label>
-                <div className="profile-img">
-                  {modalData.images ? (
-                    <img
-                      src={modalData.images[0]}
-                      alt="Asset"
-                      className="modal-image"
-                    />
-                  ) : (
-                    <div className="image-upload">
-                      <span>📷</span>
-                      <p>Click Here to Upload Image</p>
-                    </div>
-                  )}
-                </div>
-              </div> */}
               <div className="modal-content-field">
                 <label>Repaired Images:</label>
                 <div className="TModal-profile-img">

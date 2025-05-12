@@ -337,11 +337,6 @@ const Machinery = ({ category }) => {
     }
   };
 
-  const handleDeleteSelected = () => {
-    setData(data.filter((item) => !selectedRows.includes(item.AID)));
-    setSelectedRows([]);
-  };
-
   const handleView = (item) => {
     setModalData(item);
   };
@@ -605,7 +600,7 @@ const Machinery = ({ category }) => {
       Description: modalData.Description || "",
       Assign: modalData.Assign || "",
       Lastworkorder: modalData.Lastworkorder || "",
-      Schedule: modalData.Schedule || "",
+      Schedule: getCurrentTime(),
       Nextworkorder: modalData.Nextworkorder || "",
       assetCode: modalData.assetCode || "",
     });
@@ -715,6 +710,11 @@ const Machinery = ({ category }) => {
     });
 
     sortData(column, newSortOrder);
+  };
+
+   const getCurrentTime = () => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // returns "HH:MM"
   };
 
   return (
@@ -1375,12 +1375,8 @@ const Machinery = ({ category }) => {
                 <input
                   type="time"
                   value={scheduleModalData.Schedule}
-                  onChange={(e) =>
-                    setScheduleModalData({
-                      ...scheduleModalData,
-                      Schedule: e.target.value,
-                    })
-                  }
+                  readOnly
+                  disabled
                 />
               </div>
               <div className="modal-content-field">

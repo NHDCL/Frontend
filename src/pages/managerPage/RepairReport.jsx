@@ -4,11 +4,8 @@ import "./css/table.css";
 import "./css/form.css";
 import "./css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
-import { RiDeleteBin6Line } from "react-icons/ri";
-import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import { LuDownload } from "react-icons/lu";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import "tippy.js/dist/tippy.css";
 import Tippy from "@tippyjs/react";
@@ -20,7 +17,6 @@ import {
   useUpdateScheduleMutation,
   useLazyGetScheduleByRepairIDQuery,
 } from "../../slices/maintenanceApiSlice";
-import Select from "react-select";
 import { createSelector } from "reselect";
 import { useSelector } from "react-redux";
 import Swal from "sweetalert2";
@@ -33,7 +29,6 @@ import {
 } from "../../slices/userApiSlice";
 
 const Repairreport = () => {
-  const [totalTechnicians, setTotalTechnicians] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -61,20 +56,12 @@ const Repairreport = () => {
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);
 
-  const academyId = userByEmial?.user?.academyId;
-  const { data: departments, isLoading: departmentsLoading } =
-    useGetDepartmentQuery();
-
   const { data: users } = useGetUsersQuery();
   const [data, setData] = useState([]);
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (repairReport && repairRequest && academy && users && userByEmial) {
-      console.log("🔧 Repair Reports:", repairReport);
-      console.log("📋 Repair Requests:", repairRequest);
-      console.log("🎓 Academies:", academy);
-      console.log("👤 Users:", users);
 
       const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
 
@@ -101,12 +88,6 @@ const Repairreport = () => {
               .split(",")
               .filter((email) => email.trim() !== "");
             total = technicianList.length;
-            console.log(
-              "👷‍♂ Technicians for Report ID",
-              report.repairID,
-              ":",
-              total
-            );
           }
 
           // 🏫 Match academyId to academyName
@@ -123,13 +104,9 @@ const Repairreport = () => {
             description: matchingRequest.description || "N/A",
             totalTechnicians: total,
           };
-
-          console.log("🧩 Merged Item:", merged);
           return merged;
         })
-        .filter(Boolean); // 🔥 Remove any nulls (non-matching academy or request)
-
-      console.log("📦 Final Merged Data:", mergedData);
+        .filter(Boolean); 
       const sortedFiltered = mergedData.sort((a, b) => b.repairReportID.localeCompare(a.repairReportID));
 
       setData(sortedFiltered);
@@ -163,10 +140,9 @@ const Repairreport = () => {
       return;
     }
 
-    setIsUpdating(true); // 👈 start loading
+    setIsUpdating(true);
     try {
       const scheduleRes = await fetchSchedulesByRepairID(repairID).unwrap();
-      console.log("Schedule response:", scheduleRes);
 
       // handle different structures
       const scheduleID = Array.isArray(scheduleRes)
@@ -193,7 +169,6 @@ const Repairreport = () => {
         scheduleID,
         updatedSchedule,
       }).unwrap();
-      console.log("Update response:", response);
 
       Swal.fire({
         icon: "success",
@@ -212,8 +187,6 @@ const Repairreport = () => {
     }
     setIsUpdating(false);
   };
-
-  console.log("dataa", data);
 
   const sortedData = [...data].sort(
     (a, b) => b.repairReportID - a.repairReportID
@@ -398,6 +371,12 @@ const Repairreport = () => {
     sortData(column, newSortOrder);
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
+  };
 
   return (
     <div className="ManagerDashboard">
@@ -517,7 +496,7 @@ const Repairreport = () => {
                     </Tippy>
                   </td>
                   <td>{[item.startTime, item.endTime].join(" - ")}</td>
-                  <td>{item.finishedDate || ""}</td>
+                  <td>{formatDate(item.finishedDate) || ""}</td>
                   <td className="description">
                     <Tippy content={item.area || ""} placement="top">
                       <span>

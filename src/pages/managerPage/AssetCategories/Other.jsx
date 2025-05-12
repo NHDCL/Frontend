@@ -599,7 +599,7 @@ const Other = ({ category }) => {
       Description: modalData.Description || "",
       Assign: modalData.Assign || "",
       Lastworkorder: modalData.Lastworkorder || "",
-      Schedule: modalData.Schedule || "",
+      Schedule: getCurrentTime(),
       Nextworkorder: modalData.Nextworkorder || "",
       assetCode: modalData.assetCode || "",
     });
@@ -710,6 +710,11 @@ const Other = ({ category }) => {
     });
 
     sortData(column, newSortOrder);
+  };
+
+  const getCurrentTime = () => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // returns "HH:MM"
   };
 
   return (
@@ -1343,12 +1348,8 @@ const Other = ({ category }) => {
                 <input
                   type="time"
                   value={scheduleModalData.Schedule}
-                  onChange={(e) =>
-                    setScheduleModalData({
-                      ...scheduleModalData,
-                      Schedule: e.target.value,
-                    })
-                  }
+                  readOnly
+                  disabled
                 />
               </div>
               <div className="modal-content-field">

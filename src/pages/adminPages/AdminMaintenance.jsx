@@ -66,15 +66,11 @@ const AdminMaintenance = () => {
 
           return null;
         })
-        .filter((r) => r !== null); // Remove unmatched
-
-      console.log("Filtered Maintenance Requests with Asset Names:", filtered);
+        .filter((r) => r !== null);
 
       const sorted = filtered.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
-
-      console.log("Sorted Maintenance Requests with Asset Names:", sorted);
 
       setData(sorted);
     }
@@ -154,14 +150,6 @@ const filteredData = sortedData.filter((item) => {
   );
 
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
-  const sortData = (column, ascending) => {
-    const sortedData = [...data].sort((a, b) => {
-      if (a[column] < b[column]) return ascending ? -1 : 1;
-      if (a[column] > b[column]) return ascending ? 1 : -1;
-      return 0;
-    });
-    setData(sortedData);
-  };
 
   const handleSort = (field) => {
     const ascending = sortOrder.column === field ? !sortOrder.ascending : true;
@@ -180,6 +168,13 @@ const filteredData = sortedData.filter((item) => {
   };
   const getNestedValue = (obj, path) => {
     return path?.split(".").reduce((acc, part) => acc && acc[part], obj) ?? "";
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
   };
 
   return (
@@ -237,8 +232,8 @@ const filteredData = sortedData.filter((item) => {
                   { label: "Asset Name", field: "assetName" },
                   { label: "Description", field: "description" },
                   { label: "Schedule(month)", field: "repeat" },
-                  { label: "Start Date", field: "startDate" },
-                  { label: "End Date", field: "endDate" },
+                  { label: "From Date", field: "startDate" },
+                  { label: "To Date", field: "endDate" },
                   // { label: "Assign to", field: "userEmail" },
                   { label: "Workstatus", field: null },
                 ].map((header, index) => (
@@ -301,22 +296,8 @@ const filteredData = sortedData.filter((item) => {
                     </Tippy>
                   </td>
                   <td>{item.repeat}</td>
-                  <td>{item.startDate}</td>
-                  <td>{item.endDate}</td>
-                  {/* <td className="description">
-                    <Tippy
-                      content={item.assignedSupervisors || ""}
-                      placement="top"
-                    >
-                      <span>
-                        {item.assignedSupervisors
-                          ? item.assignedSupervisors.length > 20
-                            ? item.assignedSupervisors.substring(0, 20) + "..."
-                            : item.assignedSupervisors
-                          : ""}
-                      </span>
-                    </Tippy>
-                  </td> */}
+                  <td>{formatDate(item.startDate)}</td>
+                  <td>{formatDate(item.endDate)}</td>
                   <td>
                     <div
                       className={getWorkOrderStatusClass(
