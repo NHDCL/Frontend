@@ -74,7 +74,10 @@ const Category = () => {
       title: "Are you sure?",
       text: "This will delete the category!",
       icon: "warning",
+      color: "#305845",
       showCancelButton: true,
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       confirmButtonText: "Yes, delete it!",
     });
 
@@ -83,7 +86,7 @@ const Category = () => {
         await softDeleteCategory(id).unwrap();
         Swal.fire("Deleted!", "Category has been deleted.", "success");
         refetch(); // Refresh the category list
-        setModalData(null)
+        setModalData(null);
       } catch (err) {
         console.error(err);
         Swal.fire("Error!", "Something went wrong while deleting.", "error");
@@ -186,50 +189,46 @@ const Category = () => {
           </div>
         </div>
         {/* Table */}
-          <>
-            {/* Table */}
-            <div className="table-container">
-              <table className="RequestTable">
-                <thead className="table-header">
-                  <tr>
-                    <th>SI.No</th>
-                    <th>Category</th>
-                    <th>Depreciated Value (%)</th>
-                    <th>Edit</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedData.map((item, index) => (
-                    <tr key={item.id}>
-                      <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
-                      <td>{item.name}</td>
-                      <td>{item.depreciatedValue}</td>
-                      <td className="actions">
-                        <button
-                          className="edit-btn"
-                          onClick={() => handleEditRow(item)}
-                        >
-                          <FaEdit style={{ width: "20px", height: "20px" }} />
-                        </button>
-                      </td>
-                      <td
-                        className="actions"
-                        
+        <>
+          {/* Table */}
+          <div className="table-container">
+            <table className="RequestTable">
+              <thead className="table-header">
+                <tr>
+                  <th>SI.No</th>
+                  <th>Category</th>
+                  <th>Depreciated Value (%)</th>
+                  <th>Edit</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedData.map((item, index) => (
+                  <tr key={item.id}>
+                    <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
+                    <td>{item.name}</td>
+                    <td>{item.depreciatedValue}</td>
+                    <td className="actions">
+                      <button
+                        className="edit-btn"
+                        onClick={() => handleEditRow(item)}
                       >
-                        <button
-                          className="view-btn"
-                          onClick={() => handleView(item)}
-                        >
-                          View
-                        </button>
-                      </td>
-                      
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <FaEdit style={{ width: "20px", height: "20px" }} />
+                      </button>
+                    </td>
+                    <td className="actions">
+                      <button
+                        className="view-btn"
+                        onClick={() => handleView(item)}
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {/* Pagination */}
           <div className="pagination">

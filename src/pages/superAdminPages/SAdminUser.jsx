@@ -182,6 +182,9 @@ const SAdminUser = () => {
       title: "Are you sure?",
       text: "Do you want to delete this user?",
       icon: "warning",
+      color: "#305845",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       showCancelButton: true,
       confirmButtonText: "Yes, delete it!",
     });

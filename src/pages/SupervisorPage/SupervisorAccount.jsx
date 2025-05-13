@@ -195,7 +195,14 @@ const SupervisorAccount = () => {
             oldPassword: profile.oldPassword,
             newPassword: profile.newPassword,
           }).unwrap();
-          Swal.fire("Success", "Password Updated Successfully!", "success");
+          Swal.fire({
+            icon: "success",
+            title: "Password Updated Successfully!",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 2000,
+          });
           setProfile((prev) => ({
             ...prev,
             oldPassword: "",
@@ -212,7 +219,12 @@ const SupervisorAccount = () => {
       }
 
       if (!madeChanges) {
-        Swal.fire("Info", "No changes detected to update.", "info");
+        Swal.fire({
+          title: "Info",
+          text: "No changes detected to update.",
+          icon: "info",
+          confirmButtonColor: "#305845",
+        });
       }
     } else {
       Swal.fire(
@@ -230,7 +242,14 @@ const SupervisorAccount = () => {
           email: profile.email,
           image: profile.imageFile,
         }).unwrap();
-        Swal.fire("Success", "Profile Image Updated Successfully!", "success");
+        Swal.fire({
+          icon: "success",
+          title: "Profile image updated successfully.",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+        });
         originalImageRef.current = profile.imageFile;
         setIsNewImageSelected(false);
         refetch();

@@ -36,7 +36,6 @@ const AdminAcademies = () => {
   const [updateAcademy, { isLoading: isSavingLoading }] =
     useUpdateAcademyMutation();
   const [deleteAcademy] = useDeleteAcademyMutation();
-  console.log("add academy:", newAcademy);
 
   useEffect(() => {
     if (isLoading) {
@@ -103,11 +102,6 @@ const AdminAcademies = () => {
       formData.append("image", image);
     }
 
-    // Optional: Debug formData
-    for (let pair of formData.entries()) {
-      console.log(pair[0] + ": " + pair[1]);
-    }
-
     try {
       await addAcademy(formData).unwrap();
 
@@ -131,7 +125,6 @@ const AdminAcademies = () => {
 
       refetch();
     } catch (err) {
-      console.error("Error in adding academy:", err);
       Swal.fire({
         icon: "error",
         title: "Failed to add academy",
@@ -152,8 +145,6 @@ const AdminAcademies = () => {
         image, // this is a File object now
       }).unwrap();
 
-      console.log("update", currentAcademy);
-
       Swal.fire({
         icon: "success",
         title: "Academy updated!",
@@ -166,7 +157,6 @@ const AdminAcademies = () => {
       setShowEditModal(false);
       refetch();
     } catch (err) {
-      console.error("Update failed:", err);
       Swal.fire({
         icon: "error",
         title: "Failed to update academy",
@@ -177,17 +167,13 @@ const AdminAcademies = () => {
 
   const handleDelete = (id) => {
     if (!id) {
-      console.error("No ID provided for deletion");
-      console.log(academies);
       return;
     }
-    console.log("Deleting academy with ID:", id);
 
     Swal.fire({
       title: "Are you sure?",
       text: "Do you want to delete this Academy?",
       icon: "warning",
-      background: "#f5f3ef",
       color: "#305845",
       showCancelButton: true,
       confirmButtonColor: "#305845",
@@ -346,10 +332,10 @@ const AdminAcademies = () => {
                   />
                 ) : (
                   <>
-                    <RiImageAddLine />
                     <p style={{ fontSize: "14px", fontWeight: "500" }}>
                       Upload Image
                     </p>
+                    <RiImageAddLine />
                   </>
                 )}
               </div>
