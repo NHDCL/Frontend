@@ -67,7 +67,6 @@ const PMaintenance = () => {
       allUsers &&
       allDepartment
     ) {
-
       const userAcademyId = userByEmial?.user?.academyId;
 
       const filtered = maintenanceRequest
@@ -75,7 +74,6 @@ const PMaintenance = () => {
           const matchedAsset = assetData.find(
             (a) =>
               a.assetCode === request.assetCode && a.academyID === userAcademyId
-
           );
           const user = allUsers.find((u) => u?.userId === request.userID);
           const email = user ? user.email : "N/A";
@@ -98,7 +96,9 @@ const PMaintenance = () => {
         })
         .filter((r) => r !== null);
 
-      const sortedFiltered = filtered.sort((a, b) => b.maintenanceID.localeCompare(a.maintenanceID));
+      const sortedFiltered = filtered.sort((a, b) =>
+        b.maintenanceID.localeCompare(a.maintenanceID)
+      );
 
       setData(sortedFiltered);
     }
@@ -148,8 +148,10 @@ const PMaintenance = () => {
   // Filtering data based on search and priority selection and work status
   const sortedData = [...data].sort((a, b) => b?.assetCode - a?.assetCode);
   const filteredData = sortedData.filter((item) => {
-    const matchesSearch = Object.values(item).some((value) =>
-      value != null && value.toString().toLowerCase().includes(searchTerm.toLowerCase()) // Check for null or undefined
+    const matchesSearch = Object.values(item).some(
+      (value) =>
+        value != null &&
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase()) // Check for null or undefined
     );
 
     const matchesWorkStatus =
@@ -158,7 +160,6 @@ const PMaintenance = () => {
 
     return matchesSearch && matchesWorkStatus;
   });
-
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -170,7 +171,6 @@ const PMaintenance = () => {
   const handleEditRow = (item) => {
     setEditModalData(item);
     setStatusPending(item?.status);
-
   };
 
   const handleSaveEdit = async () => {
@@ -239,10 +239,10 @@ const PMaintenance = () => {
       );
 
       const matchesDepartment =
-        dept?.name?.toLowerCase() === editModalData?.userDepartment?.toLowerCase();
+        dept?.name?.toLowerCase() ===
+        editModalData?.userDepartment?.toLowerCase();
 
-      const matchesAcademy =
-        user?.academyId === userByEmial?.user?.academyId;
+      const matchesAcademy = user?.academyId === userByEmial?.user?.academyId;
 
       return matchesDepartment && matchesAcademy;
     })
@@ -260,7 +260,6 @@ const PMaintenance = () => {
     });
     setData(sortedData);
   };
-
 
   const handleSort = (column) => {
     const newSortOrder =
@@ -343,7 +342,8 @@ const PMaintenance = () => {
                               style={{
                                 color: "#305845",
                                 transform:
-                                  sortOrder.column === header.field && sortOrder.ascending
+                                  sortOrder.column === header.field &&
+                                  sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -357,13 +357,11 @@ const PMaintenance = () => {
                     )}
                   </th>
                 ))}
-              
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                 
                   <td>{item.assetCode}</td>
                   <td className="description">
                     <Tippy content={item.assetName || ""} placement="top">
@@ -473,42 +471,42 @@ const PMaintenance = () => {
               </div>
               <div className="modal-content-field">
                 <label htmlFor="">Assign: </label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workersList}
-                  value={
-                    workersList.find(
-                      (worker) => worker.value === editModalData.userID
-                    ) || null
-                  }
-                  onChange={(selectedOption) => {
-                    if (selectedOption) {
-                      setEditModalData({
-                        ...editModalData,
-                        userID: selectedOption.value, // Set the userID
-                        userEmail: selectedOption.label, // Optionally keep email for display
-                      });
-                      setUserID(selectedOption.value);
-                      setEmail(selectedOption.label);
-                    } else {
-                      setEditModalData({
-                        ...editModalData,
-                        userID: "",
-                        userEmail: "",
-                      });
-                      setUserID(null);
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={workersList}
+                    value={
+                      workersList.find(
+                        (worker) => worker.value === editModalData.userID
+                      ) || null
                     }
-                  }}
-                  placeholder="Select worker"
-                  isClearable
-                  isSearchable
-                  noOptionsMessage={() =>
-                    "No workers found for this department"
-                  }
-                />
-              </div>
+                    onChange={(selectedOption) => {
+                      if (selectedOption) {
+                        setEditModalData({
+                          ...editModalData,
+                          userID: selectedOption.value, // Set the userID
+                          userEmail: selectedOption.label, // Optionally keep email for display
+                        });
+                        setUserID(selectedOption.value);
+                        setEmail(selectedOption.label);
+                      } else {
+                        setEditModalData({
+                          ...editModalData,
+                          userID: "",
+                          userEmail: "",
+                        });
+                        setUserID(null);
+                      }
+                    }}
+                    placeholder="Select worker"
+                    isClearable
+                    isSearchable
+                    noOptionsMessage={() =>
+                      "No workers found for this department"
+                    }
+                  />
+                </div>
               </div>
 
               <p className="sub-title">Schedule Maintenance Notification</p>
@@ -576,7 +574,7 @@ const PMaintenance = () => {
                   onClick={handleSaveEdit}
                   disabled={isSaving}
                 >
-                  {isSaving ? "Saving..." : "Done"}
+                  {isSaving ? "Saving..." : "Save"}
                 </button>
               </div>
             )}

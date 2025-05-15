@@ -225,6 +225,8 @@ const AdminUser = () => {
       setSelectedAcademy(null);
       setSelectedDepartment(null);
 
+      setShowModal(false);
+
       await refetchUsers();
     } catch (err) {
       let errorMessage = "Something went wrong. Please try again.";
@@ -325,7 +327,10 @@ const AdminUser = () => {
       title: "Are you sure?",
       text: "Do you want to delete this user?",
       icon: "warning",
+      color: "#305845",
       showCancelButton: true,
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       confirmButtonText: "Yes, delete it!",
     });
 
