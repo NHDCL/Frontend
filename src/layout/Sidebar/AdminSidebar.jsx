@@ -33,8 +33,7 @@ const AdminSidebar = () => {
       try {
         await logoutUser();
         dispatch(logout());
-        sessionStorage.clear();
-        localStorage.clear();
+        sessionStorage.removeItem("token");
 
         Swal.fire({
           icon: "success",

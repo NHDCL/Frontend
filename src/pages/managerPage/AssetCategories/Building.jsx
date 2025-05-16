@@ -35,7 +35,7 @@ import { jsPDF } from "jspdf";
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
   selectUserInfo,
-  (userInfo) => userInfo?.user?.username || ""
+  (userInfo) => userInfo?.username || ""
 );
 
 const Building = ({ category }) => {

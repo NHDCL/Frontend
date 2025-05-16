@@ -34,7 +34,7 @@ import Tippy from "@tippyjs/react";
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
   selectUserInfo,
-  (userInfo) => userInfo?.user?.username || ""
+  (userInfo) => userInfo?.username || ""
 );
 
 const Landscaping = ({ category }) => {

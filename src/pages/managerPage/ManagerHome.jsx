@@ -48,7 +48,7 @@ const ManagerDashboard = () => {
 
   const getUserEmail = createSelector(
     selectUserInfo,
-    (userInfo) => userInfo?.user?.username || ""
+    (userInfo) => userInfo?.username || ""
   );
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);

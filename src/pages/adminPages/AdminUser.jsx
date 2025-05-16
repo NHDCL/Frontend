@@ -65,9 +65,6 @@ const AdminUser = () => {
   const [formError, setFormError] = useState(null);
   const [emailError, setEmailError] = useState("");
 
-  // console.log("SA: ", selectedAcademy.value)
-  console.log("dep: ", department);
-
   // Find the Manager's roleId (assuming the user has a 'role' object with an id field)
   const [managerRoleId, setManagerRoleId] = useState(null);
   const [technicianRoleId, setTechnicianRoleId] = useState(null);

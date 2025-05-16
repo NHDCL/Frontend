@@ -37,7 +37,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
     useUpdateRepairByIdMutation();
 
   const repairID = order.repairInfo.repairID;
-  console.log(order.repairInfo)
 
   const {
     data: repairReport,

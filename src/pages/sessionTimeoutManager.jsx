@@ -88,6 +88,7 @@ const SessionTimeoutManager = () => {
       localStorage.removeItem("userInfo");
       localStorage.removeItem("userRole");
       localStorage.removeItem("userToken");
+      sessionStorage.removeItem("token");
       document.cookie =
         "JWT-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 

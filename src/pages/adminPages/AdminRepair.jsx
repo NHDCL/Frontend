@@ -30,8 +30,6 @@ const AdminRepair = () => {
   const { data: academy } = useGetAcademyQuery();
 
   const [data, setData] = useState([]);
-  console.log("data: ", data);
-  console.log("academy: ", academy);
 
   useEffect(() => {
     if (!repairRequest) return;

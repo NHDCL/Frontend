@@ -27,8 +27,6 @@ const AdminMaintenance = () => {
 
   const rowsPerPage = 10;
   const [data, setData] = useState([]);
-  console.log("data: ", data);
-  console.log("a: ", assetData);
 
   useEffect(() => {
     if (isLoading) {
