@@ -13,7 +13,6 @@ import {
   useGetCategoryQuery,
   useUploadExcelMutation,
   useRequestDisposeMutation,
-  useUpdateAssetStatusMutation,
 } from "../../../slices/assetApiSlice";
 import {
   useCreateMaintenanceMutation,
@@ -96,7 +95,6 @@ const Building = ({ category }) => {
   const qrSize = 40;
   const itemsPerPage = 10;
   const [modalData2, setModalData2] = useState(null);
-  const [updateAssetStatus] = useUpdateAssetStatusMutation();
 
   const supervisorsFromSameAcademy =
     users?.filter(
@@ -753,12 +751,9 @@ const Building = ({ category }) => {
         academyId,
       }).unwrap();
 
-      await Promise.all([
-        updateAssetStatus({ assetCode, status: "In Maintenance" }).unwrap(),
-        assignedWorker?.label
-          ? sendEmail({ to: assignedWorker.label }).unwrap()
-          : Promise.resolve(),
-      ]);
+      if (assignedWorker?.label) {
+        await sendEmail({ to: assignedWorker.label }).unwrap();
+      }
 
       Swal.fire({
         icon: "success",
@@ -1240,7 +1235,6 @@ const Building = ({ category }) => {
                           {getDisplayText(item.status)}
                         </div>
                       </td>
-                      
 
                       <td
                         className="actions"

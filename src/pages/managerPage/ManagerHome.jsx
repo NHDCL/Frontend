@@ -129,9 +129,10 @@ const ManagerDashboard = () => {
       title: "Are you sure?",
       text: "Do you want to accept this repair request?",
       icon: "question",
+      color: "#305845",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       confirmButtonText: "Yes, accept it!",
     });
 
@@ -163,10 +164,11 @@ const ManagerDashboard = () => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
       text: "Do you want to reject this repair request?",
-      icon: "warning",
+      icon: "question",
+      color: "#305845",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       confirmButtonText: "Yes, reject it!",
     });
 
@@ -525,6 +527,8 @@ const ManagerDashboard = () => {
                       display: "flex",
                       flexDirection: "column",
                       gap: "0.5rem",
+                      maxWidth: "350px",
+                      width: "100%"
                     }}
                   >
                     <Select

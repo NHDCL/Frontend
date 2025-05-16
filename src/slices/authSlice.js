@@ -4,13 +4,16 @@ const userInfoFromStorage = localStorage.getItem("userInfo")
   ? JSON.parse(localStorage.getItem("userInfo"))
   : null;
 
-const userRoleFromStorage = localStorage.getItem("userRole")
-  ? localStorage.getItem("userRole")
+const userRoleFromStorage = localStorage.getItem("userRole") || null;
+
+const tokenFromStorage = localStorage.getItem("userToken")
+  ? localStorage.getItem("userToken")
   : null;
 
 const initialState = {
   userInfo: userInfoFromStorage,
   userRole: userRoleFromStorage,
+  userToken: tokenFromStorage,
 };
 
 const authSlice = createSlice({
@@ -18,17 +21,20 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      state.userInfo = action.payload;
+      state.userInfo = action.payload.user;
       state.userRole = action.payload.userRole;
-
+      state.userToken = action.payload.token;
       localStorage.setItem("userInfo", JSON.stringify(action.payload.user));
       localStorage.setItem("userRole", action.payload.userRole);
+      localStorage.setItem("userToken", action.payload.token);
     },
     logout: (state) => {
-      state.userInfo = null;
+       state.userInfo = null;
       state.userRole = null;
+      state.userToken = null;
       localStorage.removeItem("userInfo");
       localStorage.removeItem("userRole");
+      localStorage.removeItem("userToken");
     },
   },
 });

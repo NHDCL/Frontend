@@ -71,7 +71,8 @@ const Repair = () => {
     }
   }, [isLoading]);
 
-  const [updateSchedule,{isLoading:updating}] = useUpdateRepairScheduleMutation();
+  const [updateSchedule, { isLoading: updating }] =
+    useUpdateRepairScheduleMutation();
 
   if (error) {
     console.error("Error fetching schedule data:", error);
@@ -175,14 +176,15 @@ const Repair = () => {
       : [];
 
   // Department dropdown options
-  const departmentOptionsU = departments
-  ?.filter((dep) =>
-    uniqueSupervisorDepartmentIds.includes(dep.departmentId)
-  )
-  .map((dep) => ({
-    value: dep.departmentId,
-    label: dep.name,
-  })) || [];
+  const departmentOptionsU =
+    departments
+      ?.filter((dep) =>
+        uniqueSupervisorDepartmentIds.includes(dep.departmentId)
+      )
+      .map((dep) => ({
+        value: dep.departmentId,
+        label: dep.name,
+      })) || [];
   // For default department selection
   const initialDepartmentOption = departmentOptionsU.find(
     (opt) => opt.label === departmentName
@@ -448,7 +450,7 @@ const Repair = () => {
       setAssignTime(getLocalCurrentTime());
     }
   }, [modalData]);
-  
+
   return (
     <div className="ManagerDashboard">
       <div className="container">
@@ -614,7 +616,6 @@ const Repair = () => {
                         Reschedule
                       </button>
                     )}
-                   
                   </td>
                 </tr>
               ))}
@@ -663,44 +664,43 @@ const Repair = () => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Department:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-
-                <Select
-                  classNamePrefix="custom-select-department"
-                  // className="workstatus-dropdown"
-                  options={departmentOptions}
-                  value={
-                    departmentOptions.find(
-                      (opt) => opt.value === selectedDepartment
-                    ) || null
-                  }
-                  onChange={(option) =>
-                    setSelectedDepartment(option?.value || "")
-                  }
-                  isLoading={departmentsLoading}
-                  isClearable
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    // className="workstatus-dropdown"
+                    options={departmentOptions}
+                    value={
+                      departmentOptions.find(
+                        (opt) => opt.value === selectedDepartment
+                      ) || null
+                    }
+                    onChange={(option) =>
+                      setSelectedDepartment(option?.value || "")
+                    }
+                    isLoading={departmentsLoading}
+                    isClearable
+                  />
+                </div>
               </div>
 
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workerOptions}
-                  value={assignedWorker}
-                  onChange={(selectedOption) => {
-                    setAssignedWorker(selectedOption || null); // full object with { value, label }
-                    console.log(
-                      "Selected Worker Email:",
-                      selectedOption?.label || "None"
-                    );
-                  }}
-                  isClearable
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={workerOptions}
+                    value={assignedWorker}
+                    onChange={(selectedOption) => {
+                      setAssignedWorker(selectedOption || null); // full object with { value, label }
+                      console.log(
+                        "Selected Worker Email:",
+                        selectedOption?.label || "None"
+                      );
+                    }}
+                    isClearable
+                  />
+                </div>
               </div>
 
               {/* Assign Date */}
@@ -756,50 +756,50 @@ const Repair = () => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Department:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={departmentOptionsU}
-                  value={
-                    departmentOptionsU.find(
-                      (opt) => opt.value === selectedDepartmentU
-                    ) ||
-                    initialDepartmentOption ||
-                    null
-                  }
-                  onChange={(selected) =>
-                    setSelectedDepartmentU(selected.value)
-                  }
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={departmentOptionsU}
+                    value={
+                      departmentOptionsU.find(
+                        (opt) => opt.value === selectedDepartmentU
+                      ) ||
+                      initialDepartmentOption ||
+                      null
+                    }
+                    onChange={(selected) =>
+                      setSelectedDepartmentU(selected.value)
+                    }
+                  />
+                </div>
               </div>
 
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  value={
-                    finalOptions.find(
-                      (opt) => opt.value === selectedSupervisorId
-                    ) ||
-                    supervisorOption ||
-                    null
-                  }
-                  options={finalOptions}
-                  isClearable
-                  onChange={(selectedOption) => {
-                    setSelectedSupervisorId(selectedOption?.value || null);
-                    setSupervisorOption(selectedOption || null);
-                    console.log(
-                      "Selected Supervisor Email:",
-                      selectedOption?.label || "None"
-                    );
-                  }}
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    value={
+                      finalOptions.find(
+                        (opt) => opt.value === selectedSupervisorId
+                      ) ||
+                      supervisorOption ||
+                      null
+                    }
+                    options={finalOptions}
+                    isClearable
+                    onChange={(selectedOption) => {
+                      setSelectedSupervisorId(selectedOption?.value || null);
+                      setSupervisorOption(selectedOption || null);
+                      console.log(
+                        "Selected Supervisor Email:",
+                        selectedOption?.label || "None"
+                      );
+                    }}
+                  />
+                </div>
               </div>
 
               <div className="modal-content-field">
@@ -825,15 +825,18 @@ const Repair = () => {
                       ? assignTimeU
                       : rescheduleModalData?.startTime?.slice(0, 5) || ""
                   }
-                 
                   onChange={(e) => setAssignTimeU(getLocalCurrentTime())}
                 />
               </div>
 
               {statusPending === "Pending" && (
                 <div>
-                  <button disabled={updating} className="accept-btn" onClick={handleUpdateSchedule}>
-                  {updating ? "Saving..." : "Done"}
+                  <button
+                    disabled={updating}
+                    className="accept-btn"
+                    onClick={handleUpdateSchedule}
+                  >
+                    {updating ? "Saving..." : "Save"}
                   </button>
                 </div>
               )}

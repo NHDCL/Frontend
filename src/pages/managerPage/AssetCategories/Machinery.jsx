@@ -14,7 +14,6 @@ import {
   useGetCategoryQuery,
   useUploadExcelMutation,
   useRequestDisposeMutation,
-  useUpdateAssetStatusMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
 import CreatableSelect from "react-select/creatable";
@@ -85,7 +84,6 @@ const Machinery = ({ category }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduleModalData, setScheduleModalData] = useState(null);
-  const [updateAssetStatus] = useUpdateAssetStatusMutation();
 
   const supervisorsFromSameAcademy =
     users?.filter(
@@ -642,13 +640,9 @@ const Machinery = ({ category }) => {
         academyId: academyId,
       }).unwrap();
 
-      // Send email to the assigned worker
-      await Promise.all([
-        updateAssetStatus({ assetCode, status: "In Maintenance" }).unwrap(),
-        assignedWorker?.label
-          ? sendEmail({ to: assignedWorker.label }).unwrap()
-          : Promise.resolve(),
-      ]);
+      if (assignedWorker?.label) {
+        await sendEmail({ to: assignedWorker.label }).unwrap();
+      }
 
       Swal.fire({
         icon: "success",

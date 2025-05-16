@@ -59,15 +59,7 @@ const Loginpage = () => {
       try {
         const response = await login({ email, password }).unwrap();
 
-        // ⬇️ Save JWT token to sessionStorage
-        sessionStorage.setItem("token", response.token);
-        console.log("Token:", response.token);
-
-        // Dispatch and save user data in localStorage
-        dispatch(setCredentials(response.user)); // Dispatch user data to Redux
-        localStorage.setItem("userInfo", JSON.stringify(response.user)); // Save user data to localStorage
-
-        // Extract the role from authorities
+        // Extract role from response
         const authorities = response.user.authorities;
         const userRole =
           authorities.find((auth) =>
@@ -80,11 +72,17 @@ const Loginpage = () => {
             ].includes(auth.authority)
           )?.authority || "Unknown";
 
-        // Store both user and userRole in Redux and localStorage
-        dispatch(setCredentials({ user: response.user, userRole }));
+        // Dispatch once: user, userRole, and token all together
+        dispatch(
+          setCredentials({
+            user: response.user,
+            userRole,
+            token: response.token,
+          })
+        );
 
-        console.log("Login Successful:", response);
-        console.log("User Role:", userRole);
+        // Save token to sessionStorage
+        sessionStorage.setItem("token", response.token);
 
         Swal.fire({
           icon: "success",
@@ -93,29 +91,30 @@ const Loginpage = () => {
           position: "center",
           showConfirmButton: false,
           timer: 2000,
-          willClose: () => {
-            // Navigate based on the user's role
-            if (userRole === "Admin") {
-              navigate("/admin/");
-            } else if (userRole === "Manager") {
-              navigate("/manager/");
-            } else if (userRole === "Super Admin") {
-              navigate("/superadmin/");
-            } else if (userRole === "Supervisor") {
-              navigate("/supervisor/");
-            } else if (userRole === "Technician") {
-              navigate("/technician/");
-            } else {
-              navigate("/");
-            }
-          },
+          timerProgressBar: true,
+        }).then(() => {
+          if (userRole === "Admin") {
+            navigate("/admin/");
+          } else if (userRole === "Manager") {
+            navigate("/manager/");
+          } else if (userRole === "Super Admin") {
+            navigate("/superadmin/");
+          } else if (userRole === "Supervisor") {
+            navigate("/supervisor/");
+          } else if (userRole === "Technician") {
+            navigate("/technician/");
+          } else {
+            navigate("/");
+          }
         });
       } catch (err) {
         console.error("Login Failed:", err);
         Swal.fire({
           icon: "error",
           title: "Login Failed",
-          text: err?.data?.message || "Invalid email or password. Please try again.",
+          text:
+            err?.data?.message ||
+            "Invalid email or password. Please try again.",
         });
       }
     }

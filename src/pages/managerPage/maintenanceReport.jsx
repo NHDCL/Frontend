@@ -118,7 +118,9 @@ const Maintenancereport = () => {
         })
         .filter(Boolean); // ✅ Remove nulls
 
-      const sortedFiltered = mergedData.sort((a, b) => b.maintenanceReportID.localeCompare(a.maintenanceReportID));
+      const sortedFiltered = mergedData.sort((a, b) =>
+        b.maintenanceReportID.localeCompare(a.maintenanceReportID)
+      );
 
       setData(sortedFiltered);
     }
@@ -182,10 +184,10 @@ const Maintenancereport = () => {
         item.Assigned_Technician,
       ]),
     ]
-    .map((row) =>
-      row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
-    )
-    .join("\n");
+      .map((row) =>
+        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+      )
+      .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -292,32 +294,30 @@ const Maintenancereport = () => {
     doc.save(`Repair_Report_${modalData.maintenanceReportID}.pdf`);
   };
 
-  
-    const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
-    const sortData = (column, ascending) => {
-      const sortedData = [...data].sort((a, b) => {
-        if (a[column] < b[column]) return ascending ? -1 : 1;
-        if (a[column] > b[column]) return ascending ? 1 : -1;
-        return 0;
-      });
-      setData(sortedData);
-    };
-  
-  
-    const handleSort = (column) => {
-      const newSortOrder =
-        column === sortOrder.column
-          ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
-          : true; // Start with ascending for a new column
-  
-      setSortOrder({
-        column,
-        ascending: newSortOrder,
-      });
-      sortData(column, newSortOrder);
-    };
+  const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      if (a[column] < b[column]) return ascending ? -1 : 1;
+      if (a[column] > b[column]) return ascending ? 1 : -1;
+      return 0;
+    });
+    setData(sortedData);
+  };
 
-    const formatDate = (dateString) => {
+  const handleSort = (column) => {
+    const newSortOrder =
+      column === sortOrder.column
+        ? !sortOrder.ascending // Toggle the sorting direction if the same column is clicked
+        : true; // Start with ascending for a new column
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+    sortData(column, newSortOrder);
+  };
+
+  const formatDate = (dateString) => {
     if (!dateString) return "";
 
     const [year, month, day] = dateString.split("-");
@@ -358,8 +358,8 @@ const Maintenancereport = () => {
                         selectedRows.length === displayedData.length
                           ? []
                           : displayedData.map(
-                            (item) => item.maintenanceReportID
-                          )
+                              (item) => item.maintenanceReportID
+                            )
                       )
                     }
                   />
@@ -387,7 +387,8 @@ const Maintenancereport = () => {
                               style={{
                                 color: "#305845",
                                 transform:
-                                  sortOrder.column === header.field && sortOrder.ascending
+                                  sortOrder.column === header.field &&
+                                  sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -551,7 +552,11 @@ const Maintenancereport = () => {
                 </div>
                 <div className="modal-content-field">
                   <label>Date</label>
-                  <input type="text" value={formatDate(modalData.finishedDate)} readOnly />
+                  <input
+                    type="text"
+                    value={formatDate(modalData.finishedDate)}
+                    readOnly
+                  />
                 </div>
                 <div className="modal-content-field">
                   <label>Area</label>
@@ -590,7 +595,7 @@ const Maintenancereport = () => {
                   <label>Repaired Images:</label>
                   <div className="TModal-profile-img">
                     {Array.isArray(modalData.images) &&
-                      modalData.images.length > 0 ? (
+                    modalData.images.length > 0 ? (
                       modalData.images.map((imgSrc, index) => (
                         <img
                           key={index}

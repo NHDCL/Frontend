@@ -62,7 +62,6 @@ const Repairreport = () => {
 
   useEffect(() => {
     if (repairReport && repairRequest && academy && users && userByEmial) {
-
       const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
 
       const mergedData = repairReport
@@ -106,8 +105,10 @@ const Repairreport = () => {
           };
           return merged;
         })
-        .filter(Boolean); 
-      const sortedFiltered = mergedData.sort((a, b) => b.repairReportID.localeCompare(a.repairReportID));
+        .filter(Boolean);
+      const sortedFiltered = mergedData.sort((a, b) =>
+        b.repairReportID.localeCompare(a.repairReportID)
+      );
 
       setData(sortedFiltered);
     }
@@ -177,6 +178,7 @@ const Repairreport = () => {
         timer: 2000,
         showConfirmButton: false,
       });
+      setModalData(false);
     } catch (error) {
       console.error("Update failed:", error);
       Swal.fire({
@@ -233,9 +235,6 @@ const Repairreport = () => {
     const { name, value } = e.target;
     setEditableData((prev) => ({ ...prev, [name]: value }));
   };
-
-  // Ref for the modal
-  const modalRef = useRef(null);
 
   // *Function to handle PDF download*
   const handleDownloadPDF = () => {
@@ -359,9 +358,7 @@ const Repairreport = () => {
 
   const handleSort = (column) => {
     const newSortOrder =
-      column === sortOrder.column
-        ? !sortOrder.ascending
-        : true;
+      column === sortOrder.column ? !sortOrder.ascending : true;
 
     setSortOrder({
       column,
@@ -425,7 +422,7 @@ const Repairreport = () => {
                   { label: "Area", field: "area" },
                   { label: "Total Cost", field: "totalCost" },
                   { label: "Parts_used", field: null },
-                  { label: "Description", field: null }
+                  { label: "Description", field: null },
                 ].map((header, index) => (
                   <th key={index}>
                     {header.field ? (
@@ -440,7 +437,8 @@ const Repairreport = () => {
                               style={{
                                 color: "#305845",
                                 transform:
-                                  sortOrder.column === header.field && sortOrder.ascending
+                                  sortOrder.column === header.field &&
+                                  sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -578,7 +576,7 @@ const Repairreport = () => {
       {/* Modal for Viewing Request */}
       {modalData && (
         <div className="modal-overlay">
-          <div className="modal-content" ref={modalRef}>
+          <div className="modal-content">
             {/* Close Button */}
             <div className="modal-header">
               <h2 className="form-h">Repair Report</h2>
@@ -588,7 +586,7 @@ const Repairreport = () => {
                 />
               </button>
             </div>
-            <div className="modal-body" ref={modalRef}>
+            <div className="modal-body">
               <form className="repair-form">
                 <div className="modal-content-field">
                   <label>Asset Name:</label>
@@ -651,7 +649,7 @@ const Repairreport = () => {
                   <label>Repaired Images:</label>
                   <div className="TModal-profile-img">
                     {Array.isArray(modalData.images) &&
-                      modalData.images.length > 0 ? (
+                    modalData.images.length > 0 ? (
                       modalData.images.map((imgSrc, index) => (
                         <img
                           key={index}
@@ -707,7 +705,7 @@ const Repairreport = () => {
                     onClick={handleUpdate}
                     disabled={isUpdating}
                   >
-                    {isUpdating ? "Updating..." : "Done"}
+                    {isUpdating ? "Updating..." : "Update"}
                   </button>
                 </div>
               </form>

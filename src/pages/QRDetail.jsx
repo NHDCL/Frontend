@@ -7,7 +7,6 @@ import Select from "react-select"; // Make sure to install this with: npm instal
 import { useParams } from "react-router-dom";
 import {
   useGetAssetByAssetCodeQuery,
-  useUpdateAssetStatusMutation,
 } from "../slices/assetApiSlice";
 import { useGetAcademyByIdQuery } from "../slices/userApiSlice";
 import { usePostRepairRequestMutation } from "../slices/maintenanceApiSlice";
@@ -23,8 +22,7 @@ const QRDetail = () => {
   const { assetCode } = useParams();
   const {
     data: asset,
-    isLoading,
-    error,
+    isLoading
   } = useGetAssetByAssetCodeQuery(assetCode);
   const { data: academy } = useGetAcademyByIdQuery(asset?.academyID, {
     skip: !asset?.academyID, // Skip this query until asset is loaded and academyID is available
@@ -41,7 +39,6 @@ const QRDetail = () => {
     description: "",
     email: "",
   });
-  const [updateAssetStatus] = useUpdateAssetStatusMutation();
 
   useEffect(() => {
     if (isLoading) {
@@ -187,7 +184,7 @@ const QRDetail = () => {
     requestData.append("description", description.trim());
     requestData.append("assetName", asset?.title || ""); // Ensure assetName is not undefined
     requestData.append("scheduled", "false");
-    requestData.append("assetCode", asset?.assetCode || ""); // Handle assetCode as fallback too
+    requestData.append("assetCode", asset?.assetCode || "");
 
     images.forEach((imageFile) => {
       requestData.append("images", imageFile); // imageFile is the actual file
@@ -211,8 +208,6 @@ const QRDetail = () => {
 
     try {
       await postRepairRequest(requestData).unwrap();
-
-      await updateAssetStatus({ assetCode: asset?.assetCode, status: "In Maintenance" }).unwrap();
 
       Swal.fire({
         icon: "success",
@@ -323,7 +318,7 @@ const QRDetail = () => {
               classNamePrefix="customm-select-department"
               name="priority"
               options={priorities}
-              value={priorities.find((p) => p.value === formData.priority)}
+              value={formData.priority ? priorities.find(p => p.value === formData.priority) : null}
               onChange={handlePriorityChange}
               placeholder="Select Priority"
               isClearable

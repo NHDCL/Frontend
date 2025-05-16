@@ -44,7 +44,6 @@ const SupervisorMReport = () => {
   const {
     data: maintenanceRequest,
     isLoading,
-    refetch: refetchRepairRequest,
   } = useGetMaintenanceRequestQuery();
   const { data: maintenanceReport } = useGetMaintenanceReportsQuery();
   const { data: academy } = useGetAcademyQuery();
@@ -69,11 +68,6 @@ const SupervisorMReport = () => {
       users &&
       assets
     ) {
-      console.log("🔧 Maintenance Reports:", maintenanceReport);
-      console.log("📋 Maintenance Requests:", maintenanceRequest);
-      console.log("🎓 Academies:", academy);
-      console.log("👤 Users:", users);
-      console.log("📦 Assets:", assets);
 
       const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
 
@@ -103,12 +97,6 @@ const SupervisorMReport = () => {
               .split(",")
               .filter((email) => email.trim() !== "");
             total = technicianList.length;
-            console.log(
-              "👷‍♂ Technicians for Report ID",
-              report.repairID,
-              ":",
-              total
-            );
           }
 
           const matchingAcademy = academy.find(
@@ -129,13 +117,10 @@ const SupervisorMReport = () => {
             description: matchingRequest.description || "N/A",
             totalTechnicians: total,
           };
-
-          console.log("🧩 Merged Item:", merged);
           return merged;
         })
         .filter(Boolean); // ✅ Remove nulls
 
-      console.log("📦 Final Merged Data:", mergedData);
       const sortedFiltered = mergedData.sort((a, b) =>
         b.maintenanceReportID.localeCompare(a.maintenanceReportID)
       );
