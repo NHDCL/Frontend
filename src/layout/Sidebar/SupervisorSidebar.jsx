@@ -24,9 +24,10 @@ const SupervisorSidebar = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         // Remove auth data from localStorage and sessionStorage
-        localStorage.removeItem("authToken");
+        localStorage.removeItem("userInfo");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("userToken");
         sessionStorage.removeItem("token");
-
         // Show success toast
         Swal.fire({
           icon: "success",

@@ -1,6 +1,6 @@
 import React from "react";
 import "./../../pages/css/LandingFooter.css";
-import { FaFacebook, FaYoutube, FaTelegram } from "react-icons/fa";
+import { FaFacebook, FaGlobe } from "react-icons/fa";
 import { AiFillTikTok } from "react-icons/ai";
 
 const LandingFooter = () => {
@@ -21,18 +21,46 @@ const LandingFooter = () => {
         </div>
         <div className="lfQlinks">
           <h3 className="lfh3">Quick Links</h3>
-          <p>NHDCL Bhutan</p>
-          <p>Gyalsung Academy</p>
-          <p>ERP</p>
-          <p>Facility Management</p>
+          <a
+            href="https://www.nhdcl.bt/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            NHDCL Bhutan
+          </a>
+          <a
+            href="https://gyalsung.bt/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Gyalsung Academy
+          </a>
+          <a
+            href="https://erp.nhdcl.bt/#login"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            ERP System
+          </a>
         </div>
-        <div style={{marginTop:"23px"}}>
+
+        <div style={{ marginTop: "23px" }}>
           <h3 className="lfh3">Follow Us</h3>
           <div className="lflink">
-            <FaFacebook className="lf-i facebook" />
-            <FaYoutube className="lf-i youtube" />
-            <FaTelegram className="lf-i telegram" />
-            <AiFillTikTok className="lf-i tiktok" />
+            <a
+              href="https://www.facebook.com/profile.php?id=100078034536894"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaFacebook className="lf-i facebook" />
+            </a>
+            <a
+              href="https://www.tiktok.com/@nhdcl_furnitures?_t=ZS-8wJpSvU8s9B&_r=1"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <AiFillTikTok className="lf-i tiktok" />
+            </a>
           </div>
         </div>
       </div>

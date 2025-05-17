@@ -11,7 +11,6 @@ import { logout } from "../../slices/authSlice";
 
 const AdminSidebar = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
-  console.log("isSidebarOpen:", isSidebarOpen);
   const splitIndex = adminnavigationLinks.length - 2; // Split before Account and Logout
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -34,8 +33,7 @@ const AdminSidebar = () => {
       try {
         await logoutUser();
         dispatch(logout());
-        sessionStorage.clear();
-        localStorage.clear();
+        sessionStorage.removeItem("token");
 
         Swal.fire({
           icon: "success",

@@ -28,18 +28,12 @@ import Tippy from "@tippyjs/react";
 const PMaintenance = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [modalData, setModalData] = useState(null);
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [editModalData, setEditModalData] = useState(null);
   const [userID, setUserID] = useState(null);
   const [supervisor, setEmail] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [statusPending, setStatusPending] = useState(null);
-
-  const [assignedWorker, setAssignedWorker] = useState("");
-  const [assignTime, setAssignTime] = useState("");
-  const [assignDate, setAssignDate] = useState("");
 
   const {
     data: maintenanceRequest,
@@ -57,20 +51,13 @@ const PMaintenance = () => {
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
     selectUserInfo,
-    (userInfo) => userInfo?.user?.username || ""
+    (userInfo) => userInfo?.username || ""
   );
 
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);
 
-  const academyName = userByEmial?.user.academyId;
-
-  const today = new Date().toISOString().split("T")[0];
-
   const [data, setData] = useState([]);
-  // console.log('mdata: ', maintenanceRequest)
-  // console.log('adata: ', assetData)
-  console.log("data: ", data);
 
   useEffect(() => {
     if (
@@ -80,22 +67,13 @@ const PMaintenance = () => {
       allUsers &&
       allDepartment
     ) {
-      console.log("🔧 Raw Maintenance Requests:", maintenanceRequest);
-      console.log("📦 Asset Data:", assetData);
-      console.log("📧 All Users:", allUsers);
-      console.log("🏛️ Departments:", allDepartment);
-      console.log("👤 Logged-in User:", userByEmial);
-
       const userAcademyId = userByEmial?.user?.academyId;
-      console.log("🏫 User's Academy ID:", userAcademyId);
-
 
       const filtered = maintenanceRequest
         .map((request) => {
           const matchedAsset = assetData.find(
             (a) =>
               a.assetCode === request.assetCode && a.academyID === userAcademyId
-
           );
           const user = allUsers.find((u) => u?.userId === request.userID);
           const email = user ? user.email : "N/A";
@@ -103,13 +81,6 @@ const PMaintenance = () => {
             ? allDepartment.find((d) => d?.departmentId === user.departmentId)
             : null;
           const departmentName = department ? department.name : "N/A";
-          const AcademyName = department ? department.name : "N/A";
-
-          console.log("📝 Request:", request);
-          console.log("📝 usersss:", user);
-          console.log("📎 Matched Asset:", matchedAsset);
-          console.log("📨 User Email:", email);
-          console.log("🏛️ Department Name:", departmentName);
 
           if (matchedAsset) {
             return {
@@ -125,13 +96,9 @@ const PMaintenance = () => {
         })
         .filter((r) => r !== null);
 
-      console.log("✅ Filtered & Enriched Requests:", filtered);
-
-      // const sorted = filtered.sort(
-      //   (a, b) => new Date(b?.createdAt) - new Date(a?.createdAt)
-      // );
-
-      const sortedFiltered = filtered.sort((a, b) => b.maintenanceID.localeCompare(a.maintenanceID));
+      const sortedFiltered = filtered.sort((a, b) =>
+        b.maintenanceID.localeCompare(a.maintenanceID)
+      );
 
       setData(sortedFiltered);
     }
@@ -167,24 +134,6 @@ const PMaintenance = () => {
     }
   };
 
-  const handleUpdate = async () => {
-    const updatedMaintenance = {
-      title: "New Title",
-      description: "Updated description",
-      // ...other fields
-    };
-
-    try {
-      const res = await updatePreventiveMaintenance({
-        id: "1234567890",
-        maintenance: updatedMaintenance,
-      }).unwrap();
-      console.log("Update successful:", res);
-    } catch (err) {
-      console.error("Update failed:", err);
-    }
-  };
-
   // Extract unique work statuses from data
   const uniqueWorkStatuses = [
     { value: "", label: "All Work status" },
@@ -199,8 +148,10 @@ const PMaintenance = () => {
   // Filtering data based on search and priority selection and work status
   const sortedData = [...data].sort((a, b) => b?.assetCode - a?.assetCode);
   const filteredData = sortedData.filter((item) => {
-    const matchesSearch = Object.values(item).some((value) =>
-      value != null && value.toString().toLowerCase().includes(searchTerm.toLowerCase()) // Check for null or undefined
+    const matchesSearch = Object.values(item).some(
+      (value) =>
+        value != null &&
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase()) // Check for null or undefined
     );
 
     const matchesWorkStatus =
@@ -210,30 +161,16 @@ const PMaintenance = () => {
     return matchesSearch && matchesWorkStatus;
   });
 
-
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
 
-  const handleSelectRow = (assetCode) => {
-    setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(assetCode)
-        ? prevSelectedRows.filter((item) => item !== assetCode)
-        : [...prevSelectedRows, assetCode]
-    );
-  };
-
-  const handleCloseModal = () => {
-    setModalData(null);
-  };
-
   // Open Edit Modal
   const handleEditRow = (item) => {
     setEditModalData(item);
     setStatusPending(item?.status);
-
   };
 
   const handleSaveEdit = async () => {
@@ -256,11 +193,9 @@ const PMaintenance = () => {
       };
 
       const response = await updatePreventiveMaintenance(payload).unwrap();
-      console.log("✅ Maintenance updated:", response);
 
       if (supervisor) {
-        await sendEmail({ to: supervisor }).unwrap(); // Send email after successful update
-        console.log("📧 Email sent to:", supervisor);
+        await sendEmail({ to: supervisor }).unwrap();
       }
 
       setUserID(null);
@@ -304,10 +239,10 @@ const PMaintenance = () => {
       );
 
       const matchesDepartment =
-        dept?.name?.toLowerCase() === editModalData?.userDepartment?.toLowerCase();
+        dept?.name?.toLowerCase() ===
+        editModalData?.userDepartment?.toLowerCase();
 
-      const matchesAcademy =
-        user?.academyId === userByEmial?.user?.academyId;
+      const matchesAcademy = user?.academyId === userByEmial?.user?.academyId;
 
       return matchesDepartment && matchesAcademy;
     })
@@ -315,12 +250,6 @@ const PMaintenance = () => {
       value: user.userId,
       label: user.email,
     }));
-
-  // Debugging output
-  console.log("👷 Filtered Workers List:", workersList);
-
-  console.log("🛠️ Workers List for Department:", editModalData?.userDepartment);
-  console.log("👥 Matched Workers:", workersList);
 
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
   const sortData = (column, ascending) => {
@@ -331,7 +260,6 @@ const PMaintenance = () => {
     });
     setData(sortedData);
   };
-
 
   const handleSort = (column) => {
     const newSortOrder =
@@ -344,6 +272,13 @@ const PMaintenance = () => {
       ascending: newSortOrder,
     });
     sortData(column, newSortOrder);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
   };
 
   return (
@@ -383,26 +318,13 @@ const PMaintenance = () => {
           <table className="RequestTable">
             <thead className="table-header">
               <tr>
-                {/* <th>
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.length === displayedData.length} // Select all checkboxes when all rows are selected
-                    onChange={() =>
-                      setSelectedRows(
-                        selectedRows.length === displayedData.length
-                          ? []
-                          : displayedData.map((item) => item.assetCode)
-                      )
-                    }
-                  />
-                </th> */}
                 {[
                   { label: "Asset Code", field: "assetCode" },
                   { label: "Asset Name", field: "assetName" },
                   { label: "Description", field: null },
                   { label: "Schedule(month)", field: null },
-                  { label: "Start Date", field: "startDate" },
-                  { label: "End Date", field: "endDate" },
+                  { label: "From Date", field: "startDate" },
+                  { label: "To Date", field: "endDate" },
                   { label: "Assign to", field: "userEmail" },
                   { label: "Workstatus", field: null },
                   { label: " ", field: null },
@@ -420,7 +342,8 @@ const PMaintenance = () => {
                               style={{
                                 color: "#305845",
                                 transform:
-                                  sortOrder.column === header.field && sortOrder.ascending
+                                  sortOrder.column === header.field &&
+                                  sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -434,32 +357,11 @@ const PMaintenance = () => {
                     )}
                   </th>
                 ))}
-                {/* <th>
-                  {selectedRows.length > 0 ? (
-                    <button
-                      className="deleteMaintenance-all-btn"
-                      onClick={handleDeleteSelected}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px", color: "red" }}
-                      />
-                    </button>
-                  ) : (
-                    " "
-                  )}
-                </th> */}
               </tr>
             </thead>
             <tbody>
               {displayedData.map((item, index) => (
                 <tr key={index}>
-                  {/* <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(item.maintenanceID)}
-                      onChange={() => handleSelectRow(item.maintenanceID)}
-                    />
-                  </td> */}
                   <td>{item.assetCode}</td>
                   <td className="description">
                     <Tippy content={item.assetName || ""} placement="top">
@@ -480,8 +382,8 @@ const PMaintenance = () => {
                     </Tippy>
                   </td>
                   <td>{item.repeat || ""}</td>
-                  <td>{item.startDate || ""}</td>
-                  <td>{item.endDate || ""}</td>
+                  <td>{formatDate(item.startDate) || ""}</td>
+                  <td>{formatDate(item.endDate) || ""}</td>
                   <td className="description">
                     <Tippy content={item.userEmail || ""} placement="top">
                       <span>
@@ -508,14 +410,6 @@ const PMaintenance = () => {
                     >
                       <FaEdit style={{ width: "20px", height: "20px" }} />
                     </button>
-                    {/* <button
-                      className="delete-btn"
-                      onClick={() => handleDeleteRow(item.assetCode)}
-                    >
-                      <RiDeleteBin6Line
-                        style={{ width: "20px", height: "20px" }}
-                      />
-                    </button> */}
                   </td>
                 </tr>
               ))}
@@ -577,40 +471,42 @@ const PMaintenance = () => {
               </div>
               <div className="modal-content-field">
                 <label htmlFor="">Assign: </label>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workersList}
-                  value={
-                    workersList.find(
-                      (worker) => worker.value === editModalData.userID
-                    ) || null
-                  }
-                  onChange={(selectedOption) => {
-                    if (selectedOption) {
-                      setEditModalData({
-                        ...editModalData,
-                        userID: selectedOption.value, // Set the userID
-                        userEmail: selectedOption.label, // Optionally keep email for display
-                      });
-                      setUserID(selectedOption.value);
-                      setEmail(selectedOption.label);
-                    } else {
-                      setEditModalData({
-                        ...editModalData,
-                        userID: "",
-                        userEmail: "",
-                      });
-                      setUserID(null);
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={workersList}
+                    value={
+                      workersList.find(
+                        (worker) => worker.value === editModalData.userID
+                      ) || null
                     }
-                  }}
-                  placeholder="Select worker"
-                  isClearable
-                  isSearchable
-                  noOptionsMessage={() =>
-                    "No workers found for this department"
-                  }
-                />
+                    onChange={(selectedOption) => {
+                      if (selectedOption) {
+                        setEditModalData({
+                          ...editModalData,
+                          userID: selectedOption.value, // Set the userID
+                          userEmail: selectedOption.label, // Optionally keep email for display
+                        });
+                        setUserID(selectedOption.value);
+                        setEmail(selectedOption.label);
+                      } else {
+                        setEditModalData({
+                          ...editModalData,
+                          userID: "",
+                          userEmail: "",
+                        });
+                        setUserID(null);
+                      }
+                    }}
+                    placeholder="Select worker"
+                    isClearable
+                    isSearchable
+                    noOptionsMessage={() =>
+                      "No workers found for this department"
+                    }
+                  />
+                </div>
               </div>
 
               <p className="sub-title">Schedule Maintenance Notification</p>
@@ -678,7 +574,7 @@ const PMaintenance = () => {
                   onClick={handleSaveEdit}
                   disabled={isSaving}
                 >
-                  {isSaving ? "Saving..." : "Done"}
+                  {isSaving ? "Saving..." : "Save"}
                 </button>
               </div>
             )}

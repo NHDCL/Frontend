@@ -4,13 +4,10 @@ import "./../managerPage/css/table.css";
 import "./../managerPage/css/form.css";
 import "./../managerPage/css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
-import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoIosCloseCircle } from "react-icons/io";
 import { LuDownload } from "react-icons/lu";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import Select from "react-select";
 import Tippy from "@tippyjs/react";
 import { TiArrowSortedUp } from "react-icons/ti";
 import { useGetRepairReportsQuery } from "../../slices/maintenanceApiSlice"; // Import the query hook
@@ -21,11 +18,6 @@ const AdminRReport = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
   const [modalData, setModalData] = useState(null);
-  const [editableData, setEditableData] = useState({
-    Additional_cost: "",
-    Additional_Hour: "",
-    Remarks: "",
-  });
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
   // Fetch repair reports data using RTK Query
   const { data: apiData, isLoading } = useGetRepairReportsQuery();
@@ -64,11 +56,7 @@ const AdminRReport = () => {
       };
     });
   };
-
-  // Get processed data
-  // const data = processApiData(apiData);
   const [data, setData] = useState([]);
-  console.log("Data: ", data);
 
   useEffect(() => {
     if (apiData) {
@@ -76,10 +64,6 @@ const AdminRReport = () => {
       setData(processed);
     }
   }, [apiData]);
-
-  // Log the structure of the API data and processed data for debugging
-  console.log("Original API data:", apiData);
-  console.log("Processed data:", data);
 
   useEffect(() => {
     if (isLoading) {
@@ -94,12 +78,6 @@ const AdminRReport = () => {
       Swal.close();
     }
   }, [isLoading]);
-
-  const sortedData = [...data].sort((a, b) => {
-    // We want newest reports first, but we don't have a proper way to determine this
-    // without a timestamp field, so we'll use the ID for now
-    return b.rid.localeCompare(a.rid);
-  });
 
   const getNestedValue = (obj, path) => {
     return path?.split(".").reduce((acc, part) => acc && acc[part], obj) ?? "";
@@ -165,11 +143,6 @@ const AdminRReport = () => {
 
   const handleCloseModal = () => {
     setModalData(null);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditableData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Ref for the modal
@@ -273,6 +246,13 @@ const AdminRReport = () => {
 
     setData(sorted);
     setSortOrder({ column: field, ascending });
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
   };
 
   return (
@@ -392,7 +372,7 @@ const AdminRReport = () => {
                     <td>{index+1}</td>
                     <td>{item.startTime}</td>
                     <td>{item.endTime}</td>
-                    <td>{item.Date}</td>
+                    <td>{formatDate(item.Date)}</td>
                     <td className="description">
                       <Tippy content={item.Total_cost || ""} placement="top">
                         <span>
@@ -547,7 +527,7 @@ const AdminRReport = () => {
                   <label>Finished Date</label>
                   <input
                     type="text"
-                    value={modalData.Date || "Not completed"}
+                    value={formatDate(modalData.Date) || "Not completed"}
                     readOnly
                   />
                 </div>

@@ -54,7 +54,7 @@ const SupervisorWO = () => {
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
     selectUserInfo,
-    (userInfo) => userInfo?.user?.username || ""
+    (userInfo) => userInfo?.username || ""
   );
 
   const email = useSelector(getUserEmail);
@@ -594,6 +594,8 @@ const SupervisorWO = () => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Assign Technician:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
+
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -610,6 +612,8 @@ const SupervisorWO = () => {
                   isClearable
                 />
               </div>
+              </div>
+
               {/* Assign Date */}
               <div className="modal-content-field">
                 <label>Start Date:</label>
@@ -662,6 +666,8 @@ const SupervisorWO = () => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Assign Technician:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
+
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -680,6 +686,8 @@ const SupervisorWO = () => {
                   isClearable
                 />
               </div>
+              </div>
+
               {/* Assign Date */}
               <div className="modal-content-field">
                 <label>Start Date:</label>

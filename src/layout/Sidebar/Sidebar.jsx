@@ -35,14 +35,9 @@ const ManagerSidebar = () => {
         // Logging out the user by calling the API mutation
         await logoutUser();
 
-        // Clearing session and authentication tokens
-        sessionStorage.removeItem("token");
-
         // Dispatching the logout action
-        dispatch(logout()); // Dispatch the logout action
-
-        // Removing user info from localStorage
-        localStorage.removeItem("userInfo");
+        dispatch(logout());
+        sessionStorage.removeItem("token");
 
         // Showing success message on successful logout
         Swal.fire({

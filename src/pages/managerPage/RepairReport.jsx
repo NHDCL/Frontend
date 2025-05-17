@@ -4,11 +4,8 @@ import "./css/table.css";
 import "./css/form.css";
 import "./css/dropdown.css";
 import { IoIosSearch } from "react-icons/io";
-import { RiDeleteBin6Line } from "react-icons/ri";
-import img from "../../assets/images/person_four.jpg";
 import { IoIosCloseCircle } from "react-icons/io";
 import { LuDownload } from "react-icons/lu";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import "tippy.js/dist/tippy.css";
 import Tippy from "@tippyjs/react";
@@ -20,7 +17,6 @@ import {
   useUpdateScheduleMutation,
   useLazyGetScheduleByRepairIDQuery,
 } from "../../slices/maintenanceApiSlice";
-import Select from "react-select";
 import { createSelector } from "reselect";
 import { useSelector } from "react-redux";
 import Swal from "sweetalert2";
@@ -33,7 +29,6 @@ import {
 } from "../../slices/userApiSlice";
 
 const Repairreport = () => {
-  const [totalTechnicians, setTotalTechnicians] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -56,14 +51,10 @@ const Repairreport = () => {
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
     selectUserInfo,
-    (userInfo) => userInfo?.user?.username || ""
+    (userInfo) => userInfo?.username || ""
   );
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);
-
-  const academyId = userByEmial?.user?.academyId;
-  const { data: departments, isLoading: departmentsLoading } =
-    useGetDepartmentQuery();
 
   const { data: users } = useGetUsersQuery();
   const [data, setData] = useState([]);
@@ -71,11 +62,6 @@ const Repairreport = () => {
 
   useEffect(() => {
     if (repairReport && repairRequest && academy && users && userByEmial) {
-      console.log("🔧 Repair Reports:", repairReport);
-      console.log("📋 Repair Requests:", repairRequest);
-      console.log("🎓 Academies:", academy);
-      console.log("👤 Users:", users);
-
       const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
 
       const mergedData = repairReport
@@ -101,12 +87,6 @@ const Repairreport = () => {
               .split(",")
               .filter((email) => email.trim() !== "");
             total = technicianList.length;
-            console.log(
-              "👷‍♂ Technicians for Report ID",
-              report.repairID,
-              ":",
-              total
-            );
           }
 
           // 🏫 Match academyId to academyName
@@ -123,14 +103,12 @@ const Repairreport = () => {
             description: matchingRequest.description || "N/A",
             totalTechnicians: total,
           };
-
-          console.log("🧩 Merged Item:", merged);
           return merged;
         })
-        .filter(Boolean); // 🔥 Remove any nulls (non-matching academy or request)
-
-      console.log("📦 Final Merged Data:", mergedData);
-      const sortedFiltered = mergedData.sort((a, b) => b.repairReportID.localeCompare(a.repairReportID));
+        .filter(Boolean);
+      const sortedFiltered = mergedData.sort((a, b) =>
+        b.repairReportID.localeCompare(a.repairReportID)
+      );
 
       setData(sortedFiltered);
     }
@@ -163,10 +141,9 @@ const Repairreport = () => {
       return;
     }
 
-    setIsUpdating(true); // 👈 start loading
+    setIsUpdating(true);
     try {
       const scheduleRes = await fetchSchedulesByRepairID(repairID).unwrap();
-      console.log("Schedule response:", scheduleRes);
 
       // handle different structures
       const scheduleID = Array.isArray(scheduleRes)
@@ -193,7 +170,6 @@ const Repairreport = () => {
         scheduleID,
         updatedSchedule,
       }).unwrap();
-      console.log("Update response:", response);
 
       Swal.fire({
         icon: "success",
@@ -202,6 +178,7 @@ const Repairreport = () => {
         timer: 2000,
         showConfirmButton: false,
       });
+      setModalData(false);
     } catch (error) {
       console.error("Update failed:", error);
       Swal.fire({
@@ -212,8 +189,6 @@ const Repairreport = () => {
     }
     setIsUpdating(false);
   };
-
-  console.log("dataa", data);
 
   const sortedData = [...data].sort(
     (a, b) => b.repairReportID - a.repairReportID
@@ -260,9 +235,6 @@ const Repairreport = () => {
     const { name, value } = e.target;
     setEditableData((prev) => ({ ...prev, [name]: value }));
   };
-
-  // Ref for the modal
-  const modalRef = useRef(null);
 
   // *Function to handle PDF download*
   const handleDownloadPDF = () => {
@@ -386,9 +358,7 @@ const Repairreport = () => {
 
   const handleSort = (column) => {
     const newSortOrder =
-      column === sortOrder.column
-        ? !sortOrder.ascending
-        : true;
+      column === sortOrder.column ? !sortOrder.ascending : true;
 
     setSortOrder({
       column,
@@ -398,6 +368,12 @@ const Repairreport = () => {
     sortData(column, newSortOrder);
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
+  };
 
   return (
     <div className="ManagerDashboard">
@@ -446,7 +422,7 @@ const Repairreport = () => {
                   { label: "Area", field: "area" },
                   { label: "Total Cost", field: "totalCost" },
                   { label: "Parts_used", field: null },
-                  { label: "Description", field: null }
+                  { label: "Description", field: null },
                 ].map((header, index) => (
                   <th key={index}>
                     {header.field ? (
@@ -461,7 +437,8 @@ const Repairreport = () => {
                               style={{
                                 color: "#305845",
                                 transform:
-                                  sortOrder.column === header.field && sortOrder.ascending
+                                  sortOrder.column === header.field &&
+                                  sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -517,7 +494,7 @@ const Repairreport = () => {
                     </Tippy>
                   </td>
                   <td>{[item.startTime, item.endTime].join(" - ")}</td>
-                  <td>{item.finishedDate || ""}</td>
+                  <td>{formatDate(item.finishedDate) || ""}</td>
                   <td className="description">
                     <Tippy content={item.area || ""} placement="top">
                       <span>
@@ -599,7 +576,7 @@ const Repairreport = () => {
       {/* Modal for Viewing Request */}
       {modalData && (
         <div className="modal-overlay">
-          <div className="modal-content" ref={modalRef}>
+          <div className="modal-content">
             {/* Close Button */}
             <div className="modal-header">
               <h2 className="form-h">Repair Report</h2>
@@ -609,7 +586,7 @@ const Repairreport = () => {
                 />
               </button>
             </div>
-            <div className="modal-body" ref={modalRef}>
+            <div className="modal-body">
               <form className="repair-form">
                 <div className="modal-content-field">
                   <label>Asset Name:</label>
@@ -672,7 +649,7 @@ const Repairreport = () => {
                   <label>Repaired Images:</label>
                   <div className="TModal-profile-img">
                     {Array.isArray(modalData.images) &&
-                      modalData.images.length > 0 ? (
+                    modalData.images.length > 0 ? (
                       modalData.images.map((imgSrc, index) => (
                         <img
                           key={index}
@@ -728,7 +705,7 @@ const Repairreport = () => {
                     onClick={handleUpdate}
                     disabled={isUpdating}
                   >
-                    {isUpdating ? "Updating..." : "Done"}
+                    {isUpdating ? "Updating..." : "Update"}
                   </button>
                 </div>
               </form>

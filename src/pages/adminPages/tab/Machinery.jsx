@@ -215,6 +215,21 @@ const Machinery = ({ category }) => {
     sortData(column, newSortOrder);
   };
 
+  const getStatusDescription = (status) => {
+    switch (status) {
+      case "Pending":
+        return "The asset is awaiting approval or further action.";
+      case "In Usage":
+        return "The asset is currently being used.";
+      case "In Maintenance":
+        return "The asset is currently in use and also undergoing maintenance or repair.";
+      case "Disposed":
+        return "The asset has been disposed and is no longer in use.";
+      default:
+        return "Unknown status.";
+    }
+  };
+
   return (
     <div className="managerDashboard">
       <div className="search-sort-container">
@@ -344,10 +359,16 @@ const Machinery = ({ category }) => {
                       </span>
                     </Tippy>
                   </td>
+              
                   <td>
-                    <div className={getStatusClass(item.status)}>
-                      {getDisplayText(item.status)}
-                    </div>
+                    <Tippy
+                      content={getStatusDescription(item.status)}
+                      placement="top"
+                    >
+                      <div className={getStatusClass(item.status)}>
+                        {getDisplayText(item.status)}
+                      </div>
+                    </Tippy>
                   </td>
                   <td
                     className="actions"
@@ -448,7 +469,11 @@ const Machinery = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
+                <input
+                  type="text"
+                  value={formatDate(modalData.acquireDate)}
+                  readOnly
+                />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>

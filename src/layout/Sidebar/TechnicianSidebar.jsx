@@ -25,7 +25,9 @@ const TechnicianSidebar = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         // Remove authentication data
-        localStorage.removeItem("authToken");
+        localStorage.removeItem("userInfo");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("userToken");
         sessionStorage.removeItem("token");
 
         // Success toast

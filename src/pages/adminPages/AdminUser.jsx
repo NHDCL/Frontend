@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./../managerPage/css/table.css";
 import "./../managerPage/css/TabSwitcher.css";
+import "./../managerPage/css/dropdown.css";
+import "./../managerPage/css/form.css";
+
 import { IoIosSearch } from "react-icons/io";
 import img from "../../assets/images/defaultImage.png";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -71,9 +74,6 @@ const AdminUser = () => {
   const [softDeleteUser] = useSoftDeleteUserMutation();
   const [formError, setFormError] = useState(null);
   const [emailError, setEmailError] = useState("");
-
-  // console.log("SA: ", selectedAcademy.value)
-  console.log("dep: ", department);
 
   // Find the Manager's roleId (assuming the user has a 'role' object with an id field)
   const [managerRoleId, setManagerRoleId] = useState(null);
@@ -270,6 +270,8 @@ const AdminUser = () => {
       setSelectedAcademy(null);
       setSelectedDepartment(null);
 
+      setShowModal(false);
+
       await refetchUsers();
     } catch (err) {
       let errorMessage = "Something went wrong. Please try again.";
@@ -370,7 +372,10 @@ const AdminUser = () => {
       title: "Are you sure?",
       text: "Do you want to delete this user?",
       icon: "warning",
+      color: "#305845",
       showCancelButton: true,
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       confirmButtonText: "Yes, delete it!",
     });
 
@@ -728,7 +733,8 @@ const AdminUser = () => {
             <div className="AdminUser_close">
               <h2>Add {activeTab}</h2>
               <button
-                className="AdminUser-close-btn"
+                // className="AdminUser-close-btn"
+                className="close-btn"
                 onClick={() => {
                   setShowModal(false);
                   resetForm();

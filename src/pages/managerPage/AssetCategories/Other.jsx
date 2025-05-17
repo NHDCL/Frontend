@@ -14,7 +14,6 @@ import {
   useGetCategoryQuery,
   useUploadExcelMutation,
   useRequestDisposeMutation,
-  useUpdateAssetStatusMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
 import CreatableSelect from "react-select/creatable";
@@ -36,7 +35,7 @@ import Tippy from "@tippyjs/react";
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
   selectUserInfo,
-  (userInfo) => userInfo?.user?.username || ""
+  (userInfo) => userInfo?.username || ""
 );
 
 const Other = ({ category }) => {
@@ -85,7 +84,6 @@ const Other = ({ category }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduleModalData, setScheduleModalData] = useState(null);
-  const [updateAssetStatus] = useUpdateAssetStatusMutation();
 
   const supervisorsFromSameAcademy =
     users?.filter(
@@ -599,7 +597,7 @@ const Other = ({ category }) => {
       Description: modalData.Description || "",
       Assign: modalData.Assign || "",
       Lastworkorder: modalData.Lastworkorder || "",
-      Schedule: modalData.Schedule || "",
+      Schedule: getCurrentTime(),
       Nextworkorder: modalData.Nextworkorder || "",
       assetCode: modalData.assetCode || "",
     });
@@ -641,13 +639,9 @@ const Other = ({ category }) => {
         academyId: academyId,
       }).unwrap();
 
-      // Send email to the assigned worker
-      await Promise.all([
-        updateAssetStatus({ assetCode, status: "In Maintenance" }).unwrap(),
-        assignedWorker?.label
-          ? sendEmail({ to: assignedWorker.label }).unwrap()
-          : Promise.resolve(),
-      ]);
+      if (assignedWorker?.label) {
+        await sendEmail({ to: assignedWorker.label }).unwrap();
+      }
 
       Swal.fire({
         icon: "success",
@@ -710,6 +704,25 @@ const Other = ({ category }) => {
     });
 
     sortData(column, newSortOrder);
+  };
+  const getStatusDescription = (status) => {
+    switch (status) {
+      case "Pending":
+        return "The asset is awaiting approval or further action.";
+      case "In Usage":
+        return "The asset is currently being used.";
+      case "In Maintenance":
+        return "The asset is currently in use and also undergoing maintenance or repair.";
+      case "Disposed":
+        return "The asset has been disposed and is no longer in use.";
+      default:
+        return "Unknown status.";
+    }
+  };
+
+  const getCurrentTime = () => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // returns "HH:MM"
   };
 
   return (
@@ -835,7 +848,6 @@ const Other = ({ category }) => {
                   </td>
                   <td>{index + 1}</td> {/* Just showing serial # in table */}
                   <td>{item.assetCode}</td>
-                  {/* <td>{item.title}</td> */}
                   <td className="description">
                     <Tippy content={item.title || ""} placement="top">
                       <span>
@@ -857,10 +869,15 @@ const Other = ({ category }) => {
                     </Tippy>
                   </td>
                   <td>
-                    <div className={getStatusClass(item.status)}>
-                      {getDisplayText(item.status)}
-                    </div>
-                  </td>
+                        <Tippy
+                          content={getStatusDescription(item.status)}
+                          placement="top"
+                        >
+                          <div className={getStatusClass(item.status)}>
+                            {getDisplayText(item.status)}
+                          </div>
+                        </Tippy>
+                      </td>
                   <td
                     className="actions"
                     style={{
@@ -1266,6 +1283,7 @@ const Other = ({ category }) => {
               <p className="sub-title">Maintenance Detail</p>
               <div className="modal-content-field">
                 <label>Department:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -1281,8 +1299,11 @@ const Other = ({ category }) => {
                   isClearable
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -1292,6 +1313,8 @@ const Other = ({ category }) => {
                   isClearable
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Description: </label>
                 <input
@@ -1310,6 +1333,7 @@ const Other = ({ category }) => {
               <p className="sub-title">Schedule Maintenance Notification</p>
               <div className="modal-content-field">
                 <label>Repeat:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -1319,6 +1343,8 @@ const Other = ({ category }) => {
                   isClearable
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>From date: </label>
                 <input
@@ -1343,12 +1369,8 @@ const Other = ({ category }) => {
                 <input
                   type="time"
                   value={scheduleModalData.Schedule}
-                  onChange={(e) =>
-                    setScheduleModalData({
-                      ...scheduleModalData,
-                      Schedule: e.target.value,
-                    })
-                  }
+                  readOnly
+                  disabled
                 />
               </div>
               <div className="modal-content-field">

@@ -15,7 +15,7 @@ import Swal from "sweetalert2";
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
   selectUserInfo,
-  (userInfo) => userInfo?.user?.username || ""
+  (userInfo) => userInfo?.username || ""
 );
 
 const AdminAccount = () => {
@@ -158,7 +158,14 @@ const AdminAccount = () => {
             oldPassword: profile.oldPassword,
             newPassword: profile.newPassword,
           }).unwrap();
-          Swal.fire("Success", "Password Updated Successfully!", "success");
+          Swal.fire({
+            icon: "success",
+            title: "Password Updated Successfully!",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 2000,
+          });
           setProfile((prev) => ({
             ...prev,
             oldPassword: "",
@@ -200,10 +207,12 @@ const AdminAccount = () => {
           image: profile.imageFile,
         }).unwrap();
         Swal.fire({
-          title: "Success",
-          text: "Profile Image Updated Successfully!",
           icon: "success",
-          confirmButtonColor: "#305845",
+          title: "Profile image updated successfully.",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
         });
         originalImageRef.current = profile.imageFile;
         setIsNewImageSelected(false); // hide update button

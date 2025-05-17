@@ -14,7 +14,6 @@ import {
   useGetCategoryQuery,
   useUploadExcelMutation,
   useRequestDisposeMutation,
-  useUpdateAssetStatusMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
 import { useSelector } from "react-redux";
@@ -35,7 +34,7 @@ import Tippy from "@tippyjs/react";
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
   selectUserInfo,
-  (userInfo) => userInfo?.user?.username || ""
+  (userInfo) => userInfo?.username || ""
 );
 
 const Landscaping = ({ category }) => {
@@ -84,7 +83,6 @@ const Landscaping = ({ category }) => {
   const [sendEmail] = useSendEmailMutation();
   const [isCreating, setIsCreating] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  const [updateAssetStatus] = useUpdateAssetStatusMutation();
 
   const supervisorsFromSameAcademy =
     users?.filter(
@@ -404,7 +402,6 @@ const Landscaping = ({ category }) => {
 
         // Append files to FormData
         selectedFiles.forEach((file) => {
-          console.log("Appending file to formData:", file); // Check the file type
           if (file instanceof File) {
             formData.append("images", file); // Append only if it's a valid file
           } else {
@@ -608,7 +605,7 @@ const Landscaping = ({ category }) => {
       Description: modalData.Description || "",
       Assign: modalData.Assign || "",
       Lastworkorder: modalData.Lastworkorder || "",
-      Schedule: modalData.Schedule || "",
+      Schedule: getCurrentTime(),
       Nextworkorder: modalData.Nextworkorder || "",
       assetCode: modalData.assetCode || "",
     });
@@ -650,13 +647,9 @@ const Landscaping = ({ category }) => {
         academyId: academyId,
       }).unwrap();
 
-      // Send email to the assigned worker
-      await Promise.all([
-        updateAssetStatus({ assetCode, status: "In Maintenance" }).unwrap(),
-        assignedWorker?.label
-          ? sendEmail({ to: assignedWorker.label }).unwrap()
-          : Promise.resolve(),
-      ]);
+      if (assignedWorker?.label) {
+        await sendEmail({ to: assignedWorker.label }).unwrap();
+      }
 
       Swal.fire({
         icon: "success",
@@ -726,6 +719,25 @@ const Landscaping = ({ category }) => {
     });
 
     sortData(column, newSortOrder);
+  };
+  const getStatusDescription = (status) => {
+    switch (status) {
+      case "Pending":
+        return "The asset is awaiting approval or further action.";
+      case "In Usage":
+        return "The asset is currently being used.";
+      case "In Maintenance":
+        return "The asset is currently in use and also undergoing maintenance or repair.";
+      case "Disposed":
+        return "The asset has been disposed and is no longer in use.";
+      default:
+        return "Unknown status.";
+    }
+  };
+
+  const getCurrentTime = () => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // returns "HH:MM"
   };
 
   return (
@@ -853,11 +865,16 @@ const Landscaping = ({ category }) => {
                   <td>{item.lifespan}</td>
                   <td>{size}</td>
                   <td>{item.categoryDetails?.depreciatedValue}</td>
-                  <td>
-                    <div className={getStatusClass(item.status)}>
-                      {getDisplayText(item.status)}
-                    </div>
-                  </td>
+                 <td>
+                        <Tippy
+                          content={getStatusDescription(item.status)}
+                          placement="top"
+                        >
+                          <div className={getStatusClass(item.status)}>
+                            {getDisplayText(item.status)}
+                          </div>
+                        </Tippy>
+                      </td>
                   <td className="actions">
                     <button
                       className="view-btn"
@@ -1312,6 +1329,7 @@ const Landscaping = ({ category }) => {
               <p className="sub-title">Maintenance Detail</p>
               <div className="modal-content-field">
                 <label>Department:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -1327,8 +1345,11 @@ const Landscaping = ({ category }) => {
                   isClearable
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -1338,6 +1359,8 @@ const Landscaping = ({ category }) => {
                   isClearable
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>Description: </label>
                 <input
@@ -1356,6 +1379,7 @@ const Landscaping = ({ category }) => {
               <p className="sub-title">Schedule Maintenance Notification</p>
               <div className="modal-content-field">
                 <label>Repeat:</label>
+                <div style={{ width: "100%",maxWidth:"350px" }}>
                 <Select
                   classNamePrefix="custom-select-department"
                   className="workstatus-dropdown"
@@ -1365,6 +1389,8 @@ const Landscaping = ({ category }) => {
                   isClearable
                 />
               </div>
+              </div>
+
               <div className="modal-content-field">
                 <label>From date: </label>
                 <input
@@ -1389,12 +1415,8 @@ const Landscaping = ({ category }) => {
                 <input
                   type="time"
                   value={scheduleModalData.Schedule}
-                  onChange={(e) =>
-                    setScheduleModalData({
-                      ...scheduleModalData,
-                      Schedule: e.target.value,
-                    })
-                  }
+                  readOnly
+                  disabled
                 />
               </div>
               <div className="modal-content-field">

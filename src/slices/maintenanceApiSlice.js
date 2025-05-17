@@ -246,6 +246,54 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       }),
       transformResponse: (response) => response,
     }),
+    submitStartTime: builder.mutation({
+      query: ({ startTime, repairID }) => ({
+        url: `${MAINTENANCE_URL}/repair-reports/start-time`,
+        method: "POST",
+        body: { startTime, repairID }, // Sending data in the body
+      }),
+    }),
+    submitEndTime: builder.mutation({
+      query: ({ reportID, endTime }) => ({
+        url: `${MAINTENANCE_URL}/repair-reports/${reportID}/end-time`,
+        method: "PUT",
+        body: { endTime }, // Sending data in the body
+      }),
+    }),
+
+    // 3. Complete Report + Upload Images + Send Email
+    completeRepairReport: builder.mutation({
+      query: ({ reportID, formData }) => ({
+        url: `${MAINTENANCE_URL}/repair-reports/complete/${reportID}`,
+        method: "PUT",
+        body: formData,
+        formData: true,
+      }),
+    }),
+    giveStartTime: builder.mutation({
+      query: ({ startTime, preventiveMaintenanceID }) => ({
+        url: `${MAINTENANCE_URL}/maintenance-reports/start-time`,
+        method: "POST",
+        body: { startTime, preventiveMaintenanceID }, // Sending data in the body
+      }),
+    }),
+    giveEndTime: builder.mutation({
+      query: ({ maintenanceReportID, endTime }) => ({
+        url: `${MAINTENANCE_URL}/maintenance-reports/${maintenanceReportID}/end-time`,
+        method: "PUT",
+        body: { endTime }, // Sending data in the body
+      }),
+    }),
+
+    // 3. Complete Report + Upload Images + Send Email
+    completeMaintenanceReport: builder.mutation({
+      query: ({ maintenanceReportID, formData }) => ({
+        url: `${MAINTENANCE_URL}/maintenance-reports/complete/${maintenanceReportID}`,
+        method: "PUT",
+        body: formData,
+        formData: true,
+      }),
+    }),
   }),
 });
 
@@ -281,5 +329,11 @@ export const {
   useCreateMaintenanceReportMutation,
   useGetMaintenanceReportByIDQuery,
   useGetAllCombinedMaintenanceCostQuery,
-  useGetAverageResponseTimeQuery
+  useGetAverageResponseTimeQuery,
+  useSubmitStartTimeMutation,
+  useSubmitEndTimeMutation,
+  useCompleteRepairReportMutation,
+  useGiveStartTimeMutation,
+  useGiveEndTimeMutation,
+  useCompleteMaintenanceReportMutation
 } = maintenanceApiSlice;

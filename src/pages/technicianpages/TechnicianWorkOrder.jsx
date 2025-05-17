@@ -11,17 +11,14 @@ import { RiImageAddLine } from "react-icons/ri";
 import {
   useUpdateRepairByIdMutation,
   useGetSchedulesByTechnicianEmailQuery,
-  useCreateRepairReportMutation,
   useGetRepairReportByIDQuery,
+  useSubmitStartTimeMutation,
+  useSubmitEndTimeMutation,
+  useCompleteRepairReportMutation,
 } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { maintenanceApiSlice } from "../../slices/maintenanceApiSlice";
-
-import {
-  useGetUserByEmailQuery,
-  useGetUsersQuery,
-} from "../../slices/userApiSlice";
 import { createSelector } from "reselect";
 import Swal from "sweetalert2";
 
@@ -32,7 +29,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   const [images, setImages] = useState([]); // Allow multiple images
   const [imageError, setImageError] = useState("");
   const fileInputRef = useRef(null);
-
   const [selectedWorkStatus, setSelectedWorkStatus] = useState(
     order.repairInfo.status || ""
   );
@@ -40,33 +36,27 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   const [updateRepairById, { isLoading, error }] =
     useUpdateRepairByIdMutation();
 
-  const [createRepairReport, { isLoading: posting }] =
-    useCreateRepairReportMutation();
-
   const repairID = order.repairInfo.repairID;
-  console.log("rip", repairID);
-  const tm = teamMembers.join(", ");
 
   const {
     data: repairReport,
-    isLoading: repairReportLoading,
-    error: repairReportError,
     refetch,
   } = useGetRepairReportByIDQuery(repairID, {
     skip: !repairID, // skip until userID is available
   });
-  console.log("repairReport", repairReport);
 
   const reportExists = Array.isArray(repairReport) && repairReport.length > 0;
+  const [submitStartTime] = useSubmitStartTimeMutation();
+  const [submitEndTime] = useSubmitEndTimeMutation();
+  const [completeRepairReport, { isLoading: posting }] =
+    useCompleteRepairReportMutation();
 
   useEffect(() => {
-    console.log("reportExists", reportExists);
-
     if (reportExists) {
       const report = repairReport[0];
-      console.log(report); // Check the structure of the report
 
       setFormData({
+        reportID: report.repairReportID ?? "",
         startTime: report.startTime ?? "",
         endTime: report.endTime ?? "",
         finishedDate: report.finishedDate ?? "",
@@ -82,6 +72,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   }, [repairReport, reportExists]);
 
   const [formData, setFormData] = useState({
+    reportID: "",
     startTime: "",
     endTime: "",
     finishedDate: "",
@@ -91,7 +82,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
     repairID: repairID,
     images: [],
   });
-  console.log("formdata", formData);
 
   const handleInputChange = (e, field) => {
     const value = e.target.value;
@@ -129,19 +119,14 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    // Combine teamMembers into a comma-separated string
-    const {
-      startTime,
-      endTime,
-      finishedDate,
-      totalCost,
-      information,
-      partsUsed,
-    } = formData;
 
+    // pull out what we need (reportID was set in your useEffect)
+    const { reportID, finishedDate, totalCost, information, partsUsed } =
+      formData;
+
+    // basic validation
     if (
-      !startTime.trim() ||
-      !endTime.trim() ||
+      !reportID ||
       !finishedDate.trim() ||
       !totalCost.trim() ||
       !information.trim() ||
@@ -151,18 +136,16 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
       Swal.fire({
         icon: "warning",
         title: "Please fill in all fields",
-        text: "StartTime, EndTime, FinishedDate, TotalCost, Information, PartsUsed, Technicians and Images",
+        text: "FinishedDate, TotalCost, Information, PartsUsed, Technicians and Images",
       });
       return;
     }
 
+    // build FormData with ONLY the fields you still need to send
     const sendData = new FormData();
-    sendData.append("startTime", startTime.trim());
-    sendData.append("endTime", endTime.trim());
     sendData.append("finishedDate", finishedDate.trim());
     sendData.append("totalCost", totalCost.trim());
     sendData.append("information", information.trim());
-    sendData.append("repairID", repairID);
 
     partsUsed
       .split(",")
@@ -177,54 +160,47 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
 
     images.forEach((img) => sendData.append("images", img));
 
-    // Optional: Debug formData
-    for (let pair of sendData.entries()) {
-      console.log(pair[0] + ": " + pair[1]);
-    }
-
     try {
-      await createRepairReport(sendData).unwrap();
+      // call your “complete” mutation
+      await completeRepairReport({
+        reportID, // path param
+        formData: sendData, // body
+      }).unwrap();
 
       Swal.fire({
         icon: "success",
-        title: "Repair Report added!",
+        title: "Repair Report completed!",
         toast: true,
         position: "top-end",
         showConfirmButton: false,
         timer: 2000,
       });
 
-      // setShowModal(false);
-      setFormData({
-        startTime: "",
-        endTime: "",
+      // reset
+      setFormData((f) => ({
+        ...f,
         finishedDate: "",
         totalCost: "",
         information: "",
         partsUsed: "",
-        technicians: "",
-        repairID: "",
-        images: [],
-      });
+      }));
       setTeamMembers([]);
       setImages([]);
-
-      // refetch();
+      refetch();
     } catch (err) {
-      console.error("Error in adding repair report:", err);
+      console.error("Error completing repair report:", err);
       Swal.fire({
         icon: "error",
-        title: "Failed to add repair report",
+        title: "Failed to complete repair report",
         text: err?.data?.message || "Something went wrong.",
       });
     }
-    refetch();
   };
 
   const WorkOrder = [
-    { value: "pending", label: "Pending" },
-    { value: "In progress", label: "In progress" },
-    { value: "completed", label: "Completed" },
+    { value: "Pending", label: "Pending" },
+    { value: "In Progress", label: "In Progress" },
+    { value: "Completed", label: "Completed" },
   ];
   const today = new Date().toISOString().split("T")[0];
 
@@ -268,8 +244,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             />
           </div>
 
-          {/* Display Multiple Asset Images */}
-          <div className="TModal-content-field">
+           <div className="TModal-content-field">
             <label>Asset Images:</label>
             <div className="TModal-profile-img">
               {Array.isArray(order.repairInfo.images) &&
@@ -308,18 +283,55 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                 onChange={async (selectedOption) => {
                   const newStatus = selectedOption ? selectedOption.value : "";
                   setSelectedWorkStatus(newStatus);
-                  console.log("🟡 Selected Status:", newStatus); // ✅ Log selected value
-                  console.log("🛠 Repair ID:", order.repairID);
 
                   // ⚡ Update status inside repairInfo
                   try {
-                    const response = await updateRepairById({
+                    await updateRepairById({
                       repairID: order.repairID, // use correct repairID from `order`
                       updateFields: { status: newStatus }, // this updates repairInfo.status
                     }).unwrap();
 
-                    console.log("✅ Status updated in repairInfo:", response);
+                    if (newStatus === "In Progress") {
+                      const currentTime = new Date().toLocaleTimeString(
+                        "en-GB",
+                        {
+                          hour12: false,
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      );
 
+                      const response = await submitStartTime({
+                        repairID: order.repairID,
+                        startTime: currentTime,
+                      }).unwrap();
+                      setFormData((prev) => ({
+                        ...prev,
+                        startTime: response.startTime, // Assuming backend returns updated object
+                      }));
+                    }
+                    // Submit end time if status is "Completed"
+                    if (newStatus === "Completed") {
+                      const currentTime = new Date().toLocaleTimeString(
+                        "en-GB",
+                        {
+                          hour12: false,
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      );
+                      const response = await submitEndTime({
+                        reportID: formData.reportID, // use the correct report ID
+                        endTime: currentTime,
+                      }).unwrap();
+
+                      setFormData((prev) => ({
+                        ...prev,
+                        endTime: response.endTime,
+                      }));
+                    }
+
+                    refetch();
                     Swal.fire({
                       icon: "success",
                       title: "Work Status Updated",
@@ -341,6 +353,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
               />
             </div>
           </div>
+
           <div className="TModal-content-field">
             <label>Time:</label>
             <div className="TModal-time-inputs">
@@ -352,8 +365,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                     ? repairReport.startTime
                     : formData.startTime
                 }
-                onChange={(e) => handleInputChange(e, "startTime")}
-                readOnly={reportExists}
+                readOnly
               />
               <input
                 className="TModal-WorkOTime"
@@ -364,7 +376,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                     ? repairReport.endTime
                     : formData.endTime
                 }
-                onChange={(e) => handleInputChange(e, "endTime")}
                 readOnly={reportExists}
               />
             </div>
@@ -374,31 +385,28 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <label>Finished Date:</label>
             <input
               type="date"
-              // value={formData.finishedDate}
               value={
-                reportExists && repairReport?.finishedDate
-                  ? repairReport.finishedDate
+                reportExists && repairReport[0]?.finishedDate
+                  ? repairReport[0].finishedDate
                   : formData.finishedDate
               }
               min={today}
               onChange={(e) => handleInputChange(e, "finishedDate")}
-              readOnly={reportExists}
+              readOnly={reportExists && !!repairReport[0]?.finishedDate}
             />
           </div>
-
           <div className="TModal-content-field">
             <label>Total Cost:</label>
             <input
               type="text"
-              // value={formData.totalCost}
               value={
-                reportExists && repairReport?.totalCost
-                  ? repairReport.totalCost
+                reportExists && repairReport[0]?.totalCost
+                  ? repairReport[0].totalCost
                   : formData.totalCost
               }
               onChange={(e) => handleInputChange(e, "totalCost")}
               placeholder="Enter Total Cost"
-              readOnly={reportExists}
+              readOnly={reportExists && !!repairReport[0]?.totalCost}
             />
           </div>
 
@@ -407,18 +415,17 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <input
               type="text"
               value={
-                reportExists && repairReport?.[0]?.partsUsed
-                  ? repairReport[0].partsUsed
+                reportExists && Array.isArray(repairReport[0]?.partsUsed)
+                  ? repairReport[0].partsUsed.join(", ")
                   : formData.partsUsed
               }
               onChange={(e) =>
                 setFormData({ ...formData, partsUsed: e.target.value })
               }
               placeholder="Enter parts used (e.g., wood, metal, screws)"
-              readOnly={reportExists}
+              readOnly={reportExists && repairReport[0]?.partsUsed?.length > 0}
             />
           </div>
-
           {reportExists && repairReport[0]?.images ? (
             <div className="TModal-content-field">
               <label>Repaired Images:</label>
@@ -548,19 +555,23 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
           <div className="TModal-content-field">
             <label>Additional Information:</label>
             <textarea
-              // value={formData.information}
               value={
-                reportExists && repairReport?.information
-                  ? repairReport.information
+                reportExists && repairReport[0]?.information
+                  ? repairReport[0].information
                   : formData.information
               }
               onChange={(e) => handleInputChange(e, "information")}
               placeholder="Enter any additional information"
-              readOnly={reportExists}
+              readOnly={reportExists && !!repairReport[0]?.information}
             ></textarea>
           </div>
 
-          {!reportExists && (
+          {(!reportExists ||
+            !repairReport[0]?.finishedDate ||
+            !repairReport[0]?.totalCost ||
+            !repairReport[0]?.information ||
+            !repairReport[0]?.partsUsed ||
+            !repairReport[0]?.images?.length) && (
             <div disabled={posting} className="TModal-modal-buttons">
               <button type="submit" className="TModal-accept-btn">
                 {posting ? "Posting..." : "Done"}
@@ -639,8 +650,6 @@ const TechnicianHome = () => {
 
     fetchRepairDetails();
   }, [technicianSchedules, dispatch]);
-
-  console.log("Dataaa", data);
 
   const uniquePriorities = [
     { value: "", label: "All Priorities" },
