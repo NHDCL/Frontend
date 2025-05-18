@@ -1,11 +1,15 @@
 // SessionTimeoutManager.js
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 
 const SessionTimeoutManager = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isActive, setIsActive] = useState(true);
+
+  // Define routes where session timeout should not be active
+  const excludedRoutes = ["/"]; // Add your landing page route(s) here
 
   // For testing purposes, use shorter timeouts
   // Change these back to your desired values after testing
@@ -13,8 +17,17 @@ const SessionTimeoutManager = () => {
   const WARNING_TIME_MS = 2 * 60 * 1000; // 2 minutes warning before expiry
   // const SESSION_TIMEOUT_MS = 1 * 60 * 1000; // 1 minute total session timeout
   // const WARNING_TIME_MS = 10 * 1000; // 10 seconds warning before expiry (for quick testing)
+
   useEffect(() => {
-    console.log("SessionTimeoutManager mounted"); // Debugging line
+    // Check if current route should be excluded from session timeout
+    const isExcludedRoute = excludedRoutes.includes(location.pathname);
+
+    if (isExcludedRoute) {
+      console.log("Session timeout disabled for route:", location.pathname);
+      return; // Exit early if on excluded route
+    }
+
+    console.log("SessionTimeoutManager mounted for route:", location.pathname); // Debugging line
 
     let inactivityTimer;
     let warningTimer;
@@ -138,7 +151,7 @@ const SessionTimeoutManager = () => {
       clearTimeout(inactivityTimer);
       clearTimeout(warningTimer);
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]); // Added location.pathname to dependencies
 
   return null;
 };
