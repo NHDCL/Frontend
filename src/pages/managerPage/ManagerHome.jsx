@@ -48,7 +48,7 @@ const ManagerDashboard = () => {
 
   const getUserEmail = createSelector(
     selectUserInfo,
-    (userInfo) => userInfo?.user?.username || ""
+    (userInfo) => userInfo?.username || ""
   );
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);
@@ -527,6 +527,8 @@ const ManagerDashboard = () => {
                       display: "flex",
                       flexDirection: "column",
                       gap: "0.5rem",
+                      maxWidth: "350px",
+                      width: "100%"
                     }}
                   >
                     <Select

@@ -14,7 +14,6 @@ import {
   useGetCategoryQuery,
   useUploadExcelMutation,
   useRequestDisposeMutation,
-  useUpdateAssetStatusMutation,
 } from "../../../slices/assetApiSlice";
 import Swal from "sweetalert2";
 import { useSelector } from "react-redux";
@@ -35,7 +34,7 @@ import Tippy from "@tippyjs/react";
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
   selectUserInfo,
-  (userInfo) => userInfo?.user?.username || ""
+  (userInfo) => userInfo?.username || ""
 );
 
 const Landscaping = ({ category }) => {
@@ -84,7 +83,6 @@ const Landscaping = ({ category }) => {
   const [sendEmail] = useSendEmailMutation();
   const [isCreating, setIsCreating] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  const [updateAssetStatus] = useUpdateAssetStatusMutation();
 
   const supervisorsFromSameAcademy =
     users?.filter(
@@ -404,7 +402,6 @@ const Landscaping = ({ category }) => {
 
         // Append files to FormData
         selectedFiles.forEach((file) => {
-          console.log("Appending file to formData:", file); // Check the file type
           if (file instanceof File) {
             formData.append("images", file); // Append only if it's a valid file
           } else {
@@ -650,13 +647,9 @@ const Landscaping = ({ category }) => {
         academyId: academyId,
       }).unwrap();
 
-      // Send email to the assigned worker
-      await Promise.all([
-        updateAssetStatus({ assetCode, status: "In Maintenance" }).unwrap(),
-        assignedWorker?.label
-          ? sendEmail({ to: assignedWorker.label }).unwrap()
-          : Promise.resolve(),
-      ]);
+      if (assignedWorker?.label) {
+        await sendEmail({ to: assignedWorker.label }).unwrap();
+      }
 
       Swal.fire({
         icon: "success",

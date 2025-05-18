@@ -16,7 +16,7 @@ import Swal from "sweetalert2";
 const selectUserInfo = (state) => state.auth.userInfo || {};
 const getUserEmail = createSelector(
   selectUserInfo,
-  (userInfo) => userInfo?.user?.username || ""
+  (userInfo) => userInfo?.username || ""
 );
 
 const ManagerAccount = () => {

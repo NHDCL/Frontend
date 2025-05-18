@@ -24,7 +24,9 @@ const SuperAdminSidebar = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         // Remove auth data from localStorage and sessionStorage
-        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("userToken");
         sessionStorage.removeItem("token");
 
         // Show success toast
