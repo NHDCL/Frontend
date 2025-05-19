@@ -233,9 +233,9 @@ const AdminAccount = () => {
 
   return (
     <div className="profile-container">
-      <div className="profile-card">
-        <div className="profile-left">
-          <div className="profile-image-wrapper">
+      <div  className="profile-card">
+        <div  className="profile-left">
+          <div  className="profile-image-wrapper">
             <img src={profile.image} alt="Profile" className="profile-image" />
             <label className="profile-camera-icon">
               <input

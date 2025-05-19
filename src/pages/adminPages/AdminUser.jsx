@@ -3,6 +3,7 @@ import "./../managerPage/css/table.css";
 import "./../managerPage/css/TabSwitcher.css";
 import "./../managerPage/css/dropdown.css";
 import "./../managerPage/css/form.css";
+// import "./css/AdminAcademies.css";
 
 import { IoIosSearch } from "react-icons/io";
 import img from "../../assets/images/defaultImage.png";
