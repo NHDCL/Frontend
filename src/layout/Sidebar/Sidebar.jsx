@@ -37,7 +37,7 @@ const ManagerSidebar = () => {
 
         // Dispatching the logout action
         dispatch(logout());
-        sessionStorage.removeItem("token");
+        // sessionStorage.removeItem("token");
 
         // Showing success message on successful logout
         Swal.fire({

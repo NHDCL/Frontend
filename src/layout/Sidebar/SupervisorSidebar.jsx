@@ -27,7 +27,7 @@ const SupervisorSidebar = () => {
         localStorage.removeItem("userInfo");
         localStorage.removeItem("userRole");
         localStorage.removeItem("userToken");
-        sessionStorage.removeItem("token");
+        // sessionStorage.removeItem("token");
         // Show success toast
         Swal.fire({
           icon: "success",

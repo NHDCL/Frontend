@@ -28,7 +28,7 @@ const TechnicianSidebar = () => {
         localStorage.removeItem("userInfo");
         localStorage.removeItem("userRole");
         localStorage.removeItem("userToken");
-        sessionStorage.removeItem("token");
+        // sessionStorage.removeItem("token");
 
         // Success toast
         Swal.fire({

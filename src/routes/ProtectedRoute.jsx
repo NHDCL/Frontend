@@ -2,7 +2,8 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ element, requiredRole }) => {
-  const token = sessionStorage.getItem("token");
+  
+  const token = localStorage.getItem("userToken");
   const isAuthenticated = !!token;
 
   let hasRequiredRole = false;

@@ -82,7 +82,7 @@ const Loginpage = () => {
         );
 
         // Save token to sessionStorage
-        sessionStorage.setItem("token", response.token);
+        // sessionStorage.setItem("token", response.token);
 
         Swal.fire({
           icon: "success",
