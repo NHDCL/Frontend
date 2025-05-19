@@ -21,8 +21,18 @@ import { useGetAcademyQuery } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 
 const months = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
 const MaintenanceGraphs = () => {
@@ -63,19 +73,17 @@ const MaintenanceGraphs = () => {
     } else if (Swal.isVisible()) {
       Swal.close();
     }
+  }, [isLoadingAll]); // Only for loading state
 
-    if (hasError) {
+  useEffect(() => {
+    if (!isLoadingAll && hasError) {
       Swal.fire({
         icon: "error",
         title: "Error",
         text: "Failed to load data from server.",
       });
     }
-
-    return () => {
-      if (Swal.isVisible()) Swal.close();
-    };
-  }, [isLoadingAll, hasError]);
+  }, [hasError, isLoadingAll]); // Separate effect for error only after loading
 
   const validAcademyIds = useMemo(() => {
     return new Set((academies || []).map((a) => a.academyId));
@@ -109,11 +117,7 @@ const MaintenanceGraphs = () => {
 
   // Always called - safe hook usage
   useEffect(() => {
-    if (
-      academies &&
-      academies.length > 0 &&
-      !selectedAcademy
-    ) {
+    if (academies && academies.length > 0 && !selectedAcademy) {
       setSelectedAcademy(academies[0].academyId);
     }
   }, [academies, selectedAcademy]);
@@ -145,7 +149,6 @@ const MaintenanceGraphs = () => {
     }
   }, [selectedAcademy, allYears]);
 
-  
   if (isLoadingAll || !academies || !maintenanceData || !responseTimeData) {
     return <div></div>;
   }

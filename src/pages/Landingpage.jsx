@@ -21,18 +21,21 @@ const Landingpage = () => {
 
   useEffect(() => {
     if (error) {
+      const errorMessage =
+        error?.data?.message ||
+        "Unable to load academies. Please try again later.";
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "Failed to fetch academies.",
+        title: "Failed to Load Academies",
+        text: errorMessage,
       });
+      return; // Skip setting academies if there's an error
     }
 
-    // Set academy list when data is available
-    if (academies) {
-      setAcademyList(academies); // use correct state and data
+    if (academies && Array.isArray(academies)) {
+      setAcademyList(academies);
     }
-  }, [error, academies]); // add academies as dependency
+  }, [error, academies]);
 
   return (
     <div>
