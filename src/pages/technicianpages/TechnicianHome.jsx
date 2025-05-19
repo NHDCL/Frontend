@@ -600,7 +600,7 @@ const TechnicianHome = () => {
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
     selectUserInfo,
-    (userInfo) => userInfo?.user?.username || ""
+    (userInfo) => userInfo?.username || ""
   );
   const [data, setData] = useState([]);
   const email = useSelector(getUserEmail);

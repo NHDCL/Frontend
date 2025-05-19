@@ -37,7 +37,6 @@ const AdminAccount = () => {
   const [isNewImageSelected, setIsNewImageSelected] = useState(false); // 👈 new flag
   const originalImageRef = useRef(img);
   const email = useSelector(getUserEmail);
-  console.log(email);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState({
     oldPassword: false,
