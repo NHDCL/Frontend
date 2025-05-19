@@ -584,7 +584,7 @@ const TechnicianMSchedule = () => {
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
     selectUserInfo,
-    (userInfo) => userInfo?.user?.username || ""
+    (userInfo) => userInfo?.username || ""
   );
   const [data, setData] = useState([]);
 
@@ -633,8 +633,6 @@ const TechnicianMSchedule = () => {
       isMounted = false;
     };
   }, [technicianSchedules, dispatch]);
-
-  console.log("Dataaa", data);
 
   const uniqueWorkStatuses = [
     { value: null, label: "All Workstatus" },
