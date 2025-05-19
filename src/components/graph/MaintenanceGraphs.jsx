@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -6,7 +6,6 @@ import {
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   Label,
@@ -44,6 +43,7 @@ const MaintenanceGraphs = () => {
     isLoading: loadingMaintenance,
     error: errorMaintenance,
   } = useGetAllCombinedMaintenanceCostQuery();
+  console.log("filteredMaintenanceData",maintenanceData)
 
   const {
     data: academies,
@@ -56,6 +56,7 @@ const MaintenanceGraphs = () => {
     isLoading: loadingResponse,
     error: errorResponse,
   } = useGetAverageResponseTimeQuery();
+  console.log("gc",responseTimeData)
 
   const isLoadingAll =
     loadingAcademies || loadingMaintenance || loadingResponse;

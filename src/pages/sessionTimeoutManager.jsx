@@ -19,20 +19,14 @@ const SessionTimeoutManager = () => {
     const isExcludedRoute = excludedRoutes.includes(location.pathname);
 
     if (isExcludedRoute) {
-      console.log("Session timeout disabled for route:", location.pathname);
       return; // Exit early if on excluded route
     }
-
-    console.log("SessionTimeoutManager mounted for route:", location.pathname); // Debugging line
-
     let inactivityTimer;
     let warningTimer;
     let warningDisplayed = false;
 
     // Reset the timer when user activity is detected
     const resetTimer = () => {
-      console.log("Activity detected, resetting timers"); // Debugging line
-
       // If there's already a warning displayed, don't reset timers
       if (warningDisplayed) return;
 
@@ -41,20 +35,17 @@ const SessionTimeoutManager = () => {
 
       // Set warning timer to show warning before timeout
       warningTimer = setTimeout(() => {
-        console.log("Warning timer triggered"); // Debugging line
         showTimeoutWarning();
       }, SESSION_TIMEOUT_MS - WARNING_TIME_MS);
 
       // Set main timer for session expiration
       inactivityTimer = setTimeout(() => {
-        console.log("Inactivity timer triggered"); // Debugging line
         handleSessionTimeout();
       }, SESSION_TIMEOUT_MS);
     };
 
     const showTimeoutWarning = () => {
       warningDisplayed = true;
-      console.log("Showing timeout warning"); // Debugging line
 
       Swal.fire({
         title: "Session Timeout Warning",
@@ -83,7 +74,6 @@ const SessionTimeoutManager = () => {
     };
 
     const extendSession = () => {
-      console.log("Extending session"); // Debugging line
       // Reset timers after successful keep-alive
       warningDisplayed = false;
       resetTimer();
@@ -101,9 +91,11 @@ const SessionTimeoutManager = () => {
     };
 
     const handleSessionTimeout = () => {
-      console.log("Handling session timeout"); // Debugging line
       // Clear local storage/cookies
       localStorage.removeItem("user");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userToken");
+      sessionStorage.removeItem("token");
       document.cookie =
         "JWT-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
@@ -140,7 +132,6 @@ const SessionTimeoutManager = () => {
 
     // Cleanup
     return () => {
-      console.log("SessionTimeoutManager unmounting"); // Debugging line
       events.forEach((event) => {
         document.removeEventListener(event, handleUserActivity);
       });

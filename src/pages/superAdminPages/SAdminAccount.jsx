@@ -52,7 +52,6 @@ const SAdminAccount = () => {
 
   useEffect(() => {
     if (data?.user) {
-      console.log("User Data:", data.user); // 👈 for debugging
       setProfile((prevProfile) => ({
         ...prevProfile,
         name: data.user.name || "",
