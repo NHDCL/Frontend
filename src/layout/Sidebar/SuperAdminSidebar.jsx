@@ -27,7 +27,7 @@ const SuperAdminSidebar = () => {
         localStorage.removeItem("user");
         localStorage.removeItem("userRole");
         localStorage.removeItem("userToken");
-        sessionStorage.removeItem("token");
+        // sessionStorage.removeItem("token");
 
         // Show success toast
         Swal.fire({

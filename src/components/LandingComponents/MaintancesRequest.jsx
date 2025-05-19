@@ -63,20 +63,27 @@ const MaintenanceRequest = () => {
   }, [error1]);
 
   useEffect(() => {
-    if (formData.academy && assets.length > 0) {
-      const matchedAssets = assets.filter(
-        (asset) => asset.academyID === formData.academy
-      );
+  if (formData.academy && assets.length > 0) {
+    const matchedAssets = assets.filter(
+      (asset) => asset.academyID === formData.academy
+    );
 
-      const filteredAreas = matchedAssets
-        .map((asset) => asset.assetArea)
-        .filter((area, index, self) => area && self.indexOf(area) === index);
+    const filteredAreas = matchedAssets
+      .map((asset) => asset.assetArea)
+      .filter((area, index, self) => area && self.indexOf(area) === index);
 
-      setAreaList(filteredAreas);
-    } else {
-      setAreaList([]);
-    }
-  }, [formData.academy, assets]);
+    setAreaList((prev) => {
+      const same =
+        prev.length === filteredAreas.length &&
+        prev.every((val, i) => val === filteredAreas[i]);
+      return same ? prev : filteredAreas;
+    });
+  } else {
+    setAreaList((prev) => (prev.length === 0 ? prev : []));
+  }
+}, [formData.academy, assets]);
+
+
 
   // Field validation functions
   const validatePhoneNumber = (phoneNumber) => {
@@ -491,6 +498,7 @@ const MaintenanceRequest = () => {
             >
               {requesting ? "Requesting..." : "Request"}{" "}
             </button>
+            
           </form>
         </div>
       </div>

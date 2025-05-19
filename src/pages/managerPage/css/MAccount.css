@@ -1,13 +1,14 @@
 .profile-container {
   display: flex;
   justify-content: center;
-  height: 80vh;
+  min-height: 80vh;
   margin-bottom: 3%;
   background-color: #f8f8f8;
 }
 
 .profile-card {
   display: flex;
+  flex-wrap: wrap;
   background: #fff;
   padding: 20px;
   border-radius: 10px;
@@ -53,6 +54,7 @@
 
 .profile-input {
   width: 100%;
+  min-width: 200px;
   border: solid 1.5px #897463;
   border-radius: 10px;
   background: none;
