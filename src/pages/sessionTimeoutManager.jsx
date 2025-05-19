@@ -11,24 +11,16 @@ const SessionTimeoutManager = () => {
   // Define routes where session timeout should not be active
   const excludedRoutes = ["/"]; // Add your landing page route(s) here
 
-  // For testing purposes, use shorter timeouts
-  // Change these back to your desired values after testing
   const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes total session timeout
   const WARNING_TIME_MS = 2 * 60 * 1000; // 2 minutes warning before expiry
-  // const SESSION_TIMEOUT_MS = 1 * 60 * 1000; // 1 minute total session timeout
-  // const WARNING_TIME_MS = 10 * 1000; // 10 seconds warning before expiry (for quick testing)
 
   useEffect(() => {
     // Check if current route should be excluded from session timeout
     const isExcludedRoute = excludedRoutes.includes(location.pathname);
 
     if (isExcludedRoute) {
-      console.log("Session timeout disabled for route:", location.pathname);
       return; // Exit early if on excluded route
     }
-
-    console.log("SessionTimeoutManager mounted for route:", location.pathname); // Debugging line
-
     let inactivityTimer;
     let warningTimer;
     let warningDisplayed = false;
@@ -100,7 +92,7 @@ const SessionTimeoutManager = () => {
 
     const handleSessionTimeout = () => {
       // Clear local storage/cookies
-      localStorage.removeItem("userInfo");
+      localStorage.removeItem("user");
       localStorage.removeItem("userRole");
       localStorage.removeItem("userToken");
       sessionStorage.removeItem("token");

@@ -74,18 +74,14 @@ const Users = () => {
     if (!users || !userByEmial?.user?.academyId) return;
 
     const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
-    console.log("loh", loginAcademyId);
 
     // Filter users based on login user's academy
     const filtered = users.filter(
       (user) => user.academyId?.trim().toLowerCase() === loginAcademyId
     );
-    console.log("mm", filtered);
 
     setData(filtered);
   }, [users, userByEmial]);
-
-  console.log("DAT", data);
 
   const filteredData = (data || []).filter(
     (item) =>
@@ -102,7 +98,6 @@ const Users = () => {
   );
 
   const emails = displayedData.map((item) => item.email);
-  console.log("emails", emails);
   
   // Sorting
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
