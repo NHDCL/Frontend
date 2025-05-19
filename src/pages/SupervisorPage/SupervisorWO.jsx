@@ -162,7 +162,7 @@ const SupervisorWO = () => {
 
   const today = new Date().toISOString().split("T")[0];
 
-  const [updateSchedule, {isLoading: userSchedulesLoading}] = useUpdatePreventiveMaintenanceMutation();
+  const [updateSchedule, { isLoading: userSchedulesLoading }] = useUpdatePreventiveMaintenanceMutation();
 
   const handleSchedule = async () => {
     const maintenanceID = modalData.maintenanceID; // Ensure the correct way to access repairID
@@ -296,35 +296,47 @@ const SupervisorWO = () => {
   ];
 
   // Filtering data based on search and priority selection and work status
+  // const searchRecursively = (obj, searchTerm) => {
+  //   if (typeof obj !== "object" || obj === null) {
+  //     return (
+  //       obj &&
+  //       obj
+  //         .toString()
+  //         .toLowerCase()
+  //         .includes(searchTerm?.toLowerCase() || "")
+  //     );
+  //   }
+
+  //   // Check all values in the object (including nested objects)
+  //   return Object.values(obj).some((value) =>
+  //     searchRecursively(value, searchTerm)
+  //   );
+  // };
+
+
   const searchRecursively = (obj, searchTerm) => {
-    if (typeof obj !== "object" || obj === null) {
-      return (
-        obj &&
-        obj
-          .toString()
-          .toLowerCase()
-          .includes(searchTerm?.toLowerCase() || "")
-      );
+    if (!obj || typeof obj !== "object") return false;
+
+    for (const key in obj) {
+      if (Object.hasOwn(obj, key)) {
+        const value = obj[key];
+        if (typeof value === "string" && value.toLowerCase().includes(searchTerm.toLowerCase())) {
+          return true;
+        } else if (typeof value === "object") {
+          if (searchRecursively(value, searchTerm)) return true;
+        }
+      }
     }
-
-    // Check all values in the object (including nested objects)
-    return Object.values(obj).some((value) =>
-      searchRecursively(value, searchTerm)
-    );
+    return false;
   };
-  const filteredData =
-    data && data.length
-      ? data.filter((item) => {
-        // Match search term with any field at any level in the object
-        const matchesSearch = searchRecursively(item, searchTerm);
+  const filteredData = data
+    .filter((item) => {
+      const matchesSearch = searchRecursively(item, searchTerm);
+      const matchesStatus =
+        !selectedWorkStatus || item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
+      return matchesSearch && matchesStatus;
+    });
 
-        const matchesWorkStatus =
-          selectedWorkStatus === "" ||
-          item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
-
-        return matchesSearch && matchesWorkStatus;
-      })
-      : [];
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -447,7 +459,7 @@ const SupervisorWO = () => {
                   { label: "Area", field: "asset.assetArea" },
                   { label: "Workstatus", field: null },
                   { label: "Description", field: null },
-                  { label: "", field: "" } 
+                  { label: "", field: "" }
                 ].map((header, index) => (
                   <th key={index}>
                     {header.field ? (
@@ -594,24 +606,24 @@ const SupervisorWO = () => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Assign Technician:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
 
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workerOptions}
-                  value={
-                    workerOptions?.find(
-                      (w) => w.value === selectedTechnicianId
-                    ) || null
-                  }
-                  onChange={(selectedOption) => {
-                    setSelectedTechnicianId(selectedOption?.label || "");
-                    console.log("Selected Worker:", selectedOption);
-                  }}
-                  isClearable
-                />
-              </div>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={workerOptions}
+                    value={
+                      workerOptions?.find(
+                        (w) => w.value === selectedTechnicianId
+                      ) || null
+                    }
+                    onChange={(selectedOption) => {
+                      setSelectedTechnicianId(selectedOption?.label || "");
+                      console.log("Selected Worker:", selectedOption);
+                    }}
+                    isClearable
+                  />
+                </div>
               </div>
 
               {/* Assign Date */}
@@ -638,8 +650,8 @@ const SupervisorWO = () => {
                   onClick={handleSchedule}
                   disabled={userSchedulesLoading}
 
-                  >
-                   {userSchedulesLoading ? "Saving..." : "Done"}
+                >
+                  {userSchedulesLoading ? "Saving..." : "Done"}
                 </button>
               </div>
             </div>
@@ -666,26 +678,26 @@ const SupervisorWO = () => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Assign Technician:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
 
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workerOptions}
-                  value={
-                    workerOptions?.find(
-                      (w) => w.value === selectedTechnicianUpdate
-                    ) ||
-                    updatedOption ||
-                    null
-                  }
-                  onChange={(selectedOption) => {
-                    setSelectedTechnicianUpdate(selectedOption?.value || "");
-                    console.log("Selected Worker:", selectedOption);
-                  }}
-                  isClearable
-                />
-              </div>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={workerOptions}
+                    value={
+                      workerOptions?.find(
+                        (w) => w.value === selectedTechnicianUpdate
+                      ) ||
+                      updatedOption ||
+                      null
+                    }
+                    onChange={(selectedOption) => {
+                      setSelectedTechnicianUpdate(selectedOption?.value || "");
+                      console.log("Selected Worker:", selectedOption);
+                    }}
+                    isClearable
+                  />
+                </div>
               </div>
 
               {/* Assign Date */}
@@ -705,19 +717,19 @@ const SupervisorWO = () => {
                 <input type="text" value={assignTime} readOnly />
               </div>
 
-              
+
               {statusPending === "Pending" && (
                 <div className="modal-buttons">
-                <button
-                  className="accept-btn"
-                  style={{ width: "80px" }}
-                  onClick={handleReschedule}
-                  disabled={userSchedulesLoading}
+                  <button
+                    className="accept-btn"
+                    style={{ width: "80px" }}
+                    onClick={handleReschedule}
+                    disabled={userSchedulesLoading}
 
-                >
-                 {userSchedulesLoading ? "Saving..." : "Done"}
-                </button>
-              </div>
+                  >
+                    {userSchedulesLoading ? "Saving..." : "Done"}
+                  </button>
+                </div>
               )}
             </div>
           </div>

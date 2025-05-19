@@ -49,11 +49,13 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
     skip: !repairID, // skip until userID is available
   });
 
+
   const reportExists = Array.isArray(repairReport) && repairReport.length > 0;
   const [submitStartTime] = useSubmitStartTimeMutation();
   const [submitEndTime] = useSubmitEndTimeMutation();
   const [completeRepairReport, { isLoading: posting }] =
     useCompleteRepairReportMutation();
+    
 
   useEffect(() => {
     if (reportExists) {
