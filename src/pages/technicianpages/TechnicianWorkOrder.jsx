@@ -38,12 +38,12 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
 
   const repairID = order.repairInfo.repairID;
 
-  const {
-    data: repairReport,
-    refetch,
-  } = useGetRepairReportByIDQuery(repairID, {
-    skip: !repairID, // skip until userID is available
-  });
+  const { data: repairReport, refetch } = useGetRepairReportByIDQuery(
+    repairID,
+    {
+      skip: !repairID, // skip until userID is available
+    }
+  );
 
   const reportExists = Array.isArray(repairReport) && repairReport.length > 0;
   const [submitStartTime] = useSubmitStartTimeMutation();
@@ -202,6 +202,20 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
     { value: "In Progress", label: "In Progress" },
     { value: "Completed", label: "Completed" },
   ];
+
+  const getFilteredOptions = () => {
+    switch (selectedWorkStatus) {
+      case "Pending":
+        return WorkOrder.filter((o) => o.value !== "Completed"); // Only allow In Progress
+      case "In Progress":
+        return WorkOrder.filter((o) => o.value !== "Pending"); // Only allow Completed
+      case "Completed":
+        return WorkOrder.filter((o) => o.value === "Completed"); // Disable changing
+      default:
+        return WorkOrder;
+    }
+  };
+
   const today = new Date().toISOString().split("T")[0];
 
   return (
@@ -244,7 +258,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             />
           </div>
 
-           <div className="TModal-content-field">
+          <div className="TModal-content-field">
             <label>Asset Images:</label>
             <div className="TModal-profile-img">
               {Array.isArray(order.repairInfo.images) &&
@@ -276,7 +290,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
               <Select
                 classNamePrefix="customm-select-workstatus"
                 className="Wworkstatus-dropdown"
-                options={WorkOrder}
+                options={getFilteredOptions()}
                 value={WorkOrder.find(
                   (option) => option.value === selectedWorkStatus
                 )}
@@ -284,11 +298,10 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                   const newStatus = selectedOption ? selectedOption.value : "";
                   setSelectedWorkStatus(newStatus);
 
-                  // ⚡ Update status inside repairInfo
                   try {
                     await updateRepairById({
-                      repairID: order.repairID, // use correct repairID from `order`
-                      updateFields: { status: newStatus }, // this updates repairInfo.status
+                      repairID: order.repairID,
+                      updateFields: { status: newStatus },
                     }).unwrap();
 
                     if (newStatus === "In Progress") {
@@ -305,12 +318,13 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                         repairID: order.repairID,
                         startTime: currentTime,
                       }).unwrap();
+
                       setFormData((prev) => ({
                         ...prev,
-                        startTime: response.startTime, // Assuming backend returns updated object
+                        startTime: response.startTime,
                       }));
                     }
-                    // Submit end time if status is "Completed"
+
                     if (newStatus === "Completed") {
                       const currentTime = new Date().toLocaleTimeString(
                         "en-GB",
@@ -320,8 +334,9 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                           minute: "2-digit",
                         }
                       );
+
                       const response = await submitEndTime({
-                        reportID: formData.reportID, // use the correct report ID
+                        reportID: formData.reportID,
                         endTime: currentTime,
                       }).unwrap();
 
@@ -348,7 +363,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                     });
                   }
                 }}
-                isClearable
+                isClearable={false}
                 isSearchable={false}
               />
             </div>
