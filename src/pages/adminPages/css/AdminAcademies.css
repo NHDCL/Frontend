@@ -14,6 +14,8 @@
   padding: 0px 20px 20px 0px;
   opacity: 0;
   transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+  overflow-y: scroll;
+  scrollbar-width: none;
 }
 
 @keyframes popUpEffect {
@@ -115,15 +117,17 @@
 
 .AdminA-modal-content {
   background: white;
-  padding: 20px;
-  border-radius: 5px;
   width: 40%;
-  display: flex;
-  flex-direction: column;
-  /* justify-content: center; */
-  align-items: center;
-  gap: 3px;
+  max-width: 1000px;
+  max-height: 95vh;
+  overflow: auto;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  scrollbar-width: none;
   animation: popUpEffect 0.3s forwards;
+    min-width: 200px;
+
 }
 
 .AdminA-modal-content input,
@@ -145,12 +149,14 @@
   padding: 10px;
   text-align: center;
   border: 2px dashed #897463;
-  border-radius: 5px;
+  border-radius: 10px;
   /* color: #666; */
   cursor: pointer;
   margin: 10px 0;
   height: 70px;
+  margin-left: 10%;
 }
+
 
 .AdminA-add {
   background-color: #897463;
@@ -169,7 +175,6 @@
   border: none;
   font-size: 24px;
   cursor: pointer;
-  padding-right: 30px !important;
 }
 
 /* Close button hover effect */
@@ -179,10 +184,7 @@
 .AdminA_close {
   display: flex;
   justify-content: space-between;
-  /* background-color: cyan; */
-  width: 80%;
-  flex-wrap: wrap;
-  /* margin-right: -20px; */
+  align-items: center;
 }
 .AdminA-profile-upload-icon {
   color: #897463;
@@ -203,6 +205,8 @@
   align-items: center;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
+   overflow-y: scroll;
+  scrollbar-width: none;
 }
 
 .AdminA-bento-item:hover .SuperA-overlay {
@@ -210,6 +214,7 @@
 }
 .SuperA-adescription {
   width: 80%;
+  height: 50%;
 }
 
 .AdminA-profile-image {
@@ -217,4 +222,13 @@
   height: 50px; /* Maintain aspect ratio */
   object-fit: cover; /* Ensure the image covers the area without distortion */
   border-radius: 5%; /* Makes the image round */
+}
+
+
+.AdminA_close h2{
+   font-size: 14px;
+  font-weight: bold;
+  padding-left: 30px;
+  color: var(--clr-darkgreen);
+  margin-bottom: 0px !important;
 }

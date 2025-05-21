@@ -53,7 +53,8 @@
   }
   .login-input-icon {
     position: absolute;
-    left: 3%;
+    /* left: 3%; */
+    left: clamp(10px, 3%, 40px);
     top: 35%;
     color: #777;
   }
@@ -66,7 +67,8 @@
     border-radius: 10px;
     background: none;
     padding: 15px;
-    padding-left: 8%;
+    background-color: aquamarine;
+    padding-left: clamp(10px, 60px, 40px);
     font-size: 16px;
     font-weight: 500;
     color: black;

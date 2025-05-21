@@ -397,7 +397,7 @@ const AdminAcademies = () => {
                 })
               }
             />
-            <label className="AdminA-profile-upload-label">
+              <label className="AdminA-profile-upload-label">
               <input
                 type="file"
                 accept="image/*"

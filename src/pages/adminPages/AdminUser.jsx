@@ -746,7 +746,6 @@ const AdminUser = () => {
                     color: "#897463",
                     width: "20px",
                     height: "20px",
-                    marginRight: "-120px",
                   }}
                 />
               </button>
@@ -793,6 +792,8 @@ const AdminUser = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <div style={{width:"100%"}}>
+
               <Select
                 classNamePrefix="custommm-select-workstatus"
                 options={academies?.map((a) => ({
@@ -805,8 +806,10 @@ const AdminUser = () => {
                 onChange={setSelectedAcademy}
                 required
               />
+              </div>
               {activeTab !== "Manager" && (
-                <Select
+               <div style={{width:"100%"}}>
+                 <Select
                   isClearable
                   isSearchable={false}
                   classNamePrefix="custommm-select-workstatus"
@@ -818,6 +821,7 @@ const AdminUser = () => {
                   onChange={setSelectedDepartment}
                   required
                 />
+                </div>
               )}
               <button
                 className="AdminUser-add"
@@ -846,7 +850,6 @@ const AdminUser = () => {
                     color: "#897463",
                     width: "20px",
                     height: "20px",
-                    marginRight: "-120px",
                   }}
                 />
               </button>
@@ -896,7 +899,6 @@ const AdminUser = () => {
                     color: "#897463",
                     width: "20px",
                     height: "20px",
-                    marginRight: "-120px",
                   }}
                 />
               </button>
