@@ -67,7 +67,6 @@
     border-radius: 10px;
     background: none;
     padding: 15px;
-    background-color: aquamarine;
     padding-left: clamp(10px, 60px, 40px);
     font-size: 16px;
     font-weight: 500;

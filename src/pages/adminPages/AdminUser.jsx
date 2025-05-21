@@ -808,7 +808,7 @@ const AdminUser = () => {
               />
               </div>
               {activeTab !== "Manager" && (
-               <div style={{width:"100%"}}>
+               <div style={{width:"100%",}}>
                  <Select
                   isClearable
                   isSearchable={false}
