@@ -183,9 +183,9 @@ const Users = () => {
                   "Image",
                   "Name",
                   "Email",
-                  "Location",
+                  // "Location",
                   "Department",
-                  "Role",
+                  // "Role",
                   ...(activeTab === "Technician" ? ["Work Assigned"] : []),
                 ].map((header, index) => (
                   <th key={index}>
@@ -268,7 +268,7 @@ const Users = () => {
                       </span>
                     </Tippy>
                   </td>
-                  <td className="description">
+                  {/* <td className="description">
                     <Tippy
                       content={getAcademyName(item.academyId) || ""}
                       placement="top"
@@ -280,7 +280,7 @@ const Users = () => {
                           : getAcademyName(item.academyId) || ""}
                       </span>
                     </Tippy>
-                  </td>
+                  </td> */}
                   <td className="description">
                     <Tippy
                       content={getDepartmentName(item.departmentId) || ""}
@@ -297,7 +297,7 @@ const Users = () => {
                     </Tippy>
                   </td>
 
-                  <td>{item.role ? item.role.name : "No Role"}</td>
+                  {/* <td>{item.role ? item.role.name : "No Role"}</td> */}
                   {activeTab === "Technician" && (
                     // <td>{loading ? "Loading..." : totalWorkCount ?? 0}</td>
                     

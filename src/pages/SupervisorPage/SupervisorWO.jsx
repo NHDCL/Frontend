@@ -149,9 +149,17 @@ const SupervisorWO = () => {
           }
         });
 
-        const combinedResults = await Promise.all(repairPromises);
-        const validResults = combinedResults.filter(Boolean); // filter out failed ones
-        setData(validResults); // ✅ Now includes both schedule + asset
+        const repairResults = await Promise.all(repairPromises);
+        const validData = repairResults.filter(Boolean);
+        console.log("v", validData)
+
+        // 🔽 Sort newest first using repairID
+        const sortedData = validData.sort((a, b) =>
+          b.maintenanceID.localeCompare(a.maintenanceID)
+        );
+
+        // console.log('Sorted Results:', sortedResults.map(r => ({ scheduleDate: r.scheduleDate, createdAt: r.createdAt })));
+        setData(sortedData);
       }
     };
 
@@ -159,6 +167,8 @@ const SupervisorWO = () => {
   }, [userSchedules, dispatch]);
 
   console.log("data", data);
+  console.log("userSchedules outside useEffect:", userSchedules);
+
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -296,39 +306,39 @@ const SupervisorWO = () => {
   ];
 
   // Filtering data based on search and priority selection and work status
-  // const searchRecursively = (obj, searchTerm) => {
-  //   if (typeof obj !== "object" || obj === null) {
-  //     return (
-  //       obj &&
-  //       obj
-  //         .toString()
-  //         .toLowerCase()
-  //         .includes(searchTerm?.toLowerCase() || "")
-  //     );
-  //   }
-
-  //   // Check all values in the object (including nested objects)
-  //   return Object.values(obj).some((value) =>
-  //     searchRecursively(value, searchTerm)
-  //   );
-  // };
-
-
   const searchRecursively = (obj, searchTerm) => {
-    if (!obj || typeof obj !== "object") return false;
-
-    for (const key in obj) {
-      if (Object.hasOwn(obj, key)) {
-        const value = obj[key];
-        if (typeof value === "string" && value.toLowerCase().includes(searchTerm.toLowerCase())) {
-          return true;
-        } else if (typeof value === "object") {
-          if (searchRecursively(value, searchTerm)) return true;
-        }
-      }
+    if (typeof obj !== "object" || obj === null) {
+      return (
+        obj &&
+        obj
+          .toString()
+          .toLowerCase()
+          .includes(searchTerm?.toLowerCase() || "")
+      );
     }
-    return false;
+
+    // Check all values in the object (including nested objects)
+    return Object.values(obj).some((value) =>
+      searchRecursively(value, searchTerm)
+    );
   };
+
+
+  // const searchRecursively = (obj, searchTerm) => {
+  //   if (!obj || typeof obj !== "object") return false;
+
+  //   for (const key in obj) {
+  //     if (Object.hasOwn(obj, key)) {
+  //       const value = obj[key];
+  //       if (typeof value === "string" && value.toLowerCase().includes(searchTerm.toLowerCase())) {
+  //         return true;
+  //       } else if (typeof value === "object") {
+  //         if (searchRecursively(value, searchTerm)) return true;
+  //       }
+  //     }
+  //   }
+  //   return false;
+  // };
   const filteredData = data
     .filter((item) => {
       const matchesSearch = searchRecursively(item, searchTerm);
@@ -385,14 +395,14 @@ const SupervisorWO = () => {
   };
 
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
-  const sortData = (column, ascending) => {
-    const sortedData = [...data].sort((a, b) => {
-      if (a[column] < b[column]) return ascending ? -1 : 1;
-      if (a[column] > b[column]) return ascending ? 1 : -1;
-      return 0;
-    });
-    setData(sortedData);
-  };
+  // const sortData = (column, ascending) => {
+  //   const sortedData = [...data].sort((a, b) => {
+  //     if (a[column] < b[column]) return ascending ? -1 : 1;
+  //     if (a[column] > b[column]) return ascending ? 1 : -1;
+  //     return 0;
+  //   });
+  //   setData(sortedData);
+  // };
 
   const handleSort = (field) => {
     const ascending = sortOrder.column === field ? !sortOrder.ascending : true;
