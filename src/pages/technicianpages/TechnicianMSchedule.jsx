@@ -211,6 +211,23 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
     { value: "Completed", label: "Completed" },
   ];
 
+  const getFilteredWorkStatusOptions = () => {
+  switch (selectedWorkStatus) {
+    case "Pending":
+      return WorkOrder.filter(
+        (option) => option.value === "Pending" || option.value === "In Progress"
+      );
+    case "In Progress":
+      return WorkOrder.filter(
+        (option) => option.value === "In Progress" || option.value === "Completed"
+      );
+    case "Completed":
+      return WorkOrder.filter((option) => option.value === "Completed");
+    default:
+      return WorkOrder;
+  }
+};
+
   const today = new Date().toISOString().split("T")[0];
 
   return (
@@ -266,7 +283,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
           <div className="TModal-content-field">
             <label>Work Status:</label>
             <div style={{ width: "100%", maxWidth: "350px" }}>
-              <Select
+              {/* <Select
                 classNamePrefix="customm-select-workstatus"
                 className="Wworkstatus-dropdown"
                 options={WorkOrder}
@@ -341,7 +358,81 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                 }}
                 isClearable
                 isSearchable={false}
-              />
+              /> */}
+              <Select
+  classNamePrefix="customm-select-workstatus"
+  className="Wworkstatus-dropdown"
+  options={getFilteredWorkStatusOptions()}
+  value={WorkOrder.find(
+    (option) => option.value === selectedWorkStatus
+  )}
+  onChange={async (selectedOption) => {
+    const newStatus = selectedOption ? selectedOption.value : "";
+    setSelectedWorkStatus(newStatus);
+
+    try {
+      await updateMaintenanceById({
+        id: order.maintenanceID,
+        maintenance: { status: newStatus },
+      }).unwrap();
+
+      if (newStatus === "In Progress") {
+        const currentTime = new Date().toLocaleTimeString("en-GB", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const response = await giveStartTime({
+          preventiveMaintenanceID: order.maintenanceID,
+          startTime: currentTime,
+        }).unwrap();
+
+        setFormData((prev) => ({
+          ...prev,
+          startTime: response.startTime,
+        }));
+      }
+
+      if (newStatus === "Completed") {
+        const currentTime = new Date().toLocaleTimeString("en-GB", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const response = await giveEndTime({
+          maintenanceReportID: formData.maintenanceReportID,
+          endTime: currentTime,
+        }).unwrap();
+
+        setFormData((prev) => ({
+          ...prev,
+          endTime: response.endTime,
+        }));
+      }
+
+      refetch();
+      Swal.fire({
+        icon: "success",
+        title: "Work Status Updated",
+        text: `Status is now "${newStatus}"`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      console.error("❌ Failed to update work status:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error Updating Status",
+        text: "Could not update status. Try again later.",
+      });
+    }
+  }}
+  isClearable={false}
+  isSearchable={false}
+/>
+
             </div>
           </div>
 

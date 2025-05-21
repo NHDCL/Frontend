@@ -101,10 +101,13 @@
   flex-direction: column;
   gap: 3px;
 }
-.AdminUser-modal-content input {
+.AdminUser-modal-content input,
+.AdminUser-modal-content textarea {
   width: 100%;
   border: solid 1.5px #897463;
-  /* border-radius: 10px; */
+  border-radius: 10px;
+    background: none;
+  padding: 12px;
   font-size: 14px;
   font-weight: 500;
   color: black;

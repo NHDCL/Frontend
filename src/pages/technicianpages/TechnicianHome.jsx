@@ -49,11 +49,13 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
     skip: !repairID, // skip until userID is available
   });
 
+
   const reportExists = Array.isArray(repairReport) && repairReport.length > 0;
   const [submitStartTime] = useSubmitStartTimeMutation();
   const [submitEndTime] = useSubmitEndTimeMutation();
   const [completeRepairReport, { isLoading: posting }] =
     useCompleteRepairReportMutation();
+    
 
   useEffect(() => {
     if (reportExists) {
@@ -275,7 +277,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             </div>
           </div>
 
-          <div className="TModal-content-field">
+          {/* <div className="TModal-content-field">
             <label>Work Status:</label>
             <div style={{ width: "100%", maxWidth: "350px" }}>
               <Select
@@ -357,7 +359,92 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                 isSearchable={false}
               />
             </div>
-          </div>
+          </div> */}
+
+          <div className="TModal-content-field">
+  <label>Work Status:</label>
+  <div style={{ width: "100%", maxWidth: "350px" }}>
+    <Select
+      classNamePrefix="customm-select-workstatus"
+      className="Wworkstatus-dropdown"
+      options={
+        selectedWorkStatus === "Pending"
+          ? WorkOrder.filter((o) => o.value !== "Completed")
+          : WorkOrder
+      }
+      value={WorkOrder.find(
+        (option) => option.value === selectedWorkStatus
+      )}
+      onChange={async (selectedOption) => {
+        const newStatus = selectedOption ? selectedOption.value : "";
+        setSelectedWorkStatus(newStatus);
+
+        try {
+          await updateRepairById({
+            repairID: order.repairID,
+            updateFields: { status: newStatus },
+          }).unwrap();
+
+          if (newStatus === "In Progress") {
+            const currentTime = new Date().toLocaleTimeString("en-GB", {
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            const response = await submitStartTime({
+              repairID: order.repairID,
+              startTime: currentTime,
+            }).unwrap();
+
+            setFormData((prev) => ({
+              ...prev,
+              startTime: response.startTime,
+            }));
+          }
+
+          if (newStatus === "Completed") {
+            const currentTime = new Date().toLocaleTimeString("en-GB", {
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            const response = await submitEndTime({
+              reportID: formData.reportID,
+              endTime: currentTime,
+            }).unwrap();
+
+            setFormData((prev) => ({
+              ...prev,
+              endTime: response.endTime,
+            }));
+          }
+
+          refetch();
+
+          Swal.fire({
+            icon: "success",
+            title: "Work Status Updated",
+            text: `Status is now "${newStatus}"`,
+            timer: 1500,
+            showConfirmButton: false,
+          });
+        } catch (err) {
+          console.error("❌ Failed to update work status:", err);
+          Swal.fire({
+            icon: "error",
+            title: "Error Updating Status",
+            text: "Could not update status. Try again later.",
+          });
+        }
+      }}
+      isClearable
+      isSearchable={false}
+    />
+  </div>
+</div>
+
 
           <div className="TModal-content-field">
             <label>Time:</label>

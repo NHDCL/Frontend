@@ -189,6 +189,7 @@ const Repair = () => {
   const initialDepartmentOption = departmentOptionsU.find(
     (opt) => opt.label === departmentName
   );
+  
   // Set reporting time/date
   useEffect(() => {
     if (Array.isArray(scheduleData) && scheduleData.length > 0) {
@@ -256,7 +257,6 @@ const Repair = () => {
       Swal.fire("Error", "Schedule data not found.", "error");
       return;
     }
-
     const scheduleId = scheduleData[0].scheduleID;
 
     let formattedTime = assignTimeU;

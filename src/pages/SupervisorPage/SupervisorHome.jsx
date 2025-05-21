@@ -93,35 +93,42 @@ const SupervisorHome = () => {
   const [repairs, setRepairs] = useState([]);
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    const fetchRepairDetails = async () => {
-      if (userSchedules && userSchedules.length) {
-        const repairPromises = userSchedules.map(async (schedule) => {
-          try {
-            const repair = await dispatch(
-              maintenanceApiSlice.endpoints.getRepairById.initiate(
-                schedule?.repairID
-              )
-            ).unwrap();
+useEffect(() => {
+  const fetchRepairDetails = async () => {
+    if (userSchedules && userSchedules.length) {
+      const repairPromises = userSchedules.map(async (schedule) => {
+        try {
+          const repair = await dispatch(
+            maintenanceApiSlice.endpoints.getRepairById.initiate(
+              schedule?.repairID
+            )
+          ).unwrap();
 
-            return {
-              ...schedule, // include all original schedule details
-              repairInfo: repair, // attach fetched repair data under `repairInfo`
-            };
-          } catch (err) {
-            console.error(`Error fetching repair ${schedule?.repairID}:`, err);
-            return null;
-          }
-        });
+          return {
+            ...schedule, // include all original schedule details
+            repairInfo: repair, // attach fetched repair data under `repairInfo`
+          };
+        } catch (err) {
+          console.error(`Error fetching repair ${schedule?.repairID}:`, err);
+          return null;
+        }
+      });
 
-        const repairResults = await Promise.all(repairPromises);
-        const validData = repairResults.filter(Boolean);
-        setData(validData); // ✅ now contains both schedule & repair info
-      }
-    };
+      const repairResults = await Promise.all(repairPromises);
+      const validData = repairResults.filter(Boolean);
 
-    fetchRepairDetails();
-  }, [userSchedules, dispatch]);
+      // 🔽 Sort newest first using repairID
+      const sortedData = validData.sort((a, b) =>
+        b.repairID.localeCompare(a.repairID)
+      );
+
+      setData(sortedData);
+    }
+  };
+
+  fetchRepairDetails();
+}, [userSchedules, dispatch]);
+
 
 
   const [selectedDepartment, setSelectedDepartment] = useState(null);
@@ -395,14 +402,14 @@ const SupervisorHome = () => {
     console.log("item",item)
   };
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
-  const sortData = (column, ascending) => {
-    const sortedData = [...data].sort((a, b) => {
-      if (a[column] < b[column]) return ascending ? -1 : 1;
-      if (a[column] > b[column]) return ascending ? 1 : -1;
-      return 0;
-    });
-    setData(sortedData);
-  };
+  // const sortData = (column, ascending) => {
+  //   const sortedData = [...data].sort((a, b) => {
+  //     if (a[column] < b[column]) return ascending ? -1 : 1;
+  //     if (a[column] > b[column]) return ascending ? 1 : -1;
+  //     return 0;
+  //   });
+  //   setData(sortedData);
+  // };
 
   const handleSort = (field) => {
     const ascending = sortOrder.column === field ? !sortOrder.ascending : true;
@@ -423,9 +430,6 @@ const SupervisorHome = () => {
   const getNestedValue = (obj, path) => {
     return path?.split('.').reduce((acc, part) => acc && acc[part], obj) ?? "";
   };
-
-
-
 
   return (
     <div className="ManagerDashboard">

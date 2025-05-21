@@ -224,9 +224,7 @@ const RoomQRDetail = () => {
     if (!result.isConfirmed) return;
 
     try {
-      console.log(requestData);
       const res = await postRepairRequest(requestData).unwrap();
-      console.log(res);
       Swal.fire({
         icon: "success",
         title: "Repair Request Sent!",
@@ -333,7 +331,7 @@ const RoomQRDetail = () => {
               classNamePrefix="customm-select-department"
               name="priority"
               options={priorities}
-              value={priorities.find((p) => p.value === formData.priority)}
+              value={priorities.find((p) => p.value === null)} // returns undefined
               onChange={handlePriorityChange}
               placeholder="Select Priority"
               isClearable
