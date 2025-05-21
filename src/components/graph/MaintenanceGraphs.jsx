@@ -43,7 +43,7 @@ const MaintenanceGraphs = () => {
     isLoading: loadingMaintenance,
     error: errorMaintenance,
   } = useGetAllCombinedMaintenanceCostQuery();
-  console.log("filteredMaintenanceData",maintenanceData)
+  console.log("filteredMaintenanceData", maintenanceData);
 
   const {
     data: academies,
@@ -56,7 +56,7 @@ const MaintenanceGraphs = () => {
     isLoading: loadingResponse,
     error: errorResponse,
   } = useGetAverageResponseTimeQuery();
-  console.log("gc",responseTimeData)
+  console.log("gc", responseTimeData);
 
   const isLoadingAll =
     loadingAcademies || loadingMaintenance || loadingResponse;

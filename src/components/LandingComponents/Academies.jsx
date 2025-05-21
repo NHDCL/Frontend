@@ -9,8 +9,8 @@ const Academies = () => {
     if (error) {
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "Failed to fetch academies.",
+        title: "Failed to Load Academies",
+        text: "Unable to load academies. Please try again later.",
       });
     }
   }, [error]);
