@@ -5,46 +5,50 @@ import { techniciannavigationLinks } from "../../data/data";
 import "./Sidebar.css";
 import { SidebarContext } from "../../context/sidebarContext";
 import logo from "../../assets/images/Nlogo.jpeg";
-
+import { logout } from "../../slices/authSlice";
+import { useDispatch } from "react-redux";
 const TechnicianSidebar = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
   const navigate = useNavigate();
   const splitIndex = techniciannavigationLinks.length - 2;
+  
+  const dispatch = useDispatch();
 
   // Handle Logout Logic
   const handleLogout = () => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You will be logged out!",
-      icon: "warning",
-      color: "#305845",
-      showCancelButton: true,
-      confirmButtonColor: "#305845",
-      cancelButtonColor: "#897462",
-      confirmButtonText: "Yes, Logout!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Remove authentication data
-        localStorage.removeItem("userInfo");
-        localStorage.removeItem("userRole");
-        localStorage.removeItem("userToken");
-        // sessionStorage.removeItem("token");
+  Swal.fire({
+    title: "Are you sure?",
+    text: "You will be logged out!",
+    icon: "warning",
+    color: "#305845",
+    showCancelButton: true,
+    confirmButtonColor: "#305845",
+    cancelButtonColor: "#897462",
+    confirmButtonText: "Yes, Logout!",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Clear all authentication data from sessionStorage
+      sessionStorage.clear();
 
-        // Success toast
-        Swal.fire({
-          icon: "success",
-          title: "Logged out successfully!",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 2000,
-        });
+      // Optionally, dispatch logout action if using Redux
+      dispatch(logout());
 
-        // Redirect to login page
-        navigate("/login");
-      }
-    });
-  };
+      // Success toast
+      Swal.fire({
+        icon: "success",
+        title: "Logged out successfully!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+
+      // Redirect to login page
+      navigate("/login");
+    }
+  });
+};
+
 
   return (
     <div className={`sidebar ${isSidebarOpen ? "sidebar-change" : ""}`}>

@@ -5,45 +5,49 @@ import { sadminnavigationLinks } from "../../data/data";
 import "./Sidebar.css";
 import { SidebarContext } from "../../context/sidebarContext";
 import logo from "../../assets/images/Nlogo.jpeg";
+import { logout } from "../../slices/authSlice";
+import { useDispatch } from "react-redux";
 
 const SuperAdminSidebar = () => {
   const { isSidebarOpen } = useContext(SidebarContext);
   const splitIndex = sadminnavigationLinks.length - 2;
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogout = () => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You will be logged out!",
-      icon: "warning",
-      color: "#305845",
-      showCancelButton: true,
-      confirmButtonColor: "#305845",
-      cancelButtonColor: "#897462",
-      confirmButtonText: "Yes, Logout!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Remove auth data from localStorage and sessionStorage
-        localStorage.removeItem("user");
-        localStorage.removeItem("userRole");
-        localStorage.removeItem("userToken");
-        // sessionStorage.removeItem("token");
+  Swal.fire({
+    title: "Are you sure?",
+    text: "You will be logged out!",
+    icon: "warning",
+    color: "#305845",
+    showCancelButton: true,
+    confirmButtonColor: "#305845",
+    cancelButtonColor: "#897462",
+    confirmButtonText: "Yes, Logout!",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Clear sessionStorage correctly
+      sessionStorage.clear();
 
-        // Show success toast
-        Swal.fire({
-          icon: "success",
-          title: "Logged out successfully!",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 2000,
-        });
+      // Dispatch Redux logout action
+      dispatch(logout());
 
-        // Navigate to login page
-        navigate("/login");
-      }
-    });
-  };
+      // Show success toast
+      Swal.fire({
+        icon: "success",
+        title: "Logged out successfully!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+
+      // Navigate to login page
+      navigate("/login");
+    }
+  });
+};
+
 
   return (
     <div className={`sidebar ${isSidebarOpen ? "sidebar-change" : ""}`}>

@@ -11,7 +11,7 @@ const SessionTimeoutManager = () => {
   // Define routes where session timeout should not be active
   const excludedRoutes = ["/"]; // Add your landing page route(s) here
 
-  const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes total session timeout
+  const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes total session timeout* 60 *
   const WARNING_TIME_MS = 2 * 60 * 1000; // 2 minutes warning before expiry
 
   useEffect(() => {
@@ -91,11 +91,9 @@ const SessionTimeoutManager = () => {
     };
 
     const handleSessionTimeout = () => {
-      // Clear local storage/cookies
-      localStorage.removeItem("user");
-      localStorage.removeItem("userRole");
-      localStorage.removeItem("userToken");
-      // sessionStorage.removeItem("token");
+      //Clear all localStorage
+      sessionStorage.clear();
+
       document.cookie =
         "JWT-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
