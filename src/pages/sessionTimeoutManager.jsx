@@ -11,8 +11,8 @@ const SessionTimeoutManager = () => {
   // Define routes where session timeout should not be active
   const excludedRoutes = ["/"]; // Add your landing page route(s) here
 
-  const SESSION_TIMEOUT_MS = 15 * 1000; // 15 minutes total session timeout* 60 *
-  const WARNING_TIME_MS = 5 * 1000; // 2 minutes warning before expiry
+  const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes total session timeout* 60 *
+  const WARNING_TIME_MS = 2 * 60 *  1000; // 2 minutes warning before expiry
 
   useEffect(() => {
     // Check if current route should be excluded from session timeout
