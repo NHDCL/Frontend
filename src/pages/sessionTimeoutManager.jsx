@@ -91,11 +91,9 @@ const SessionTimeoutManager = () => {
     };
 
     const handleSessionTimeout = () => {
-      // Clear local storage/cookies
-      localStorage.removeItem("user");
-      localStorage.removeItem("userRole");
-      localStorage.removeItem("userToken");
-      // sessionStorage.removeItem("token");
+      //Clear all localStorage
+      localStorage.clear();
+
       document.cookie =
         "JWT-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
