@@ -24,7 +24,7 @@
 }
 .lfQlinks {
   /* background-color: darkmagenta; */
-  height: 120px;
+  /* height: 120px; */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
