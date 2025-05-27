@@ -44,7 +44,7 @@ const LandingFooter = () => {
           </a>
         </div>
 
-        <div style={{ marginTop: "23px" }}>
+        <div style={{marginTop:"20px"}}>
           <h3 className="lfh3">Follow Us</h3>
           <div className="lflink">
             <a
