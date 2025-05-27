@@ -842,7 +842,9 @@ const Landscaping = ({ category }) => {
             </tr>
           </thead>
           <tbody>
-            {displayedData.map((item, index) => {
+            {[...displayedData]
+                  .sort((a, b) => b.assetID - a.assetID) // Sort by assetID DESC
+                  .map((item, index) => {
               // Extract values from `attributes`
               const sizeAttr = item.attributes.find(
                 (attr) => attr.name === "Size"

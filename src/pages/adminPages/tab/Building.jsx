@@ -711,57 +711,61 @@ const Building = ({ category }) => {
                 </tr>
               </thead>
               <tbody>
-                {displayedData.map((item, index) => {
-                  const plintAreaAttr = item.attributes.find(
-                    (attr) => attr.name === "Plint_area"
-                  );
-                  const floorAttr = item.attributes.find(
-                    (attr) => attr.name === "Floor and rooms"
-                  );
-                  const plintArea = plintAreaAttr ? plintAreaAttr.value : "N/A";
-                  const floorCount = floorAttr
-                    ? Object.keys(JSON.parse(floorAttr.value)).length
-                    : "N/A";
+                {[...displayedData]
+                  .sort((a, b) => b.assetID - a.assetID) // Sort by assetID DESC
+                  .map((item, index) => {
+                    const plintAreaAttr = item.attributes.find(
+                      (attr) => attr.name === "Plint_area"
+                    );
+                    const floorAttr = item.attributes.find(
+                      (attr) => attr.name === "Floor and rooms"
+                    );
+                    const plintArea = plintAreaAttr
+                      ? plintAreaAttr.value
+                      : "N/A";
+                    const floorCount = floorAttr
+                      ? Object.keys(JSON.parse(floorAttr.value)).length
+                      : "N/A";
 
-                  return (
-                    <tr key={index}>
-                      <td>{index + 1}</td>
-                      <td>{item.assetCode}</td>
-                      <td className="description">
-                        <Tippy content={item.title || ""} placement="top">
-                          <span>
-                            {item.title?.length > 20
-                              ? item.title.substring(0, 20) + "..."
-                              : item.title || ""}
-                          </span>
-                        </Tippy>
-                      </td>
-                      <td>{formatDate(item.acquireDate)}</td>
-                      <td>{item.lifespan}</td>
-                      <td>{floorCount}</td>
-                      <td>{plintArea}</td>
-                      <td>{item.categoryDetails?.depreciatedValue}</td>
-                      <td>
-                        <Tippy
-                          content={getStatusDescription(item.status)}
-                          placement="top"
-                        >
-                          <div className={getStatusClass(item.status)}>
-                            {getDisplayText(item.status)}
-                          </div>
-                        </Tippy>
-                      </td>
-                      <td className="actions">
-                        <button
-                          className="view-btn"
-                          onClick={() => handleView(item)}
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                    return (
+                      <tr key={index}>
+                        <td>{index + 1}</td>
+                        <td>{item.assetCode}</td>
+                        <td className="description">
+                          <Tippy content={item.title || ""} placement="top">
+                            <span>
+                              {item.title?.length > 20
+                                ? item.title.substring(0, 20) + "..."
+                                : item.title || ""}
+                            </span>
+                          </Tippy>
+                        </td>
+                        <td>{formatDate(item.acquireDate)}</td>
+                        <td>{item.lifespan}</td>
+                        <td>{floorCount}</td>
+                        <td>{plintArea}</td>
+                        <td>{item.categoryDetails?.depreciatedValue}</td>
+                        <td>
+                          <Tippy
+                            content={getStatusDescription(item.status)}
+                            placement="top"
+                          >
+                            <div className={getStatusClass(item.status)}>
+                              {getDisplayText(item.status)}
+                            </div>
+                          </Tippy>
+                        </td>
+                        <td className="actions">
+                          <button
+                            className="view-btn"
+                            onClick={() => handleView(item)}
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
 
@@ -869,7 +873,11 @@ const Building = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
+                <input
+                  type="text"
+                  value={formatDate(modalData.acquireDate)}
+                  readOnly
+                />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>
@@ -979,7 +987,11 @@ const Building = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={formatDate(modalData2.acquireDate)} readOnly />
+                <input
+                  type="text"
+                  value={formatDate(modalData2.acquireDate)}
+                  readOnly
+                />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>

@@ -403,6 +403,7 @@ const Machinery = ({ category }) => {
 
   const handleAddMachinery = () => {
     setShowAddModal(true);
+    setIsFormSubmitted(false);
   };
 
   const handleSaveNewMachinery = async () => {
@@ -720,7 +721,7 @@ const Machinery = ({ category }) => {
     }
   };
 
-   const getCurrentTime = () => {
+  const getCurrentTime = () => {
     const now = new Date();
     return now.toTimeString().slice(0, 5); // returns "HH:MM"
   };
@@ -835,72 +836,74 @@ const Machinery = ({ category }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((item, index) => {
-              const isSelected = selectedRows.includes(item.assetCode); // Use assetCode to track selection
-              return (
-                <tr key={item.assetCode}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleSelectRow(item.assetCode)}
-                    />
-                  </td>
-                  <td>{index + 1}</td> {/* Just showing serial # in table */}
-                  <td>{item.assetCode}</td>
-                  <td className="description">
-                    <Tippy content={item.title || ""} placement="top">
-                      <span>
-                        {item.title?.length > 20
-                          ? item.title.substring(0, 20) + "..."
-                          : item.title || ""}
-                      </span>
-                    </Tippy>
-                  </td>
-                  <td>{formatDate(item.acquireDate)}</td>
-                  <td>{item.lifespan}</td>
-                  <td className="description">
-                    <Tippy content={item.assetArea || ""} placement="top">
-                      <span>
-                        {item.assetArea?.length > 20
-                          ? item.assetArea.substring(0, 20) + "..."
-                          : item.assetArea || ""}
-                      </span>
-                    </Tippy>
-                  </td>
-                  <td>
-                        <Tippy
-                          content={getStatusDescription(item.status)}
-                          placement="top"
-                        >
-                          <div className={getStatusClass(item.status)}>
-                            {getDisplayText(item.status)}
-                          </div>
-                        </Tippy>
-                      </td> 
-                  <td
-                    className="actions"
-                    style={{
-                      display: "flex",
-                      gap: "0.5rem",
-                      maxWidth: "150px",
-                    }}
-                  >
-                    <button
-                      className="view-btn"
-                      onClick={() => handleView(item)}
+            {[...filteredData]
+              .sort((a, b) => b.assetID - a.assetID) // Sort by assetID DESC
+              .map((item, index) => {
+                const isSelected = selectedRows.includes(item.assetCode); // Use assetCode to track selection
+                return (
+                  <tr key={item.assetCode}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleSelectRow(item.assetCode)}
+                      />
+                    </td>
+                    <td>{index + 1}</td> {/* Just showing serial # in table */}
+                    <td>{item.assetCode}</td>
+                    <td className="description">
+                      <Tippy content={item.title || ""} placement="top">
+                        <span>
+                          {item.title?.length > 20
+                            ? item.title.substring(0, 20) + "..."
+                            : item.title || ""}
+                        </span>
+                      </Tippy>
+                    </td>
+                    <td>{formatDate(item.acquireDate)}</td>
+                    <td>{item.lifespan}</td>
+                    <td className="description">
+                      <Tippy content={item.assetArea || ""} placement="top">
+                        <span>
+                          {item.assetArea?.length > 20
+                            ? item.assetArea.substring(0, 20) + "..."
+                            : item.assetArea || ""}
+                        </span>
+                      </Tippy>
+                    </td>
+                    <td>
+                      <Tippy
+                        content={getStatusDescription(item.status)}
+                        placement="top"
+                      >
+                        <div className={getStatusClass(item.status)}>
+                          {getDisplayText(item.status)}
+                        </div>
+                      </Tippy>
+                    </td>
+                    <td
+                      className="actions"
+                      style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                        maxWidth: "150px",
+                      }}
                     >
-                      View
-                    </button>
-                    <img
-                      src={getQrImageUrl(item.attributes)}
-                      alt="QR Code"
-                      style={{ width: qrSize, height: qrSize }}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
+                      <button
+                        className="view-btn"
+                        onClick={() => handleView(item)}
+                      >
+                        View
+                      </button>
+                      <img
+                        src={getQrImageUrl(item.attributes)}
+                        alt="QR Code"
+                        style={{ width: qrSize, height: qrSize }}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
@@ -1311,36 +1314,36 @@ const Machinery = ({ category }) => {
               <p className="sub-title">Maintenance Detail</p>
               <div className="modal-content-field">
                 <label>Department:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={departmentOptions}
-                  value={
-                    departmentOptions.find(
-                      (opt) => opt.value === selectedDepartment
-                    ) || null
-                  }
-                  onChange={(option) =>
-                    setSelectedDepartment(option?.value || "")
-                  }
-                  isClearable
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={departmentOptions}
+                    value={
+                      departmentOptions.find(
+                        (opt) => opt.value === selectedDepartment
+                      ) || null
+                    }
+                    onChange={(option) =>
+                      setSelectedDepartment(option?.value || "")
+                    }
+                    isClearable
+                  />
+                </div>
               </div>
 
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workerOptions}
-                  value={assignedWorker}
-                  onChange={setAssignedWorker}
-                  isClearable
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={workerOptions}
+                    value={assignedWorker}
+                    onChange={setAssignedWorker}
+                    isClearable
+                  />
+                </div>
               </div>
 
               <div className="modal-content-field">
@@ -1361,16 +1364,16 @@ const Machinery = ({ category }) => {
               <p className="sub-title">Schedule Maintenance Notification</p>
               <div className="modal-content-field">
                 <label>Repeat:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={repeatOptions}
-                  value={repeatFrequency}
-                  onChange={setRepeatFrequency}
-                  isClearable
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={repeatOptions}
+                    value={repeatFrequency}
+                    onChange={setRepeatFrequency}
+                    isClearable
+                  />
+                </div>
               </div>
 
               <div className="modal-content-field">

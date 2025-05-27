@@ -275,50 +275,52 @@ const Landscaping = ({ category }) => {
             </tr>
           </thead>
           <tbody>
-            {displayedData.map((item, index) => {
-              // Extract values from `attributes`
-              const sizeAttr = item.attributes.find(
-                (attr) => attr.name === "Size"
-              );
-              const size = sizeAttr ? sizeAttr.value : "N/A";
-              return (
-                <tr key={index}>
-                  <td>{index + 1}</td>
-                  <td>{item.assetCode}</td>
-                  <td className="description">
-                    <Tippy content={item.title || ""} placement="top">
-                      <span>
-                        {item.title?.length > 20
-                          ? item.title.substring(0, 20) + "..."
-                          : item.title || ""}
-                      </span>
-                    </Tippy>
-                  </td>
-                  <td>{formatDate(item.acquireDate)}</td>
-                  <td>{item.lifespan}</td>
-                  <td>{size}</td>
-                  <td>{item.categoryDetails?.depreciatedValue}</td>
-                  <td>
-                        <Tippy
-                          content={getStatusDescription(item.status)}
-                          placement="top"
-                        >
-                          <div className={getStatusClass(item.status)}>
-                            {getDisplayText(item.status)}
-                          </div>
-                        </Tippy>
-                      </td>
-                  <td className="actions">
-                    <button
-                      className="view-btn"
-                      onClick={() => handleView(item)}
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+            {[...displayedData]
+              .sort((a, b) => b.assetID - a.assetID) // Sort by assetID DESC
+              .map((item, index) => {
+                // Extract values from `attributes`
+                const sizeAttr = item.attributes.find(
+                  (attr) => attr.name === "Size"
+                );
+                const size = sizeAttr ? sizeAttr.value : "N/A";
+                return (
+                  <tr key={index}>
+                    <td>{index + 1}</td>
+                    <td>{item.assetCode}</td>
+                    <td className="description">
+                      <Tippy content={item.title || ""} placement="top">
+                        <span>
+                          {item.title?.length > 20
+                            ? item.title.substring(0, 20) + "..."
+                            : item.title || ""}
+                        </span>
+                      </Tippy>
+                    </td>
+                    <td>{formatDate(item.acquireDate)}</td>
+                    <td>{item.lifespan}</td>
+                    <td>{size}</td>
+                    <td>{item.categoryDetails?.depreciatedValue}</td>
+                    <td>
+                      <Tippy
+                        content={getStatusDescription(item.status)}
+                        placement="top"
+                      >
+                        <div className={getStatusClass(item.status)}>
+                          {getDisplayText(item.status)}
+                        </div>
+                      </Tippy>
+                    </td>
+                    <td className="actions">
+                      <button
+                        className="view-btn"
+                        onClick={() => handleView(item)}
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
@@ -393,7 +395,11 @@ const Landscaping = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
+                <input
+                  type="text"
+                  value={formatDate(modalData.acquireDate)}
+                  readOnly
+                />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>

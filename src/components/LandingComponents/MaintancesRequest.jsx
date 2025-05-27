@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 import { usePostRepairRequestMutation } from "./../../slices/maintenanceApiSlice";
 import { useGetAcademyQuery } from "./../../slices/userApiSlice";
 import { useGetAssetQuery } from "./../../slices/assetApiSlice";
-
+import CreatableSelect from "react-select/creatable";
 const priorities = [
   { value: "Immediate", label: "Immediate (Within 24 hours)" },
   { value: "High", label: "High (Within 1-2 days)" },
@@ -63,27 +63,25 @@ const MaintenanceRequest = () => {
   // }, [error1]);
 
   useEffect(() => {
-  if (formData.academy && assets.length > 0) {
-    const matchedAssets = assets.filter(
-      (asset) => asset.academyID === formData.academy
-    );
+    if (formData.academy && assets.length > 0) {
+      const matchedAssets = assets.filter(
+        (asset) => asset.academyID === formData.academy
+      );
 
-    const filteredAreas = matchedAssets
-      .map((asset) => asset.assetArea)
-      .filter((area, index, self) => area && self.indexOf(area) === index);
+      const filteredAreas = matchedAssets
+        .map((asset) => asset.assetArea)
+        .filter((area, index, self) => area && self.indexOf(area) === index);
 
-    setAreaList((prev) => {
-      const same =
-        prev.length === filteredAreas.length &&
-        prev.every((val, i) => val === filteredAreas[i]);
-      return same ? prev : filteredAreas;
-    });
-  } else {
-    setAreaList((prev) => (prev.length === 0 ? prev : []));
-  }
-}, [formData.academy, assets]);
-
-
+      setAreaList((prev) => {
+        const same =
+          prev.length === filteredAreas.length &&
+          prev.every((val, i) => val === filteredAreas[i]);
+        return same ? prev : filteredAreas;
+      });
+    } else {
+      setAreaList((prev) => (prev.length === 0 ? prev : []));
+    }
+  }, [formData.academy, assets]);
 
   // Field validation functions
   const validatePhoneNumber = (phoneNumber) => {
@@ -396,7 +394,7 @@ const MaintenanceRequest = () => {
             />
             {errors.academy && <p className="error-text">{errors.academy}</p>}
 
-            <Select
+            <CreatableSelect
               classNamePrefix="customm-select-department"
               name="area"
               value={
@@ -407,13 +405,18 @@ const MaintenanceRequest = () => {
               onChange={(selectedOption) =>
                 handleInputChange(selectedOption, "area")
               }
+              onCreateOption={(inputValue) => {
+                const newOption = { value: inputValue, label: inputValue };
+                setAreaList((prev) => [...prev, inputValue]); // Add to list
+                handleInputChange(newOption, "area"); // Set the form data
+              }}
               options={areaList.map((area) => ({
                 value: area,
                 label: area,
               }))}
-              placeholder="Select Area"
+              placeholder="Select or create Area"
               isClearable
-              isSearchable={true}
+              isSearchable
             />
             {errors.area && <p className="error-text">{errors.area}</p>}
 
@@ -498,7 +501,6 @@ const MaintenanceRequest = () => {
             >
               {requesting ? "Requesting..." : "Request"}{" "}
             </button>
-            
           </form>
         </div>
       </div>

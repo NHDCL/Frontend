@@ -121,8 +121,6 @@ const SAdminUser = () => {
     // If activeTab is "Manager", use the managerRoleId
     const roleId = activeTab === "Admin" ? adminRoleId : null;
 
-    console.log("roleid: ", roleId);
-
     const newUser = {
       name,
       employeeId,
@@ -137,8 +135,6 @@ const SAdminUser = () => {
 
     try {
       const res = await createUser(newUser).unwrap();
-
-      console.log("res", res);
 
       Swal.fire("Success", "User created successfully", "success");
       setName("");
@@ -433,8 +429,9 @@ const SAdminUser = () => {
                 className="AdminUser-add"
                 type="submit"
                 onClick={handleCreateUser}
+                disabled={isLoading}
               >
-                Add
+                {isLoading ? "Adding..." : "Add"}
               </button>
             </div>
           </div>

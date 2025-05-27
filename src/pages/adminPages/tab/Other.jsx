@@ -327,72 +327,74 @@ const Other = ({ category }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((item, index) => {
-              const isSelected = selectedRows.includes(item.assetCode); // Use assetCode to track selection
-              return (
-                <tr key={item.assetCode}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleSelectRow(item.assetCode)}
-                    />
-                  </td>
-                  <td>{index + 1}</td> {/* Just showing serial # in table */}
-                  <td>{item.assetCode}</td>
-                  <td className="description">
-                    <Tippy content={item.title || ""} placement="top">
-                      <span>
-                        {item.title?.length > 20
-                          ? item.title.substring(0, 20) + "..."
-                          : item.title || ""}
-                      </span>
-                    </Tippy>
-                  </td>
-                  <td>{formatDate(item.acquireDate)}</td>
-                  <td>{item.lifespan}</td>
-                  <td className="description">
-                    <Tippy content={item.assetArea || ""} placement="top">
-                      <span>
-                        {item.assetArea?.length > 20
-                          ? item.assetArea.substring(0, 20) + "..."
-                          : item.assetArea || ""}
-                      </span>
-                    </Tippy>
-                  </td>
-                  <td>
-                        <Tippy
-                          content={getStatusDescription(item.status)}
-                          placement="top"
-                        >
-                          <div className={getStatusClass(item.status)}>
-                            {getDisplayText(item.status)}
-                          </div>
-                        </Tippy>
-                      </td>
-                  <td
-                    className="actions"
-                    style={{
-                      display: "flex",
-                      gap: "0.5rem",
-                      maxWidth: "150px",
-                    }}
-                  >
-                    <button
-                      className="view-btn"
-                      onClick={() => handleView(item)}
+            {[...filteredData]
+              .sort((a, b) => b.assetID - a.assetID) // Sort by assetID DESC
+              .map((item, index) => {
+                const isSelected = selectedRows.includes(item.assetCode); // Use assetCode to track selection
+                return (
+                  <tr key={item.assetCode}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleSelectRow(item.assetCode)}
+                      />
+                    </td>
+                    <td>{index + 1}</td> {/* Just showing serial # in table */}
+                    <td>{item.assetCode}</td>
+                    <td className="description">
+                      <Tippy content={item.title || ""} placement="top">
+                        <span>
+                          {item.title?.length > 20
+                            ? item.title.substring(0, 20) + "..."
+                            : item.title || ""}
+                        </span>
+                      </Tippy>
+                    </td>
+                    <td>{formatDate(item.acquireDate)}</td>
+                    <td>{item.lifespan}</td>
+                    <td className="description">
+                      <Tippy content={item.assetArea || ""} placement="top">
+                        <span>
+                          {item.assetArea?.length > 20
+                            ? item.assetArea.substring(0, 20) + "..."
+                            : item.assetArea || ""}
+                        </span>
+                      </Tippy>
+                    </td>
+                    <td>
+                      <Tippy
+                        content={getStatusDescription(item.status)}
+                        placement="top"
+                      >
+                        <div className={getStatusClass(item.status)}>
+                          {getDisplayText(item.status)}
+                        </div>
+                      </Tippy>
+                    </td>
+                    <td
+                      className="actions"
+                      style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                        maxWidth: "150px",
+                      }}
                     >
-                      View
-                    </button>
-                    <img
-                      src={getQrImageUrl(item.attributes)}
-                      alt="QR Code"
-                      style={{ width: qrSize, height: qrSize }}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
+                      <button
+                        className="view-btn"
+                        onClick={() => handleView(item)}
+                      >
+                        View
+                      </button>
+                      <img
+                        src={getQrImageUrl(item.attributes)}
+                        alt="QR Code"
+                        style={{ width: qrSize, height: qrSize }}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
@@ -457,7 +459,11 @@ const Other = ({ category }) => {
               </div>
               <div className="modal-content-field">
                 <label>Acquired Date:</label>
-                <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
+                <input
+                  type="text"
+                  value={formatDate(modalData.acquireDate)}
+                  readOnly
+                />
               </div>
               <div className="modal-content-field">
                 <label>Useful Life(Years):</label>

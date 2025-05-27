@@ -326,7 +326,9 @@ const Machinery = ({ category }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((item, index) => {
+            {[...filteredData]
+                  .sort((a, b) => b.assetID - a.assetID) // Sort by assetID DESC
+                  .map((item, index) => {
               const isSelected = selectedRows.includes(item.assetCode); // Use assetCode to track selection
               return (
                 <tr key={item.assetCode}>
