@@ -606,7 +606,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                   <div className="TModal-team-members">
                     <input
                       type="text"
-                      placeholder="Enter email"
+                      placeholder="Enter Name"
                       value={newMember}
                       onChange={(e) => setNewMember(e.target.value)}
                     />

@@ -203,29 +203,31 @@ const Category = () => {
                 </tr>
               </thead>
               <tbody>
-                {displayedData.map((item, index) => (
-                  <tr key={item.id}>
-                    <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
-                    <td>{item.name}</td>
-                    <td>{item.depreciatedValue}</td>
-                    <td className="actions">
-                      <button
-                        className="edit-btn"
-                        onClick={() => handleEditRow(item)}
-                      >
-                        <FaEdit style={{ width: "20px", height: "20px" }} />
-                      </button>
-                    </td>
-                    <td className="actions">
-                      <button
-                        className="view-btn"
-                        onClick={() => handleView(item)}
-                      >
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {[...displayedData]
+                  .sort((a, b) => (a.id < b.id ? 1 : -1)) // Sort by id DESC (latest first)
+                  .map((item, index) => (
+                    <tr key={item.id}>
+                      <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
+                      <td>{item.name}</td>
+                      <td>{item.depreciatedValue}</td>
+                      <td className="actions">
+                        <button
+                          className="edit-btn"
+                          onClick={() => handleEditRow(item)}
+                        >
+                          <FaEdit style={{ width: "20px", height: "20px" }} />
+                        </button>
+                      </td>
+                      <td className="actions">
+                        <button
+                          className="view-btn"
+                          onClick={() => handleView(item)}
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
