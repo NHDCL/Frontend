@@ -1,70 +1,45 @@
-# Getting Started with Create React App
+# NHDCL Facility Management System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Welcome to the official GitHub organization for the National Housing Development Corporation Limited (NHDCL) Facility Management System.
 
-## Available Scripts
+## Purpose
 
-In the project directory, you can run:
+The NHDCL Facility Management System (FMS) is a comprehensive digital platform designed to streamline the management of assets and maintenance operations for the National Housing Development Corporation Limited (NHDCL), which oversees over 300 buildings across five Gyalsung Academies in Bhutan. The system addresses inefficiencies in asset tracking, maintenance scheduling, and data centralization, aiming to enhance operational efficiency, reduce costs, and improve service delivery for facility management.
 
-### `npm start`
+## Architecture
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+This project follows a microservices architecture, with separate repositories for each core service:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Frontend:** Built with React.js, offering responsive UI/UX for users, managers, technicians, and admins.
+- **Backend:**  Developed using Spring Boot (Java), handling authentication, business logic, and data services.
+- **Database:** MongoDB, storing structured asset and user data.
+- **API Gateway:** Secure routing of requests with role-based access.
+- **(Add other services as needed, e.g., Mobile App, Notification Service, etc.)**
 
-### `npm test`
+Each service is developed, deployed, and maintained independently for scalability and flexibility.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Functionalities:
+Key features of the NHDCL FMS include:
 
-### `npm run build`
+- **User Role Management:** Super Admin, Admin, Manager, Supervisor, Technician, General User
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **Asset Management:** Track, add, update, bulk upload, and tag assets with QR codes
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Maintenance Management:** Submit requests, assign tasks, update status (Pending, In Progress, Completed)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- **Scheduling:** Create and reschedule tasks with centralized calendar & alerts
 
-### `npm run eject`
+- **Mobile Technician Interface:** On-site updates and status tracking
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- **Reports & Exports:** Generate and download maintenance and asset reports (CSV, PDF)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- **Security:** JWT-based authentication, encrypted data, and secure user access
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Contact & Contribution
 
-## Learn More
+For inquiries or contributions, please contact 12210100.gcit@rub.edu.bt or open an issue in the relevant repository.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+*This organization is maintained by the NHDCL Facility Management Team.*

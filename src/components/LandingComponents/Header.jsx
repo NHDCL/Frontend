@@ -1,6 +1,6 @@
 import React from "react";
 import "./../../pages/css/header.css";
-import nlogo from "./../../assets/images/nhdcl-o-logo.png";
+import nlogo from "./../../assets/images/logo-Photoroom.png";
 import glogo from "./../../assets/images/glogo.png";
 import { Link } from "react-router-dom";
 
