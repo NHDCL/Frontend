@@ -25,15 +25,15 @@ Key features of the NHDCL FMS include:
 
 - **Asset Management:** Track, add, update, bulk upload, and tag assets with QR codes
 
--**Maintenance Management:** Submit requests, assign tasks, update status (Pending, In Progress, Completed)
+- **Maintenance Management:** Submit requests, assign tasks, update status (Pending, In Progress, Completed)
 
--**Scheduling:** Create and reschedule tasks with centralized calendar & alerts
+- **Scheduling:** Create and reschedule tasks with centralized calendar & alerts
 
--**Mobile Technician Interface:** On-site updates and status tracking
+- **Mobile Technician Interface:** On-site updates and status tracking
 
--**Reports & Exports:** Generate and download maintenance and asset reports (CSV, PDF)
+- **Reports & Exports:** Generate and download maintenance and asset reports (CSV, PDF)
 
--**Security:** JWT-based authentication, encrypted data, and secure user access
+- **Security:** JWT-based authentication, encrypted data, and secure user access
 
 
 ## Contact & Contribution
