@@ -10,25 +10,18 @@ To provide a centralized, digital platform for managing assets, maintenance, and
 
 This project follows a microservices architecture, with separate repositories for each core service:
 
-- **Frontend:** React.js web application for user interaction, asset tracking, and maintenance requests.
-- **Backend:** Node.js/Express.js REST API handling business logic, authentication, and data storage.
+- **Frontend:** Built with React.js, offering responsive UI/UX for users, managers, technicians, and admins.
+- **Backend:**  Developed using Spring Boot (Java), handling authentication, business logic, and data services.
+- **Database:** MongoDB, storing structured asset and user data.
+- **API Gateway:** Secure routing of requests with role-based access.
 - **(Add other services as needed, e.g., Mobile App, Notification Service, etc.)**
 
 Each service is developed, deployed, and maintained independently for scalability and flexibility.
 
-## Repositories
-
-- [nhdcl-frontend](https://github.com/NHDCL/nhdcl-frontend): Web interface for end-users and administrators.
-- [nhdcl-backend](https://github.com/NHDCL/nhdcl-backend): API and business logic.
-- (List other repos as needed)
-
-## Live Site
-
-[Access the NHDCL Facility Management System](https://your-live-site-link.com)
 
 ## Contact & Contribution
 
-For inquiries or contributions, please contact [your-email@domain.com] or open an issue in the relevant repository.
+For inquiries or contributions, please contact 12210100.gcit@rub.edu.bt or open an issue in the relevant repository.
 
 ---
 
