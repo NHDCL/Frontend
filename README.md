@@ -4,7 +4,7 @@ Welcome to the official GitHub organization for the National Housing Development
 
 ## Purpose
 
-To provide a centralized, digital platform for managing assets, maintenance, and operations across 300+ buildings in Bhutan’s Gyalsung Academies.
+The NHDCL Facility Management System (FMS) is a comprehensive digital platform designed to streamline the management of assets and maintenance operations for the National Housing Development Corporation Limited (NHDCL), which oversees over 300 buildings across five Gyalsung Academies in Bhutan. The system addresses inefficiencies in asset tracking, maintenance scheduling, and data centralization, aiming to enhance operational efficiency, reduce costs, and improve service delivery for facility management.
 
 ## Architecture
 
@@ -17,6 +17,23 @@ This project follows a microservices architecture, with separate repositories fo
 - **(Add other services as needed, e.g., Mobile App, Notification Service, etc.)**
 
 Each service is developed, deployed, and maintained independently for scalability and flexibility.
+
+## Functionalities:
+Key features of the NHDCL FMS include:
+
+- **User Role Management:** Super Admin, Admin, Manager, Supervisor, Technician, General User
+
+- **Asset Management:** Track, add, update, bulk upload, and tag assets with QR codes
+
+-**Maintenance Management:** Submit requests, assign tasks, update status (Pending, In Progress, Completed)
+
+-**Scheduling:** Create and reschedule tasks with centralized calendar & alerts
+
+-**Mobile Technician Interface:** On-site updates and status tracking
+
+-**Reports & Exports:** Generate and download maintenance and asset reports (CSV, PDF)
+
+-**Security:** JWT-based authentication, encrypted data, and secure user access
 
 
 ## Contact & Contribution
