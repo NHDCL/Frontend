@@ -18,13 +18,11 @@ import {
 } from "../../slices/maintenanceApiSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
-import {
-  assetApiSlice,
-} from "../../slices/assetApiSlice";
+import { assetApiSlice } from "../../slices/assetApiSlice";
 import { createSelector } from "reselect";
 import Swal from "sweetalert2";
 
-const WorkOrderModal = ({ order, onClose, data = [] }) => {
+const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules }) => {
   const [teamMembers, setTeamMembers] = useState(order.teamMembers || []);
   const [newMember, setNewMember] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState(
@@ -194,6 +192,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
       setTeamMembers([]);
       setImages([]);
       refetch();
+      refetchTechnicianSchedules();
     } catch (err) {
       console.error("Error completing repair report:", err);
       Swal.fire({
@@ -212,21 +211,23 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   ];
 
   const getFilteredWorkStatusOptions = () => {
-  switch (selectedWorkStatus) {
-    case "Pending":
-      return WorkOrder.filter(
-        (option) => option.value === "Pending" || option.value === "In Progress"
-      );
-    case "In Progress":
-      return WorkOrder.filter(
-        (option) => option.value === "In Progress" || option.value === "Completed"
-      );
-    case "Completed":
-      return WorkOrder.filter((option) => option.value === "Completed");
-    default:
-      return WorkOrder;
-  }
-};
+    switch (selectedWorkStatus) {
+      case "Pending":
+        return WorkOrder.filter(
+          (option) =>
+            option.value === "Pending" || option.value === "In Progress"
+        );
+      case "In Progress":
+        return WorkOrder.filter(
+          (option) =>
+            option.value === "In Progress" || option.value === "Completed"
+        );
+      case "Completed":
+        return WorkOrder.filter((option) => option.value === "Completed");
+      default:
+        return WorkOrder;
+    }
+  };
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -360,79 +361,84 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                 isSearchable={false}
               /> */}
               <Select
-  classNamePrefix="customm-select-workstatus"
-  className="Wworkstatus-dropdown"
-  options={getFilteredWorkStatusOptions()}
-  value={WorkOrder.find(
-    (option) => option.value === selectedWorkStatus
-  )}
-  onChange={async (selectedOption) => {
-    const newStatus = selectedOption ? selectedOption.value : "";
-    setSelectedWorkStatus(newStatus);
+                classNamePrefix="customm-select-workstatus"
+                className="Wworkstatus-dropdown"
+                options={getFilteredWorkStatusOptions()}
+                value={WorkOrder.find(
+                  (option) => option.value === selectedWorkStatus
+                )}
+                onChange={async (selectedOption) => {
+                  const newStatus = selectedOption ? selectedOption.value : "";
+                  setSelectedWorkStatus(newStatus);
 
-    try {
-      await updateMaintenanceById({
-        id: order.maintenanceID,
-        maintenance: { status: newStatus },
-      }).unwrap();
+                  try {
+                    await updateMaintenanceById({
+                      id: order.maintenanceID,
+                      maintenance: { status: newStatus },
+                    }).unwrap();
 
-      if (newStatus === "In Progress") {
-        const currentTime = new Date().toLocaleTimeString("en-GB", {
-          hour12: false,
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+                    if (newStatus === "In Progress") {
+                      const currentTime = new Date().toLocaleTimeString(
+                        "en-GB",
+                        {
+                          hour12: false,
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      );
 
-        const response = await giveStartTime({
-          preventiveMaintenanceID: order.maintenanceID,
-          startTime: currentTime,
-        }).unwrap();
+                      const response = await giveStartTime({
+                        preventiveMaintenanceID: order.maintenanceID,
+                        startTime: currentTime,
+                      }).unwrap();
 
-        setFormData((prev) => ({
-          ...prev,
-          startTime: response.startTime,
-        }));
-      }
+                      setFormData((prev) => ({
+                        ...prev,
+                        startTime: response.startTime,
+                      }));
+                    }
 
-      if (newStatus === "Completed") {
-        const currentTime = new Date().toLocaleTimeString("en-GB", {
-          hour12: false,
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+                    if (newStatus === "Completed") {
+                      const currentTime = new Date().toLocaleTimeString(
+                        "en-GB",
+                        {
+                          hour12: false,
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      );
 
-        const response = await giveEndTime({
-          maintenanceReportID: formData.maintenanceReportID,
-          endTime: currentTime,
-        }).unwrap();
+                      const response = await giveEndTime({
+                        maintenanceReportID: formData.maintenanceReportID,
+                        endTime: currentTime,
+                      }).unwrap();
 
-        setFormData((prev) => ({
-          ...prev,
-          endTime: response.endTime,
-        }));
-      }
+                      setFormData((prev) => ({
+                        ...prev,
+                        endTime: response.endTime,
+                      }));
+                    }
 
-      refetch();
-      Swal.fire({
-        icon: "success",
-        title: "Work Status Updated",
-        text: `Status is now "${newStatus}"`,
-        timer: 1500,
-        showConfirmButton: false,
-      });
-    } catch (err) {
-      console.error("❌ Failed to update work status:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Error Updating Status",
-        text: "Could not update status. Try again later.",
-      });
-    }
-  }}
-  isClearable={false}
-  isSearchable={false}
-/>
-
+                    refetch();
+                    Swal.fire({
+                      icon: "success",
+                      title: "Work Status Updated",
+                      text: `Status is now "${newStatus}"`,
+                      timer: 1500,
+                      showConfirmButton: false,
+                    });
+                  } catch (err) {
+                    console.error("❌ Failed to update work status:", err);
+                    Swal.fire({
+                      icon: "error",
+                      title: "Error Updating Status",
+                      text: "Could not update status. Try again later.",
+                    });
+                  }
+                }}
+                isClearable={false}
+                isSearchable={false}
+              />
             </div>
           </div>
 
@@ -680,7 +686,7 @@ const TechnicianMSchedule = () => {
   const [data, setData] = useState([]);
 
   const email = useSelector(getUserEmail);
-  const { data: technicianSchedules } =
+  const { data: technicianSchedules, refetch: refetchTechnicianSchedules } =
     useGetMaintenanceByTechnicianEmailQuery(email);
   const dispatch = useDispatch();
 
@@ -779,6 +785,7 @@ const TechnicianMSchedule = () => {
         <WorkOrderModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
+          refetchTechnicianSchedules={refetchTechnicianSchedules} // ✅ Pass the prop
         />
       )}
     </div>
