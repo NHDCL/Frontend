@@ -121,13 +121,11 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
     e.preventDefault();
 
     // pull out what we need (reportID was set in your useEffect)
-    const { reportID, finishedDate, totalCost, information, partsUsed } =
-      formData;
+    const { reportID, totalCost, information, partsUsed } = formData;
 
     // basic validation
     if (
       !reportID ||
-      !finishedDate.trim() ||
       !totalCost.trim() ||
       !information.trim() ||
       !partsUsed.trim() ||
@@ -143,7 +141,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
 
     // build FormData with ONLY the fields you still need to send
     const sendData = new FormData();
-    sendData.append("finishedDate", finishedDate.trim());
     sendData.append("totalCost", totalCost.trim());
     sendData.append("information", information.trim());
 
@@ -179,7 +176,6 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
       // reset
       setFormData((f) => ({
         ...f,
-        finishedDate: "",
         totalCost: "",
         information: "",
         partsUsed: "",
@@ -334,15 +330,20 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                           minute: "2-digit",
                         }
                       );
+                      const currentDate = new Date()
+                        .toISOString()
+                        .split("T")[0];
 
                       const response = await submitEndTime({
                         reportID: formData.reportID,
                         endTime: currentTime,
+                        finishedDate: currentDate,
                       }).unwrap();
 
                       setFormData((prev) => ({
                         ...prev,
                         endTime: response.endTime,
+                        finishedDate: response.finishedDate,
                       }));
                     }
 
@@ -401,13 +402,11 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <input
               type="date"
               value={
-                reportExists && repairReport[0]?.finishedDate
-                  ? repairReport[0].finishedDate
+                reportExists && repairReport?.finishedDate
+                  ? repairReport.finishedDate
                   : formData.finishedDate
               }
-              min={today}
-              onChange={(e) => handleInputChange(e, "finishedDate")}
-              readOnly={reportExists && !!repairReport[0]?.finishedDate}
+              readOnly={reportExists}
             />
           </div>
           <div className="TModal-content-field">

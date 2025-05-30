@@ -123,7 +123,6 @@ const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules 
 
     const {
       maintenanceReportID,
-      finishedDate,
       totalCost,
       information,
       partsUsed,
@@ -132,7 +131,6 @@ const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules 
     // basic validation
     if (
       !maintenanceReportID ||
-      !finishedDate.trim() ||
       !totalCost.trim() ||
       !information.trim() ||
       !partsUsed.trim() ||
@@ -148,7 +146,6 @@ const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules 
 
     // build FormData with ONLY the fields you still need to send
     const sendData = new FormData();
-    sendData.append("finishedDate", finishedDate.trim());
     sendData.append("totalCost", totalCost.trim());
     sendData.append("information", information.trim());
 
@@ -184,7 +181,6 @@ const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules 
       // reset
       setFormData((f) => ({
         ...f,
-        finishedDate: "",
         totalCost: "",
         information: "",
         partsUsed: "",
@@ -408,14 +404,18 @@ const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules 
                         }
                       );
 
+                      const currentDate = new Date().toISOString().split("T")[0];
+
                       const response = await giveEndTime({
                         maintenanceReportID: formData.maintenanceReportID,
                         endTime: currentTime,
+                        finishedDate: currentDate
                       }).unwrap();
 
                       setFormData((prev) => ({
                         ...prev,
                         endTime: response.endTime,
+                        finishedDate: response.finishedDate
                       }));
                     }
 
@@ -478,9 +478,7 @@ const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules 
                   ? maintenanceReport.finishedDate
                   : formData.finishedDate
               }
-              min={today}
-              onChange={(e) => handleInputChange(e, "finishedDate")}
-              readOnly={reportExists && maintenanceReport?.[0]?.finishedDate}
+              readOnly={reportExists}
             />
           </div>
 
