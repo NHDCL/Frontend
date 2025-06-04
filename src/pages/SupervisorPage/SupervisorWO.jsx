@@ -550,9 +550,19 @@ const SupervisorWO = () => {
                       </span>
                     </Tippy>
                   </td>
-
                   <td className="actions">
-                    {item.technicianEmail === null ? (
+                    {item.status === "Completed" ? (
+                      <button
+                        className="schedule-btn"
+                        onClick={() =>
+                          item.scheduled === false
+                            ? handleScheduleView(item)
+                            : handleRescheduleView(item)
+                        }
+                      >
+                        View
+                      </button>
+                    ) : item.scheduled === false ? (
                       <button
                         className="schedule-btn"
                         onClick={() => handleScheduleView(item)}
