@@ -1249,7 +1249,7 @@ const Other = ({ category }) => {
                 >
                   {isDeleting ? "Deleting..." : <RiDeleteBin6Line />}
                 </button>
-                {modalData.status !== "Pending" && (
+                {modalData.status !== "Pending" && modalData.status !== "In Maintenance" && (
                   <button
                     type="button"
                     className="accept-btn"

@@ -254,10 +254,10 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       }),
     }),
     submitEndTime: builder.mutation({
-      query: ({ reportID, endTime }) => ({
+      query: ({ reportID, endTime, finishedDate }) => ({
         url: `${MAINTENANCE_URL}/repair-reports/${reportID}/end-time`,
         method: "PUT",
-        body: { endTime }, // Sending data in the body
+        body: { endTime, finishedDate }, // Sending data in the body
       }),
     }),
 
@@ -278,10 +278,10 @@ export const maintenanceApiSlice = apiSlice.injectEndpoints({
       }),
     }),
     giveEndTime: builder.mutation({
-      query: ({ maintenanceReportID, endTime }) => ({
+      query: ({ maintenanceReportID, endTime, finishedDate }) => ({
         url: `${MAINTENANCE_URL}/maintenance-reports/${maintenanceReportID}/end-time`,
         method: "PUT",
-        body: { endTime }, // Sending data in the body
+        body: { endTime,finishedDate }, // Sending data in the body
       }),
     }),
 

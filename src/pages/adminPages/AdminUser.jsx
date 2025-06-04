@@ -193,9 +193,6 @@ const AdminUser = () => {
       }
     }
   };
-
-  console.log("AAA", academies);
-
   // Update the button click handlers to handle Department tab
   const handleAddUserClick = () => {
     if (activeTab === "Department") {
@@ -342,7 +339,6 @@ const AdminUser = () => {
   };
 
   const [data, setData] = useState(users);
-  console.log("data", data);
   useEffect(() => {
     if (users) {
       setData(users);
@@ -351,21 +347,25 @@ const AdminUser = () => {
 
   // Update the filteredData to handle Department tab
   const filteredData =
-    activeTab === "Department"
-      ? (department || []).filter((item) =>
+  activeTab === "Department"
+    ? (department || []).filter((item) =>
         Object.values(item).some((value) =>
-          value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+          (value !== null && value !== undefined
+            ? value.toString().toLowerCase()
+            : ""
+          ).includes(searchTerm.toLowerCase())
         )
       )
-      : (data || []).filter(
+    : (data || []).filter(
         (item) =>
-          item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
+          item.role?.name?.toLowerCase() === activeTab.toLowerCase() &&
           Object.values(item).some((value) =>
-            value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+            (value !== null && value !== undefined
+              ? value.toString().toLowerCase()
+              : ""
+            ).includes(searchTerm.toLowerCase())
           )
       );
-
-  console.log("FD", filteredData);
 
   const handleDelete = async (userId) => {
     console.log("Deleting user with ID:", userId);
@@ -406,8 +406,6 @@ const AdminUser = () => {
     const depart = department?.find((d) => d.departmentId === departmentID);
     return depart ? depart.name : "Unknown department";
   };
-
-  console.log("GAN", getAcademyName);
 
   const isValidEmail = (email) => {
     // Simple email regex pattern
