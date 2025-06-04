@@ -150,7 +150,7 @@ const Maintenancereport = () => {
   const handleDownloadSelected = () => {
     if (selectedRows.length === 0) return;
 
-    const selectedData = data.filter((item) => selectedRows.includes(item.rid));
+    const selectedData = data.filter((item) => selectedRows.includes(item.maintenanceReportID));
 
     const csvContent = [
       [
@@ -162,10 +162,10 @@ const Maintenancereport = () => {
         "Area",
         "Total Cost",
         "Parts Used",
-        "Location",
+        // "Location",
         "Description",
         "Total Technicians",
-        "Assigned Supervisor",
+        // "Assigned Supervisor",
         "Assigned Technician",
       ],
       ...selectedData.map((item) => [
@@ -175,13 +175,13 @@ const Maintenancereport = () => {
         item.endTime,
         item.Date,
         item.Area,
-        item.Total_cost,
-        item.part_used,
-        item.location,
+        item.totalCost,
+        item.partsUsed,
+        // item.location,
         item.description,
-        item.total_technician,
-        item.Assigned_supervisor,
-        item.Assigned_Technician,
+        item.totalTechnicians,
+        // item.Assigned_supervisor,
+        item.technicians,
       ]),
     ]
       .map((row) =>
