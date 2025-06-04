@@ -37,7 +37,6 @@
   position: relative;
   display: inline-block;
   margin-bottom: 8px;
-  font-size: 16px; /* adjust as needed */
 }
 
 .lfQlinks a::after {
