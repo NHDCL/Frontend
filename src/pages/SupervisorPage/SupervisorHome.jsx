@@ -34,7 +34,7 @@ const SupervisorHome = () => {
   const [selectedPriority, setSelectedPriority] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState("");
   const [rescheduleModalData, setRescheduleModalData] = useState(null);
-  const [status ,setStatus] = useState(null);
+  const [status, setStatus] = useState(null);
 
   const [assignTime, setAssignTime] = useState("");
   const [assignDate, setAssignDate] = useState("");
@@ -93,41 +93,41 @@ const SupervisorHome = () => {
   const [repairs, setRepairs] = useState([]);
   const dispatch = useDispatch();
 
-useEffect(() => {
-  const fetchRepairDetails = async () => {
-    if (userSchedules && userSchedules.length) {
-      const repairPromises = userSchedules.map(async (schedule) => {
-        try {
-          const repair = await dispatch(
-            maintenanceApiSlice.endpoints.getRepairById.initiate(
-              schedule?.repairID
-            )
-          ).unwrap();
+  useEffect(() => {
+    const fetchRepairDetails = async () => {
+      if (userSchedules && userSchedules.length) {
+        const repairPromises = userSchedules.map(async (schedule) => {
+          try {
+            const repair = await dispatch(
+              maintenanceApiSlice.endpoints.getRepairById.initiate(
+                schedule?.repairID
+              )
+            ).unwrap();
 
-          return {
-            ...schedule, // include all original schedule details
-            repairInfo: repair, // attach fetched repair data under `repairInfo`
-          };
-        } catch (err) {
-          console.error(`Error fetching repair ${schedule?.repairID}:`, err);
-          return null;
-        }
-      });
+            return {
+              ...schedule, // include all original schedule details
+              repairInfo: repair, // attach fetched repair data under `repairInfo`
+            };
+          } catch (err) {
+            console.error(`Error fetching repair ${schedule?.repairID}:`, err);
+            return null;
+          }
+        });
 
-      const repairResults = await Promise.all(repairPromises);
-      const validData = repairResults.filter(Boolean);
+        const repairResults = await Promise.all(repairPromises);
+        const validData = repairResults.filter(Boolean);
 
-      // 🔽 Sort newest first using repairID
-      const sortedData = validData.sort((a, b) =>
-        b.repairID.localeCompare(a.repairID)
-      );
+        // 🔽 Sort newest first using repairID
+        const sortedData = validData.sort((a, b) =>
+          b.repairID.localeCompare(a.repairID)
+        );
 
-      setData(sortedData);
-    }
-  };
+        setData(sortedData);
+      }
+    };
 
-  fetchRepairDetails();
-}, [userSchedules, dispatch]);
+    fetchRepairDetails();
+  }, [userSchedules, dispatch]);
 
 
 
@@ -399,7 +399,7 @@ useEffect(() => {
     setAssignTime(item?.startTime);
     setStatus(item?.repairInfo?.status);
 
-    console.log("item",item)
+    console.log("item", item)
   };
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
   // const sortData = (column, ascending) => {
@@ -413,20 +413,20 @@ useEffect(() => {
 
   const handleSort = (field) => {
     const ascending = sortOrder.column === field ? !sortOrder.ascending : true;
-  
+
     const sorted = [...data].sort((a, b) => {
       const aValue = getNestedValue(a, field);
       const bValue = getNestedValue(b, field);
-  
+
       if (aValue < bValue) return ascending ? -1 : 1;
       if (aValue > bValue) return ascending ? 1 : -1;
       return 0;
     });
-  
+
     setData(sorted);
     setSortOrder({ column: field, ascending });
   };
-  
+
   const getNestedValue = (obj, path) => {
     return path?.split('.').reduce((acc, part) => acc && acc[part], obj) ?? "";
   };
@@ -610,7 +610,18 @@ useEffect(() => {
                   </td>
 
                   <td className="actions">
-                    {item.technicianEmail === null ? (
+                    {item.status === "Completed" ? (
+                      <button
+                        className="schedule-btn"
+                        onClick={() =>
+                          item.scheduled === false
+                            ? handleScheduleView(item)
+                            : handleRescheduleView(item)
+                        }
+                      >
+                        View
+                      </button>
+                    ) : item.scheduled === false ? (
                       <button
                         className="schedule-btn"
                         onClick={() => handleScheduleView(item)}
@@ -674,24 +685,24 @@ useEffect(() => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Assign Technician:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
 
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workerOptions}
-                  value={
-                    workerOptions?.find(
-                      (w) => w.value === selectedTechnicianId
-                    ) || null
-                  }
-                  onChange={(selectedOption) => {
-                    setSelectedTechnicianId(selectedOption?.value || "");
-                    console.log("Selected Worker:", selectedOption);
-                  }}
-                  isClearable
-                />
-              </div>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={workerOptions}
+                    value={
+                      workerOptions?.find(
+                        (w) => w.value === selectedTechnicianId
+                      ) || null
+                    }
+                    onChange={(selectedOption) => {
+                      setSelectedTechnicianId(selectedOption?.value || "");
+                      console.log("Selected Worker:", selectedOption);
+                    }}
+                    isClearable
+                  />
+                </div>
               </div>
 
               {/* Assign Date */}
@@ -712,8 +723,8 @@ useEffect(() => {
                   style={{ width: "80px" }}
                   onClick={handleSchedule}
                   disabled={updating}
-                  >
-                    {updating ? "Saving..." : "Done"}
+                >
+                  {updating ? "Saving..." : "Done"}
                 </button>
               </div>
             </div>
@@ -740,25 +751,25 @@ useEffect(() => {
             <div className="schedule-form">
               <div className="modal-content-field">
                 <label>Assign Technician:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workerOptions}
-                  value={
-                    workerOptions?.find(
-                      (w) => w.value === selectedTechnicianUpdate
-                    ) ||
-                    updatedOption ||
-                    null
-                  }
-                  onChange={(selectedOption) => {
-                    setSelectedTechnicianUpdate(selectedOption?.value || "");
-                    console.log("Selected Worker:", selectedOption);
-                  }}
-                  isClearable
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={workerOptions}
+                    value={
+                      workerOptions?.find(
+                        (w) => w.value === selectedTechnicianUpdate
+                      ) ||
+                      updatedOption ||
+                      null
+                    }
+                    onChange={(selectedOption) => {
+                      setSelectedTechnicianUpdate(selectedOption?.value || "");
+                      console.log("Selected Worker:", selectedOption);
+                    }}
+                    isClearable
+                  />
+                </div>
               </div>
 
               {/* Assign Date */}

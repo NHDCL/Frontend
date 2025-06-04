@@ -172,8 +172,8 @@ const Repair = () => {
     supervisorsInDepartment.length > 0
       ? supervisorsInDepartment
       : supervisorOption
-      ? [supervisorOption]
-      : [];
+        ? [supervisorOption]
+        : [];
 
   // Department dropdown options
   const departmentOptionsU =
@@ -189,7 +189,7 @@ const Repair = () => {
   const initialDepartmentOption = departmentOptionsU.find(
     (opt) => opt.label === departmentName
   );
-  
+
   // Set reporting time/date
   useEffect(() => {
     if (Array.isArray(scheduleData) && scheduleData.length > 0) {
@@ -301,6 +301,7 @@ const Repair = () => {
   const today = new Date().toISOString().split("T")[0];
 
   const [data, setData] = useState([]);
+  console.log("dataaaa", data)
 
   useEffect(() => {
     if (!repairRequest || !userByEmial) return;
@@ -528,7 +529,7 @@ const Repair = () => {
                                 color: "#305845",
                                 transform:
                                   sortOrder.column === header.field &&
-                                  sortOrder.ascending
+                                    sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -600,7 +601,18 @@ const Repair = () => {
                     </div>
                   </td>
                   <td className="actions">
-                    {item.scheduled === false ? (
+                    {item.status === "Completed" ? (
+                      <button
+                        className="schedule-btn"
+                        onClick={() =>
+                          item.scheduled === false
+                            ? handleScheduleView(item)
+                            : handleRescheduleView(item)
+                        }
+                      >
+                        View
+                      </button>
+                    ) : item.scheduled === false ? (
                       <button
                         className="schedule-btn"
                         onClick={() => handleScheduleView(item)}
@@ -617,6 +629,7 @@ const Repair = () => {
                       </button>
                     )}
                   </td>
+
                 </tr>
               ))}
             </tbody>
@@ -720,7 +733,7 @@ const Repair = () => {
                 <input
                   type="time"
                   value={assignTime}
-                  // onChange={(e) => setAssignTime(e.target.value)}
+                // onChange={(e) => setAssignTime(e.target.value)}
                 />
               </div>
               <div className="modal-buttons">

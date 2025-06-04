@@ -58,6 +58,7 @@ const SupervisorMReport = () => {
   const email = useSelector(getUserEmail);
   const { data: userByEmial } = useGetUserByEmailQuery(email);
   const [data, setData] = useState([]);
+  console.log("daaa", data)
 
   useEffect(() => {
     if (
@@ -155,7 +156,7 @@ const SupervisorMReport = () => {
   const handleDownloadSelected = () => {
     if (selectedRows.length === 0) return;
 
-    const selectedData = data.filter((item) => selectedRows.includes(item.rid));
+    const selectedData = data.filter((item) => selectedRows.includes(item.maintenanceReportID));
 
     const csvContent = [
       [
@@ -167,10 +168,10 @@ const SupervisorMReport = () => {
         "Area",
         "Total Cost",
         "Parts Used",
-        "Location",
+        // "Location",
         "Description",
         "Total Technicians",
-        "Assigned Supervisor",
+        // "Assigned Supervisor",
         "Assigned Technician",
       ],
       ...selectedData.map((item) => [
@@ -178,15 +179,15 @@ const SupervisorMReport = () => {
         item.assetName,
         item.startTime,
         item.endTime,
-        item.Date,
-        item.Area,
-        item.Total_cost,
-        item.part_used,
-        item.location,
+        item.finishedDate,
+        item.area,
+        item.totalCost,
+        item.partsUsed,
+        // item.location,
         item.description,
-        item.total_technician,
-        item.Assigned_supervisor,
-        item.Assigned_Technician,
+        item.totalTechnicians,
+        // item.Assigned_supervisor,
+        item.technicians,
       ]),
     ]
       .map((row) =>
@@ -262,7 +263,7 @@ const SupervisorMReport = () => {
     const doc = new jsPDF();
 
     // Add title
-    doc.text("Repair Report", 14, 15);
+    doc.text("Maintenance Report", 14, 15);
 
     // Define table headers
     const columns = ["Field", "Value"];
@@ -275,13 +276,13 @@ const SupervisorMReport = () => {
       ["End Time", modalData.endTime],
       ["Date", modalData.finishedDate],
       ["Area", modalData.area],
-      ["Total Cost", modalData.Total_cost],
-      ["Part Used", modalData.part_used],
-      ["Location", modalData.location],
+      ["Total Cost", modalData.totalCost],
+      ["Part Used", modalData.partsUsed],
+      // ["Location", modalData.location],
       ["Description", modalData.description],
       ["Total Technicians", modalData.totalTechnicians],
-      ["Assigned Supervisor", modalData.Assigned_supervisor],
-      ["Assigned Technician", modalData.Assigned_Technician],
+      // ["Assigned Supervisor", modalData.Assigned_supervisor],
+      ["Assigned Technician", modalData.technicians],
       ["Additional Info", modalData.information],
     ];
 
@@ -296,7 +297,7 @@ const SupervisorMReport = () => {
     });
 
     // Save the PDF
-    doc.save(`Repair_Report_${modalData.maintenanceReportID}.pdf`);
+    doc.save(`maintenance_Report_${modalData.maintenanceReportID}.pdf`);
   };
 
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
@@ -356,8 +357,8 @@ const SupervisorMReport = () => {
                         selectedRows.length === displayedData.length
                           ? []
                           : displayedData.map(
-                              (item) => item.maintenanceReportID
-                            )
+                            (item) => item.maintenanceReportID
+                          )
                       )
                     }
                   />
@@ -386,7 +387,7 @@ const SupervisorMReport = () => {
                                 color: "#305845",
                                 transform:
                                   sortOrder.column === header.field &&
-                                  sortOrder.ascending
+                                    sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -593,7 +594,7 @@ const SupervisorMReport = () => {
                   <label>Repaired Images:</label>
                   <div className="TModal-profile-img">
                     {Array.isArray(modalData.images) &&
-                    modalData.images.length > 0 ? (
+                      modalData.images.length > 0 ? (
                       modalData.images.map((imgSrc, index) => (
                         <img
                           key={index}
