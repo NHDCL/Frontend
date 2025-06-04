@@ -8,7 +8,11 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useGetAcademyQuery } from "./../slices/userApiSlice";
 import Swal from "sweetalert2";
-// import { useEffect } from "react";
+import slider01 from "./../assets/images/khotokha.jpeg";
+import slider02 from './../assets/images/gyalpozhing.jpeg';
+import slider03 from './../assets/images/landingBG.png';
+import { FaArrowAltCircleLeft } from "react-icons/fa";
+import { FaArrowAltCircleRight } from "react-icons/fa";
 
 const Landingpage = () => {
   const navigate = useNavigate();
@@ -37,26 +41,65 @@ const Landingpage = () => {
     }
   }, [error, academies]);
 
+
+  const images = [slider01, slider02, slider03];
+  const totalSlides = images.length;
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    const autoplayInterval = setInterval(() => {
+      nextSlide();
+    }, 3000);
+
+    return () => clearInterval(autoplayInterval);
+  }, [currentSlide]);
+
+  const nextSlide = () => {
+    setCurrentSlide((currentSlide + 1) % totalSlides);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((currentSlide - 1 + totalSlides) % totalSlides);
+  };
+
   return (
     <div>
       <Header />
-      <div className="lcontainer">
-        <div className="lwording">
-          <div className="lh1outer">
-            <h1 className="lh1">Efficient Facility</h1>
-            <h1 className="lh1">Management</h1>
-            <h1 className="lh1">for Gyalsung</h1>
-            <h1 className="lh1">Academy</h1>
-          </div>
-          <h3 className="lh3">
+      <div style={{ height: '100vh' }}>
+      <div className='heroBanner-slider'>
+        <img className='slider-image' src={images[currentSlide]} alt={`slider-0${currentSlide + 1}`} />
+      </div>
+      <div className='contentOuter'>
+       
+        <div style={{marginTop:"200px"}}>
+          <h1 className='slider-content'>Efficient Facility Management for Gyalsung </h1>
+          <h3 className="slider-content1">
             Streamline facility maintenance, requests, and tracking
             effortlessly.
           </h3>
-          <Link to="/login" className="lgetstart">
-            <p className="lp">Get Started</p>
+          <Link to="/login">
+            {/* <p className="lp">Get Started</p> */}
+              <button className='mt-4 btn btn-primary shopnowBtn'>Get Started</button>
+
           </Link>
         </div>
+        
       </div>
+      <div className='buttonNextPrev'>
+        <button className="prev pt-2 px-3" onClick={prevSlide}>
+          <FaArrowAltCircleLeft size='lg' color='#897463'/>
+        </button>
+        <div className='ms-auto d-flex flex-row'>
+          {images.map((_, index) => (
+            <button key={index} type='button' className={`slider-indicator p-0 m-0 ${index === currentSlide ? 'indicator-active' : ''}`} onClick={() => setCurrentSlide(index)}></button>
+          ))}
+        </div>
+        <button className="next pt-2 px-3" onClick={nextSlide}>
+          <FaArrowAltCircleRight size="lg" color='#897463'/>
+        </button>
+      </div>
+    </div>
       <div className="llowercontainer">
         <div>
           <Academies />
