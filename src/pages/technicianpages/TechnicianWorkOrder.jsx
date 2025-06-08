@@ -429,15 +429,15 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <input
               type="text"
               value={
-                reportExists && Array.isArray(repairReport[0]?.partsUsed)
-                  ? repairReport[0].partsUsed.join(", ")
-                  : formData.partsUsed
+                reportExists && repairReport[0]?.partsUsed
+                  ? repairReport[0].partsUsed
+                  : formData.partsUsed || ""
               }
               onChange={(e) =>
                 setFormData({ ...formData, partsUsed: e.target.value })
               }
               placeholder="Enter parts used (e.g., wood, metal, screws)"
-              readOnly={reportExists && repairReport[0]?.partsUsed?.length > 0}
+              readOnly={reportExists && !!repairReport[0]?.partsUsed}
             />
           </div>
           {reportExists && repairReport[0]?.images ? (

@@ -84,7 +84,15 @@ const Category = () => {
     if (confirmed) {
       try {
         await softDeleteCategory(id).unwrap();
-        Swal.fire("Deleted!", "Category has been deleted.", "success");
+        Swal.fire({
+          icon: "success",
+          title: "Delete",
+          text: "Category deleted successfully!",
+          timer: 2000,
+                    toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+        });
         refetch(); // Refresh the category list
         setModalData(null);
       } catch (err) {
@@ -120,6 +128,8 @@ const Category = () => {
           title: "Success",
           text: "Category added successfully!",
           timer: 2000,
+                    toast: true,
+          position: "top-end",
           showConfirmButton: false,
         });
       } catch (err) {
@@ -144,7 +154,10 @@ const Category = () => {
         title: "Are you sure?",
         text: "You are about to update this category!",
         icon: "warning",
-        showCancelButton: true,
+      color: "#305845",
+      showCancelButton: true,
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
         confirmButtonText: "Yes, update it!",
       });
 
@@ -156,8 +169,15 @@ const Category = () => {
             depreciatedValue: editModalData.depreciatedValue,
           },
         }).unwrap();
-
-        Swal.fire("Updated!", "The category has been updated.", "success");
+        Swal.fire({
+          icon: "success",
+          title: "Update",
+          text: "Category updated successfully!",
+          timer: 2000,
+                    toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+        });
         setEditModalData(null);
         refetch();
       }

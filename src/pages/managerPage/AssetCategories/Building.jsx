@@ -684,9 +684,10 @@ const Building = ({ category }) => {
       title: "Are you sure?",
       text: "Do you really want to mark this asset as disposed?",
       icon: "warning",
+      color: "#305845",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       confirmButtonText: "Yes, delete it!",
     });
 

@@ -176,6 +176,8 @@ const Repairreport = () => {
         title: "Success!",
         text: "Schedule updated successfully.",
         timer: 2000,
+                            toast: true,
+          position: "top-end",
         showConfirmButton: false,
       });
       setModalData(false);

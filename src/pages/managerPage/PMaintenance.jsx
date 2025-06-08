@@ -214,6 +214,8 @@ const PMaintenance = () => {
         title: "Saved!",
         text: "The maintenance record has been updated and email sent.",
         timer: 2000,
+                            toast: true,
+          position: "top-end",
         showConfirmButton: false,
       });
 

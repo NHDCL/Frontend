@@ -9,79 +9,89 @@ import LandingFooter from "../components/LandingComponents/LandingFooter";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const Newpasswordpage = () => {
-  const { state } = useLocation(); // This will receive email from the previous page
+  const { state } = useLocation();
   const email = state?.email;
-
-  // Retrieve OTP from localStorage
   const otp = localStorage.getItem("otp");
 
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
-  const navigate = useNavigate(); // Hook to navigate programmatically
+  const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
 
+  const getPasswordStrength = (password) => {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+    if (strength <= 2) return "Weak";
+    if (strength === 3 || strength === 4) return "Medium";
+    if (strength === 5) return "Strong";
+    return "";
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setPasswordError(""); // Clear previous error
 
-    // Validate passwords match
+    const strongPasswordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^])[A-Za-z\d@$!%*?&#^]{8,}$/;
+
     if (password !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+
+    if (!strongPasswordRegex.test(password)) {
+      setPasswordError(
+        "Password must be 8+ characters and include uppercase, lowercase, number, and special character"
+      );
+      return;
+    }
+
+    const loadingSwal = Swal.fire({
+      title: "Processing...",
+      text: "Please wait while we reset your password.",
+      didOpen: () => {
+        Swal.showLoading();
+      },
+      allowOutsideClick: false,
+    });
+
+    try {
+      const res = await resetPassword({
+        email,
+        otp,
+        newPassword: password,
+      }).unwrap();
+
+      loadingSwal.close();
+      Swal.fire({
+        icon: "success",
+        title: "Password Reset Successful",
+        text: res.message || "You can now log in with your new password!",
+      });
+
+      setPassword("");
+      setConfirmPassword("");
+      navigate("/login");
+    } catch (error) {
+      loadingSwal.close();
       Swal.fire({
         icon: "error",
-        title: "Passwords do not match!",
-        text: "Please enter matching passwords.",
+        title: "Error!",
+        text: error?.data?.message || "Failed to reset password. Try again!",
       });
-      return;
-    } else {
-      // Show loading spinner with SweetAlert
-      const loadingSwal = Swal.fire({
-        title: "Processing...",
-        text: "Please wait while we reset your password.",
-        didOpen: () => {
-          Swal.showLoading();
-        },
-        allowOutsideClick: false, // Prevent closing the alert
-        didClose: () => {
-          Swal.showLoading();
-        },
-      });
-
-      try {
-        // API call to reset password using email, OTP, and newPassword
-        const res = await resetPassword({
-          email,
-          otp, // Ensure OTP is sent along with the email and new password
-          newPassword: password, // Only send the newPassword (backend doesn't need confirmPassword)
-        }).unwrap(); // Unwrap the result from the API call
-
-        // Close the loading alert and show success message
-        loadingSwal.close();
-        Swal.fire({
-          icon: "success",
-          title: "Password Reset Successful",
-          text: res.message || "You can now log in with your new password!",
-        });
-
-        // Reset form fields
-        setPassword("");
-        setConfirmPassword("");
-
-        // Redirect to login page
-        navigate("/login"); // This will navigate to the login page
-      } catch (error) {
-        // Close the loading alert and show error message
-        loadingSwal.close();
-        Swal.fire({
-          icon: "error",
-          title: "Error!",
-          text: error?.data?.message || "Failed to reset password. Try again!",
-        });
-      }
     }
   };
 
@@ -94,14 +104,13 @@ const Newpasswordpage = () => {
       });
     }
 
-    // If OTP is not found in localStorage, show an error
     if (!otp) {
       Swal.fire({
         icon: "error",
         title: "OTP not found!",
         text: "OTP not found. Please try again or request a new OTP.",
       }).then(() => {
-        navigate("/otp"); // Navigate back to OTP page
+        navigate("/otp");
       });
     }
   }, [email, otp, navigate]);
@@ -114,7 +123,7 @@ const Newpasswordpage = () => {
           <h2 className="newp-title">Reset Your Password</h2>
 
           {/* New Password Input */}
-          <div style={{width:"80%"}} className="newp-input-group">
+          <div style={{ width: "80%" }} className="newp-input-group">
             <FaLock className="newp-input-icon" />
             <input
               required
@@ -124,7 +133,12 @@ const Newpasswordpage = () => {
               placeholder="Enter New Password"
               className="newp-input"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                const newPassword = e.target.value;
+                setPassword(newPassword);
+                setPasswordStrength(getPasswordStrength(newPassword));
+                setPasswordError(""); // Reset on change
+              }}
             />
             <span
               className="newp-password-toggle"
@@ -134,8 +148,28 @@ const Newpasswordpage = () => {
             </span>
           </div>
 
+          {/* Password Strength Indicator */}
+          {password && (
+            <div
+              style={{
+                width: "80%",
+                textAlign: "center",
+                marginTop: "5px",
+                fontWeight: "bold",
+                color:
+                  passwordStrength === "Weak"
+                    ? "red"
+                    : passwordStrength === "Medium"
+                    ? "orange"
+                    : "green",
+              }}
+            >
+              Strength: {passwordStrength}
+            </div>
+          )}
+
           {/* Confirm Password Input */}
-          <div style={{width:"80%"}} className="newp-input-group">
+          <div style={{ width: "80%" }} className="newp-input-group">
             <FaLock className="newp-input-icon" />
             <input
               required
@@ -145,7 +179,10 @@ const Newpasswordpage = () => {
               placeholder="Confirm New Password"
               className="newp-input"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setPasswordError(""); // Reset on change
+              }}
             />
             <span
               className="newp-password-toggle"
@@ -154,6 +191,22 @@ const Newpasswordpage = () => {
               {showPassword ? <AiFillEyeInvisible /> : <AiFillEye />}
             </span>
           </div>
+{passwordError && (
+  <div
+    style={{
+      width: "80%",
+      marginTop: "8px",
+      color: "red",
+      fontWeight: "500",
+      textAlign: "left",
+      marginLeft: "auto",
+      marginRight: "auto",
+    }}
+  >
+    {passwordError}
+  </div>
+)}
+
 
           <button
             type="submit"
