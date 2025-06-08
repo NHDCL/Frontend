@@ -51,6 +51,8 @@ const SupervisorWO = () => {
     "start supervisor........................................................................."
   );
 
+  console.log("statusPending", statusPending);
+
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
     selectUserInfo,
@@ -151,7 +153,7 @@ const SupervisorWO = () => {
 
         const repairResults = await Promise.all(repairPromises);
         const validData = repairResults.filter(Boolean);
-        console.log("v", validData)
+        console.log("v", validData);
 
         // 🔽 Sort newest first using repairID
         const sortedData = validData.sort((a, b) =>
@@ -169,10 +171,10 @@ const SupervisorWO = () => {
   console.log("data", data);
   console.log("userSchedules outside useEffect:", userSchedules);
 
-
   const today = new Date().toISOString().split("T")[0];
 
-  const [updateSchedule, { isLoading: userSchedulesLoading }] = useUpdatePreventiveMaintenanceMutation();
+  const [updateSchedule, { isLoading: userSchedulesLoading }] =
+    useUpdatePreventiveMaintenanceMutation();
 
   const handleSchedule = async () => {
     const maintenanceID = modalData.maintenanceID; // Ensure the correct way to access repairID
@@ -323,7 +325,6 @@ const SupervisorWO = () => {
     );
   };
 
-
   // const searchRecursively = (obj, searchTerm) => {
   //   if (!obj || typeof obj !== "object") return false;
 
@@ -339,14 +340,13 @@ const SupervisorWO = () => {
   //   }
   //   return false;
   // };
-  const filteredData = data
-    .filter((item) => {
-      const matchesSearch = searchRecursively(item, searchTerm);
-      const matchesStatus =
-        !selectedWorkStatus || item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
-      return matchesSearch && matchesStatus;
-    });
-
+  const filteredData = data.filter((item) => {
+    const matchesSearch = searchRecursively(item, searchTerm);
+    const matchesStatus =
+      !selectedWorkStatus ||
+      item.status?.toLowerCase() === selectedWorkStatus.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -382,7 +382,6 @@ const SupervisorWO = () => {
     setEndDate(null);
     setAssignTime(null);
     setStatusPending(null);
-
   };
   const handleRescheduleView = (item) => {
     setRescheduleModalData(item);
@@ -390,8 +389,7 @@ const SupervisorWO = () => {
     setStartDate(item?.startDate);
     setEndDate(item?.endDate);
     setAssignTime(item?.timeStart);
-    setStatusPending(item?.repairInfo?.status);
-
+    setStatusPending(item?.status);
   };
 
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
@@ -420,7 +418,7 @@ const SupervisorWO = () => {
     setSortOrder({ column: field, ascending });
   };
   const getNestedValue = (obj, path) => {
-    return path?.split('.').reduce((acc, part) => acc && acc[part], obj) ?? "";
+    return path?.split(".").reduce((acc, part) => acc && acc[part], obj) ?? "";
   };
 
   return (
@@ -469,7 +467,7 @@ const SupervisorWO = () => {
                   { label: "Area", field: "asset.assetArea" },
                   { label: "Workstatus", field: null },
                   { label: "Description", field: null },
-                  { label: "", field: "" }
+                  { label: "", field: "" },
                 ].map((header, index) => (
                   <th key={index}>
                     {header.field ? (
@@ -485,7 +483,8 @@ const SupervisorWO = () => {
                               style={{
                                 color: "#305845",
                                 transform:
-                                  sortOrder.column === header.field && sortOrder.ascending
+                                  sortOrder.column === header.field &&
+                                  sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -525,7 +524,7 @@ const SupervisorWO = () => {
                     >
                       <span>
                         {item.asset?.assetArea &&
-                          item.asset.assetArea.length > 20
+                        item.asset.assetArea.length > 20
                           ? item.asset.assetArea.substring(0, 20) + "..."
                           : item.asset?.assetArea || ""}
                       </span>
@@ -550,32 +549,33 @@ const SupervisorWO = () => {
                       </span>
                     </Tippy>
                   </td>
+
                   <td className="actions">
-                    {item.status === "Completed" ? (
+                    {(item.status === "Completed" || item.status === "In Progress") ? (
                       <button
                         className="schedule-btn"
                         onClick={() =>
-                          item.scheduled === false
+                          !item.technicianEmail
                             ? handleScheduleView(item)
                             : handleRescheduleView(item)
                         }
                       >
                         View
                       </button>
-                    ) : item.scheduled === false ? (
-                      <button
-                        className="schedule-btn"
-                        onClick={() => handleScheduleView(item)}
-                      >
-                        Schedule
-                      </button>
-                    ) : (
+                    ) : item.technicianEmail ? (
                       <button
                         className="schedule-btn"
                         style={{ backgroundColor: "#315845" }}
                         onClick={() => handleRescheduleView(item)}
                       >
                         Reschedule
+                      </button>
+                    ) : (
+                      <button
+                        className="schedule-btn"
+                        onClick={() => handleScheduleView(item)}
+                      >
+                        Schedule
                       </button>
                     )}
                   </td>
@@ -627,7 +627,6 @@ const SupervisorWO = () => {
               <div className="modal-content-field">
                 <label>Assign Technician:</label>
                 <div style={{ width: "100%", maxWidth: "350px" }}>
-
                   <Select
                     classNamePrefix="custom-select-department"
                     className="workstatus-dropdown"
@@ -635,7 +634,7 @@ const SupervisorWO = () => {
                     value={
                       workerOptions?.find(
                         (w) => w.value === selectedTechnicianId
-                      ) || null
+                      ) || ""
                     }
                     onChange={(selectedOption) => {
                       setSelectedTechnicianId(selectedOption?.label || "");
@@ -669,7 +668,6 @@ const SupervisorWO = () => {
                   style={{ width: "80px" }}
                   onClick={handleSchedule}
                   disabled={userSchedulesLoading}
-
                 >
                   {userSchedulesLoading ? "Saving..." : "Done"}
                 </button>
@@ -699,7 +697,6 @@ const SupervisorWO = () => {
               <div className="modal-content-field">
                 <label>Assign Technician:</label>
                 <div style={{ width: "100%", maxWidth: "350px" }}>
-
                   <Select
                     classNamePrefix="custom-select-department"
                     className="workstatus-dropdown"
@@ -737,7 +734,6 @@ const SupervisorWO = () => {
                 <input type="text" value={assignTime} readOnly />
               </div>
 
-
               {statusPending === "Pending" && (
                 <div className="modal-buttons">
                   <button
@@ -745,7 +741,6 @@ const SupervisorWO = () => {
                     style={{ width: "80px" }}
                     onClick={handleReschedule}
                     disabled={userSchedulesLoading}
-
                   >
                     {userSchedulesLoading ? "Saving..." : "Done"}
                   </button>
