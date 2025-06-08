@@ -67,12 +67,14 @@ const Maintenancereport = () => {
       assets
     ) {
       const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
+      console.log("dataa", maintenanceRequest);
 
       const mergedData = maintenanceReport
         .map((report) => {
           const matchingRequest = maintenanceRequest.find(
             (request) =>
-              request.maintenanceID === report.preventiveMaintenanceID
+              request.maintenanceID === report.preventiveMaintenanceID &&
+              request.status !== "In Progress"
           );
 
           if (!matchingRequest) return null;
@@ -150,7 +152,9 @@ const Maintenancereport = () => {
   const handleDownloadSelected = () => {
     if (selectedRows.length === 0) return;
 
-    const selectedData = data.filter((item) => selectedRows.includes(item.maintenanceReportID));
+    const selectedData = data.filter((item) =>
+      selectedRows.includes(item.maintenanceReportID)
+    );
 
     const csvContent = [
       [

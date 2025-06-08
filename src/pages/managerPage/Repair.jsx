@@ -758,7 +758,7 @@ const Repair = () => {
           <div className="modal-content">
             <div className="modal-header">
               <h2 style={{ fontSize: "18px" }} className="form-h">
-                Reschedule Form
+                {statusPending === "Pending" ? "Reschedule Form" : "Schedule Details"}
               </h2>
               <button className="close-btn" onClick={handleCloseModal2}>
                 <IoIosCloseCircle

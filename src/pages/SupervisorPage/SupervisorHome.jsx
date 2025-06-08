@@ -769,7 +769,7 @@ const SupervisorHome = () => {
             {/* Close Button */}
             <div className="modal-header">
               <h2 style={{ fontSize: "18px" }} className="form-h">
-                Reschedule Form
+                {status === "Pending" ? "Reschedule Form" : "Schedule Details"}
               </h2>
               <button className="close-btn" onClick={handleCloseModal2}>
                 <IoIosCloseCircle

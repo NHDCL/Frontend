@@ -683,7 +683,7 @@ const SupervisorWO = () => {
             {/* Close Button */}
             <div className="modal-header">
               <h2 style={{ fontSize: "18px" }} className="form-h">
-                Reschedule Form
+                {statusPending === "Pending" ? "Reschedule Form" : "Schedule Details"}
               </h2>
               <button className="close-btn" onClick={handleCloseModal2}>
                 <IoIosCloseCircle
