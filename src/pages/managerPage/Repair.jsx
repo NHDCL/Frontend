@@ -601,7 +601,7 @@ const Repair = () => {
                     </div>
                   </td>
                   <td className="actions">
-                    {item.status === "Completed" ? (
+                    {(item.status === "Completed" || item.status === "In Progress") ? (
                       <button
                         className="schedule-btn"
                         onClick={() =>

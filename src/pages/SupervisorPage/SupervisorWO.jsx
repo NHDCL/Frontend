@@ -47,6 +47,11 @@ const SupervisorWO = () => {
   const [selectedTechnicianUpdate, setSelectedTechnicianUpdate] =
     useState(null);
   const rowsPerPage = 10;
+  console.log(
+    "start supervisor........................................................................."
+  );
+
+  console.log("statusPending", statusPending);
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
@@ -58,10 +63,13 @@ const SupervisorWO = () => {
   const { data: userByEmial } = useGetUserByEmailQuery(email);
 
   const userID = userByEmial?.user?.userId;
+  console.log("userID", userID);
 
   const academyId = userByEmial?.user?.academyId;
+  console.log("academyId", academyId);
 
   const departmentId = userByEmial?.user?.departmentId;
+  console.log("departmentId", departmentId);
 
   const { data: users, isLoading } = useGetUsersQuery();
 
@@ -72,11 +80,13 @@ const SupervisorWO = () => {
       typeof user.role?.name === "string" &&
       user.role.name.toLowerCase() === "technician"
   );
+  console.log("filteredUsers:", filteredUsers);
 
   const workerOptions = filteredUsers?.map((user) => ({
     label: user.email,
     value: user.email,
   }));
+  console.log("workerOptions:", workerOptions);
 
   const updatedOption = workerOptions?.find(
     (w) => w.label === selectedTechnicianUpdate
@@ -90,7 +100,10 @@ const SupervisorWO = () => {
   } = useGetPreventiveSchedulesByUserIDQuery(userID, {
     skip: !userID,
   });
+  console.log("sdf", modalData);
   const assetCode = userSchedules?.assetCode;
+  console.log("rid", assetCode);
+  console.log("userSchedule", userSchedules);
 
   const { data: scheduleData } = useGetAssetByAssetCodeQuery(assetCode, {
     skip: !assetCode,
@@ -155,7 +168,8 @@ const SupervisorWO = () => {
     fetchRepairDetails();
   }, [userSchedules, dispatch]);
 
-  const [viewModalData, setViewModalData] = useState(null);
+  console.log("data", data);
+  console.log("userSchedules outside useEffect:", userSchedules);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -236,6 +250,7 @@ const SupervisorWO = () => {
     }
 
     const id = matchingSchedule.maintenanceID;
+    console.log("scheduleId", id);
 
     if (!selectedTechnicianUpdate) {
       Swal.fire("Error", "Technician email is missing.", "error");
@@ -368,16 +383,13 @@ const SupervisorWO = () => {
     setAssignTime(null);
     setStatusPending(null);
   };
-  const handleCloseViewModal = () => {
-    setViewModalData(null);
-  };
   const handleRescheduleView = (item) => {
     setRescheduleModalData(item);
     setSelectedTechnicianUpdate(item?.technicianEmail || "");
     setStartDate(item?.startDate);
     setEndDate(item?.endDate);
     setAssignTime(item?.timeStart);
-    setStatusPending(item?.repairInfo?.status);
+    setStatusPending(item?.status);
   };
 
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
@@ -537,22 +549,20 @@ const SupervisorWO = () => {
                       </span>
                     </Tippy>
                   </td>
+
                   <td className="actions">
-                    {["Completed", "In Progress"].includes(item.status) ? (
+                    {(item.status === "Completed" || item.status === "In Progress") ? (
                       <button
                         className="schedule-btn"
-                        onClick={() => setViewModalData(item)} // 👈 open modal with selected item
+                        onClick={() =>
+                          !item.technicianEmail
+                            ? handleScheduleView(item)
+                            : handleRescheduleView(item)
+                        }
                       >
                         View
                       </button>
-                    ) : item.status === "Pending" && !item.technicianEmail ? (
-                      <button
-                        className="schedule-btn"
-                        onClick={() => handleScheduleView(item)}
-                      >
-                        Schedule
-                      </button>
-                    ) : item.status === "Pending" && item.technicianEmail ? (
+                    ) : item.technicianEmail ? (
                       <button
                         className="schedule-btn"
                         style={{ backgroundColor: "#315845" }}
@@ -560,7 +570,14 @@ const SupervisorWO = () => {
                       >
                         Reschedule
                       </button>
-                    ) : null}
+                    ) : (
+                      <button
+                        className="schedule-btn"
+                        onClick={() => handleScheduleView(item)}
+                      >
+                        Schedule
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -617,7 +634,7 @@ const SupervisorWO = () => {
                     value={
                       workerOptions?.find(
                         (w) => w.value === selectedTechnicianId
-                      ) || null
+                      ) || ""
                     }
                     onChange={(selectedOption) => {
                       setSelectedTechnicianId(selectedOption?.label || "");
@@ -716,75 +733,19 @@ const SupervisorWO = () => {
                 <label>Assign Time:</label>
                 <input type="text" value={assignTime} readOnly />
               </div>
-              <div className="modal-buttons">
-                <button
-                  className="accept-btn"
-                  style={{ width: "80px" }}
-                  onClick={handleReschedule}
-                  disabled={userSchedulesLoading}
-                >
-                  {userSchedulesLoading ? "Saving..." : "Done"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {viewModalData && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            {/* Modal Header */}
-            <div className="modal-header">
-              <h2 style={{ fontSize: "18px" }} className="form-h">
-                Schedule Details
-              </h2>
-              <button
-                className="close-btn"
-                onClick={() => setViewModalData(null)}
-              >
-                <IoIosCloseCircle
-                  style={{ color: "#897463", width: "20px", height: "20px" }}
-                />
-              </button>
-            </div>
 
-            {/* View Form using same structure as Reschedule */}
-            <div className="schedule-form">
-              <div className="modal-content-field">
-                <label>Technician:</label>
-                <input
-                  type="text"
-                  value={viewModalData.technicianEmail || "Not Assigned"}
-                  readOnly
-                />
-              </div>
-
-              <div className="modal-content-field">
-                <label>Start Date:</label>
-                <input
-                  type="text"
-                  value={viewModalData.startDate || ""}
-                  readOnly
-                />
-              </div>
-
-              <div className="modal-content-field">
-                <label>End Date:</label>
-                <input
-                  type="text"
-                  value={viewModalData.endDate || ""}
-                  readOnly
-                />
-              </div>
-
-              <div className="modal-content-field">
-                <label>Assign Time:</label>
-                <input
-                  type="text"
-                  value={viewModalData.timeStart || ""}
-                  readOnly
-                />
-              </div>
+              {statusPending === "Pending" && (
+                <div className="modal-buttons">
+                  <button
+                    className="accept-btn"
+                    style={{ width: "80px" }}
+                    onClick={handleReschedule}
+                    disabled={userSchedulesLoading}
+                  >
+                    {userSchedulesLoading ? "Saving..." : "Done"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
