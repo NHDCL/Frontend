@@ -17,15 +17,17 @@ const AdminHome = () => {
       });
     }
   }, [error]);
+  console.log("localStorage",repairRequest)
 
   const totalRepair = repairRequest?.filter((req) => req.accept === true);
 
   const totalResolvedRepair = totalRepair?.filter(
-    (req) => req.status === "completed"
+    (req) => req.status === "Completed"
   );
   const totalUnResolvedRepair = totalRepair?.filter(
-    (req) => req.status === "Pending" || req.status === "In progress"
+    (req) => req.status === "Pending" || req.status === "In Progress"
   );
+  console.log("debugger",totalUnResolvedRepair)
   return (
     <div>
       <div className="cardwrap">
@@ -48,12 +50,12 @@ const AdminHome = () => {
             <p className="count">{totalResolvedRepair?.length || 0}</p>
           </div>
         </div>
-        <div className="cardCount">
+        {/* <div className="cardCount">
           <div className="CardContent">
             <h3 className="cardTitle">Total Unresolved Requests</h3>
             <p className="count">{totalUnResolvedRepair?.length || 0}</p>
           </div>
-        </div>
+        </div> */}
       </div>
       <div>
         <MaintenanceGraphs />

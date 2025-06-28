@@ -355,7 +355,6 @@ const RoomQR = () => {
 
         try {
           const res = await updateFloorAndRooms(payload);
-          console.log(res);
           Swal.fire(
             "Success",
             "Floor and rooms added successfully!",

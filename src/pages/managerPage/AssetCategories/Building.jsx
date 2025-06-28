@@ -508,8 +508,7 @@ const Building = ({ category }) => {
         formData.append("assetID", assetId); // Make sure assetID is an integer
 
         // Append files to FormData
-        selectedFiles.forEach((file) => {
-          console.log("Appending file to formData:", file); // Check the file type
+        selectedFiles.forEach((file) => { // Check the file type
           if (file instanceof File) {
             formData.append("images", file); // Append only if it's a valid file
           } else {
@@ -524,7 +523,8 @@ const Building = ({ category }) => {
         icon: "success",
         title: "Asset creation request submitted.",
         text: "Asset creation request has been successfully submitted. Please wait for admin approval.",
-        confirmButtonColor: "#305845",
+         timer: 2000,
+          showConfirmButton: false,
       });
       refetch();
       setNewBuilding({

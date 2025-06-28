@@ -432,7 +432,8 @@ const Machinery = ({ category }) => {
           icon: "success",
           title: "Asset creation request submitted.",
           text: "Asset creation request has been successfully submitted. Please wait for admin approval.",
-          confirmButtonColor: "#305845",
+           timer: 2000,
+          showConfirmButton: false,
         });
         refetch();
         setShowAddModal(false);
