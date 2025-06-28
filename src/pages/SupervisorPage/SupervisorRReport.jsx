@@ -68,6 +68,7 @@ const SupervisorRReport = () => {
   const { data: users } = useGetUsersQuery();
   const [data, setData] = useState([]);
   const [isUpdating, setIsUpdating] = useState(false);
+  console.log("dataaaa", data)
 
   useEffect(() => {
     if (repairReport && repairRequest && academy && users && userByEmial) {
@@ -396,6 +397,12 @@ const SupervisorRReport = () => {
     });
 
     sortData(column, newSortOrder);
+  };
+    const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
   };
 
 

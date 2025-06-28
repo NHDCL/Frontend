@@ -217,6 +217,8 @@ const PMaintenance = () => {
         toast: true,
         position: "top-end",
         timer: 2000,
+                            toast: true,
+          position: "top-end",
         showConfirmButton: false,
       });
 

@@ -208,6 +208,19 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
     { value: "In Progress", label: "In Progress" },
     { value: "Completed", label: "Completed" },
   ];
+
+  const getFilteredOptions = () => {
+    switch (selectedWorkStatus) {
+      case "Pending":
+        return WorkOrder.filter((o) => o.value !== "Completed"); // Only allow In Progress
+      case "In Progress":
+        return WorkOrder.filter((o) => o.value !== "Pending"); // Only allow Completed
+      case "Completed":
+        return WorkOrder.filter((o) => o.value === "Completed"); // Disable changing
+      default:
+        return WorkOrder;
+    }
+  };
   const today = new Date().toISOString().split("T")[0];
 
   return (
@@ -364,7 +377,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
           <div className="TModal-content-field">
             <label>Work Status:</label>
             <div style={{ width: "100%", maxWidth: "350px" }}>
-              <Select
+              {/* <Select
                 classNamePrefix="customm-select-workstatus"
                 className="Wworkstatus-dropdown"
                 options={
@@ -372,6 +385,13 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
                     ? WorkOrder.filter((o) => o.value !== "Completed")
                     : WorkOrder
                 }
+                value={WorkOrder.find(
+                  (option) => option.value === selectedWorkStatus
+                )} */}
+              <Select
+                classNamePrefix="customm-select-workstatus"
+                className="Wworkstatus-dropdown"
+                options={getFilteredOptions()}
                 value={WorkOrder.find(
                   (option) => option.value === selectedWorkStatus
                 )}
@@ -515,15 +535,15 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <input
               type="text"
               value={
-                reportExists && Array.isArray(repairReport[0]?.partsUsed)
-                  ? repairReport[0].partsUsed.join(", ")
-                  : formData.partsUsed
+                reportExists && repairReport[0]?.partsUsed
+                  ? repairReport[0].partsUsed
+                  : formData.partsUsed || ""
               }
               onChange={(e) =>
                 setFormData({ ...formData, partsUsed: e.target.value })
               }
               placeholder="Enter parts used (e.g., wood, metal, screws)"
-              readOnly={reportExists && repairReport[0]?.partsUsed?.length > 0}
+              readOnly={reportExists && !!repairReport[0]?.partsUsed}
             />
           </div>
           {reportExists && repairReport[0]?.images ? (

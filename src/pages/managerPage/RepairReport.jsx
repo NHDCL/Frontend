@@ -67,7 +67,9 @@ const Repairreport = () => {
       const mergedData = repairReport
         .map((report) => {
           const matchingRequest = repairRequest.find(
-            (request) => request.repairID === report.repairID
+            (request) =>
+              request.repairID === report.repairID &&
+              request.status !== "In Progress"
           );
 
           // Skip if no matching request
@@ -181,6 +183,8 @@ const Repairreport = () => {
         position: "top-end",
         text: "Schedule updated successfully.",
         timer: 2000,
+        toast: true,
+        position: "top-end",
         showConfirmButton: false,
       });
       setModalData(false);

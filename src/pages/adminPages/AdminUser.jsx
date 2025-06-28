@@ -404,7 +404,15 @@ const AdminUser = () => {
     if (result.isConfirmed) {
       try {
         await softDeleteUser(userId).unwrap();
-        Swal.fire("Deleted!", "User has been deleted.", "success");
+        Swal.fire({
+          icon: "success",
+          title: "Delete",
+          text: "User has been deleted.",
+          timer: 2000,
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+        });
         refetchUsers();
       } catch (error) {
         Swal.fire("Error", "Failed to delete user", "error");

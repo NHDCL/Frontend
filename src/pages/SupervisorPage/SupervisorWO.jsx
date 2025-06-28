@@ -51,6 +51,8 @@ const SupervisorWO = () => {
     "start supervisor........................................................................."
   );
 
+  console.log("statusPending", statusPending);
+
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
     selectUserInfo,
@@ -401,7 +403,7 @@ const SupervisorWO = () => {
     setStartDate(item?.startDate);
     setEndDate(item?.endDate);
     setAssignTime(item?.timeStart);
-    setStatusPending(item?.repairInfo?.status);
+    setStatusPending(item?.status);
   };
 
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
@@ -563,20 +565,32 @@ const SupervisorWO = () => {
                   </td>
 
                   <td className="actions">
-                    {item.technicianEmail === null ? (
+                    {item.status === "Completed" ||
+                    item.status === "In Progress" ? (
                       <button
                         className="schedule-btn"
-                        onClick={() => handleScheduleView(item)}
+                        onClick={() =>
+                          !item.technicianEmail
+                            ? handleScheduleView(item)
+                            : handleRescheduleView(item)
+                        }
                       >
-                        Schedule
+                        View
                       </button>
-                    ) : (
+                    ) : item.technicianEmail ? (
                       <button
                         className="schedule-btn"
                         style={{ backgroundColor: "#315845" }}
                         onClick={() => handleRescheduleView(item)}
                       >
                         Reschedule
+                      </button>
+                    ) : (
+                      <button
+                        className="schedule-btn"
+                        onClick={() => handleScheduleView(item)}
+                      >
+                        Schedule
                       </button>
                     )}
                   </td>
@@ -635,7 +649,7 @@ const SupervisorWO = () => {
                     value={
                       workerOptions?.find(
                         (w) => w.value === selectedTechnicianId
-                      ) || null
+                      ) || ""
                     }
                     onChange={(selectedOption) => {
                       setSelectedTechnicianId(selectedOption?.label || "");
@@ -684,7 +698,9 @@ const SupervisorWO = () => {
             {/* Close Button */}
             <div className="modal-header">
               <h2 style={{ fontSize: "18px" }} className="form-h">
-                Reschedule Form
+                {statusPending === "Pending"
+                  ? "Reschedule Form"
+                  : "Schedule Details"}
               </h2>
               <button className="close-btn" onClick={handleCloseModal2}>
                 <IoIosCloseCircle
