@@ -28,6 +28,7 @@ const SAdminUser = () => {
   const [password, setPassword] = useState("");
   const [employeeId, setEmployeeId] = useState("");
   const [image, setImage] = useState(img);
+  const [showModalUser, setShowModalUser] = useState(false);
 
   const [selectedAcademy, setSelectedAcademy] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState(null);
@@ -53,9 +54,6 @@ const SAdminUser = () => {
 
   const [adminRoleId, setAdminRoleId] = useState(null);
   const [emailError, setEmailError] = useState("");
-
-  // console.log("users: ", roles);
-  // console.log("adminRole: ", adminRoleId);
 
   useEffect(() => {
     if (
@@ -106,7 +104,12 @@ const SAdminUser = () => {
 
   const handleCreateUser = async () => {
     if (!name || !email || !password || !employeeId) {
-      alert("Please fill all fields");
+      Swal.fire({
+        icon: "error",
+        title: "Incomplete Form",
+        text: "Please fill in all required fields",
+        confirmButtonColor: "#897463",
+      });
       return;
     }
 
@@ -126,8 +129,6 @@ const SAdminUser = () => {
       employeeId,
       email,
       password,
-      academyId: "null",
-      departmentId: activeTab !== "Manager" ? selectedDepartment : "null",
       roleId: roleId,
       image: imageFile,
     };
@@ -136,7 +137,17 @@ const SAdminUser = () => {
     try {
       const res = await createUser(newUser).unwrap();
 
-      Swal.fire("Success", "User created successfully", "success");
+      console.log("res", res);
+
+      Swal.fire({
+        icon: "success",
+        title: "User created successfully!",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      setShowModalUser(false);
       setName("");
       setEmail("");
       setEmployeeId("");
@@ -160,17 +171,32 @@ const SAdminUser = () => {
     }
   };
 
+  const resetForm = () => {
+    setName("");
+    setEmployeeId("");
+    setEmail("");
+    setPassword("");
+    setEmailError("");
+  };
+
   const handleAddUserClick = () => {
     if (activeTab === "Admin") setShowModal(true);
   };
 
-  const filteredData = (users || []).filter(
-    (item) =>
-      item.role?.name.toLowerCase() === activeTab.toLowerCase() && // Compare role name to activeTab
-      Object.values(item).some((value) =>
-        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      )
-  );
+  const filteredData = (users || []).filter((item) => {
+    // Check role match (case-insensitive)
+    const userRole = item.role?.name?.toLowerCase();
+    const targetRole = activeTab.toLowerCase();
+
+    if (userRole !== targetRole) return false;
+
+    // Apply search filter if search term exists
+    if (!searchTerm) return true;
+
+    return Object.values(item).some((value) =>
+      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   const handleDelete = async (userId) => {
     console.log("Deleting user with ID:", userId);
@@ -188,10 +214,21 @@ const SAdminUser = () => {
     if (result.isConfirmed) {
       try {
         await softDeleteUser(userId).unwrap();
-        Swal.fire("Deleted!", "User has been deleted.", "success");
+        Swal.fire({
+          icon: "success",
+          title: "User deleted successfully!",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+        });
         refetchUsers();
       } catch (error) {
-        Swal.fire("Error", "Failed to delete user", "error");
+        Swal.fire({
+          icon: "error",
+          title: "Deletion Failed",
+          text: "Unable to delete the user at this time. Please try again later.",
+        });
       }
     }
   };
@@ -367,7 +404,10 @@ const SAdminUser = () => {
               <h2>Add Admin</h2>
               <button
                 className="AdminUser-close-btn"
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  resetForm();
+                }}
               >
                 <IoIosCloseCircle
                   style={{

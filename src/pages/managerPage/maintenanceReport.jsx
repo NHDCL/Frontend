@@ -136,8 +136,10 @@ const Maintenancereport = () => {
   useEffect(() => {
     if (isLoading) {
       Swal.fire({
-        title: "Loading repair reports...",
+        title: "Please wait...",
+        text: "Loading maintenance reports.",
         allowOutsideClick: false,
+        allowEscapeKey: false,
         didOpen: () => {
           Swal.showLoading();
         },

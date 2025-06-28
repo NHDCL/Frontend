@@ -120,48 +120,50 @@ const RoomQR = () => {
   // Sorting and filtering logic
   const [sortOrder, setSortOrder] = useState({ column: null, ascending: true });
   const filteredData = [...data]
-  .filter((item) => {
-    const matchesSearch = Object.values(item).some((value) =>
-      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    .filter((item) => {
+      const matchesSearch = Object.values(item).some((value) =>
+        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
-    const matchesBuilding =
-      selectedBuilding === "" || item.title === selectedBuilding;
+      const matchesBuilding =
+        selectedBuilding === "" || item.title === selectedBuilding;
 
-    const floorRoomsAttr = item.attributes.find(
-      (attr) => attr.name === "Floor and rooms"
-    );
-    const floorRoomObj = floorRoomsAttr ? JSON.parse(floorRoomsAttr.value) : {};
-    const floors = Object.keys(floorRoomObj);
-    const rooms = Object.values(floorRoomObj).flat();
+      const floorRoomsAttr = item.attributes.find(
+        (attr) => attr.name === "Floor and rooms"
+      );
+      const floorRoomObj = floorRoomsAttr
+        ? JSON.parse(floorRoomsAttr.value)
+        : {};
+      const floors = Object.keys(floorRoomObj);
+      const rooms = Object.values(floorRoomObj).flat();
 
-    const matchesFloor = selectedFloor === "" || floors.includes(selectedFloor);
-    const matchesRoom = selectedRoom === "" || rooms.includes(selectedRoom);
+      const matchesFloor =
+        selectedFloor === "" || floors.includes(selectedFloor);
+      const matchesRoom = selectedRoom === "" || rooms.includes(selectedRoom);
 
-    return matchesSearch && matchesBuilding && matchesFloor && matchesRoom;
-  })
-  .sort((a, b) => {
-    if (!sortOrder.column) return 0;
+      return matchesSearch && matchesBuilding && matchesFloor && matchesRoom;
+    })
+    .sort((a, b) => {
+      if (!sortOrder.column) return 0;
 
-    let valA = a[sortOrder.column];
-    let valB = b[sortOrder.column];
+      let valA = a[sortOrder.column];
+      let valB = b[sortOrder.column];
 
-    if (valA === undefined || valA === null) valA = "";
-    if (valB === undefined || valB === null) valB = "";
+      if (valA === undefined || valA === null) valA = "";
+      if (valB === undefined || valB === null) valB = "";
 
-    if (!isNaN(valA) && !isNaN(valB)) {
-      valA = Number(valA);
-      valB = Number(valB);
-    } else {
-      valA = valA.toString().toLowerCase();
-      valB = valB.toString().toLowerCase();
-    }
+      if (!isNaN(valA) && !isNaN(valB)) {
+        valA = Number(valA);
+        valB = Number(valB);
+      } else {
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+      }
 
-    if (valA < valB) return sortOrder.ascending ? -1 : 1;
-    if (valA > valB) return sortOrder.ascending ? 1 : -1;
-    return 0;
-  });
-
+      if (valA < valB) return sortOrder.ascending ? -1 : 1;
+      if (valA > valB) return sortOrder.ascending ? 1 : -1;
+      return 0;
+    });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const displayedData = filteredData.slice(
@@ -356,11 +358,14 @@ const RoomQR = () => {
         try {
           const res = await updateFloorAndRooms(payload);
           console.log(res);
-          Swal.fire(
-            "Success",
-            "Floor and rooms added successfully!",
-            "success"
-          );
+          Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "success",
+            title: "Floor and rooms added successfully!",
+            showConfirmButton: false,
+            timer: 2000,
+          });
           refetch();
           setFloorAndRooms({});
           setFloorInput("");
@@ -368,53 +373,56 @@ const RoomQR = () => {
           setShowForm(false);
         } catch (error) {
           console.error("Error adding floor and rooms:", error);
-          Swal.fire("Error", "Failed to add floor and rooms.", "error");
+          Swal.fire({
+            icon: "error",
+            title: "Operation Failed",
+            text: "Unable to add floor and rooms at this time. Please try again later.",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#305845",
+          });
         }
       }
     });
   };
 
+  const sortData = (column, ascending) => {
+    const sortedData = [...data].sort((a, b) => {
+      let valA = a[column];
+      let valB = b[column];
 
-    const sortData = (column, ascending) => {
-      const sortedData = [...data].sort((a, b) => {
-        let valA = a[column];
-        let valB = b[column];
-  
-        // Normalize: Handle undefined, null, numbers, strings consistently
-        if (valA === undefined || valA === null) valA = "";
-        if (valB === undefined || valB === null) valB = "";
-  
-        // If both are numbers, compare numerically
-        if (!isNaN(valA) && !isNaN(valB)) {
-          valA = Number(valA);
-          valB = Number(valB);
-        } else {
-          // Otherwise, compare as lowercase strings (for emails, names, etc.)
-          valA = valA.toString().toLowerCase();
-          valB = valB.toString().toLowerCase();
-        }
-  
-        if (valA < valB) return ascending ? -1 : 1;
-        if (valA > valB) return ascending ? 1 : -1;
-        return 0;
-      });
-  
-      setData(sortedData);
-    };
-  
-    const handleSort = (column) => {
-      const newSortOrder =
-        column === sortOrder.column
-          ? !sortOrder.ascending
-          : true;
-  
-      setSortOrder({
-        column,
-        ascending: newSortOrder,
-      });
-  
-      sortData(column, newSortOrder);
-    };
+      // Normalize: Handle undefined, null, numbers, strings consistently
+      if (valA === undefined || valA === null) valA = "";
+      if (valB === undefined || valB === null) valB = "";
+
+      // If both are numbers, compare numerically
+      if (!isNaN(valA) && !isNaN(valB)) {
+        valA = Number(valA);
+        valB = Number(valB);
+      } else {
+        // Otherwise, compare as lowercase strings (for emails, names, etc.)
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+      }
+
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    });
+
+    setData(sortedData);
+  };
+
+  const handleSort = (column) => {
+    const newSortOrder =
+      column === sortOrder.column ? !sortOrder.ascending : true;
+
+    setSortOrder({
+      column,
+      ascending: newSortOrder,
+    });
+
+    sortData(column, newSortOrder);
+  };
 
   return (
     <div className="managerDashboard">
@@ -538,38 +546,37 @@ const RoomQR = () => {
                 { label: "Asset Code", field: "assetCode" },
                 { label: "Building Name", field: "title" },
                 { label: "Floor", field: null },
-                { label: "Room", field: null }
-              ].map(
-                (header, index) => (
-                  <th key={index}>
-                    {header.field ? (
-                      <div className="header-title">
-                        {header.label}
-                        <div className="sort-icons">
-                          <button
-                            className="sort-btn"
-                            onClick={() => handleSort(header.field)}
-                            title={`Sort by ${header.label}`}
-                          >
-                            <TiArrowSortedUp
-                              style={{
-                                color: "#305845",
-                                transform:
-                                  sortOrder.column === header.field && sortOrder.ascending
-                                    ? "rotate(0deg)"
-                                    : "rotate(180deg)",
-                                transition: "transform 0.3s ease",
-                              }}
-                            />
-                          </button>
-                        </div>
+                { label: "Room", field: null },
+              ].map((header, index) => (
+                <th key={index}>
+                  {header.field ? (
+                    <div className="header-title">
+                      {header.label}
+                      <div className="sort-icons">
+                        <button
+                          className="sort-btn"
+                          onClick={() => handleSort(header.field)}
+                          title={`Sort by ${header.label}`}
+                        >
+                          <TiArrowSortedUp
+                            style={{
+                              color: "#305845",
+                              transform:
+                                sortOrder.column === header.field &&
+                                sortOrder.ascending
+                                  ? "rotate(0deg)"
+                                  : "rotate(180deg)",
+                              transition: "transform 0.3s ease",
+                            }}
+                          />
+                        </button>
                       </div>
-                    ) : (
-                      header.label // Non-sortable label like "Action"
-                    )}
-                  </th>
-                )
-              )}
+                    </div>
+                  ) : (
+                    header.label // Non-sortable label like "Action"
+                  )}
+                </th>
+              ))}
               <th>
                 {selectedRows.length > 0 && (
                   <button onClick={handleDownloadPDF}>
@@ -654,24 +661,24 @@ const RoomQR = () => {
             <form className="repair-form">
               <div className="modal-content-field">
                 <label>Select Building:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  placeholder="Select Building"
-                  isSearchable={false} // 🔒 disables typing/filtering
-                  value={
-                    assetOptions.find(
-                      (opt) => opt.value === selectedAssetTitle
-                    ) || null
-                  }
-                  onChange={(selectedOption) => {
-                    setSelectedAssetTitle(selectedOption?.value || "");
-                    setSelectedAssetCode(selectedOption?.assetCode || "");
-                  }}
-                  options={assetOptions}
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    placeholder="Select Building"
+                    isSearchable={false} // 🔒 disables typing/filtering
+                    value={
+                      assetOptions.find(
+                        (opt) => opt.value === selectedAssetTitle
+                      ) || null
+                    }
+                    onChange={(selectedOption) => {
+                      setSelectedAssetTitle(selectedOption?.value || "");
+                      setSelectedAssetCode(selectedOption?.assetCode || "");
+                    }}
+                    options={assetOptions}
+                  />
+                </div>
               </div>
 
               <div className="modal-content-field">

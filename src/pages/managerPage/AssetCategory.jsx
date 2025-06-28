@@ -58,7 +58,8 @@ const Category = () => {
   useEffect(() => {
     if (isLoading) {
       Swal.fire({
-        title: "Loading asset category...",
+        title: "Loading Asset Categories",
+        text: "Please wait while we retrieve the data.",
         allowOutsideClick: false,
         didOpen: () => {
           Swal.showLoading();
@@ -84,12 +85,27 @@ const Category = () => {
     if (confirmed) {
       try {
         await softDeleteCategory(id).unwrap();
-        Swal.fire("Deleted!", "Category has been deleted.", "success");
+        Swal.fire({
+          icon: "success",
+          title: "Category deleted successfully!",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+        });
+
         refetch(); // Refresh the category list
         setModalData(null);
       } catch (err) {
         console.error(err);
-        Swal.fire("Error!", "Something went wrong while deleting.", "error");
+        Swal.fire({
+          icon: "error",
+          title: "Failed to delete category.",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+        });
       }
     }
   };
@@ -110,23 +126,36 @@ const Category = () => {
   const handleSaveNewCategory = async () => {
     if (newCategory.name && newCategory.depreciatedValue) {
       try {
-        await postCategory(newCategory).unwrap();
-        setShowAddModal(false);
-        setNewCategory({ name: "", depreciatedValue: "" });
-        refetch();
-
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: "Category added successfully!",
-          timer: 2000,
-          showConfirmButton: false,
+        const { value: confirmed } = await Swal.fire({
+          title: "Are you sure?",
+          text: "You are about to add this new category!",
+          icon: "warning",
+          color: "#305845",
+          showCancelButton: true,
+          confirmButtonColor: "#305845",
+          cancelButtonColor: "#897462",
+          confirmButtonText: "Yes, add it!",
         });
+
+        if (confirmed) {
+          await postCategory(newCategory).unwrap();
+          setShowAddModal(false);
+          setNewCategory({ name: "", depreciatedValue: "" });
+          refetch();
+          Swal.fire({
+            icon: "success",
+            title: "Category added successfully!",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        }
       } catch (err) {
         Swal.fire({
           icon: "error",
-          title: "Oops...",
-          text: "Failed to add category. Please try again.",
+          title: "Add Category Failed",
+          text: "Unable to add the category at this time. Please try again later.",
         });
       }
     } else {
@@ -144,7 +173,10 @@ const Category = () => {
         title: "Are you sure?",
         text: "You are about to update this category!",
         icon: "warning",
+        color: "#305845",
         showCancelButton: true,
+        confirmButtonColor: "#305845",
+        cancelButtonColor: "#897462",
         confirmButtonText: "Yes, update it!",
       });
 
@@ -157,13 +189,25 @@ const Category = () => {
           },
         }).unwrap();
 
-        Swal.fire("Updated!", "The category has been updated.", "success");
+        Swal.fire({
+          icon: "success",
+          title: "Category updated successfully.",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+        });
+
         setEditModalData(null);
         refetch();
       }
     } catch (err) {
       console.log(err);
-      Swal.fire("Error!", "Something went wrong while updating.", "error");
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: "An error occurred while updating. Please try again later.",
+      });
     }
   };
 

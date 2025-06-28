@@ -40,13 +40,13 @@ const AdminAcademies = () => {
   useEffect(() => {
     if (isLoading) {
       Swal.fire({
-        title: "Loading academies...",
+        title: "Loading academies, please wait...",
         allowOutsideClick: false,
         didOpen: () => {
           Swal.showLoading();
         },
       });
-    } else {
+    } else if (Swal.isVisible()) {
       Swal.close();
     }
   }, [isLoading]);
@@ -55,8 +55,8 @@ const AdminAcademies = () => {
     if (error) {
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "Failed to fetch academies.",
+        title: "Error Fetching Data",
+        text: "Unable to retrieve academies at this time. Please try again later.",
       });
     }
   }, [error]);
@@ -107,7 +107,7 @@ const AdminAcademies = () => {
 
       Swal.fire({
         icon: "success",
-        title: "Academy added!",
+        title: "Academy successfully added!",
         toast: true,
         position: "top-end",
         showConfirmButton: false,
@@ -147,7 +147,7 @@ const AdminAcademies = () => {
 
       Swal.fire({
         icon: "success",
-        title: "Academy updated!",
+        title: "Academy updated successfully!",
         toast: true,
         position: "top-end",
         showConfirmButton: false,
@@ -397,7 +397,7 @@ const AdminAcademies = () => {
                 })
               }
             />
-              <label className="AdminA-profile-upload-label">
+            <label className="AdminA-profile-upload-label">
               <input
                 type="file"
                 accept="image/*"

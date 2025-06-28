@@ -65,7 +65,7 @@ const MaintenanceGraphs = () => {
   useEffect(() => {
     if (isLoadingAll) {
       Swal.fire({
-        title: "Loading graphs...",
+        title: "Loading data, please wait...",
         allowOutsideClick: false,
         didOpen: () => {
           Swal.showLoading();
@@ -74,7 +74,7 @@ const MaintenanceGraphs = () => {
     } else if (Swal.isVisible()) {
       Swal.close();
     }
-  }, [isLoadingAll]); // Only for loading state
+  }, [isLoadingAll]);
 
   useEffect(() => {
     if (!isLoadingAll && hasError) {

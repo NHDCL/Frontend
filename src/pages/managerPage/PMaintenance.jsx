@@ -109,8 +109,10 @@ const PMaintenance = () => {
   useEffect(() => {
     if (isLoading) {
       Swal.fire({
-        title: "Loading maintenance...",
+        title: "Please wait...",
+        text: "Loading maintenance data.",
         allowOutsideClick: false,
+        allowEscapeKey: false,
         didOpen: () => {
           Swal.showLoading();
         },
@@ -208,22 +210,22 @@ const PMaintenance = () => {
             : item
         )
       );
-
       Swal.fire({
         icon: "success",
-        title: "Saved!",
-        text: "The maintenance record has been updated and email sent.",
+        title: "Record Updated",
+        text: "Maintenance record updated and email sent successfully.",
+        toast: true,
+        position: "top-end",
         timer: 2000,
         showConfirmButton: false,
       });
 
       setEditModalData(null);
     } catch (err) {
-      console.error("❌ Failed to update maintenance:", err);
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "Failed to update the maintenance record. Please try again.",
+        title: "Update Failed",
+        text: "We couldn't update the maintenance record. Please try again shortly.",
       });
     } finally {
       setIsSaving(false);

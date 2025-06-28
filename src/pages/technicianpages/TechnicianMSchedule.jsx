@@ -22,7 +22,12 @@ import { assetApiSlice } from "../../slices/assetApiSlice";
 import { createSelector } from "reselect";
 import Swal from "sweetalert2";
 
-const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules }) => {
+const WorkOrderModal = ({
+  order,
+  onClose,
+  data = [],
+  refetchTechnicianSchedules,
+}) => {
   const [teamMembers, setTeamMembers] = useState(order.teamMembers || []);
   const [newMember, setNewMember] = useState("");
   const [selectedWorkStatus, setSelectedWorkStatus] = useState(
@@ -106,7 +111,13 @@ const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length > 5) {
-      setImageError("You can upload a maximum of 5 images.");
+      Swal.fire({
+        icon: "warning",
+        title: "Upload Limit Exceeded",
+        text: "You can upload a maximum of 5 images.",
+        confirmButtonColor: "#305845",
+      });
+
       return;
     }
     setImageError("");
@@ -121,12 +132,7 @@ const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules 
   const handleAdd = async (e) => {
     e.preventDefault();
 
-    const {
-      maintenanceReportID,
-      totalCost,
-      information,
-      partsUsed,
-    } = formData;
+    const { maintenanceReportID, totalCost, information, partsUsed } = formData;
 
     // basic validation
     if (
@@ -140,6 +146,7 @@ const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules 
         icon: "warning",
         title: "Please fill in all fields",
         text: "FinishedDate, TotalCost, Information, PartsUsed, Technicians and Images",
+        confirmButtonColor: "#305845",
       });
       return;
     }
@@ -404,18 +411,20 @@ const WorkOrderModal = ({ order, onClose, data = [], refetchTechnicianSchedules 
                         }
                       );
 
-                      const currentDate = new Date().toISOString().split("T")[0];
+                      const currentDate = new Date()
+                        .toISOString()
+                        .split("T")[0];
 
                       const response = await giveEndTime({
                         maintenanceReportID: formData.maintenanceReportID,
                         endTime: currentTime,
-                        finishedDate: currentDate
+                        finishedDate: currentDate,
                       }).unwrap();
 
                       setFormData((prev) => ({
                         ...prev,
                         endTime: response.endTime,
-                        finishedDate: response.finishedDate
+                        finishedDate: response.finishedDate,
                       }));
                     }
 
