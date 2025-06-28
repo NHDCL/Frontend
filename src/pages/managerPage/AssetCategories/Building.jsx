@@ -366,6 +366,7 @@ const Building = ({ category }) => {
         icon: "warning",
         title: "No File",
         text: "Please select an Excel file first.",
+        confirmButtonColor: "#305845",
       });
     }
 
@@ -439,9 +440,13 @@ const Building = ({ category }) => {
         setSelectedFile(null);
         setShowBulkModal(false);
         Swal.fire({
+          toast: true,
+          position: "top-end",
           icon: "success",
           title: "Success",
           text: "Excel file uploaded successfully!",
+          showConfirmButton: false,
+          timer: 2000,
         });
       };
 
@@ -520,11 +525,13 @@ const Building = ({ category }) => {
         await postUploadImages(formData);
       }
       Swal.fire({
+        toast: true,
+        position: "top-end",
         icon: "success",
         title: "Asset creation request submitted.",
-        text: "Asset creation request has been successfully submitted. Please wait for admin approval.",
-         timer: 2000,
-          showConfirmButton: false,
+        text: "Please wait for admin approval.",
+        showConfirmButton: false,
+        timer: 2000,
       });
       refetch();
       setNewBuilding({
@@ -546,7 +553,7 @@ const Building = ({ category }) => {
         icon: "error",
         title: "Failed to create asset",
         text: err?.data?.message || "Something went wrong!",
-        confirmButtonColor: "#897463",
+        confirmButtonColor: "#305845",
       });
     }
   };
@@ -577,9 +584,10 @@ const Building = ({ category }) => {
       // Show SweetAlert with a custom message
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "You can only select up to 5 images!",
+        title: "Limit Exceeded",
+        text: "You can select a maximum of 5 images only.",
         confirmButtonText: "OK",
+        confirmButtonColor: "#305845",
       }).then(() => {
         // Clear the input and reset the selected files state
         fileInputRef.current.value = null;
@@ -625,10 +633,15 @@ const Building = ({ category }) => {
         .unwrap()
         .then(() => {
           Swal.fire({
+            toast: true,
+            position: "top-end",
             icon: "success",
             title: "Upload Successful!",
             text: "Your images have been uploaded.",
+            showConfirmButton: false,
+            timer: 2000,
           });
+
           setSelectedFiles([]); // Clear the selected files
           fileInputRef.current.value = null; // Reset the input value
           refetch();
@@ -702,9 +715,13 @@ const Building = ({ category }) => {
         setModalData(null);
 
         Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "success",
           title: "Deleted!",
           text: result.message || "Asset marked as disposed.",
-          icon: "success",
+          showConfirmButton: false,
+          timer: 2000,
         });
 
         // Optionally close modal or refresh list
@@ -755,13 +772,15 @@ const Building = ({ category }) => {
       if (assignedWorker?.label) {
         await sendEmail({ to: assignedWorker.label }).unwrap();
       }
-
       Swal.fire({
+        toast: true,
+        position: "top-end",
         icon: "success",
         title: "Schedule Created",
-        text: "Preventive maintenance has been scheduled successfully",
+        text: "Preventive maintenance has been scheduled successfully.",
+        showConfirmButton: false,
+        timer: 2000,
       });
-
       setIsScheduleModalOpen(false);
       setRepeatFrequency(null);
       setAssignedWorker(null);
@@ -1947,15 +1966,16 @@ const Building = ({ category }) => {
                   {isDeleting ? "Deleting..." : <RiDeleteBin6Line />}
                 </button>
 
-                {modalData.status !== "Pending" && modalData.status !== "In Maintenance" && (
-                  <button
-                    type="button"
-                    className="accept-btn"
-                    onClick={handleScheduleMaintenance}
-                  >
-                    Schedule Maintenance
-                  </button>
-                )}
+                {modalData.status !== "Pending" &&
+                  modalData.status !== "In Maintenance" && (
+                    <button
+                      type="button"
+                      className="accept-btn"
+                      onClick={handleScheduleMaintenance}
+                    >
+                      Schedule Maintenance
+                    </button>
+                  )}
 
                 {/* Align Download Button with Schedule Maintenance */}
                 <div className="align-buttons">

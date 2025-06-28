@@ -116,8 +116,10 @@ const SupervisorWO = () => {
   useEffect(() => {
     if (isLoading) {
       Swal.fire({
-        title: "Loading work order...",
+        title: "Please wait...",
+        text: "Loading work order details.",
         allowOutsideClick: false,
+        allowEscapeKey: false,
         didOpen: () => {
           Swal.showLoading();
         },
@@ -180,7 +182,12 @@ const SupervisorWO = () => {
     const maintenanceID = modalData.maintenanceID; // Ensure the correct way to access repairID
 
     if (!maintenanceID) {
-      Swal.fire("Error", "Repair ID not found.", "error");
+      Swal.fire({
+        icon: "error",
+        title: "Repair ID Not Found",
+        text: "The specified Repair ID could not be located. Please check and try again.",
+      });
+
       return;
     }
     const matchingSchedule = userSchedules.find(
@@ -188,11 +195,12 @@ const SupervisorWO = () => {
     );
 
     if (!matchingSchedule) {
-      Swal.fire(
-        "Error",
-        "No schedule found for the given maintenanceID.",
-        "error"
-      );
+      Swal.fire({
+        icon: "error",
+        title: "Schedule Not Found",
+        text: "No schedule found for the provided Maintenance ID. Please verify and try again.",
+      });
+
       return;
     }
 
@@ -241,11 +249,12 @@ const SupervisorWO = () => {
     );
 
     if (!matchingSchedule) {
-      Swal.fire(
-        "Error",
-        "No Reschedule found for the given maintenanceID.",
-        "error"
-      );
+      Swal.fire({
+        icon: "error",
+        title: "Reschedule Not Found",
+        text: "No reschedule found for the provided Maintenance ID. Please verify and try again.",
+      });
+
       return;
     }
 
@@ -253,7 +262,12 @@ const SupervisorWO = () => {
     console.log("scheduleId", id);
 
     if (!selectedTechnicianUpdate) {
-      Swal.fire("Error", "Technician email is missing.", "error");
+      Swal.fire({
+        icon: "error",
+        title: "Missing Technician Email",
+        text: "Technician email is missing. Please provide it and try again.",
+      });
+
       return;
     }
 
@@ -551,7 +565,8 @@ const SupervisorWO = () => {
                   </td>
 
                   <td className="actions">
-                    {(item.status === "Completed" || item.status === "In Progress") ? (
+                    {item.status === "Completed" ||
+                    item.status === "In Progress" ? (
                       <button
                         className="schedule-btn"
                         onClick={() =>
@@ -683,7 +698,9 @@ const SupervisorWO = () => {
             {/* Close Button */}
             <div className="modal-header">
               <h2 style={{ fontSize: "18px" }} className="form-h">
-                {statusPending === "Pending" ? "Reschedule Form" : "Schedule Details"}
+                {statusPending === "Pending"
+                  ? "Reschedule Form"
+                  : "Schedule Details"}
               </h2>
               <button className="close-btn" onClick={handleCloseModal2}>
                 <IoIosCloseCircle

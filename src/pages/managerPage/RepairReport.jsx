@@ -119,8 +119,10 @@ const Repairreport = () => {
   useEffect(() => {
     if (isLoading) {
       Swal.fire({
-        title: "Loading repair reports...",
+        title: "Please wait...",
+        text: "Loading repair reports.",
         allowOutsideClick: false,
+        allowEscapeKey: false,
         didOpen: () => {
           Swal.showLoading();
         },
@@ -137,9 +139,10 @@ const Repairreport = () => {
       console.error("Repair ID is missing.");
       Swal.fire({
         icon: "error",
-        title: "Missing ID",
-        text: "Repair ID is missing. Please try again.",
+        title: "Missing Repair ID",
+        text: "The repair ID is missing. Please try again or contact support if the issue persists.",
       });
+
       return;
     }
 
@@ -176,6 +179,8 @@ const Repairreport = () => {
       Swal.fire({
         icon: "success",
         title: "Success!",
+        toast: true,
+        position: "top-end",
         text: "Schedule updated successfully.",
         timer: 2000,
         toast: true,

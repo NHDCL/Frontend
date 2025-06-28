@@ -314,9 +314,13 @@ const Machinery = ({ category }) => {
         setShowBulkModal(false);
         console.log(res);
         Swal.fire({
+          toast: true,
+          position: "top-end",
           icon: "success",
           title: "Success",
           text: "Excel file uploaded successfully!",
+          showConfirmButton: false,
+          timer: 2000,
         });
       } catch (err) {
         console.log(err);
@@ -331,6 +335,7 @@ const Machinery = ({ category }) => {
         icon: "warning",
         title: "No File",
         text: "Please select an Excel file first.",
+        confirmButtonColor: "#305845",
       });
     }
   };
@@ -429,11 +434,13 @@ const Machinery = ({ category }) => {
       try {
         await postAsset(payload).unwrap();
         Swal.fire({
+          toast: true,
+          position: "top-end",
           icon: "success",
           title: "Asset creation request submitted.",
-          text: "Asset creation request has been successfully submitted. Please wait for admin approval.",
-           timer: 2000,
+          text: "Please wait for admin approval.",
           showConfirmButton: false,
+          timer: 2000,
         });
         refetch();
         setShowAddModal(false);
@@ -570,9 +577,13 @@ const Machinery = ({ category }) => {
         setModalData(null);
 
         Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "success",
           title: "Deleted!",
           text: result.message || "Asset marked as disposed.",
-          icon: "success",
+          showConfirmButton: false,
+          timer: 2000,
         });
 
         // Optionally close modal or refresh list
@@ -648,9 +659,13 @@ const Machinery = ({ category }) => {
       }
 
       Swal.fire({
+        toast: true,
+        position: "top-end",
         icon: "success",
         title: "Schedule Created",
-        text: "Preventive maintenance has been scheduled successfully",
+        text: "Preventive maintenance has been scheduled successfully.",
+        showConfirmButton: false,
+        timer: 2000,
       });
 
       // Optionally close modal
@@ -1278,15 +1293,16 @@ const Machinery = ({ category }) => {
                 >
                   {isDeleting ? "Deleting..." : <RiDeleteBin6Line />}
                 </button>
-                {modalData.status !== "Pending" && modalData.status !== "In Maintenance" && (
-                  <button
-                    type="button"
-                    className="accept-btn"
-                    onClick={handleScheduleMaintenance}
-                  >
-                    Schedule Maintenance
-                  </button>
-                )}
+                {modalData.status !== "Pending" &&
+                  modalData.status !== "In Maintenance" && (
+                    <button
+                      type="button"
+                      className="accept-btn"
+                      onClick={handleScheduleMaintenance}
+                    >
+                      Schedule Maintenance
+                    </button>
+                  )}
               </div>
             </form>
           </div>

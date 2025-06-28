@@ -89,8 +89,9 @@ const AdminUser = () => {
     ) {
       Swal.fire({
         title: "Loading data...",
-        text: "Please wait while we fetch the latest information",
+        text: "Fetching the latest information. Please wait.",
         allowOutsideClick: false,
+        allowEscapeKey: false,
         didOpen: () => {
           Swal.showLoading();
         },
@@ -158,12 +159,11 @@ const AdminUser = () => {
       .then(() => {
         Swal.fire({
           icon: "success",
-          title: "Update",
-          text: "Department updated successfully.",
-          timer: 2000,
+          title: "Department successfully updated!",
           toast: true,
           position: "top-end",
           showConfirmButton: false,
+          timer: 2000,
         });
         setShowEditDepartmentModal(false);
         setSelectedId(null);
@@ -171,7 +171,7 @@ const AdminUser = () => {
         refetchDepartments();
       })
       .catch((error) => {
-        Swal.fire("Error", "Something went wrong.", "error");
+        Swal.fire("Error", "Failed to update department", "error");
       });
   };
   const [deleteDepartment] = useDeleteDepartmentMutation();
@@ -193,14 +193,13 @@ const AdminUser = () => {
       try {
         await deleteDepartment(departmentId).unwrap();
         Swal.fire({
-                icon: "success",
-                title: "Delete",
-                text: "Department updated successfully.",
-                timer: 2000,
-                                    toast: true,
-                  position: "top-end",
-                showConfirmButton: false,
-              });
+          icon: "success",
+          title: "Department successfully deleted!",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+        });
         refetchDepartments();
       } catch (error) {
         Swal.fire("Error", "Failed to delete department", "error");
@@ -276,13 +275,14 @@ const AdminUser = () => {
 
       Swal.fire({
         icon: "success",
-        title: "Success",
-        text: "User created successfully",
-        timer: 2000,
+        title: "User created successfully",
         toast: true,
         position: "top-end",
         showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
+
       setName("");
       setEmail("");
       setEmployeeId("");
@@ -341,23 +341,20 @@ const AdminUser = () => {
       const res = await createDepartment(departmentData).unwrap();
       Swal.fire({
         icon: "success",
-        title: "Department Added",
-        text: "The department was added successfully!",
-        timer: 2000,
+        title: "Department successfully added!",
         toast: true,
         position: "top-end",
         showConfirmButton: false,
+        timer: 2000,
       });
       setNewDepartmentName("");
       setDescription("");
       refetchDepartments();
-      // console.log("Department created:", res);
-      // setShowModal(false);
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "Failed to add department. Please try again.",
+        title: "Action Failed",
+        text: "Unable to add department. Please try again later.",
       });
     }
   };
@@ -408,14 +405,14 @@ const AdminUser = () => {
       try {
         await softDeleteUser(userId).unwrap();
         Swal.fire({
-                icon: "success",
-                title: "Delete",
-                text: "User has been deleted.",
-                timer: 2000,
-                                    toast: true,
-                  position: "top-end",
-                showConfirmButton: false,
-              });
+          icon: "success",
+          title: "Delete",
+          text: "User has been deleted.",
+          timer: 2000,
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+        });
         refetchUsers();
       } catch (error) {
         Swal.fire("Error", "Failed to delete user", "error");

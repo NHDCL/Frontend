@@ -144,18 +144,23 @@ const ManagerDashboard = () => {
         }).unwrap();
 
         await Swal.fire({
-          title: "Accepted!",
-          text: "Successed mail successfully sent to user.",
           icon: "success",
-          timer: 2000,
+          title: "Mail sent successfully to the user.",
+          toast: true,
+          position: "top-end",
           showConfirmButton: false,
+          timer: 2000,
         });
 
         handleCloseModal();
         refetchRepairRequest();
       } catch (err) {
         console.error("Error:", err);
-        Swal.fire("Error", "Failed to update repair request.", "error");
+        Swal.fire({
+          icon: "error",
+          title: "Update Failed",
+          text: "Unable to update the repair request at this time. Please try again later.",
+        });
       }
     }
   };
@@ -180,18 +185,23 @@ const ManagerDashboard = () => {
         }).unwrap();
 
         await Swal.fire({
-          title: "Rejected!",
-          text: "Repair request has been rejected successfully.",
           icon: "success",
-          timer: 2000,
+          title: "Repair request rejected successfully.",
+          toast: true,
+          position: "top-end",
           showConfirmButton: false,
+          timer: 2000,
         });
 
         handleCloseModal();
         refetchRepairRequest();
       } catch (err) {
         console.error("Error:", err);
-        Swal.fire("Error", "Failed to update repair request.", "error");
+        Swal.fire({
+          icon: "error",
+          title: "Update Failed",
+          text: "We couldn’t update the repair request at this time. Please try again later.",
+        });
       }
     } else {
       handleCloseModal();
@@ -528,7 +538,7 @@ const ManagerDashboard = () => {
                       flexDirection: "column",
                       gap: "0.5rem",
                       maxWidth: "350px",
-                      width: "100%"
+                      width: "100%",
                     }}
                   >
                     <Select
@@ -564,11 +574,13 @@ const ManagerDashboard = () => {
                             });
                             Swal.fire({
                               icon: "success",
-                              title: "Updated!",
-                              text: "Priority has been updated.",
+                              title: "Priority updated successfully.",
+                              toast: true,
+                              position: "top-end",
                               showConfirmButton: false,
                               timer: 1500,
                             });
+
                             setIsEditingPriority(false);
                             refetchRepairRequest();
                           }

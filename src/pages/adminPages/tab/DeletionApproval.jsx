@@ -84,9 +84,10 @@ const DeletionApproval = () => {
       title: "Are you sure?",
       text: "You are about to approve this asset deletion request.",
       icon: "warning",
+      color: "#305845",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       confirmButtonText: "Yes, approve it!",
     });
 
@@ -103,10 +104,12 @@ const DeletionApproval = () => {
 
         Swal.fire({
           icon: "success",
-          title: "Approved!",
-          text: response.message,
+          title: "Asset deletion approved successfully!",
+          toast: true,
+          position: "top-end",
           timer: 2000,
           showConfirmButton: false,
+          timerProgressBar: true,
         });
 
         handleCloseModal(); // close the modal if needed
@@ -114,8 +117,10 @@ const DeletionApproval = () => {
         setLoadingApprove(false);
         Swal.fire({
           icon: "error",
-          title: "Oops...",
-          text: err?.data?.message || "Failed to approve asset.",
+          title: "Approval Failed",
+          text:
+            err?.data?.message ||
+            "Unable to approve the asset at this time. Please try again later.",
         });
       }
     }
@@ -131,9 +136,10 @@ const DeletionApproval = () => {
       title: "Are you sure?",
       text: "You are about to decline this asset deletion request.",
       icon: "warning",
+      color: "#305845",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       confirmButtonText: "Yes, decline it!",
     });
 
@@ -150,10 +156,10 @@ const DeletionApproval = () => {
 
         Swal.fire({
           icon: "success",
-          title: "Declined!",
-          text: response.message,
+          title: "Asset deletion declined successfully!",
+          toast: true,
+          position: "top-end",
           timer: 2000,
-          showConfirmButton: false,
         });
 
         handleCloseModal(); // close the modal if needed
@@ -161,8 +167,10 @@ const DeletionApproval = () => {
         setIsDeclining(false);
         Swal.fire({
           icon: "error",
-          title: "Oops...",
-          text: err?.data?.message || "Failed to approve asset.",
+          title: "Decline Failed",
+          text:
+            err?.data?.message ||
+            "An error occurred while declining the asset. Please try again later.",
         });
       }
     }
@@ -197,9 +205,7 @@ const DeletionApproval = () => {
 
   const handleSort = (column) => {
     const newSortOrder =
-      column === sortOrder.column
-        ? !sortOrder.ascending
-        : true;
+      column === sortOrder.column ? !sortOrder.ascending : true;
 
     setSortOrder({
       column,
@@ -235,11 +241,11 @@ const DeletionApproval = () => {
             <thead className="table-header">
               <tr>
                 {[
-                  { label: "Sl. No.", field: null },           // Usually index-based
+                  { label: "Sl. No.", field: null }, // Usually index-based
                   { label: "Asset_Code", field: "assetCode" },
                   { label: "Asset Name", field: "title" },
                   { label: "Area", field: "assetArea" },
-                  { label: "Requested By", field: "deleteBy" }
+                  { label: "Requested By", field: "deleteBy" },
                 ].map((header, index) => (
                   <th key={index}>
                     {header.field ? (
@@ -255,7 +261,8 @@ const DeletionApproval = () => {
                               style={{
                                 color: "#305845",
                                 transform:
-                                  sortOrder.column === header.field && sortOrder.ascending
+                                  sortOrder.column === header.field &&
+                                  sortOrder.ascending
                                     ? "rotate(0deg)"
                                     : "rotate(180deg)",
                                 transition: "transform 0.3s ease",
@@ -290,7 +297,7 @@ const DeletionApproval = () => {
                 <tr key={index}>
                   <td>{index + 1}</td>
                   <td>{item.assetCode}</td>
-                 
+
                   <td className="description">
                     <Tippy content={item.title || ""} placement="top">
                       <span>
@@ -440,7 +447,11 @@ const DeletionApproval = () => {
                   </div>
                   <div className="modal-content-field">
                     <label>Acquired Date:</label>
-                    <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
+                    <input
+                      type="text"
+                      value={formatDate(modalData.acquireDate)}
+                      readOnly
+                    />
                   </div>
                   <div className="modal-content-field">
                     <label>Useful Life(Years):</label>
@@ -489,91 +500,95 @@ const DeletionApproval = () => {
               {(modalData.categoryDetails?.name === "Landscaping" ||
                 modalData.categoryDetails?.name === "Facility" ||
                 modalData.categoryDetails?.name === "Infrastructure") && (
-                  <form className="repair-form">
-                    <div className="modal-content-field">
-                      <label>Asset Id:</label>
-                      <input type="text" value={modalData.assetID} readOnly />
-                    </div>
+                <form className="repair-form">
+                  <div className="modal-content-field">
+                    <label>Asset Id:</label>
+                    <input type="text" value={modalData.assetID} readOnly />
+                  </div>
 
-                    <div className="modal-content-field">
-                      <label>Title:</label>
-                      <input type="text" value={modalData.title} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Asset Code:</label>
-                      <input type="email" value={modalData.assetCode} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Size</label>
-                      <input
-                        type="text"
-                        value={
-                          modalData?.attributes?.find(
-                            (attr) => attr.name === "Size"
-                          )?.value || "N/A"
-                        }
-                        readOnly
-                      />
-                    </div>
+                  <div className="modal-content-field">
+                    <label>Title:</label>
+                    <input type="text" value={modalData.title} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Asset Code:</label>
+                    <input type="email" value={modalData.assetCode} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Size</label>
+                    <input
+                      type="text"
+                      value={
+                        modalData?.attributes?.find(
+                          (attr) => attr.name === "Size"
+                        )?.value || "N/A"
+                      }
+                      readOnly
+                    />
+                  </div>
 
-                    <div className="modal-content-field">
-                      <label>Cost:</label>
-                      <input type="text" value={modalData.cost} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Depreciated Value:</label>
-                      <input
-                        value={modalData.categoryDetails?.depreciatedValue}
-                        readOnly
-                      />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Acquired Date:</label>
-                      <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Useful Life(Years):</label>
-                      <input value={modalData.lifespan} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>status:</label>
-                      <input value={modalData.status} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>category:</label>
-                      <input value={modalData.categoryDetails?.name} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Area:</label>
-                      <input value={modalData.assetArea} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Created by</label>
-                      <input value={modalData.createdBy} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Description: </label>
-                      <textarea value={modalData.description} readOnly />
-                    </div>
-                    <div className="modal-buttons">
-                      <button
-                        className="accept-btn"
-                        onClick={handleApprove}
-                        disabled={loadingApprove}
-                      >
-                        {loadingApprove ? "Accepting..." : "Accept"}
-                      </button>
+                  <div className="modal-content-field">
+                    <label>Cost:</label>
+                    <input type="text" value={modalData.cost} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Depreciated Value:</label>
+                    <input
+                      value={modalData.categoryDetails?.depreciatedValue}
+                      readOnly
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Acquired Date:</label>
+                    <input
+                      type="text"
+                      value={formatDate(modalData.acquireDate)}
+                      readOnly
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Useful Life(Years):</label>
+                    <input value={modalData.lifespan} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>status:</label>
+                    <input value={modalData.status} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>category:</label>
+                    <input value={modalData.categoryDetails?.name} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Area:</label>
+                    <input value={modalData.assetArea} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Created by</label>
+                    <input value={modalData.createdBy} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Description: </label>
+                    <textarea value={modalData.description} readOnly />
+                  </div>
+                  <div className="modal-buttons">
+                    <button
+                      className="accept-btn"
+                      onClick={handleApprove}
+                      disabled={loadingApprove}
+                    >
+                      {loadingApprove ? "Accepting..." : "Accept"}
+                    </button>
 
-                      <button
-                        className="reject-btn"
-                        onClick={handleDecline}
-                        disabled={isDeclining}
-                      >
-                        {isDeclining ? "Declining..." : "Decline"}
-                      </button>
-                    </div>
-                  </form>
-                )}
+                    <button
+                      className="reject-btn"
+                      onClick={handleDecline}
+                      disabled={isDeclining}
+                    >
+                      {isDeclining ? "Declining..." : "Decline"}
+                    </button>
+                  </div>
+                </form>
+              )}
 
               {modalData.categoryDetails?.name === "Machinery" && (
                 <form className="repair-form">
@@ -616,7 +631,11 @@ const DeletionApproval = () => {
                   </div>
                   <div className="modal-content-field">
                     <label>Acquired Date:</label>
-                    <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
+                    <input
+                      type="text"
+                      value={formatDate(modalData.acquireDate)}
+                      readOnly
+                    />
                   </div>
                   <div className="modal-content-field">
                     <label>Useful Life(Years):</label>
@@ -670,79 +689,83 @@ const DeletionApproval = () => {
                 "Infrastructure",
                 "Machinery",
               ].includes(modalData.categoryDetails?.name) && (
-                  <form className="repair-form">
-                    <div className="modal-content-field">
-                      <label>Asset Id:</label>
-                      <input type="text" value={modalData.assetID} readOnly />
-                    </div>
+                <form className="repair-form">
+                  <div className="modal-content-field">
+                    <label>Asset Id:</label>
+                    <input type="text" value={modalData.assetID} readOnly />
+                  </div>
 
-                    <div className="modal-content-field">
-                      <label>Title:</label>
-                      <input type="text" value={modalData.title} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Asset Code:</label>
-                      <input type="email" value={modalData.assetCode} readOnly />
-                    </div>
+                  <div className="modal-content-field">
+                    <label>Title:</label>
+                    <input type="text" value={modalData.title} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Asset Code:</label>
+                    <input type="email" value={modalData.assetCode} readOnly />
+                  </div>
 
-                    <div className="modal-content-field">
-                      <label>Cost:</label>
-                      <input type="text" value={modalData.cost} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Depreciated Value:</label>
-                      <input
-                        value={modalData.categoryDetails?.depreciatedValue}
-                        readOnly
-                      />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Acquired Date:</label>
-                      <input type="text" value={formatDate(modalData.acquireDate)} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Useful Life(Years):</label>
-                      <input value={modalData.lifespan} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Status:</label>
-                      <input value={modalData.status} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Category:</label>
-                      <input value={modalData.categoryDetails?.name} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Area:</label>
-                      <input value={modalData.assetArea} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Created by</label>
-                      <input value={modalData.createdBy} readOnly />
-                    </div>
-                    <div className="modal-content-field">
-                      <label>Description: </label>
-                      <textarea value={modalData.description} readOnly />
-                    </div>
-                    <div className="modal-buttons">
-                      <button
-                        className="accept-btn"
-                        onClick={handleApprove}
-                        disabled={loadingApprove}
-                      >
-                        {loadingApprove ? "Accepting..." : "Accept"}
-                      </button>
+                  <div className="modal-content-field">
+                    <label>Cost:</label>
+                    <input type="text" value={modalData.cost} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Depreciated Value:</label>
+                    <input
+                      value={modalData.categoryDetails?.depreciatedValue}
+                      readOnly
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Acquired Date:</label>
+                    <input
+                      type="text"
+                      value={formatDate(modalData.acquireDate)}
+                      readOnly
+                    />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Useful Life(Years):</label>
+                    <input value={modalData.lifespan} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Status:</label>
+                    <input value={modalData.status} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Category:</label>
+                    <input value={modalData.categoryDetails?.name} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Area:</label>
+                    <input value={modalData.assetArea} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Created by</label>
+                    <input value={modalData.createdBy} readOnly />
+                  </div>
+                  <div className="modal-content-field">
+                    <label>Description: </label>
+                    <textarea value={modalData.description} readOnly />
+                  </div>
+                  <div className="modal-buttons">
+                    <button
+                      className="accept-btn"
+                      onClick={handleApprove}
+                      disabled={loadingApprove}
+                    >
+                      {loadingApprove ? "Accepting..." : "Accept"}
+                    </button>
 
-                      <button
-                        className="reject-btn"
-                        onClick={handleDecline}
-                        disabled={isDeclining}
-                      >
-                        {isDeclining ? "Declining..." : "Decline"}
-                      </button>
-                    </div>
-                  </form>
-                )}
+                    <button
+                      className="reject-btn"
+                      onClick={handleDecline}
+                      disabled={isDeclining}
+                    >
+                      {isDeclining ? "Declining..." : "Decline"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

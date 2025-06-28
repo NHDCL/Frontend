@@ -12,8 +12,8 @@ const AdminHome = () => {
     if (error) {
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "Failed to fetch academies.",
+        title: "Error Fetching Data",
+        text: "Unable to retrieve academies at this time. Please try again later.",
       });
     }
   }, [error]);
