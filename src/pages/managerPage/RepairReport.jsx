@@ -43,7 +43,7 @@ const Repairreport = () => {
 
   const { data: repairRequest, refetch: refetchRepairRequest } =
     useGetRepairRequestQuery();
-  const { data: repairReport, isLoading } = useGetRepairReportsQuery();
+  const { data: repairReport, isLoading, refetch } = useGetRepairReportsQuery();
   const { data: academy } = useGetAcademyQuery();
 
   const [updateSchedule] = useUpdateScheduleMutation();
@@ -64,25 +64,40 @@ const Repairreport = () => {
     if (repairReport && repairRequest && academy && users && userByEmial) {
       const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
 
-      const mergedData = repairReport
-        .map((report) => {
+      const fetchAndMerge = async () => {
+        const mergedDataPromises = repairReport.map(async (report) => {
           const matchingRequest = repairRequest.find(
             (request) =>
               request.repairID === report.repairID &&
               request.status !== "In Progress"
           );
 
-          // Skip if no matching request
           if (!matchingRequest) return null;
 
           const requestAcademyId = matchingRequest.academyId
             ?.trim()
             .toLowerCase();
 
-          // ✅ Only keep records matching the login user's academy
           if (requestAcademyId !== loginAcademyId) return null;
 
-          // 🔍 Count technicians
+          // Fetch schedule
+          let scheduleData = null;
+          try {
+            scheduleData = await fetchSchedulesByRepairID(
+              report.repairID
+            ).unwrap();
+          } catch (error) {
+            console.error(
+              `Failed to fetch schedule for repairID ${report.repairID}`,
+              error
+            );
+          }
+
+          const schedule = Array.isArray(scheduleData)
+            ? scheduleData[0]
+            : scheduleData;
+
+          // Count technicians
           let total = 0;
           if (report.technicians) {
             const technicianList = report.technicians
@@ -91,12 +106,11 @@ const Repairreport = () => {
             total = technicianList.length;
           }
 
-          // 🏫 Match academyId to academyName
           const matchingAcademy = academy.find(
             (a) => a.academyId?.trim().toLowerCase() === requestAcademyId
           );
 
-          const merged = {
+          return {
             ...report,
             academyId: matchingRequest.academyId || null,
             academyName: matchingAcademy?.name || "Unknown Academy",
@@ -104,17 +118,33 @@ const Repairreport = () => {
             area: matchingRequest.area || "N/A",
             description: matchingRequest.description || "N/A",
             totalTechnicians: total,
+            addCost: schedule?.addCost || "",
+            addHours: schedule?.addHours || "",
+            remark: schedule?.remark || "",
           };
-          return merged;
-        })
-        .filter(Boolean);
-      const sortedFiltered = mergedData.sort((a, b) =>
-        b.repairReportID.localeCompare(a.repairReportID)
-      );
+        });
 
-      setData(sortedFiltered);
+        const mergedData = (await Promise.all(mergedDataPromises)).filter(
+          Boolean
+        );
+
+        const sortedFiltered = mergedData.sort((a, b) =>
+          b.repairReportID.localeCompare(a.repairReportID)
+        );
+
+        setData(sortedFiltered);
+      };
+
+      fetchAndMerge();
     }
-  }, [repairReport, repairRequest, academy, users, userByEmial]);
+  }, [
+    repairReport,
+    repairRequest,
+    academy,
+    users,
+    userByEmial,
+    fetchSchedulesByRepairID,
+  ]);
 
   useEffect(() => {
     if (isLoading) {
@@ -166,12 +196,11 @@ const Repairreport = () => {
       }
 
       const updatedSchedule = {
-        addcost: editableData.Additional_cost,
+        addCost: editableData.Additional_cost,
         addHours: editableData.Additional_Hour,
         remark: editableData.Remarks,
       };
-
-      const response = await updateSchedule({
+      await updateSchedule({
         scheduleID,
         updatedSchedule,
       }).unwrap();
@@ -187,6 +216,13 @@ const Repairreport = () => {
         position: "top-end",
         showConfirmButton: false,
       });
+      setEditableData({
+        Additional_cost: "",
+        Additional_Hour: "",
+        Remarks: "",
+      });
+      refetch();
+      refetchRepairRequest();
       setModalData(false);
     } catch (error) {
       console.error("Update failed:", error);
@@ -681,27 +717,41 @@ const Repairreport = () => {
                 </div>
                 <div className="modal-content-field">
                   <label>Additional Cost:</label>
-                  <input
-                    name="Additional_cost"
-                    value={editableData.Additional_cost}
-                    onChange={handleInputChange}
-                  />
+                  {modalData?.addCost ? (
+                    <input name="Additional_cost" value={modalData.addCost} /> // Show value as text
+                  ) : (
+                    <input
+                      name="Additional_cost"
+                      value={editableData.Additional_cost}
+                      onChange={handleInputChange}
+                    />
+                  )}
                 </div>
+
                 <div className="modal-content-field">
                   <label>Additional Hours:</label>
-                  <input
-                    name="Additional_Hour"
-                    value={editableData.Additional_Hour}
-                    onChange={handleInputChange}
-                  />
+                  {modalData?.addHours ? (
+                    <input name="Additional_Hour" value={modalData.addHours} />
+                  ) : (
+                    <input
+                      name="Additional_Hour"
+                      value={editableData.Additional_Hour}
+                      onChange={handleInputChange}
+                    />
+                  )}
                 </div>
+
                 <div className="modal-content-field">
                   <label>Remarks:</label>
-                  <textarea
-                    name="Remarks"
-                    value={editableData.Remarks}
-                    onChange={handleInputChange}
-                  />
+                  {modalData?.remark ? (
+                    <input name="Remarks" value={modalData.remark} />
+                  ) : (
+                    <textarea
+                      name="Remarks"
+                      value={editableData.Remarks}
+                      onChange={handleInputChange}
+                    />
+                  )}
                 </div>
 
                 <div className="modal-buttons">
@@ -709,13 +759,17 @@ const Repairreport = () => {
                     Download
                     <LuDownload style={{ marginLeft: "12px" }} />
                   </button>
-                  <button
-                    className="reject-btn"
-                    onClick={handleUpdate}
-                    disabled={isUpdating}
-                  >
-                    {isUpdating ? "Updating..." : "Update"}
-                  </button>
+                  {!modalData?.addCost &&
+                    !modalData?.addHours &&
+                    !modalData?.remark && (
+                      <button
+                        className="reject-btn"
+                        onClick={handleUpdate}
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? "Updating..." : "Update"}
+                      </button>
+                    )}
                 </div>
               </form>
             </div>

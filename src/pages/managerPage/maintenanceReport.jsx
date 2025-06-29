@@ -21,6 +21,7 @@ import {
 import {
   useGetMaintenanceReportsQuery,
   useGetMaintenanceRequestQuery,
+  useUpdatePreventiveMaintenanceMutation,
 } from "../../slices/maintenanceApiSlice";
 import { useGetAssetQuery } from "../../slices/assetApiSlice";
 import Swal from "sweetalert2";
@@ -47,6 +48,8 @@ const Maintenancereport = () => {
   const { data: academy } = useGetAcademyQuery();
   const { data: users } = useGetUsersQuery();
   const { data: assets } = useGetAssetQuery();
+  const [updatePreventiveMaintenance, { isLoading: isUpdating }] =
+    useUpdatePreventiveMaintenanceMutation();
 
   const selectUserInfo = (state) => state.auth.userInfo || {};
   const getUserEmail = createSelector(
@@ -67,7 +70,6 @@ const Maintenancereport = () => {
       assets
     ) {
       const loginAcademyId = userByEmial.user.academyId?.trim().toLowerCase();
-      console.log("dataa", maintenanceRequest);
 
       const mergedData = maintenanceReport
         .map((report) => {
@@ -102,11 +104,11 @@ const Maintenancereport = () => {
             (a) => a.academyId?.trim().toLowerCase() === requestAcademyId
           );
 
-          // 🧩 Match asset using assetCode from the request
           const matchingAsset = assets.find(
             (asset) => asset.assetCode === matchingRequest.assetCode
           );
 
+          // ✅ Merge additional fields from request
           const merged = {
             ...report,
             academyId: requestUser.academyId || null,
@@ -115,7 +117,12 @@ const Maintenancereport = () => {
             area: matchingAsset?.assetArea || "N/A",
             description: matchingRequest.description || "N/A",
             totalTechnicians: total,
+            // ✅ New fields from maintenanceRequest
+            addCost: matchingRequest.addCost || "",
+            addHours: matchingRequest.addHours || "",
+            remark: matchingRequest.remark || "",
           };
+
           return merged;
         })
         .filter(Boolean); // ✅ Remove nulls
@@ -150,6 +157,50 @@ const Maintenancereport = () => {
       Swal.close();
     }
   }, [isLoading]);
+
+  const handleUpdate = async () => {
+    try {
+      console.log(modalData);
+      const id = modalData.preventiveMaintenanceID;
+
+      const maintenance = {
+        addCost: editableData.Additional_cost,
+        addHours: editableData.Additional_Hour,
+        remark: editableData.Remarks,
+      };
+
+      await updatePreventiveMaintenance({
+        id,
+        maintenance,
+      }).unwrap();
+      setEditableData({
+        Additional_cost: "",
+        Additional_Hour: "",
+        Remarks: "",
+      });
+      setModalData(false);
+
+      Swal.fire({
+        icon: "success",
+        title: "Success!",
+        toast: true,
+        position: "top-end",
+        text: "Schedule updated successfully.",
+        timer: 2000,
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Update failed:", error);
+
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: "Something went wrong while updating the report.",
+      });
+    }
+  };
 
   const handleDownloadSelected = () => {
     if (selectedRows.length === 0) return;
@@ -535,7 +586,7 @@ const Maintenancereport = () => {
           <div className="modal-content" ref={modalRef}>
             {/* Close Button */}
             <div className="modal-header">
-              <h2 className="form-h">Repair Report</h2>
+              <h2 className="form-h">Maintenance Report</h2>
               <button className="close-btn" onClick={handleCloseModal}>
                 <IoIosCloseCircle
                   style={{ color: "#897463", width: "20px", height: "20px" }}
@@ -624,27 +675,53 @@ const Maintenancereport = () => {
                 </div>
                 <div className="modal-content-field">
                   <label>Additional Cost:</label>
-                  <input
-                    name="Additional_cost"
-                    value={editableData.Additional_cost}
-                    onChange={handleInputChange}
-                  />
+                  {modalData?.addCost ? (
+                    <input
+                      name="Additional_cost"
+                      value={modalData.addCost}
+                      readOnly
+                    />
+                  ) : (
+                    <input
+                      name="Additional_cost"
+                      value={editableData.Additional_cost}
+                      onChange={handleInputChange}
+                    />
+                  )}
                 </div>
+
                 <div className="modal-content-field">
                   <label>Additional Hours:</label>
-                  <input
-                    name="Additional_Hour"
-                    value={editableData.Additional_Hour}
-                    onChange={handleInputChange}
-                  />
+                  {modalData?.addHours ? (
+                    <input
+                      name="Additional_Hour"
+                      value={modalData.addHours}
+                      readOnly
+                    />
+                  ) : (
+                    <input
+                      name="Additional_Hour"
+                      value={editableData.Additional_Hour}
+                      onChange={handleInputChange}
+                    />
+                  )}
                 </div>
+
                 <div className="modal-content-field">
                   <label>Remarks:</label>
-                  <textarea
-                    name="Remarks"
-                    value={editableData.Remarks}
-                    onChange={handleInputChange}
-                  />
+                  {modalData?.remark ? (
+                    <textarea
+                      name="Remarks"
+                      value={modalData.remark}
+                      readOnly
+                    />
+                  ) : (
+                    <textarea
+                      name="Remarks"
+                      value={editableData.Remarks}
+                      onChange={handleInputChange}
+                    />
+                  )}
                 </div>
 
                 <div className="modal-buttons">
@@ -652,7 +729,18 @@ const Maintenancereport = () => {
                     Download
                     <LuDownload style={{ marginLeft: "12px" }} />
                   </button>
-                  <button className="reject-btn">Done</button>
+
+                  {!modalData?.addCost &&
+                    !modalData?.addHours &&
+                    !modalData?.remark && (
+                      <button
+                        className="reject-btn"
+                        onClick={handleUpdate}
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? "Updating..." : "Update"}
+                      </button>
+                    )}
                 </div>
               </form>
             </div>

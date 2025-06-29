@@ -87,15 +87,6 @@ const Category = () => {
         await softDeleteCategory(id).unwrap();
         Swal.fire({
           icon: "success",
-<<<<<<< HEAD
-          title: "Category deleted successfully!",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 2000,
-        });
-
-=======
           title: "Delete",
           text: "Category deleted successfully!",
           timer: 2000,
@@ -103,7 +94,6 @@ const Category = () => {
           position: "top-end",
           showConfirmButton: false,
         });
->>>>>>> 9ef337e620a24865f94e2cd05612230050c0f880
         refetch(); // Refresh the category list
         setModalData(null);
       } catch (err) {
@@ -136,17 +126,6 @@ const Category = () => {
   const handleSaveNewCategory = async () => {
     if (newCategory.name && newCategory.depreciatedValue) {
       try {
-<<<<<<< HEAD
-        const { value: confirmed } = await Swal.fire({
-          title: "Are you sure?",
-          text: "You are about to add this new category!",
-          icon: "warning",
-          color: "#305845",
-          showCancelButton: true,
-          confirmButtonColor: "#305845",
-          cancelButtonColor: "#897462",
-          confirmButtonText: "Yes, add it!",
-=======
         await postCategory(newCategory).unwrap();
         setShowAddModal(false);
         setNewCategory({ name: "", depreciatedValue: "" });
@@ -160,23 +139,7 @@ const Category = () => {
                     toast: true,
           position: "top-end",
           showConfirmButton: false,
->>>>>>> 9ef337e620a24865f94e2cd05612230050c0f880
         });
-
-        if (confirmed) {
-          await postCategory(newCategory).unwrap();
-          setShowAddModal(false);
-          setNewCategory({ name: "", depreciatedValue: "" });
-          refetch();
-          Swal.fire({
-            icon: "success",
-            title: "Category added successfully!",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 2000,
-          });
-        }
       } catch (err) {
         Swal.fire({
           icon: "error",
@@ -199,17 +162,10 @@ const Category = () => {
         title: "Are you sure?",
         text: "You are about to update this category!",
         icon: "warning",
-<<<<<<< HEAD
-        color: "#305845",
-        showCancelButton: true,
-        confirmButtonColor: "#305845",
-        cancelButtonColor: "#897462",
-=======
       color: "#305845",
       showCancelButton: true,
       confirmButtonColor: "#305845",
       cancelButtonColor: "#897462",
->>>>>>> 9ef337e620a24865f94e2cd05612230050c0f880
         confirmButtonText: "Yes, update it!",
       });
 
@@ -221,18 +177,6 @@ const Category = () => {
             depreciatedValue: editModalData.depreciatedValue,
           },
         }).unwrap();
-<<<<<<< HEAD
-
-        Swal.fire({
-          icon: "success",
-          title: "Category updated successfully.",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 2000,
-        });
-
-=======
         Swal.fire({
           icon: "success",
           title: "Update",
@@ -242,7 +186,6 @@ const Category = () => {
           position: "top-end",
           showConfirmButton: false,
         });
->>>>>>> 9ef337e620a24865f94e2cd05612230050c0f880
         setEditModalData(null);
         refetch();
       }

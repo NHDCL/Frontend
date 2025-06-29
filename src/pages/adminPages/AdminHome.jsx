@@ -50,12 +50,12 @@ const AdminHome = () => {
             <p className="count">{totalResolvedRepair?.length || 0}</p>
           </div>
         </div>
-        {/* <div className="cardCount">
+        <div className="cardCount">
           <div className="CardContent">
             <h3 className="cardTitle">Total Unresolved Requests</h3>
             <p className="count">{totalUnResolvedRepair?.length || 0}</p>
           </div>
-        </div> */}
+        </div>
       </div>
       <div>
         <MaintenanceGraphs />
