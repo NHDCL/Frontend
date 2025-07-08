@@ -44,8 +44,8 @@ const AdminAssets = () => {
       if (error) {
         Swal.fire({
           icon: "error",
-          title: "Error",
-          text: "Failed to load asset categories. Please try again later.",
+          title: "Failed to Load Categories",
+          text: "An error occurred while fetching asset categories. Please try again later.",
         });
       }
     }
@@ -65,7 +65,7 @@ const AdminAssets = () => {
   const categoryList = [
     ...activeCategories.slice(0, 1),
     { name: "Room QR" },
-    ...activeCategories.slice(1)
+    ...activeCategories.slice(1),
   ];
 
   // Get the correct filename based on the category name

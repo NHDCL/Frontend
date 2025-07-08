@@ -265,6 +265,7 @@ const Landscaping = ({ category }) => {
         icon: "warning",
         title: "No File",
         text: "Please select an Excel file first.",
+        confirmButtonColor: "#305845",
       });
     }
 
@@ -338,9 +339,12 @@ const Landscaping = ({ category }) => {
         setSelectedFile(null);
         setShowBulkModal(false);
         Swal.fire({
+          toast: true,
+          position: "top-end",
           icon: "success",
-          title: "Success",
-          text: "Excel file uploaded successfully!",
+          title: "Excel file uploaded successfully.",
+          showConfirmButton: false,
+          timer: 2000,
         });
       };
 
@@ -413,10 +417,13 @@ const Landscaping = ({ category }) => {
         await postUploadImages(formData);
       }
       Swal.fire({
+        toast: true,
+        position: "top-end",
         icon: "success",
         title: "Asset creation request submitted.",
-        text: "Asset creation request has been successfully submitted. Please wait for admin approval.",
-        confirmButtonColor: "#305845",
+        text: "Please wait for admin approval.",
+        showConfirmButton: false,
+        timer: 2000,
       });
       refetch();
       setNewLandscaping({
@@ -437,7 +444,6 @@ const Landscaping = ({ category }) => {
         icon: "error",
         title: "Failed to create asset",
         text: err?.data?.message || "Something went wrong!",
-        confirmButtonColor: "#897463",
       });
     }
   };
@@ -450,13 +456,15 @@ const Landscaping = ({ category }) => {
       // Show SweetAlert with a custom message
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "You can only select up to 5 images!",
+        title: "Selection Limit Exceeded",
+        text: "You may select up to 5 images only.",
         confirmButtonText: "OK",
+        confirmButtonColor: "#d33",
       }).then(() => {
         // Clear the input and reset the selected files state
         fileInputRef.current.value = null;
       });
+
       return;
     }
 
@@ -498,10 +506,15 @@ const Landscaping = ({ category }) => {
         .unwrap()
         .then(() => {
           Swal.fire({
+            toast: true,
+            position: "top-end",
             icon: "success",
             title: "Upload Successful!",
             text: "Your images have been uploaded.",
+            showConfirmButton: false,
+            timer: 2000,
           });
+
           setSelectedFiles([]); // Clear the selected files
           fileInputRef.current.value = null; // Reset the input value
           refetch();
@@ -557,9 +570,10 @@ const Landscaping = ({ category }) => {
       title: "Are you sure?",
       text: "Do you really want to mark this asset as disposed?",
       icon: "warning",
+      color: "#305845",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#305845",
+      cancelButtonColor: "#897462",
       confirmButtonText: "Yes, delete it!",
     });
 
@@ -574,9 +588,13 @@ const Landscaping = ({ category }) => {
         setModalData(null);
 
         Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "success",
           title: "Deleted!",
           text: result.message || "Asset marked as disposed.",
-          icon: "success",
+          showConfirmButton: false,
+          timer: 2000,
         });
 
         // Optionally close modal or refresh list
@@ -652,9 +670,13 @@ const Landscaping = ({ category }) => {
       }
 
       Swal.fire({
+        toast: true,
+        position: "top-end",
         icon: "success",
         title: "Schedule Created",
-        text: "Preventive maintenance has been scheduled successfully",
+        text: "Preventive maintenance has been scheduled successfully.",
+        showConfirmButton: false,
+        timer: 2000,
       });
 
       // Optionally close modal
@@ -843,51 +865,51 @@ const Landscaping = ({ category }) => {
           </thead>
           <tbody>
             {[...displayedData]
-                  .sort((a, b) => b.assetID - a.assetID) // Sort by assetID DESC
-                  .map((item, index) => {
-              // Extract values from `attributes`
-              const sizeAttr = item.attributes.find(
-                (attr) => attr.name === "Size"
-              );
-              const size = sizeAttr ? sizeAttr.value : "N/A";
-              return (
-                <tr key={index}>
-                  <td>{index + 1}</td>
-                  <td>{item.assetCode}</td>
-                  <td className="description">
-                    <Tippy content={item.title || ""} placement="top">
-                      <span>
-                        {item.title?.length > 20
-                          ? item.title.substring(0, 20) + "..."
-                          : item.title || ""}
-                      </span>
-                    </Tippy>
-                  </td>
-                  <td>{formatDate(item.acquireDate)}</td>
-                  <td>{item.lifespan}</td>
-                  <td>{size}</td>
-                  <td>{item.categoryDetails?.depreciatedValue}</td>
-                 <td>
-                        <Tippy
-                          content={getStatusDescription(item.status)}
-                          placement="top"
-                        >
-                          <div className={getStatusClass(item.status)}>
-                            {getDisplayText(item.status)}
-                          </div>
-                        </Tippy>
-                      </td>
-                  <td className="actions">
-                    <button
-                      className="view-btn"
-                      onClick={() => handleView(item)}
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+              .sort((a, b) => b.assetID - a.assetID) // Sort by assetID DESC
+              .map((item, index) => {
+                // Extract values from `attributes`
+                const sizeAttr = item.attributes.find(
+                  (attr) => attr.name === "Size"
+                );
+                const size = sizeAttr ? sizeAttr.value : "N/A";
+                return (
+                  <tr key={index}>
+                    <td>{index + 1}</td>
+                    <td>{item.assetCode}</td>
+                    <td className="description">
+                      <Tippy content={item.title || ""} placement="top">
+                        <span>
+                          {item.title?.length > 20
+                            ? item.title.substring(0, 20) + "..."
+                            : item.title || ""}
+                        </span>
+                      </Tippy>
+                    </td>
+                    <td>{formatDate(item.acquireDate)}</td>
+                    <td>{item.lifespan}</td>
+                    <td>{size}</td>
+                    <td>{item.categoryDetails?.depreciatedValue}</td>
+                    <td>
+                      <Tippy
+                        content={getStatusDescription(item.status)}
+                        placement="top"
+                      >
+                        <div className={getStatusClass(item.status)}>
+                          {getDisplayText(item.status)}
+                        </div>
+                      </Tippy>
+                    </td>
+                    <td className="actions">
+                      <button
+                        className="view-btn"
+                        onClick={() => handleView(item)}
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
@@ -1265,15 +1287,16 @@ const Landscaping = ({ category }) => {
                 >
                   {isDeleting ? "Deleting..." : <RiDeleteBin6Line />}
                 </button>
-                {modalData.status !== "Pending" && modalData.status !== "In Maintenance" && (
-                  <button
-                    type="button"
-                    className="accept-btn"
-                    onClick={handleScheduleMaintenance}
-                  >
-                    Schedule Maintenance
-                  </button>
-                )}
+                {modalData.status !== "Pending" &&
+                  modalData.status !== "In Maintenance" && (
+                    <button
+                      type="button"
+                      className="accept-btn"
+                      onClick={handleScheduleMaintenance}
+                    >
+                      Schedule Maintenance
+                    </button>
+                  )}
 
                 {/* Align Download Button with Schedule Maintenance */}
                 <div className="align-buttons">
@@ -1331,36 +1354,36 @@ const Landscaping = ({ category }) => {
               <p className="sub-title">Maintenance Detail</p>
               <div className="modal-content-field">
                 <label>Department:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={departmentOptions}
-                  value={
-                    departmentOptions.find(
-                      (opt) => opt.value === selectedDepartment
-                    ) || null
-                  }
-                  onChange={(option) =>
-                    setSelectedDepartment(option?.value || "")
-                  }
-                  isClearable
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={departmentOptions}
+                    value={
+                      departmentOptions.find(
+                        (opt) => opt.value === selectedDepartment
+                      ) || null
+                    }
+                    onChange={(option) =>
+                      setSelectedDepartment(option?.value || "")
+                    }
+                    isClearable
+                  />
+                </div>
               </div>
 
               <div className="modal-content-field">
                 <label>Assign Supervisor:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={workerOptions}
-                  value={assignedWorker}
-                  onChange={setAssignedWorker}
-                  isClearable
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={workerOptions}
+                    value={assignedWorker}
+                    onChange={setAssignedWorker}
+                    isClearable
+                  />
+                </div>
               </div>
 
               <div className="modal-content-field">
@@ -1381,16 +1404,16 @@ const Landscaping = ({ category }) => {
               <p className="sub-title">Schedule Maintenance Notification</p>
               <div className="modal-content-field">
                 <label>Repeat:</label>
-                <div style={{ width: "100%",maxWidth:"350px" }}>
-                <Select
-                  classNamePrefix="custom-select-department"
-                  className="workstatus-dropdown"
-                  options={repeatOptions}
-                  value={repeatFrequency}
-                  onChange={setRepeatFrequency}
-                  isClearable
-                />
-              </div>
+                <div style={{ width: "100%", maxWidth: "350px" }}>
+                  <Select
+                    classNamePrefix="custom-select-department"
+                    className="workstatus-dropdown"
+                    options={repeatOptions}
+                    value={repeatFrequency}
+                    onChange={setRepeatFrequency}
+                    isClearable
+                  />
+                </div>
               </div>
 
               <div className="modal-content-field">

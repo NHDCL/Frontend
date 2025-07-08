@@ -66,21 +66,21 @@ const Landingpage = () => {
   return (
     <div>
       <Header />
-      <div style={{ height: '100vh' }}>
+      <div style={{ height: '100vw',minHeight:"60vh",maxHeight:"100vh", position:"relative" }}>
       <div className='heroBanner-slider'>
         <img className='slider-image' src={images[currentSlide]} alt={`slider-0${currentSlide + 1}`} />
       </div>
       <div className='contentOuter'>
        
-        <div style={{marginTop:"200px"}}>
-          <h1 className='slider-content'>Efficient Facility Management for Gyalsung </h1>
+      <div style={{ marginTop: "clamp(3rem, 20vh, 10rem)" }}>
+            <h1 className='slider-content'>Efficient Facility Management for Gyalsung </h1>
           <h3 className="slider-content1">
             Streamline facility maintenance, requests, and tracking
             effortlessly.
           </h3>
           <Link to="/login">
             {/* <p className="lp">Get Started</p> */}
-              <button className='mt-4 btn btn-primary shopnowBtn'>Get Started</button>
+              <button className='startBtn'>Get Started</button>
 
           </Link>
         </div>

@@ -12,20 +12,22 @@ const AdminHome = () => {
     if (error) {
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "Failed to fetch academies.",
+        title: "Error Fetching Data",
+        text: "Unable to retrieve academies at this time. Please try again later.",
       });
     }
   }, [error]);
+  console.log("localStorage",repairRequest)
 
   const totalRepair = repairRequest?.filter((req) => req.accept === true);
 
   const totalResolvedRepair = totalRepair?.filter(
-    (req) => req.status === "completed"
+    (req) => req.status === "Completed"
   );
   const totalUnResolvedRepair = totalRepair?.filter(
-    (req) => req.status === "Pending" || req.status === "In progress"
+    (req) => req.status === "Pending" || req.status === "In Progress"
   );
+  console.log("debugger",totalUnResolvedRepair)
   return (
     <div>
       <div className="cardwrap">

@@ -241,6 +241,7 @@ const Users = () => {
                         width: "50px",
                         height: "50px",
                         borderRadius: "50%",
+                        objectFit: "cover",
                       }}
                       onMouseOver={(e) =>
                         (e.target.style.transform = "scale(1.3)")

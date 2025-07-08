@@ -23,7 +23,6 @@ import {
   useSoftDeleteUserMutation,
   useDeleteDepartmentMutation,
   useUpdateDepartmentMutation,
-
 } from "../../slices/userApiSlice";
 import Swal from "sweetalert2";
 import Tippy from "@tippyjs/react";
@@ -49,9 +48,8 @@ const AdminUser = () => {
   const [newDepartmentName, setNewDepartmentName] = useState("");
   const [description, setDescription] = useState("");
   const [showEditDepartmentModal, setShowEditDepartmentModal] = useState(false);
-  const [editData, setEditData] = useState({ name: '', description: '' });
+  const [editData, setEditData] = useState({ name: "", description: "" });
   const [selectedId, setSelectedId] = useState(null);
-
 
   const { data: academies, isLoading: isLoadingAcademies } =
     useGetAcademyQuery();
@@ -65,7 +63,8 @@ const AdminUser = () => {
     isLoading: isLoadingUsers,
     refetch: refetchUsers,
   } = useGetUsersQuery();
-  const [updateDepartment, { isLoading: updating }] = useUpdateDepartmentMutation();
+  const [updateDepartment, { isLoading: updating }] =
+    useUpdateDepartmentMutation();
 
   const { data: roles, isLoading: isLoadingRoles } = useGetRolesQuery();
 
@@ -90,8 +89,9 @@ const AdminUser = () => {
     ) {
       Swal.fire({
         title: "Loading data...",
-        text: "Please wait while we fetch the latest information",
+        text: "Fetching the latest information. Please wait.",
         allowOutsideClick: false,
+        allowEscapeKey: false,
         didOpen: () => {
           Swal.showLoading();
         },
@@ -132,7 +132,6 @@ const AdminUser = () => {
     }
   }, [department]);
 
-
   const handleEditDepartment = (id) => {
     if (!Array.isArray(departments)) {
       console.error("Departments is not an array");
@@ -158,14 +157,21 @@ const AdminUser = () => {
   const handleUpdateDepartment = () => {
     updateDepartment({ id: selectedId, ...editData })
       .then(() => {
-        Swal.fire("Updated!", "Department updated successfully.", "success");
+        Swal.fire({
+          icon: "success",
+          title: "Department successfully updated!",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+        });
         setShowEditDepartmentModal(false);
         setSelectedId(null);
-        setEditData({ name: '', description: '' });
-        refetchDepartments()
+        setEditData({ name: "", description: "" });
+        refetchDepartments();
       })
       .catch((error) => {
-        Swal.fire("Error", "Something went wrong.", "error");
+        Swal.fire("Error", "Failed to update department", "error");
       });
   };
   const [deleteDepartment] = useDeleteDepartmentMutation();
@@ -186,8 +192,15 @@ const AdminUser = () => {
     if (result.isConfirmed) {
       try {
         await deleteDepartment(departmentId).unwrap();
-        Swal.fire("Deleted!", "Department has been deleted.", "success");
-        refetchDepartments()
+        Swal.fire({
+          icon: "success",
+          title: "Department successfully deleted!",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+        });
+        refetchDepartments();
       } catch (error) {
         Swal.fire("Error", "Failed to delete department", "error");
       }
@@ -237,10 +250,10 @@ const AdminUser = () => {
       activeTab === "Manager"
         ? managerRoleId
         : activeTab === "Supervisor"
-          ? supervisorRoleId
-          : activeTab === "Technician"
-            ? technicianRoleId
-            : null;
+        ? supervisorRoleId
+        : activeTab === "Technician"
+        ? technicianRoleId
+        : null;
 
     // console.log("roleid: ", roleId)
 
@@ -260,7 +273,16 @@ const AdminUser = () => {
 
       console.log("res", res);
 
-      Swal.fire("Success", "User created successfully", "success");
+      Swal.fire({
+        icon: "success",
+        title: "User created successfully",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
+
       setName("");
       setEmail("");
       setEmployeeId("");
@@ -319,21 +341,20 @@ const AdminUser = () => {
       const res = await createDepartment(departmentData).unwrap();
       Swal.fire({
         icon: "success",
-        title: "Department Added",
-        text: "The department was added successfully!",
-        timer: 2000,
+        title: "Department successfully added!",
+        toast: true,
+        position: "top-end",
         showConfirmButton: false,
+        timer: 2000,
       });
-      setNewDepartmentName("")
+      setNewDepartmentName("");
       setDescription("");
       refetchDepartments();
-      // console.log("Department created:", res);
-      // setShowModal(false);
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Oops...",
-        text: "Failed to add department. Please try again.",
+        title: "Action Failed",
+        text: "Unable to add department. Please try again later.",
       });
     }
   };
@@ -347,25 +368,25 @@ const AdminUser = () => {
 
   // Update the filteredData to handle Department tab
   const filteredData =
-  activeTab === "Department"
-    ? (department || []).filter((item) =>
-        Object.values(item).some((value) =>
-          (value !== null && value !== undefined
-            ? value.toString().toLowerCase()
-            : ""
-          ).includes(searchTerm.toLowerCase())
-        )
-      )
-    : (data || []).filter(
-        (item) =>
-          item.role?.name?.toLowerCase() === activeTab.toLowerCase() &&
+    activeTab === "Department"
+      ? (department || []).filter((item) =>
           Object.values(item).some((value) =>
             (value !== null && value !== undefined
               ? value.toString().toLowerCase()
               : ""
             ).includes(searchTerm.toLowerCase())
           )
-      );
+        )
+      : (data || []).filter(
+          (item) =>
+            item.role?.name?.toLowerCase() === activeTab.toLowerCase() &&
+            Object.values(item).some((value) =>
+              (value !== null && value !== undefined
+                ? value.toString().toLowerCase()
+                : ""
+              ).includes(searchTerm.toLowerCase())
+            )
+        );
 
   const handleDelete = async (userId) => {
     console.log("Deleting user with ID:", userId);
@@ -383,7 +404,15 @@ const AdminUser = () => {
     if (result.isConfirmed) {
       try {
         await softDeleteUser(userId).unwrap();
-        Swal.fire("Deleted!", "User has been deleted.", "success");
+        Swal.fire({
+          icon: "success",
+          title: "Delete",
+          text: "User has been deleted.",
+          timer: 2000,
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+        });
         refetchUsers();
       } catch (error) {
         Swal.fire("Error", "Failed to delete user", "error");
@@ -517,7 +546,7 @@ const AdminUser = () => {
                               color: "#305845",
                               transform:
                                 sortOrder.column === "name" &&
-                                  sortOrder.ascending
+                                sortOrder.ascending
                                   ? "rotate(0deg)"
                                   : "rotate(180deg)",
                               transition: "transform 0.3s ease",
@@ -559,8 +588,16 @@ const AdminUser = () => {
                       </Tippy>
                     </td>
                     <td>
-                      <button onClick={() => handleEditDepartment(item.departmentId)}>
-                        <FaEdit style={{ width: "20px", height: "20px", color: "green" }} />
+                      <button
+                        onClick={() => handleEditDepartment(item.departmentId)}
+                      >
+                        <FaEdit
+                          style={{
+                            width: "20px",
+                            height: "20px",
+                            color: "green",
+                          }}
+                        />
                       </button>
                     </td>
                     <td>
@@ -608,7 +645,7 @@ const AdminUser = () => {
                                     color: "#305845",
                                     transform:
                                       sortOrder.column === header.field &&
-                                        sortOrder.ascending
+                                      sortOrder.ascending
                                         ? "rotate(0deg)"
                                         : "rotate(180deg)",
                                     transition: "transform 0.3s ease",
@@ -681,9 +718,9 @@ const AdminUser = () => {
                           {getAcademyName(item.academyId)
                             ? getAcademyName(item.academyId).length > 20
                               ? getAcademyName(item.academyId).substring(
-                                0,
-                                20
-                              ) + "..."
+                                  0,
+                                  20
+                                ) + "..."
                               : getAcademyName(item.academyId)
                             : ""}
                         </span>
@@ -790,35 +827,34 @@ const AdminUser = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <div style={{width:"100%"}}>
-
-              <Select
-                classNamePrefix="custommm-select-workstatus"
-                options={academies?.map((a) => ({
-                  value: a.academyId,
-                  label: a.name,
-                }))}
-                placeholder="Select Academy"
-                isClearable
-                isSearchable={false}
-                onChange={setSelectedAcademy}
-                required
-              />
-              </div>
-              {activeTab !== "Manager" && (
-               <div style={{width:"100%",}}>
-                 <Select
+              <div style={{ width: "100%" }}>
+                <Select
+                  classNamePrefix="custommm-select-workstatus"
+                  options={academies?.map((a) => ({
+                    value: a.academyId,
+                    label: a.name,
+                  }))}
+                  placeholder="Select Academy"
                   isClearable
                   isSearchable={false}
-                  classNamePrefix="custommm-select-workstatus"
-                  options={department?.map((d) => ({
-                    value: d.departmentId,
-                    label: d.name,
-                  }))}
-                  placeholder="Select Department"
-                  onChange={setSelectedDepartment}
+                  onChange={setSelectedAcademy}
                   required
                 />
+              </div>
+              {activeTab !== "Manager" && (
+                <div style={{ width: "100%" }}>
+                  <Select
+                    isClearable
+                    isSearchable={false}
+                    classNamePrefix="custommm-select-workstatus"
+                    options={department?.map((d) => ({
+                      value: d.departmentId,
+                      label: d.name,
+                    }))}
+                    placeholder="Select Department"
+                    onChange={setSelectedDepartment}
+                    required
+                  />
                 </div>
               )}
               <button
@@ -880,7 +916,6 @@ const AdminUser = () => {
           </div>
         </div>
       )}
-
 
       {/* Add department Modal */}
       {showModalDepartment && (

@@ -1,7 +1,7 @@
 
 .title {
     font-family: 'Poppins', sans-serif;
-    font-size: 2rem;
+    font-size: clamp(1.25rem, 4vw, 2rem);
     color: #315845;
 } 
 .a_hr1{
@@ -49,6 +49,8 @@
   .adescription{
     width: 80%;
       height: 50%;
+    font-size: clamp(0.5rem, 2vw, 0.875rem);
+
 
   }
   .aname{
@@ -60,7 +62,12 @@
     
   }
   .aname h1 {
-  font-size: clamp(10px, 5vw, 40px);
+  font-size: clamp(0.625rem, 4vw, 2.5rem);
+
+}
+ .aname p {
+font-size: clamp(0.75rem, 3vw, 1rem);
+
 }
    .bento-container {
     display: flex;

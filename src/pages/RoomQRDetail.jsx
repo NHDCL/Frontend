@@ -260,7 +260,7 @@ const RoomQRDetail = () => {
       <div className="qrcontainer">
         <div className="card report-form">
           <div className="asset-info">
-            <h3 className="section-title">Room Information</h3>
+            <h3 className="section-title" style={{ textAlign: "start" }}>Room Information</h3>
             <div className="asset_detail">
               <div className="pp">
                 <p className="p1">Block:</p>

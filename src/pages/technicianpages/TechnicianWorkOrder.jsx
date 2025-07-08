@@ -106,7 +106,12 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length > 5) {
-      setImageError("You can upload a maximum of 5 images.");
+      Swal.fire({
+        icon: "warning",
+        title: "Upload Limit Exceeded",
+        text: "You can upload a maximum of 5 images.",
+        confirmButtonColor: "#305845",
+      });
       return;
     }
     setImageError("");
@@ -135,6 +140,7 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
         icon: "warning",
         title: "Please fill in all fields",
         text: "FinishedDate, TotalCost, Information, PartsUsed, Technicians and Images",
+        confirmButtonColor: "#305845",
       });
       return;
     }
@@ -429,15 +435,15 @@ const WorkOrderModal = ({ order, onClose, data = [] }) => {
             <input
               type="text"
               value={
-                reportExists && Array.isArray(repairReport[0]?.partsUsed)
-                  ? repairReport[0].partsUsed.join(", ")
-                  : formData.partsUsed
+                reportExists && repairReport[0]?.partsUsed
+                  ? repairReport[0].partsUsed
+                  : formData.partsUsed || ""
               }
               onChange={(e) =>
                 setFormData({ ...formData, partsUsed: e.target.value })
               }
               placeholder="Enter parts used (e.g., wood, metal, screws)"
-              readOnly={reportExists && repairReport[0]?.partsUsed?.length > 0}
+              readOnly={reportExists && !!repairReport[0]?.partsUsed}
             />
           </div>
           {reportExists && repairReport[0]?.images ? (

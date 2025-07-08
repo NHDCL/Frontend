@@ -65,7 +65,11 @@ const AdminAccount = () => {
 
     if (error) {
       console.error("Failed to fetch profile data:", error);
-      Swal.fire("Error", "Failed to load profile data.", "error");
+      Swal.fire({
+        icon: "error",
+        title: "Error Loading Profile",
+        text: "Unable to load profile data. Please try again later.",
+      });
     }
   }, [data, error]);
 
@@ -159,7 +163,7 @@ const AdminAccount = () => {
           }).unwrap();
           Swal.fire({
             icon: "success",
-            title: "Password Updated Successfully!",
+            title: "Password updated successfully!",
             toast: true,
             position: "top-end",
             showConfirmButton: false,
@@ -190,11 +194,12 @@ const AdminAccount = () => {
         });
       }
     } else {
-      Swal.fire(
-        "Validation Error",
-        "Please correct the errors in the form.",
-        "warning"
-      );
+      Swal.fire({
+        title: "Validation Error",
+        text: "Please correct the errors in the form.",
+        icon: "warning",
+        confirmButtonColor: "#305845",
+      });
     }
   };
 
@@ -207,7 +212,7 @@ const AdminAccount = () => {
         }).unwrap();
         Swal.fire({
           icon: "success",
-          title: "Profile image updated successfully.",
+          title: "Profile image updated successfully!",
           toast: true,
           position: "top-end",
           showConfirmButton: false,
@@ -232,9 +237,9 @@ const AdminAccount = () => {
 
   return (
     <div className="profile-container">
-      <div  className="profile-card">
-        <div  className="profile-left">
-          <div  className="profile-image-wrapper">
+      <div className="profile-card">
+        <div className="profile-left">
+          <div className="profile-image-wrapper">
             <img src={profile.image} alt="Profile" className="profile-image" />
             <label className="profile-camera-icon">
               <input

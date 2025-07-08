@@ -60,8 +60,10 @@ const Repair = () => {
   useEffect(() => {
     if (isLoading) {
       Swal.fire({
-        title: "Loading repairs...",
+        title: "Please wait...",
+        text: "Loading repair data.",
         allowOutsideClick: false,
+        allowEscapeKey: false,
         didOpen: () => {
           Swal.showLoading();
         },
@@ -234,7 +236,8 @@ const Repair = () => {
 
       Swal.fire({
         icon: "success",
-        title: "Repair Request assigned and scheduled!",
+        title: "Repair Request Scheduled",
+        text: "The request has been successfully assigned and scheduled.",
         toast: true,
         position: "top-end",
         showConfirmButton: false,
@@ -254,7 +257,12 @@ const Repair = () => {
 
   const handleUpdateSchedule = async () => {
     if (!scheduleData?.[0]?.scheduleID) {
-      Swal.fire("Error", "Schedule data not found.", "error");
+      Swal.fire({
+        icon: "error",
+        title: "Schedule Not Found",
+        text: "We couldn’t locate the schedule data. Please check and try again.",
+      });
+
       return;
     }
     const scheduleId = scheduleData[0].scheduleID;
@@ -283,7 +291,8 @@ const Repair = () => {
 
       Swal.fire({
         icon: "success",
-        title: "Schedule updated and repair reassigned!",
+        title: "Schedule Updated",
+        text: "Repair has been reassigned successfully.",
         toast: true,
         position: "top-end",
         showConfirmButton: false,
@@ -601,7 +610,7 @@ const Repair = () => {
                     </div>
                   </td>
                   <td className="actions">
-                    {item.status === "Completed" ? (
+                    {(item.status === "Completed" || item.status === "In Progress") ? (
                       <button
                         className="schedule-btn"
                         onClick={() =>
@@ -758,7 +767,7 @@ const Repair = () => {
           <div className="modal-content">
             <div className="modal-header">
               <h2 style={{ fontSize: "18px" }} className="form-h">
-                Reschedule Form
+                {statusPending === "Pending" ? "Reschedule Form" : "Schedule Details"}
               </h2>
               <button className="close-btn" onClick={handleCloseModal2}>
                 <IoIosCloseCircle

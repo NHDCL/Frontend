@@ -1,6 +1,6 @@
 .mr_title {
   font-family: "Poppins", sans-serif;
-  font-size: 2rem;
+  font-size: clamp(1.25rem, 4vw, 2rem);
   color: #315845;
 }
 .mr_hr1 {
@@ -34,21 +34,24 @@
 .mr_formouter {
   display: flex;
   flex-direction: row;
-  height: 80vh;
+  min-height: 80vh;
   border: 1px solid black;
   border-radius: 10px;
   /* background-color: aqua; */
+  flex-wrap: wrap;
 }
 .mr_img {
   background-image: url("../../assets/images/mform.png");
   background-size: cover;
-  width: 45%;
+  width: 100%;
+  /* min-width: 400px; */
+  max-width: 45%;
   border-radius: 10px 0px 0px 10px;
 }
 
 .mr_p {
   color: #897463;
-  font-size: 30px;
+  font-size: clamp(1rem, 5vw, 1.875rem);
   font-weight: 900;
   width: 90%;
   /* background-color: crimson; */
@@ -61,11 +64,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 55%;
+  width: 100%;
+  max-width: 55%;
   flex-wrap: wrap;
   overflow-y: scroll;
   /* min-height: 100vh; */
-  /* background-color: #f9f9f9; */
+  background-color: #f9f9f9;
+    border-radius: 10px;
+
 }
 
 .mr-custom-form {
@@ -76,6 +82,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+    border-radius: 10px;
+
 }
 
 .mr-input-group {
@@ -89,12 +97,12 @@
   border-radius: 10px;
   background: none;
   padding: 10px;
-  font-size: 14px;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
   color: black;
   transition: border 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 .mr-pimg {
-  font-size: 14px;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
   color: black;
 }
 .mr-upload-box {
@@ -130,10 +138,10 @@
   padding: 12px;
   border: none;
   border-radius: 6px;
-  font-size: clamp(10px, 16px, 16px);
+  font-size: clamp(0.625rem, 4vw, 1rem);
   cursor: pointer;
   transition: 0.3s;
-  width: 50%;
+  width: clamp(100px, 50%, 300px);
   align-self: center;
 }
 
@@ -153,14 +161,30 @@
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
-
   gap: 5px;
   /* width: 100%; */
   padding: 15px;
   overflow-x: scroll;
-
-  /* max-width: 100px; */
 }
+
 .error-text {
   margin-bottom: 1px;
+}
+
+
+@media (max-width: 768px) {
+  .mr_formouter {
+    flex-direction: column;
+  }
+
+  .mr_img {
+    max-width: 100%;
+    border-radius: 10px 10px 0 0;
+    min-height: 200px; /* adjust as needed */
+  }
+
+  .mr_form {
+    max-width: 100%;
+    border-radius: 0 0 10px 10px;
+  }
 }

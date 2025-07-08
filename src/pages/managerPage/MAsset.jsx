@@ -38,8 +38,8 @@ const MAsset = () => {
       if (error) {
         Swal.fire({
           icon: "error",
-          title: "Error",
-          text: "Failed to load asset categories. Please try again later.",
+          title: "Load Failed",
+          text: "Unable to load asset categories. Please try again later.",
         });
       }
 

@@ -41,6 +41,8 @@ const SupervisorHome = () => {
   const [selectedTechnicianId, setSelectedTechnicianId] = useState(null);
   const [selectedTechnicianUpdate, setSelectedTechnicianUpdate] =
     useState(null);
+      console.log("statusPending", status);
+
 
   const rowsPerPage = 10;
 
@@ -609,7 +611,7 @@ const SupervisorHome = () => {
                     </Tippy>
                   </td>
 
-                  <td className="actions">
+                  {/* <td className="actions">
                     {item.status === "Completed" ? (
                       <button
                         className="schedule-btn"
@@ -635,6 +637,35 @@ const SupervisorHome = () => {
                         onClick={() => handleRescheduleView(item)}
                       >
                         Reschedule
+                      </button>
+                    )}
+                  </td> */}
+                    <td className="actions">
+                    {(item.repairInfo?.status === "Completed" || item.repairInfo?.status === "In Progress") ? (
+                      <button
+                        className="schedule-btn"
+                        onClick={() =>
+                          !item.technicianEmail
+                            ? handleScheduleView(item)
+                            : handleRescheduleView(item)
+                        }
+                      >
+                        View
+                      </button>
+                    ) : item.technicianEmail ? (
+                      <button
+                        className="schedule-btn"
+                        style={{ backgroundColor: "#315845" }}
+                        onClick={() => handleRescheduleView(item)}
+                      >
+                        Reschedule
+                      </button>
+                    ) : (
+                      <button
+                        className="schedule-btn"
+                        onClick={() => handleScheduleView(item)}
+                      >
+                        Schedule
                       </button>
                     )}
                   </td>
@@ -738,7 +769,7 @@ const SupervisorHome = () => {
             {/* Close Button */}
             <div className="modal-header">
               <h2 style={{ fontSize: "18px" }} className="form-h">
-                Reschedule Form
+                {status === "Pending" ? "Reschedule Form" : "Schedule Details"}
               </h2>
               <button className="close-btn" onClick={handleCloseModal2}>
                 <IoIosCloseCircle
