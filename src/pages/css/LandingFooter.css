@@ -18,9 +18,13 @@
   text-align: center;
   padding-top: 5px;
   padding-bottom: 5px;
+  font-size: clamp(0.75rem, 2vw, 1rem);
 }
 .lfh3 {
   padding-bottom: 5px;
+}
+.lfQlinks p{
+  font-size: clamp(0.75rem, 2vw, 1rem);
 }
 .lfQlinks {
   /* background-color: darkmagenta; */
@@ -37,6 +41,8 @@
   position: relative;
   display: inline-block;
   margin-bottom: 8px;
+  font-size: clamp(0.75rem, 2vw, 1rem);
+
 }
 
 .lfQlinks a::after {
@@ -62,7 +68,7 @@
 
 .lf-i {
   color: white;
-  font-size: 30px;
+  font-size: clamp(1rem, 5vw, 1.875rem);
   transition: transform 0.3s ease, color 0.3s ease;
   cursor: pointer;
 }

@@ -303,7 +303,7 @@
   border: 1.5px solid #897463 !important;
   border-radius: 10px !important;
   padding: 2px;
-  font-size: 13px;
+  font-size: clamp(0.7rem, 2vw, 0.8125rem);
   color: #333;
   text-align: left !important;
   display: flex !important;
@@ -316,7 +316,7 @@
 }
 
 .customm-select-department__placeholder {
-  font-size: 14px;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
   color: #aaa;
   align-items: flex-start !important;
   display: flex !important;
@@ -335,7 +335,7 @@
 
 /* Change dropdown option color */
 .customm-select-department__option {
-  font-size: 13px !important;
+  font-size: clamp(0.7rem, 2vw, 0.8125rem) !important;
   color: #333;
   padding: 12px !important;
   background-color: #fff;

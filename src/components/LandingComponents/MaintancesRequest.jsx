@@ -42,26 +42,6 @@ const MaintenanceRequest = () => {
   const [errors, setErrors] = useState({});
   const [imageError, setImageError] = useState("");
 
-  // useEffect(() => {
-  //   if (error) {
-  //     Swal.fire({
-  //       icon: "error",
-  //       title: "Oops...",
-  //       text: "Failed to fetch academies.",
-  //     });
-  //   }
-  // }, [error]);
-
-  // useEffect(() => {
-  //   if (error1) {
-  //     Swal.fire({
-  //       icon: "error",
-  //       title: "Oops...",
-  //       text: "Failed to fetch asset.",
-  //     });
-  //   }
-  // }, [error1]);
-
   useEffect(() => {
     if (formData.academy && assets.length > 0) {
       const matchedAssets = assets.filter(
