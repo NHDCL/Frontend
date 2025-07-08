@@ -1,34 +1,39 @@
 .main-content {
-    background-color: var(--clr-secondary);
-    flex: 1;
-    padding: 32px;
-    margin-left:300px;
-    min-height: 100vh;
-  }
-.shifted{
-  margin-left: 0px !important;
+  background-color: var(--clr-secondary);
+  flex: 1;
+  padding: 32px;
+  margin-left: 300px; /* default: full sidebar */
+  min-height: 100vh;
+  transition: margin-left 0.3s ease, padding 0.3s ease;
 }
 
-  @media screen and (max-width: 1400px) {
-    .main-content {
-      padding-left: 20px;
-      padding-right: 20px;
-      margin-left: 72px;
-    }
-    .shifted{
-      margin-left: 0px !important;
-    }
-    
+/* Shifted (sidebar hidden or toggled off) */
+.main-content.shifted {
+  margin-left: 0 !important;
+}
+
+/* Sidebar collapsed to 72px for medium screens and tablets */
+@media screen and (max-width: 1400px) {
+  .main-content {
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-left: 72px;
   }
 
-  @media screen and (max-width: 1200px) {
-    .main-content {
-      padding-right: 16px;
-      padding-left: 16px;
-      margin-left: 72px;
-
-    }
-    .shifted{
-      margin-left: 0px !important;
-    }
+  .main-content.shifted {
+    margin-left: 0 !important;
   }
+}
+
+/* Small screens like iPhone SE */
+@media screen and (max-width: 480px) {
+  .main-content {
+    padding-left: 16px;
+    padding-right: 16px;
+    margin-left: 72px;
+  }
+
+  .main-content.shifted {
+    margin-left: 0 !important;
+  }
+}

@@ -374,7 +374,7 @@ const SAdminUser = () => {
                     color: "#897463",
                     width: "20px",
                     height: "20px",
-                    marginRight: "-120px",
+                    // marginRight: "-120px",
                   }}
                 />
               </button>

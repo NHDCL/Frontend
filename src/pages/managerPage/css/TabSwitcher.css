@@ -13,6 +13,7 @@
   border: 1px solid #897463;
   overflow: hidden;
   width: fit-content;
+  flex-wrap: wrap;
 }
 
 .tab {
@@ -99,15 +100,14 @@
   /* text-align: center; */
   scrollbar-width: none;
   animation: popUpEffect 0.3s forwards;
-    min-width: 200px;
-
+  min-width: 200px;
 }
 .AdminUser-modal-content input,
 .AdminUser-modal-content textarea {
   width: 90%;
   border: solid 1.5px #897463;
   border-radius: 10px;
-    background: none;
+  background: none;
   padding: 12px;
   font-size: 14px;
   font-weight: 500;
@@ -130,7 +130,6 @@
   cursor: pointer;
   /* padding-right: 30px !important; */
   /* background-color: darkcyan; */
-
 }
 
 .AdminUser-close-btn:hover {
@@ -141,8 +140,8 @@
   justify-content: space-between;
   align-items: center;
 }
-.AdminUser_close h2{
-   font-size: 14px;
+.AdminUser_close h2 {
+  font-size: 14px;
   font-weight: bold;
   padding-left: 30px;
   color: var(--clr-darkgreen);

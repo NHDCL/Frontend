@@ -124,6 +124,24 @@
   margin-bottom: 10px;
   align-self: flex-start;
 }
-  
+/* Tablets (768px and below) */
+@media screen and (max-width: 768px) {
+    .login-custom-form {
+        width: 95%;
+        height: auto;
+        padding: 15px;
+        gap: 8px;
+    }
+}
+
+/* Mobile phones (480px and below) */
+@media screen and (max-width: 480px) {
+    .login-custom-form {
+        width: 90%;
+        padding: 12px;
+        gap: 6px;
+        border-radius: 8px;
+    }
+}
   
   
